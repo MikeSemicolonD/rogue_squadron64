@@ -333,12 +333,15 @@ D_800CD184 = 0x800CD184; //          size:0x120 segment:menu_overlay
 
 D_800CD438 = 0x800CD438; // type:f32 size:0x30 segment:menu_overlay
 
+dLevelByDemoId = 0x800CD404; // type:u8 size:0x08 segment:menu_overlay
+
 gIntroCrawlTextId               = 0x800CD470; // type:u8  size:0x04 segment:menu_overlay
 gPostIntroCrawlNumCraft         = 0x800CD474; // type:u8  size:0x04 segment:menu_overlay
 // type_size:0x10 count:0x04
 gPostIntroCrawlCraftObjectNames = 0x800CD478; // type:u32 size:0x40 segment:menu_overlay
 // type_size:0x10 count:0x04
 gPostIntroCrawlHobFiles         = 0x800CD4B8; // type:u32 size:0x40 segment:menu_overlay
+introCrawlYellowColor           = 0x800CD4F8; // type:u32 size:0x04 segment:menu_overlay
 
 D_800CD508 = 0x800CD508; // type:f32 size:0x4 segment:menu_overlay
 D_800CD510 = 0x800CD510; // size:0x4 segment:menu_overlay

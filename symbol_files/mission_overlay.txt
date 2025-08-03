@@ -230,6 +230,111 @@ addTimerHandle             = 0x800FA1DC; // segment:mission_overlay
 
 getHudSecondaryWeponCount = 0x800FEEF4; // segment:mission_overlay
 
+lv0_initializeObjectTracking = 0x80101090; // segment:mission_overlay
+lv0_checkComplexObjectives   = 0x8010119C; // segment:mission_overlay
+lv0_80101954                 = 0x80101954; // segment:mission_overlay
+lv0_calculateFriendliesSaved = 0x8010195C; // segment:mission_overlay
+
+lv1_initializeObjectTracking = 0x801019A0; // segment:mission_overlay
+lv1_80101BE4                 = 0x80101BE4; // segment:mission_overlay
+lv1_calculateFriendliesSaved = 0x80101BEC; // segment:mission_overlay
+lv1_checkComplexObjectives   = 0x80101C48; // segment:mission_overlay
+
+lv2_initializeObjectTracking = 0x80101CD0; // segment:mission_overlay
+lv2_checkComplexObjectives   = 0x80101EF4; // segment:mission_overlay
+lv2_80102A64                 = 0x80102A64; // segment:mission_overlay
+lv2_calculateFriendliesSaved = 0x80102A6C; // segment:mission_overlay
+
+lv3_initializeObjectTracking = 0x80102AA0; // segment:mission_overlay
+lv3_checkComplexObjectives   = 0x80102D08; // segment:mission_overlay
+lv3_80103528                 = 0x80103528; // segment:mission_overlay
+lv3_calculateFriendliesSaved = 0x80103530; // segment:mission_overlay
+
+lv4_initializeObjectTracking = 0x80103580; // segment:mission_overlay
+lv4_checkComplexObjectives   = 0x80103720; // segment:mission_overlay
+lv4_80103CBC                 = 0x80103CBC; // segment:mission_overlay
+lv4_calculateFriendliesSaved = 0x80103CC4; // segment:mission_overlay
+
+lv5_initializeObjectTracking = 0x80103D10; // segment:mission_overlay
+lv5_80104110                 = 0x80104110; // segment:mission_overlay
+lv5_calculateFriendliesSaved = 0x80104118; // segment:mission_overlay
+lv5_checkComplexObjectives   = 0x8010415C; // segment:mission_overlay
+
+lv6_checkComplexObjectives   = 0x80104210; // segment:mission_overlay
+lv6_initializeObjectTracking = 0x8010439C; // segment:mission_overlay
+lv6_8010443C                 = 0x8010443C; // segment:mission_overlay
+lv6_calculateFriendliesSaved = 0x80104444; // segment:mission_overlay
+
+lv7_checkComplexObjectives   = 0x801044E0; // segment:mission_overlay
+lv7_initializeObjectTracking = 0x80104A0C; // segment:mission_overlay
+lv7_80104A58                 = 0x80104A58; // segment:mission_overlay
+lv7_calculateFriendliesSaved = 0x80104A60; // segment:mission_overlay
+
+lv8_checkComplexObjectives   = 0x80104AA0; // segment:mission_overlay
+lv8_initializeObjectTracking = 0x80104D8C; // segment:mission_overlay
+lv8_80104E64                 = 0x80104E64; // segment:mission_overlay
+lv8_calculateFriendliesSaved = 0x80104E9C; // segment:mission_overlay
+
+lv9_initializeObjectTracking = 0x80104F80; // segment:mission_overlay
+lv9_checkComplexObjectives   = 0x801051CC; // segment:mission_overlay
+lv9_80105B00                 = 0x80105B00; // segment:mission_overlay
+lv9_calculateFriendliesSaved = 0x80105B08; // segment:mission_overlay
+
+lva_initializeObjectTracking = 0x80105B60; // segment:mission_overlay
+lva_80106100                 = 0x80106100; // segment:mission_overlay
+lva_calculateFriendliesSaved = 0x80106108; // segment:mission_overlay
+lva_checkComplexObjectives   = 0x80106134; // segment:mission_overlay
+
+lvb_initializeObjectTracking = 0x801061A0; // segment:mission_overlay
+lvb_checkComplexObjectives   = 0x801062E4; // segment:mission_overlay
+lvb_80106B98                 = 0x80106B98; // segment:mission_overlay
+lvb_calculateFriendliesSaved = 0x80106BA0; // segment:mission_overlay
+
+lvc_initializeObjectTracking = 0x80106BF0; // segment:mission_overlay
+lvc_checkComplexObjectives   = 0x80106D3C; // segment:mission_overlay
+lvc_801071E8                 = 0x801071E8; // segment:mission_overlay
+lvc_calculateFriendliesSaved = 0x801071F0; // segment:mission_overlay
+
+lvd_initializeObjectTracking = 0x80107220; // segment:mission_overlay
+lvd_80107290                 = 0x80107290; // segment:mission_overlay
+lvd_calculateFriendliesSaved = 0x80107298; // segment:mission_overlay
+lvd_checkComplexObjectives   = 0x801072A0; // segment:mission_overlay
+
+lve_initializeObjectTracking = 0x80107370; // segment:mission_overlay
+lve_checkComplexObjectives   = 0x80107578; // segment:mission_overlay
+lve_80107E58                 = 0x80107E58; // segment:mission_overlay
+lve_calculateFriendliesSaved = 0x80107E60; // segment:mission_overlay
+
+lvf_initializeObjectTracking = 0x80107EB0; // segment:mission_overlay
+lvf_checkComplexObjectives   = 0x8010802C; // segment:mission_overlay
+lvf_80108494                 = 0x80108494; // segment:mission_overlay
+lvf_calculateFriendliesSaved = 0x8010849C; // segment:mission_overlay
+
+lvg_checkComplexObjectives   = 0x801084E0; // segment:mission_overlay
+lvg_initializeObjectTracking = 0x80108B34; // segment:mission_overlay
+lvg_80108B7C                 = 0x80108B7C; // segment:mission_overlay
+lvg_calculateFriendliesSaved = 0x80108B84; // segment:mission_overlay
+
+lvh_initializeObjectTracking = 0x80108B90; // segment:mission_overlay
+lvh_80108E68                 = 0x80108E68; // segment:mission_overlay
+lvh_calculateFriendliesSaved = 0x80108E70; // segment:mission_overlay
+lvh_checkComplexObjectives   = 0x80108EB0; // segment:mission_overlay
+
+lvi_checkComplexObjectives   = 0x80108F60; // segment:mission_overlay
+lvi_initializeObjectTracking = 0x80109114; // segment:mission_overlay
+lvi_801091F8                 = 0x801091F8; // segment:mission_overlay
+lvi_calculateFriendliesSaved = 0x80109200; // segment:mission_overlay
+
+lvk_checkComplexObjectives   = 0x80109430; // segment:mission_overlay
+lvk_initializeObjectTracking = 0x80109590; // segment:mission_overlay
+lvk_801095CC                 = 0x801095CC; // segment:mission_overlay
+lvk_calculateFriendliesSaved = 0x801095D4; // segment:mission_overlay
+
+lvj_initializeObjectTracking = 0x80109620; // segment:mission_overlay
+lvj_80109628                 = 0x80109628; // segment:mission_overlay
+lvj_calculateFriendliesSaved = 0x80109630; // segment:mission_overlay
+lvj_checkComplexObjectives   = 0x80109638; // segment:mission_overlay
+
 // Fake Function Fixing
 fake_func_800AA6CC = 0x800AA6CC; // segment:mission_overlay
 func_800AA6D0      = 0x800AA6D0; // segment:mission_overlay
@@ -340,46 +445,46 @@ fake_func_800FEF04 = 0x800FEF04; // segment:mission_overlay
 func_800FEF10      = 0x800FEF10; // segment:mission_overlay
 
 fake_func_80101CCC = 0x80101CCC; // segment:mission_overlay
-func_80101CD0      = 0x80101CD0; // segment:mission_overlay
+// real function is lv2_initializeObjectTracking
 
 fake_func_80102A98 = 0x80102A98; // segment:mission_overlay
-func_80102AA0      = 0x80102AA0; // segment:mission_overlay
+// real function is lv3_initializeObjectTracking
 
 fake_func_8010357C = 0x8010357C; // segment:mission_overlay
-func_80103580      = 0x80103580; // segment:mission_overlay
+// real function is lv4_initializeObjectTracking
 
 fake_func_80103D08 = 0x80103D08; // segment:mission_overlay
-func_80103D10      = 0x80103D10; // segment:mission_overlay
+// real function is lv5_initializeObjectTracking
 
 fake_func_80104208 = 0x80104208; // segment:mission_overlay
-func_80104210      = 0x80104210; // segment:mission_overlay
+// real function is lv6_checkComplexObjectives
 
 fake_func_801044D8 = 0x801044D8; // segment:mission_overlay
-func_801044E0      = 0x801044E0; // segment:mission_overlay
+// real function is lv7_checkComplexObjectives
 
 fake_func_80105B54 = 0x80105B54; // segment:mission_overlay
-func_80105B60      = 0x80105B60; // segment:mission_overlay
+// real function is lva_initializeObjectTracking
 
 fake_func_8010619C = 0x8010619C; // segment:mission_overlay
-func_801061A0      = 0x801061A0; // segment:mission_overlay
+// real function is lvb_initializeObjectTracking
 
 fake_func_80106BE8 = 0x80106BE8; // segment:mission_overlay
-func_80106BF0      = 0x80106BF0; // segment:mission_overlay
+// real function is lvc_initializeObjectTracking
 
 fake_func_8010721C = 0x8010721C; // segment:mission_overlay
-func_80107220      = 0x80107220; // segment:mission_overlay
+// real function is lvd_initializeObjectTracking
 
 fake_func_80107EA4 = 0x80107EA4; // segment:mission_overlay
-func_80107EB0      = 0x80107EB0; // segment:mission_overlay
+// real function is lvf_initializeObjectTracking
 
 fake_func_80108B8C = 0x80108B8C; // segment:mission_overlay
-func_80108B90      = 0x80108B90; // segment:mission_overlay
+// real function is lvh_initializeObjectTracking
 
 fake_func_80109428 = 0x80109428; // segment:mission_overlay
-func_80109430      = 0x80109430; // segment:mission_overlay
+// real function is lvk_checkComplexObjectives
 
 fake_func_80109618 = 0x80109618; // segment:mission_overlay
-func_80109620      = 0x80109620; // segment:mission_overlay
+// real function is lvj_initializeObjectTracking
 
 ////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////// Variables ///////////////////////////////////
@@ -457,7 +562,7 @@ D_801099B0 = 0x801099B0; // type:f32 size:0xC segment:mission_overlay
 D_801099C4 = 0x801099C4; // type:f32 size:0x30 segment:mission_overlay
 
 // type_size:0x10 count:0x04
-D_80109A00 = 0x80109A00; // type:u32 size:40 segment:mission_overlay
+D_80109A00 = 0x80109A00; // type:u32 size:0x40 segment:mission_overlay
 
 D_80109A48 = 0x80109A48; // type:f32 size:0xC segment:mission_overlay
 D_80109A60 = 0x80109A60; // type:f32 size:0xC segment:mission_overlay
@@ -560,8 +665,8 @@ D_8010B178 = 0x8010B178; // type:f32 size:0xC segment:mission_overlay
 
 D_8010B304 = 0x8010B304; // type:u16 size:0x10 segment:mission_overlay
 
-D_8010B3A0 = 0x8010B3A0; // size:0x24 segment:mission_overlay
-D_8010B3C4 = 0x8010B3C4; // size:0x24 segment:mission_overlay
+playerCraftHobObjectNames  = 0x8010B3A0; // size:0x24 segment:mission_overlay
+playerCraftUpdateFunctions = 0x8010B3C4; // size:0x24 segment:mission_overlay
 
 D_8010B4C0 = 0x8010B4C0; // type:f32 size:0xC segment:mission_overlay
 D_8010B4CC = 0x8010B4CC; // type:f32 size:0xC segment:mission_overlay
