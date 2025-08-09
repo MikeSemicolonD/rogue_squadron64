@@ -13,11 +13,11 @@ The blob starts with a list of what I'll call `segment_header`s.
 
 ```cpp
 struct segment_header {
-	char     segment_name[16];
-	uint32_t unk10;
-	uint32_t unk14;
-	uint32_t unk18; // If this is non-zero the data block for this header won't get DMA'd. I don't know why that would ever be useful
-	uint32_t data_offset;
+    char     segment_name[16];
+    uint32_t unk10;
+    uint32_t unk14;
+    uint32_t unk18; // If this is non-zero the data block for this header won't get DMA'd. I don't know why that would ever be useful
+uint32_t data_offset;
 }; // size: 0x20 bytes
 ```
 
@@ -30,12 +30,12 @@ The data blocks themselves have a tiny header too, henceforth called `block_head
 
 ```cpp
 struct block_header {
-	union {
-		uint32_t block_size;
-		uint32_t manifest_offset;
-	};
-	uint16_t flags;
-	uint16_t manifest_size;
+    union {
+        uint32_t block_size;
+        uint32_t manifest_offset;
+    };
+    uint16_t flags;
+    uint16_t manifest_size;
 }; // size: 0x8 bytes
 ```
 
@@ -52,13 +52,13 @@ A series of structs that explain the structres of the raw data for a given data 
 
 ```cpp
 struct manifest_entry {
-	uint32_t asset_offset;
-	uint32_t decompressed_size;
-	uint32_t compressed_size;
-	uint8_t  flags;
-	uint8_t  unk0D;
-	uint16_t directory_size;
-	char     asset_name[16];
+    uint32_t asset_offset;
+    uint32_t decompressed_size;
+    uint32_t compressed_size;
+    uint8_t  flags;
+    uint8_t  unk0D;
+    uint16_t directory_size;
+    char     asset_name[16];
 }; // size: 0x20 bytes
 ```
 
@@ -84,18 +84,19 @@ For some files their type is easy to deduce by just looking at their name, for o
 
 [ReRogue's version](https://github.com/dpethes/rerogue/blob/master/doc/file_hob_spec.txt)
 These appear to be 3D models.
-See the [HOB file specification](#/docs/hob_files/hob_files.md) for more details.
+See the [HOB file specification](/docs/hob_files/hob_files.md) for more details.
 
 ### HMT
 
 [ReRogue's version](https://github.com/dpethes/rerogue/blob/master/doc/file_hmt_spec.txt)
 These appear to be texture collections.
 In 3D modeling parlance I think textures are more commonly called "materials".
-See the [HMT file specification](#/docs/hmt_files/hmt_files.md) for more details.
+See the [HMT file specification](/docs/hmt_files/hmt_files.md) for more details.
 
 ### Various Image files
 
 File types like:
+
 - ANM
 - IMG
 - SPR

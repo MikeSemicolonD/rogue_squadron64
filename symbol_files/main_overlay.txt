@@ -217,18 +217,23 @@ getViModeType                        = 0x8000273C; // defined:true
 setViModeType                        = 0x8000274C; // defined:true
 getOsResetType                       = 0x800027A8; // defined:true
 rand                                 = 0x80003430; // defined:true
+setRngSeed                           = 0x80003460; // defined:true
 find_manifest_entry                  = 0x80003A0C; // defined:true
 get_asset_size_extra                 = 0x80004D5C; // defined:true
+get_manifest_entry_type              = 0x80005080; // defined:true
 get_asset_size_simple                = 0x80005134; // defined:true
 // The zcfree and zcalloc functions are effectively just wrappers for these functions
 rs_zcfree                            = 0x8000525C; // defined:true
 rs_zcalloc                           = 0x8000527C; // defined:true
+rs_strcasecmp                        = 0x80007520; // defined:true
 rs_strcpy                            = 0x8000761C; // defined:true
 rs_strncpy                           = 0x80007640; // defined:true
 rs_strcat                            = 0x8000767C; // defined:true
 rs_strncat                           = 0x800076B8; // defined:true
 rs_strcmp                            = 0x800076F8; // defined:true
 rs_strncmp                           = 0x800077A8; // defined:true
+rs_strncasecmp                       = 0x80007810; // defined:true
+rs_tolower                           = 0x800078C0; // defined:true
 rs_memset                            = 0x800078E0; // defined:true
 load_level_hmp                       = 0x80043D74; // defined:true
 loadDatFile                          = 0x80046784; // defined:true
@@ -328,6 +333,9 @@ func_80007380      = 0x80007380; // defined:true
 
 fake_func_800074D8 = 0x800074D8; // defined:true
 func_800074E0      = 0x800074E0; // defined:true
+
+fake_func_8000751C = 0x8000751C; // defined:true
+// real function rs_strcasecmp
 
 fake_func_80007908 = 0x80007908; // defined:true
 func_80007910      = 0x80007910; // defined:true
@@ -500,7 +508,7 @@ D_800007E4 = 0x800007E4; // type:f32 size:0x4
 D_80000808 = 0x80000808; // type:f32 size:0x4
 D_80000984 = 0x80000984; // type:f32 size:0x4
 D_800009F0 = 0x800009F0; // type:f32 size:0x4
-D_80003470 = 0x80003470; // type:u32 size:0x4
+rngSeed    = 0x80003470; // type:u32 size:0x4
 D_800186E0 = 0x800186E0; // type:f32
 
 gspF3DEXTextStart     = 0x80024A10; // size:0x1FA0 name_end:gspF3DEXTextEnd
@@ -510,6 +518,8 @@ D_80037620            = 0x80037620; // type:u32 size:0x4
 D_80037630            = 0x80037630; // type:s32 size:0x4
 gspTask               = 0x800377C8; // type:OSTask size:0x40
 D_80037860            = 0x80037860; // type:u32 size:0x1000
+D_800388E0            = 0x800388E0; // type:u32 size:0x200
+D_80038AE0            = 0x80038AE0; // type:u32 size:0x200
 D_80038CE0            = 0x80038CE0; // type:u8 size:0x01
 gspF3DEXDataStart     = 0x80038D00; // size:0x100 name_end:gspF3DEXDataEnd
 D_8003A4C4            = 0x8003A4C4; // type:f32 size:0x4
@@ -724,6 +734,8 @@ D_80128CE0 = 0x80128CE0; // type:OSMesg size:0x4
 D_80130B10   = 0x80130B10; // size:0x28
 D_80130B40   = 0x80130B40; // size:0x30
 missionStats = 0x80130B78; // size:0x10
+D_80130BB0   = 0x80130BB0; // size:0x04
+D_80130BB4   = 0x80130BB0; // type:u16
 gPlayers     = 0x80137DB8; // size:0x2A0
 
 gObjectiveCounts   = 0x80138060; // type:u32

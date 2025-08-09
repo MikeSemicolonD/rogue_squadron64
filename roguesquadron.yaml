@@ -107,6 +107,7 @@ segments:
       - [0x07800, asm,     "main/07800"]
       - [0x07F80, asm,     "main/07F80"]
       - [0x080E0, asm,     "main/080E0"]
+      - [0x08120, asm,     "main/08120"]
       - [0x08510, asm,     "main/08510"]
       # This is a bunch of hand written code (seemingly matrix math related)
       # It has some data at the top too, but the alignment between it and the text is weird.
