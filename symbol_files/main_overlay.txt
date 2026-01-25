@@ -225,6 +225,7 @@ get_asset_size_simple                = 0x80005134; // defined:true
 // The zcfree and zcalloc functions are effectively just wrappers for these functions
 rs_zcfree                            = 0x8000525C; // defined:true
 rs_zcalloc                           = 0x8000527C; // defined:true
+setDmaSlotMaxTxSize                  = 0x80005938; // defined:true
 rs_strcasecmp                        = 0x80007520; // defined:true
 rs_strcpy                            = 0x8000761C; // defined:true
 rs_strncpy                           = 0x80007640; // defined:true
@@ -235,6 +236,7 @@ rs_strncmp                           = 0x800077A8; // defined:true
 rs_strncasecmp                       = 0x80007810; // defined:true
 rs_tolower                           = 0x800078C0; // defined:true
 rs_memset                            = 0x800078E0; // defined:true
+normalize_vector                     = 0x8001CF58; // defined:true
 load_level_hmp                       = 0x80043D74; // defined:true
 loadDatFile                          = 0x80046784; // defined:true
 getLevelDatItemByName                = 0x80047B48; // defined:true
@@ -245,7 +247,6 @@ loadTxtFile                          = 0x800556A0; // defined:true
 loadGameOrFrontTxtFile               = 0x80055880; // defined:true
 getGameOrFrontText                   = 0x8005589C; // defined:true
 freeTxtFile                          = 0x800558D4; // defined:true
-setDmaSlotMaxTxSize                  = 0x80005938; // defined:true
 loadVoiceTxtFile                     = 0x8005595C; // defined:true
 getVoiceText                         = 0x80055978; // defined:true
 func_80055A20                        = 0x80055A20; // defined:true
@@ -642,8 +643,8 @@ D_800A1990 = 0x800A1990; // type:s32
 D_800A2FD0 = 0x800A2FD0; // type:u32
 D_800A31D0 = 0x800A31D0; // type:u32
 
-D_800A33D0 = 0x800A33D0; // type:u32 size:0xC00
-D_800A3FD0 = 0x800A3FD4; // type:u32 size:0xC00
+D_800A33D0 = 0x800A33D0; // type:u32 size:0xC04
+D_800A3FD4 = 0x800A3FD4; // type:u32 size:0xC04
 
 D_800A4BD8 = 0x800A4BD8; // type:f32 size:0x200
 D_800A4DD8 = 0x800A4DD8; // type:f32
@@ -735,7 +736,8 @@ D_80130B10   = 0x80130B10; // size:0x28
 D_80130B40   = 0x80130B40; // size:0x30
 missionStats = 0x80130B78; // size:0x10
 D_80130BB0   = 0x80130BB0; // size:0x04
-D_80130BB4   = 0x80130BB0; // type:u16
+D_80130BB4   = 0x80130BB4; // type:u16
+hmpFile      = 0x80136FC4; // type:u32
 gPlayers     = 0x80137DB8; // size:0x2A0
 
 gObjectiveCounts   = 0x80138060; // type:u32
@@ -775,7 +777,15 @@ D_8013A670 = 0x8013A670; // size:0x224
 gPreviousButtonsPressed = 0x8013A950; // type:u32 size:0x10
 gNewButtonsPressed      = 0x8013A960; // type:u32 size:0x10
 
+// type_size:0x14 count:0x20
+D_8013A990 = 0x8013A990; // type:u32 size:0x280
+
+// type_size:0x17C count:0x20
+D_8013D880 = 0x8013D880; // type:u32 size:0x2F80
+
 aspTask    = 0x80149470; // type:OSTask size:0x40
+// type_size:0x24 count:0x40
+D_801529C0 = 0x801529C0; // type:u32 size:0x900
 D_80153420 = 0x80153420; // size:0x1228
 
 numSpeechSamples    = 0x80154670; // size:0x4
