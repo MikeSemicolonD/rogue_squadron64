@@ -6,3 +6,5 @@ output_pngs/**
 tools/*
 venv/**
 .vscode/**
+*.z64
+build/*
