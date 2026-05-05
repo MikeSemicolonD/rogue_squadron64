@@ -8,3 +8,4 @@ venv/**
 .vscode/**
 *.z64
 build/*
+/.claude
