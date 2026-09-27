@@ -8,3 +8,8 @@ venv/**
 *.z64
 build/*
 /.claude
+build/**
+expected/**
+nonmatchings/**
+__pycache__/**
+tools/compilers*
