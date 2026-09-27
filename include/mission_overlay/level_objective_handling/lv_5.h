@@ -16,7 +16,7 @@ void func_mission_overlay_80104080(void);
 void func_mission_overlay_801040B0(void);
 void func_mission_overlay_801040D0(void);
 void func_mission_overlay_801040F0(void);
-s32 lv5_80104110(void);
+s32 lv5_objectiveSlot1(void);
 s32 lv5_calculateFriendliesSaved(void);
 s32 lv5_checkComplexObjectives(void);
 

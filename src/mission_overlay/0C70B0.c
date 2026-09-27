@@ -2,37 +2,37 @@
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", initHangarDisplayItemTimers);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A6880);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCKolsch);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A688C);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCT16);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A6894);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCTie);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A689C);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCFal);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68A4);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCSpdr);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68AC);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCVwg);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68B4);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCAwg);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68BC);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCYwg);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68C4);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCXwg);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68CC);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCkpg2w);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68D4);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCkpg2g);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68DC);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCkpg2r);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68E4);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCkpg1w);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68EC);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCkpg1g);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68F4);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCkpg1r);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A68FC);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", strMissCkpg3r);
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A6904);
 

@@ -26,7 +26,7 @@ void func_mission_overlay_8010606C(void);
 void func_mission_overlay_80106088(void);
 void func_mission_overlay_801060B4(void);
 void func_mission_overlay_801060E0(void);
-s32  lva_80106100(void);
+s32  lva_objectiveSlot1(void);
 s32  lva_calculateFriendliesSaved(void);
 s32  lva_checkComplexObjectives(void);
 

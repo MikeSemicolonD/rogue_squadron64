@@ -22,7 +22,7 @@ void func_mission_overlay_80103C40(void);
 void func_mission_overlay_80103C50(void);
 void func_mission_overlay_80103C74(void);
 void func_mission_overlay_80103C98(void);
-s32 lv4_80103CBC(void);
+s32 lv4_objectiveSlot1(void);
 s32 lv4_calculateFriendliesSaved(void);
 
 #endif

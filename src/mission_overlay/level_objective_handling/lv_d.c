@@ -22,7 +22,7 @@ s32 lvd_initializeObjectTracking(void) {
     return 0;
 }
 
-s32 lvd_80107290(void) {
+s32 lvd_objectiveSlot1(void) {
     return 0;
 }
 

@@ -50,7 +50,7 @@ void func_mission_overlay_80101934(void) {
     setObjectiveCount(0x73, 6U);
 }
 
-s32 lv0_80101954(void) {
+s32 lv0_objectiveSlot1(void) {
     return 0;
 }
 

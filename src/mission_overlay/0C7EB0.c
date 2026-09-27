@@ -10,127 +10,127 @@
 #include "mission_overlay/0F3E90.h"
 #include "mission_overlay/level_objective_handling/all_levels.h"
 
-struct D_8010A450_type D_mission_overlay_8010A450[0x15] = {
+struct D_8010A450_type gMissionObjectiveVtable[0x15] = {
     {lv0_initializeObjectTracking,
-    lv0_80101954,
+    lv0_objectiveSlot1,
     lv0_calculateFriendliesSaved,
     lv0_checkComplexObjectives,},
 
     {lv1_initializeObjectTracking,
-    lv1_80101BE4,
+    lv1_objectiveSlot1,
     lv1_calculateFriendliesSaved,
     lv1_checkComplexObjectives,},
 
     {lv2_initializeObjectTracking,
-    lv2_80102A64,
+    lv2_objectiveSlot1,
     lv2_calculateFriendliesSaved,
     lv2_checkComplexObjectives,},
 
     {lv3_initializeObjectTracking,
-    lv3_80103528,
+    lv3_objectiveSlot1,
     lv3_calculateFriendliesSaved,
     lv3_checkComplexObjectives,},
 
     {lv4_initializeObjectTracking,
-    lv4_80103CBC,
+    lv4_objectiveSlot1,
     lv4_calculateFriendliesSaved,
     lv4_checkComplexObjectives,},
 
     {lv5_initializeObjectTracking,
-    lv5_80104110,
+    lv5_objectiveSlot1,
     lv5_calculateFriendliesSaved,
     lv5_checkComplexObjectives,},
 
     {lv6_initializeObjectTracking,
-    lv6_8010443C,
+    lv6_objectiveSlot1,
     lv6_calculateFriendliesSaved,
     lv6_checkComplexObjectives,},
 
     {lv7_initializeObjectTracking,
-    lv7_80104A58,
+    lv7_objectiveSlot1,
     lv7_calculateFriendliesSaved,
     lv7_checkComplexObjectives,},
 
     {lv8_initializeObjectTracking,
-    lv8_80104E64,
+    lv8_objectiveSlot1,
     lv8_calculateFriendliesSaved,
     lv8_checkComplexObjectives,},
 
     {lv9_initializeObjectTracking,
-    lv9_80105B00,
+    lv9_objectiveSlot1,
     lv9_calculateFriendliesSaved,
     lv9_checkComplexObjectives,},
 
     {lva_initializeObjectTracking,
-    lva_80106100,
+    lva_objectiveSlot1,
     lva_calculateFriendliesSaved,
     lva_checkComplexObjectives,},
 
     {lvb_initializeObjectTracking,
-    lvb_80106B98,
+    lvb_objectiveSlot1,
     lvb_calculateFriendliesSaved,
     lvb_checkComplexObjectives,},
 
     {lvc_initializeObjectTracking,
-    lvc_801071E8,
+    lvc_objectiveSlot1,
     lvc_calculateFriendliesSaved,
     lvc_checkComplexObjectives,},
 
     {lvd_initializeObjectTracking,
-    lvd_80107290,
+    lvd_objectiveSlot1,
     lvd_calculateFriendliesSaved,
     lvd_checkComplexObjectives,},
 
     {lve_initializeObjectTracking,
-    lve_80107E58,
+    lve_objectiveSlot1,
     lve_calculateFriendliesSaved,
     lve_checkComplexObjectives,},
 
     {lvf_initializeObjectTracking,
-    lvf_80108494,
+    lvf_objectiveSlot1,
     lvf_calculateFriendliesSaved,
     lvf_checkComplexObjectives,},
 
     {lvg_initializeObjectTracking,
-    lvg_80108B7C,
+    lvg_objectiveSlot1,
     lvg_calculateFriendliesSaved,
     lvg_checkComplexObjectives,},
 
     {lvh_initializeObjectTracking,
-    lvh_80108E68,
+    lvh_objectiveSlot1,
     lvh_calculateFriendliesSaved,
     lvh_checkComplexObjectives,},
 
     {lvi_initializeObjectTracking,
-    lvi_801091F8,
+    lvi_objectiveSlot1,
     lvi_calculateFriendliesSaved,
     lvi_checkComplexObjectives,},
 
     {lvj_initializeObjectTracking,
-    lvj_80109628,
+    lvj_objectiveSlot1,
     lvj_calculateFriendliesSaved,
     lvj_checkComplexObjectives,},
 
     {lvk_initializeObjectTracking,
-    lvk_801095CC,
+    lvk_objectiveSlot1,
     lvk_calculateFriendliesSaved,
     lvk_checkComplexObjectives,},
 };
 
 void initializeObjectiveTracking(void) {
-    D_mission_overlay_8010A450[gCurrentLevel].initializeObjectiveTracking();
+    gMissionObjectiveVtable[gCurrentLevel].initializeObjectiveTracking();
 }
 
-void func_mission_overlay_800C72E8(void) {
-    D_mission_overlay_8010A450[gCurrentLevel].unk4();
+void dispatchObjectiveSlot1(void) {
+    gMissionObjectiveVtable[gCurrentLevel].unk4();
 }
 
 void calculateFriendliesSaved(void) {
-    D_mission_overlay_8010A450[gCurrentLevel].calculateFriendliesSaved();
+    gMissionObjectiveVtable[gCurrentLevel].calculateFriendliesSaved();
 }
 
 void checkComplexObjectives(void) {
-    D_mission_overlay_8010A450[gCurrentLevel].checkComplexObjectives();
+    gMissionObjectiveVtable[gCurrentLevel].checkComplexObjectives();
 }
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", dealDamagetoDatItem);

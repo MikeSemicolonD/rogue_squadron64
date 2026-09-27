@@ -286,7 +286,7 @@ void func_mission_overlay_80105AE0(void) {
     setObjectiveBoolean(0x78, 1U);
 }
 
-s32 lv9_80105B00(void) {
+s32 lv9_objectiveSlot1(void) {
     return 0;
 }
 

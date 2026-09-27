@@ -136,7 +136,7 @@ s32 lv7_initializeObjectTracking(void) {
     return 0;
 }
 
-s32 lv7_80104A58(void) {
+s32 lv7_objectiveSlot1(void) {
     return 0;
 }
 

@@ -146,7 +146,7 @@ void func_mission_overlay_80108488(void) {
     D_mission_overlay_8010D1A4 = 0;
 }
 
-s32 lvf_80108494(void) {
+s32 lvf_objectiveSlot1(void) {
     return 0;
 }
 

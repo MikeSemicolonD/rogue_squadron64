@@ -262,7 +262,7 @@ s32 lve_checkComplexObjectives(void) {
     return 0;
 }
 
-s32 lve_80107E58(void) {
+s32 lve_objectiveSlot1(void) {
     return 0;
 }
 

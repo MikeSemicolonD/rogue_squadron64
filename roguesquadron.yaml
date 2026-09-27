@@ -97,7 +97,8 @@ segments:
       - [0x016B0, .rodata,  "zlib/infblock"]
       - [0x016E0, .rodata,  "zlib/infcodes"]
       - [0x01720, c,     "main/01720"]
-      - [0x02490, c,     "main/02490"]
+      - [0x01850, c,     "main/01850"]
+      - [0x02420, c,     "main/02420"]
       - [0x031B0, c,     "main/031B0"]
       - [0x03290, c,     "main/03290"]
       - [0x033C0, c,     "main/033C0"]
@@ -257,8 +258,7 @@ segments:
       - [0x37CE0, asm,     "libultra/libc/ldiv"]
       - [0x37E70, asm,     "libultra/libc/xlitob"]
       - [0x38110, asm,     "libultra/os/yieldthread"]
-      - [0x38160, data,    "main/38160"]
-      - [0x381B0, data,    "main/381B0"]
+      - [0x38160, .data,    "main/01720"]
       - [0x381C0, data,    "main/381C0"]
       - [0x38220, .data,    "main/03290"]
       - [0x38230, data,    "main/38230"]
@@ -323,9 +323,8 @@ segments:
       - [0x3B9B0, .rodata,  "main/5A750"]
       - [0x3B9C0, .rodata,  "main/5AD20"]
       - [0x3BB60, .rodata,  "main/5D220"]
-      - [0x3BDC0, rodata,  "main/3BDC0"]
-      - [0x3BE30, rodata,  "main/3BE30"]
-      - [0x3BF00, rodata,  "main/3BF00"]
+      - [0x3BDC0, .rodata,  "main/5FA70"]
+      - [0x3BF00, .rodata,  "main/61290"]
       - [0x3C010, rodata,  "main/3C010"]
       - [0x3C430, .rodata,  "main/65540"]
       - [0x3CE60, .rodata,  "main/66660"]
@@ -369,6 +368,7 @@ segments:
       - [0x5AD20, c,     "main/5AD20"]
       - [0x5D220, c,     "main/5D220"]
       - [0x5FA70, c,     "main/5FA70"]
+      - [0x61290, c,     "main/61290"]
       - [0x61FC0, c,     "main/61FC0"]
       - [0x64EA0, c,     "main/64EA0"]
       - [0x65540, c,     "main/65540"]
@@ -412,7 +412,8 @@ segments:
       - [0x9F8B0, .data,  "main/56F50"]
       - [0x9F8C0, .data,  "main/5AD20"]
       - [0x9F8F0, .data,  "main/5D220"]
-      - [0x9F960, data,  "main/9F960"]
+      - [0x9F960, data,  "main/9F960"] # 5FA70
+      - [0x9F970, data,  "main/9F970"]
       - [0xA0850, data,  "main/A0850"]
       - [0xA08D0, .data,  "main/66FB0"]
       - [0xA0BE0, .data,  "main/67690"]
@@ -614,9 +615,9 @@ segments:
       - {type: bss, vram: 0x8010B6D0, name: "mission_overlay/0AB6E0"}
       - {type: bss, vram: 0x8010B6E0, name: "mission_overlay/0ADF80"}
       - {type: bss, vram: 0x8010B740, name: "mission_overlay/0AEFF0"}
-      - {type: bss, vram: 0x8010BC80, name: "mission_overlay/0B4EC0"}
+      - {type: .bss, vram: 0x8010BC80, name: "mission_overlay/0B4EC0"}
       - {type: bss, vram: 0x8010BCA0, name: "mission_overlay/0BF800"}
-      - {type: bss, vram: 0x8010BFD0, name: "mission_overlay/0C0390"}
+      - {type: .bss, vram: 0x8010BFD0, name: "mission_overlay/0C0390"}
       - {type: bss, vram: 0x8010BFE0, name: "mission_overlay/0C4DB0"}
       - {type: bss, vram: 0x8010C090, name: "mission_overlay/0C70B0"}
       - {type: bss, vram: 0x8010C0A0, name: "mission_overlay/0DDED0"}
@@ -719,7 +720,7 @@ segments:
     vram: 0x8010D200
     subsegments:
       - {type: bss, vram: 0x8010D200, name: "main/8010D200"              }
-      - {type: .bss, vram: 0x8010FEE0, name: "main/02490"                }
+      - {type: .bss, vram: 0x8010FEE0, name: "main/02420"                }
       - {type: .bss, vram: 0x8010FF20, name: "main/03290"                }
       - {type: .bss, vram: 0x8010FF30, name: "main/033C0"                }
       - {type: .bss, vram: 0x801107A0, name: "main/04080"                }

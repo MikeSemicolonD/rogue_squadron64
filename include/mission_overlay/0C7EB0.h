@@ -7,7 +7,7 @@
 #include "crafts.h"
 
 void initializeObjectiveTracking(void);
-void func_mission_overlay_800C72E8(void);
+void dispatchObjectiveSlot1(void);
 void calculateFriendliesSaved(void);
 void checkComplexObjectives(void);
 s32  dealDamagetoDatItem(u8*, u32);

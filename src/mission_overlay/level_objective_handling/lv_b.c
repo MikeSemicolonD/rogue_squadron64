@@ -287,7 +287,7 @@ void func_mission_overlay_80106B78(void) {
     playObjectiveVoiceLine2(0x2F2U, 2.0f);
 }
 
-s32 lvb_80106B98(void) {
+s32 lvb_objectiveSlot1(void) {
     return 0;
 }
 

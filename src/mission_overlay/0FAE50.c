@@ -1,6 +1,6 @@
 #include "common.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800FA250);
+INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", initMission);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800FA6A4);
 
@@ -16,23 +16,23 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", setupMissionTransitionScr
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", tickMissionTransitionAndTeardown);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A8FE4);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", strMissKoelsch);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A8FEC);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", strMissT16);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A8FF0);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", strMissTieinter);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A8FFC);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", strMissFalcon);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A9004);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", strMissSnowspeeder);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A9010);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", strMissVwing);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A9018);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", strMissAwing);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A9020);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", strMissYwing);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A9028);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", strMissXwing);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", choosePlayerCraftAssets);
 

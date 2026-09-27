@@ -1,16 +1,16 @@
 #include "common.h"
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7F60);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", strMissArmTrn);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7F68);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", strMissTpTrn3);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7F74);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", strMissBrTrn2);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7F80);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", strMissBrTrn);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7F88);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", strMissTpTrn2);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7F94);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", strMissTpTrn);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", applyCraftAnimAndDetailParams);
 

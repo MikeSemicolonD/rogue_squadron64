@@ -12,18 +12,18 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CAE70", updateProbeDroidHopState)
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CAE70", npcProbeDriod);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", D_mission_overlay_800A6D10);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", strMissRlfb);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", D_mission_overlay_800A6D18);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", strMissRlrb);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", D_mission_overlay_800A6D20);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", strMissLlrb);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", D_mission_overlay_800A6D28);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", strMissLlfb);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", D_mission_overlay_800A6D30);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", strMissRlft);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", D_mission_overlay_800A6D38);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", strMissRlrt);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", D_mission_overlay_800A6D40);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", strMissLlrt);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", D_mission_overlay_800A6D48);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", strMissLlft);

@@ -34,7 +34,7 @@ void func_mission_overlay_8010349C(void);
 void func_mission_overlay_801034C0(void);
 void func_mission_overlay_801034E4(void);
 void func_mission_overlay_80103508(void);
-s32  lv3_80103528(void);
+s32  lv3_objectiveSlot1(void);
 s32  lv3_calculateFriendliesSaved(void);
 
 #endif

@@ -4,7 +4,7 @@
 #include "PR/ultratypes.h"
 
 s32  lvd_initializeObjectTracking(void);
-s32  lvd_80107290(void);
+s32  lvd_objectiveSlot1(void);
 s32  lvd_calculateFriendliesSaved(void);
 s32  lvd_checkComplexObjectives(void);
 void func_mission_overlay_80107338(void);

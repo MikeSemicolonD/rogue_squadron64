@@ -206,7 +206,7 @@ s32 lvg_initializeObjectTracking(void) {
     return 0;
 }
 
-s32 lvg_80108B7C(void) {
+s32 lvg_objectiveSlot1(void) {
     return 0;
 }
 

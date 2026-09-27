@@ -63,7 +63,7 @@ s32 lvi_initializeObjectTracking(void) {
     return 0;
 }
 
-s32 lvi_801091F8(void) {
+s32 lvi_objectiveSlot1(void) {
     return 0;
 }
 

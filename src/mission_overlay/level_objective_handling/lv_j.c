@@ -8,7 +8,7 @@ s32 lvj_initializeObjectTracking(void) {
     return 0;
 }
 
-s32 lvj_80109628(void) {
+s32 lvj_objectiveSlot1(void) {
     return 0;
 }
 

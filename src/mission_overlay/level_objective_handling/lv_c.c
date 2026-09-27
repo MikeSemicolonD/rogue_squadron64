@@ -170,7 +170,7 @@ void func_mission_overlay_801071C8(void) {
     playObjectiveVoiceLine2(0x296U, 0.0f);
 }
 
-s32 lvc_801071E8(void) {
+s32 lvc_objectiveSlot1(void) {
     return 0;
 }
 

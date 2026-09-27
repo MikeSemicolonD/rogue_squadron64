@@ -51,7 +51,7 @@ s32 lv6_initializeObjectTracking(void) {
     return 0;
 }
 
-s32 lv6_8010443C(void) {
+s32 lv6_objectiveSlot1(void) {
     return 0;
 }
 

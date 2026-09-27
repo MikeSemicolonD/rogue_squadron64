@@ -51,7 +51,7 @@ s32 lvk_initializeObjectTracking(void) {
     return 0;
 }
 
-s32 lvk_801095CC(void) {
+s32 lvk_objectiveSlot1(void) {
     return 0;
 }
 

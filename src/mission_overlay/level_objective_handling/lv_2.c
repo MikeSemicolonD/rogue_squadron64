@@ -347,7 +347,7 @@ void func_mission_overlay_80102A24(void) {
     triggerSoundCueByType(3);
 }
 
-s32 lv2_80102A64(void) {
+s32 lv2_objectiveSlot1(void) {
     return 0;
 }
 

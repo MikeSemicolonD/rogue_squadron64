@@ -127,7 +127,8 @@ SECTIONS
         build/asm/libultra/io/controller.o(.rodata);
         main_TEXT_START = .;
         build/src/main/01720.o(.text);
-        build/src/main/02490.o(.text);
+        build/src/main/01850.o(.text);
+        build/src/main/02420.o(.text);
         build/src/main/031B0.o(.text);
         build/src/main/03290.o(.text);
         build/src/main/033C0.o(.text);
@@ -275,8 +276,7 @@ SECTIONS
         build/asm/libultra/libc/xlitob.o(.text);
         build/asm/libultra/os/yieldthread.o(.text);
         main_DATA_START = .;
-        build/asm/data/main/38160.data.o(.data);
-        build/asm/data/main/381B0.data.o(.data);
+        build/src/main/01720.o(.data);
         build/asm/data/main/381C0.data.o(.data);
         build/src/main/03290.o(.data);
         build/asm/data/main/38230.data.o(.data);
@@ -552,9 +552,8 @@ SECTIONS
         build/src/main/5A750.o(.rodata);
         build/src/main/5AD20.o(.rodata);
         build/src/main/5D220.o(.rodata);
-        build/asm/data/main/3BDC0.rodata.o(.rodata);
-        build/asm/data/main/3BE30.rodata.o(.rodata);
-        build/asm/data/main/3BF00.rodata.o(.rodata);
+        build/src/main/5FA70.o(.rodata);
+        build/src/main/61290.o(.rodata);
         build/asm/data/main/3C010.rodata.o(.rodata);
         build/src/main/65540.o(.rodata);
         build/src/main/66660.o(.rodata);
@@ -598,6 +597,7 @@ SECTIONS
         build/src/main/5AD20.o(.text);
         build/src/main/5D220.o(.text);
         build/src/main/5FA70.o(.text);
+        build/src/main/61290.o(.text);
         build/src/main/61FC0.o(.text);
         build/src/main/64EA0.o(.text);
         build/src/main/65540.o(.text);
@@ -664,6 +664,7 @@ SECTIONS
         build/src/main/5AD20.o(.data);
         build/src/main/5D220.o(.data);
         build/asm/data/main/9F960.data.o(.data);
+        build/asm/data/main/9F970.data.o(.data);
         build/asm/data/main/A0850.data.o(.data);
         build/src/main/66FB0.o(.data);
         build/src/main/67690.o(.data);
@@ -929,7 +930,7 @@ SECTIONS
         build/asm/data/mission_overlay/0AB6E0.bss.o(.bss);
         build/asm/data/mission_overlay/0ADF80.bss.o(.bss);
         build/asm/data/mission_overlay/0AEFF0.bss.o(.bss);
-        build/asm/data/mission_overlay/0B4EC0.bss.o(.bss);
+        build/src/mission_overlay/0B4EC0.o(.bss);
         build/src/mission_overlay/0B64C0.o(.bss);
         build/src/mission_overlay/0B81D0.o(.bss);
         build/src/mission_overlay/0B9600.o(.bss);
@@ -939,7 +940,7 @@ SECTIONS
         build/src/mission_overlay/0BE650.o(.bss);
         build/asm/data/mission_overlay/0BF800.bss.o(.bss);
         build/src/mission_overlay/0C00A0.o(.bss);
-        build/asm/data/mission_overlay/0C0390.bss.o(.bss);
+        build/src/mission_overlay/0C0390.o(.bss);
         build/asm/data/mission_overlay/0C4DB0.bss.o(.bss);
         build/asm/data/mission_overlay/0C70B0.bss.o(.bss);
         build/src/mission_overlay/0C84A0.o(.bss);
@@ -1166,7 +1167,7 @@ SECTIONS
         FILL(0x00000000);
         main_bss_BSS_START = .;
         build/asm/data/main/8010D200.bss.o(.bss);
-        build/src/main/02490.o(.bss);
+        build/src/main/02420.o(.bss);
         build/src/main/03290.o(.bss);
         build/src/main/033C0.o(.bss);
         build/src/main/04080.o(.bss);

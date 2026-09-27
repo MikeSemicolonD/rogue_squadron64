@@ -270,7 +270,7 @@ void func_mission_overlay_80103508(void) {
     setObjectiveBoolean(0x6F, 0U);
 }
 
-s32 lv3_80103528(void) {
+s32 lv3_objectiveSlot1(void) {
     return 0;
 }
 

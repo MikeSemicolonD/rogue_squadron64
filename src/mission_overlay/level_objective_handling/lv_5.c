@@ -91,7 +91,7 @@ void func_mission_overlay_801040F0(void) {
     getAndSetByteAtLevelStateTable(0, 1);
 }
 
-s32 lv5_80104110(void) {
+s32 lv5_objectiveSlot1(void) {
     return 0;
 }
 

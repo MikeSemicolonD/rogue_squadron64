@@ -45,7 +45,7 @@ void func_mission_overlay_80105A70(void);
 void func_mission_overlay_80105AA0(void);
 void func_mission_overlay_80105AC0(void);
 void func_mission_overlay_80105AE0(void);
-s32  lv9_80105B00(void);
+s32  lv9_objectiveSlot1(void);
 s32  lv9_calculateFriendliesSaved(void);
 
 #endif

@@ -1,6 +1,6 @@
 #include "common.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E4C70", func_mission_overlay_800E4070);
+INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E4C70", handleRayShieldedNpcDestroy);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E4C70", fake_func_800E447C);
 

@@ -6,7 +6,7 @@
 s32  lv8_checkComplexObjectives(f32);
 void func_mission_overlay_80104CCC(f32);
 s32  lv8_initializeObjectTracking(void);
-s32  lv8_80104E64(void);
+s32  lv8_objectiveSlot1(void);
 s32  lv8_calculateFriendliesSaved(void);
 void func_mission_overlay_80104EC8(void);
 void func_mission_overlay_80104EE4(void);

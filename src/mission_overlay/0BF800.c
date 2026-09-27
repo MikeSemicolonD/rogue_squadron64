@@ -1,18 +1,18 @@
 #include "common.h"
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", D_mission_overlay_800A61E0);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", strMissC5L2);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", D_mission_overlay_800A61E8);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", strMissC3L2);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", D_mission_overlay_800A61F0);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", strMissC3L1);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", D_mission_overlay_800A61F8);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", strMissC2L3);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", D_mission_overlay_800A6200);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", strMissC2L1);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", D_mission_overlay_800A6208);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", strMissC1L1);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BF800", func_mission_overlay_800BEC00);
+INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BF800", initDemoPlayState);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BF800", applyDemoRecordedHudEvents);
 

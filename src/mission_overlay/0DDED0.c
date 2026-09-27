@@ -1,14 +1,14 @@
 #include "common.h"
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", D_mission_overlay_800A7DE0);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", strMissRohrTr2);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", D_mission_overlay_800A7DEC);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", strMissBarrelT);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", D_mission_overlay_800A7DF8);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", strMissTopTr2);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", D_mission_overlay_800A7E00);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", strMissRohrTra);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", D_mission_overlay_800A7E0C);
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", strMissTopTran);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0DDED0", npcInitFullModel);
 

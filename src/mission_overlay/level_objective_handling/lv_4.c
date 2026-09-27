@@ -193,7 +193,7 @@ void func_mission_overlay_80103C98(void) {
     dealDamagetoDatItem("Y_Wing_tres", 0xD3U);
 }
 
-s32 lv4_80103CBC(void) {
+s32 lv4_objectiveSlot1(void) {
     return 0;
 }
 

@@ -7,7 +7,7 @@ s32  lv0_initializeObjectTracking(void);
 s32  lv0_checkComplexObjectives(void);
 void func_mission_overlay_801018EC(void);
 void func_mission_overlay_80101934(void);
-s32  lv0_80101954(void);
+s32  lv0_objectiveSlot1(void);
 s32  lv0_calculateFriendliesSaved(void);
 
 #endif

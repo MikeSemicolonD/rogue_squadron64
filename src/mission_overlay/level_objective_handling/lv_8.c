@@ -115,7 +115,7 @@ s32 lv8_initializeObjectTracking(void) {
     return 0;
 }
 
-s32 lv8_80104E64(void) {
+s32 lv8_objectiveSlot1(void) {
     D_mission_overlay_8010D0C8 = 0;
     D_mission_overlay_8010D0C0 = 0;
     triggerNamedAssetCue(lv_8_musicrng_levelsettings, 0);
