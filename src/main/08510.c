@@ -256,7 +256,39 @@ s32 waitForPrevFrameDone(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", beginFrameDLChunk);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", initRenderStateArrays);
+typedef struct {
+    s32 a[64];
+    s32 b[32];
+} RenderStateRow;
+
+s32 beginFrameDLChunk(void);
+extern RenderStateRow D_main_bss_8011D498[4];
+extern s32 D_main_bss_80128C6C;
+extern s32 D_main_bss_801143A0;
+extern s32 D_main_bss_8011A460;
+extern s32 D_main_bss_8011A4A8;
+extern s32 D_main_bss_80117C00;
+
+s32 initRenderStateArrays(void) {
+    s32 i;
+    s32 j;
+
+    beginFrameDLChunk();
+    D_main_bss_80128C6C = 0;
+    D_main_bss_801143A0 = 0;
+    for (i = 0; i < 4; i++) {
+        for (j = 63; j >= 0; j--) {
+            D_main_bss_8011D498[i].a[j] = 0;
+        }
+        for (j = 31; j >= 0; j--) {
+            D_main_bss_8011D498[i].b[j] = 0;
+        }
+    }
+    D_main_bss_8011A460 = 0;
+    D_main_bss_8011A4A8 = 0;
+    D_main_bss_80117C00 = 0;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", drawFrameProfilerBars);
 
