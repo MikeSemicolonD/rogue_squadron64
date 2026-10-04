@@ -59,7 +59,27 @@ void attachChildNpcByIndex(u16 idx, s32 child) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", assignNpcTargetAndPosition);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} NpcTargetVec3;
+void assignNpcTargetAndPosition(u16 idx, u16 key, NpcTargetVec3 *pos, f32 arg3) {
+    u8 *ctx = NULL;
+
+    if (idx != 0xFFFF && key != 0xFFFF) {
+        slotDispatcherIter(idx, 0x1000, &ctx);
+        if (ctx != NULL) {
+            if (*(u16 *)(ctx + 0x140) == 0xFFFF) {
+                *(u16 *)(ctx + 0x140) = findFreeNpcSlotByKey((struct D_80130BB8_type *)(u32)idx, key);
+            }
+            if (pos != NULL) {
+                *(NpcTargetVec3 *)(ctx + 0x144) = *pos;
+            }
+            *(f32 *)(ctx + 0x15C) = arg3;
+        }
+    }
+}
 
 typedef struct {
     f32 x;
