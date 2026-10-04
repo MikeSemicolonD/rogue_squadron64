@@ -15,7 +15,14 @@ void initWaterSprayEffectAndSfx(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/79E80", spawnNpcWithRandomRotation);
 
-INCLUDE_ASM("asm/nonmatchings/main/79E80", spawnHeavyMechSubEffect);
+extern u16 spawnNpcOfType(void *, void *, u32, u8);
+extern void heavyMechSubEffectNpcHandler(void);
+
+u16 spawnHeavyMechSubEffect(u8 *args, u8 *parent, s32 arg2) {
+    *(u16 *)args = *(u16 *)(parent + 0x16);
+    *(s32 *)(args + 4) = arg2;
+    return spawnNpcOfType(heavyMechSubEffectNpcHandler, args, 2, parent[0x19] + 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/79E80", setRandomFacingDirection);
 
