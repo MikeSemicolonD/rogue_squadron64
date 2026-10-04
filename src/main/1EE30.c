@@ -17,7 +17,28 @@ u16 D_main_bss_80128F04;
 u16 bass_pad1_1EE30;
 struct D_main_bss_80128F08 *D_main_bss_80128F08;
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", initTextureLUTAndAllocBuffers);
+extern s32 D_main_bss_8011A850;
+extern s32 D_main_bss_8011A854;
+extern s32 D_main_bss_8011A7D0;
+extern s32 D_main_bss_8011A7D8;
+
+void initTextureLUTAndAllocBuffers(u16 arg0, u16 arg1) {
+    s32 i;
+
+    D_main_bss_80128F04 = arg1;
+    D_main_bss_80128EF0 = arg0;
+    D_main_bss_80128F08 = rs_malloc(arg0 * 0x24, 0);
+    D_main_bss_80128EFC = rs_malloc(D_main_bss_80128F04 << 2, 0);
+    D_main_bss_80128F00 = rs_malloc(D_main_bss_80128EF0 << 2, 0);
+    for (i = 0; i < D_main_bss_80128EF0; i++) {
+        D_main_bss_80128F08[i].unk00 = 0;
+    }
+    for (i = 0; i < D_main_bss_80128F04; i++) {
+        D_main_bss_80128EFC[i] = 0;
+    }
+    D_main_bss_8011A7D8 = D_main_bss_8011A850;
+    D_main_bss_8011A7D0 = D_main_bss_8011A854;
+}
 
 void destroyTextureLUTs(void) {
     rs_free(D_main_bss_80128F08);
