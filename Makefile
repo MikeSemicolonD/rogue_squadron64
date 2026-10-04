@@ -53,7 +53,7 @@ O_FILES += $(filter-out $(O_FILES),$(sort $(shell grep -o "build/asm/libultra/[A
 $(ULTRALIB_STAMP):
 	rm -rf $(ULTRALIB_WORK)
 	mkdir -p build
-	cp -r ultralib $(ULTRALIB_WORK)
+	cp -rL ultralib $(ULTRALIB_WORK)
 	$(MAKE) -C $(ULTRALIB_WORK) VERSION=$(ULTRALIB_VERSION) TARGET=libultra_rom MODERN_LD=1 COMPARE=0 setup
 	$(MAKE) -C $(ULTRALIB_WORK) VERSION=$(ULTRALIB_VERSION) TARGET=libultra_rom MODERN_LD=1 COMPARE=0 CROSS=$(CROSS)
 	touch $@
