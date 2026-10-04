@@ -1,6 +1,48 @@
 #include "common.h"
 #include "common_types.h"
 
+typedef struct {
+    s32 unk0;
+    u16 unk4;
+    u16 unk6;
+    u8 unk8;
+    u8 pad9;
+    u16 unkA;
+} SoundDescriptor;
+
+typedef struct {
+    s32 unk0;
+    u16 unk4;
+    u16 unk6;
+    u16 unk8;
+    u8 unkA;
+    u8 padB[0x1C - 0xB];
+} SoundDescriptorStackEntry;
+
+typedef struct {
+    s32 unk0;
+    s16 unk4;
+    s16 unk6;
+    u8 unk8;
+    u8 pad9;
+    s16 unkA;
+    u8 unkC;
+    u8 unkD;
+    u8 unkE;
+    u8 unkF;
+    s16 unk10;
+    s16 unk12;
+} SoundCueRequest;
+
+extern SoundDescriptor D_mission_overlay_8010C170;
+extern SoundCueRequest D_mission_overlay_8010C200;
+extern u8 D_mission_overlay_8010C262;
+extern u8 D_mission_overlay_8010C268;
+extern u8 D_mission_overlay_8010C310;
+extern SoundDescriptorStackEntry D_mission_overlay_8010C320[];
+extern SoundDescriptor D_mission_overlay_8010C400;
+extern u16 D_mission_overlay_8010B304[];
+
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", claimSongSlotForCurrentHandle);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", tickActiveSongSlots);
@@ -63,7 +105,20 @@ s32 preloadSceneSongsWrapper(void) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", commitStagedSongAndPlay);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", stageSoundCueRequestByIdAndParam);
+void stageSoundCueRequestByIdAndParam(s16 arg0, s16 arg1) {
+    D_mission_overlay_8010C200.unkA = 1;
+    D_mission_overlay_8010C200.unk8 = 0x7F;
+    D_mission_overlay_8010C200.unk4 = arg0;
+    D_mission_overlay_8010C200.unk6 = arg1;
+    D_mission_overlay_8010C200.unkF = 0;
+    D_mission_overlay_8010C200.unk10 = 100;
+    D_mission_overlay_8010C200.unk12 = 100;
+    D_mission_overlay_8010C200.unkC = 0;
+    D_mission_overlay_8010C200.unkD = 0;
+    D_mission_overlay_8010C200.unkE = 0;
+    D_mission_overlay_8010C268 = 1;
+    D_mission_overlay_8010C262 = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", initSoundCueRequest);
 
