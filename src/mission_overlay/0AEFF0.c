@@ -65,7 +65,13 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", setPlayerSlotPositionVec3
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", destroySceneNpcsAndUnlink);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", decayWeaponCooldownTimer);
+extern f32 D_mission_overlay_801096B0;
+
+void decayWeaponCooldownTimer(s32 arg0, f32 arg1) {
+    if (D_mission_overlay_801096B0 > 0.0f) {
+        D_mission_overlay_801096B0 -= arg1;
+    }
+}
 
 extern f32 D_mission_overlay_8010B7A0;
 
