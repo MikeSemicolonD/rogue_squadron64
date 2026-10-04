@@ -3,7 +3,33 @@
 
 INCLUDE_ASM("asm/nonmatchings/main/79E80", heavyMechSubEffectNpcHandler);
 
-INCLUDE_ASM("asm/nonmatchings/main/79E80", concatChildTransformAlongChain);
+extern void mat3x4Multiply(void *, void *, void *);
+extern void zmemcpy(void *, void *, s32);
+
+void concatChildTransformAlongChain(u8 *node, u8 *arg1) {
+    u8 *out = arg1;
+    u8 buf[2][0x30];
+    s32 n = 0;
+    u8 *src;
+    u8 *dst;
+
+    if (*(u8 **)(node + 8) == NULL) {
+        zmemcpy(arg1, node + 0x1C, 0x30);
+        return;
+    }
+    src = node + 0x1C;
+    node = *(u8 **)(node + 8);
+    do {
+        dst = out;
+        if (*(u8 **)(node + 8) != NULL) {
+            n++;
+            dst = buf[n & 1];
+        }
+        mat3x4Multiply(node + 0x1C, src, dst);
+        node = *(u8 **)(node + 8);
+        src = dst;
+    } while (node != NULL);
+}
 
 s32 initWaterSprayParticles();
 s32 loadSfxAsset();
