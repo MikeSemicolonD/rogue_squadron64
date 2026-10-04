@@ -243,7 +243,21 @@ char *buildPrefixedAssetName(char *arg0) {
     return D_menu_overlay_800CE6B0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", buildPrefixedAssetName);
+extern char strMenuAlpha[];
+
+char *buildPrefixedAssetName(char *arg0) {
+    char *alpha;
+    s32 len;
+    u32 i;
+
+    alpha = strMenuAlpha;
+    rs_strcpy(D_menu_overlay_800CE6B0, arg0);
+    len = strlen(D_menu_overlay_800CE6B0);
+    for (i = 0; i < strlen(alpha) + 1; i++) {
+        D_menu_overlay_800CE6B0[len + i] = alpha[i];
+    }
+    return D_menu_overlay_800CE6B0;
+}
 #endif
 
 typedef struct {
