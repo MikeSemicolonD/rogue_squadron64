@@ -9,7 +9,34 @@ f32 getScaledPlayerCraftSpeed(void) {
     return (*(f32 *)((u8 *)(getCraftRecordByIdx(0)) + 4)) * 4.0f;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", spawnEffectOnNamedDatItem);
+typedef struct {
+    u8 pad0[4];
+    f32 unk4;
+    s32 unk8;
+    f32 unkC;
+    u8 unk10;
+    u8 pad11[7];
+    u8 action;
+    u8 pad19[7];
+} DatItemSpawnArgs;
+
+s32 slotDispatcherIter(u16, s32, void *);
+void *getLevelDatItemByName(char *);
+
+void spawnEffectOnNamedDatItem(char *name, f32 arg1, s32 arg2, f32 arg3) {
+    DatItemSpawnArgs args;
+    u8 *item;
+
+    item = getLevelDatItemByName(name);
+    if (item != NULL && *(u16 *)(item + 6) != 0xFFFF) {
+        args.action = 5;
+        args.unk4 = arg1;
+        args.unk8 = 0;
+        args.unkC = arg3;
+        args.unk10 = arg2;
+        slotDispatcherIter(*(u16 *)(item + 6), 9, &args);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", initActorTowardNamedDatItem);
 
