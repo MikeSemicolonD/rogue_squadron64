@@ -818,7 +818,14 @@ void freeMenuScreenState(MenuScreenState *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateMenuElementTimedPosition);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", applyCraftSlotAnimations);
+void activateAnimationKeyframe(s32, s32, u8);
+void applyCraftSlotAnimations(f32 t) {
+    u8 v = (u32)(t * 254.0f);
+
+    activateAnimationKeyframe(8, 1, v);
+    activateAnimationKeyframe(8, 2, v);
+    activateAnimationKeyframe(8, 3, v);
+}
 
 void setMaterialFadeTargetIfIdle(void *arg0, s32 arg1) {
     if ((*(f32 *)((u8 *)(arg0) + 0xA4)) == 0.0f) {
@@ -868,4 +875,4 @@ void tickSongAssetLoadWorker(s32 *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", fake_func_800C5898);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A7550);
+const u32 rodata_pad_11B970[3] = { 0xAC680000, 0xAC690004, 0xAC6A0008 };
