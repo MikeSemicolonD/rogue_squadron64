@@ -174,7 +174,41 @@ void applyAccountUnlocksToSettings(void) {
 }
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", serializeSettingsToSaveAndPersist);
+void serializeSettingsToSaveAndPersist(void) {
+    u8 sp18[16];
+    u32 i;
+
+    gSaveDataBody.cheatCodeFlags[0] = 0;
+    gSaveDataBody.cheatCodeFlags[1] = 0;
+    gSaveDataBody.unk00 = gGameSettings.unlockAndSettingsFlags[1];
+    gSaveDataBody.unk04 = gGameSettings.unlockAndSettingsFlags[0] & 0x8B;
+    gSaveDataBody.musicVolume = gGameSettings.musicVolume;
+    gSaveDataBody.soundFxVolume = gGameSettings.soundFxVolume;
+    gSaveDataBody.speechVolume = gGameSettings.speechVolume;
+    gSaveDataBody.controllerSetting = gGameSettings.controllerSetting;
+    gSaveDataBody.unkA3[5] = gGameSettings.languageSelect;
+    i = 0;
+    do {
+        u8 idx = i;
+        if ((gGameSettings.cheatCodeFlags[idx >> 5] & (1 << (i & 0x1F))) && isCheatCodeIndexAllowed(idx)) {
+            gSaveDataBody.cheatCodeFlags[idx >> 5] |= 1 << (i & 0x1F);
+        }
+        i++;
+    } while ((u8)i < 0x1D);
+    gSaveDataBody.unkA2 = 0x3A;
+    gSaveDataBody.unkA3[6] = gGameSettings.unk23;
+    gSaveDataBody.unkAC = gGameSettings.nabooStarfighterCheatHash;
+    if (D_main_800A0A60 == -1) {
+        if (!(saveLoadDispatcher(1, 0, 0, sp18, &gSaveDataBody, 0xB0) & 0xFF)) {
+            gGameSettings.unk2C = 1;
+        }
+        if (!(saveLoadDispatcher(1, 0, 1, sp18, &gSaveDataBody, 0xB0) & 0xFF)) {
+            gGameSettings.unk2C = 1;
+        }
+    } else {
+        triggerSaveMessage();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", setUnlockBitAndPersist);
 
