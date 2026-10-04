@@ -58,6 +58,18 @@ u16 spawnHeavyMechSubEffect(HeavyMechSubEffectArgs *args, u8 *parent, s32 arg2) 
     return spawnNpcOfType(heavyMechSubEffectNpcHandler, args, 2, parent[0x19] + 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/79E80", setRandomFacingDirection);
+void buildRotationMatrixSlot0(f32 *, f32);
+void composeRotationMatrixSlot1(f32 *, f32);
+s16 rand();
+
+void setRandomFacingDirection(f32 *arg0, s16 arg1) {
+    f32 m[12];
+
+    buildRotationMatrixSlot0(m, (f32)(rand() % arg1));
+    composeRotationMatrixSlot1(m, (f32)rand());
+    arg0[0] = -m[1];
+    arg0[1] = -m[4];
+    arg0[2] = -m[7];
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/79E80", fake_func_80079CD8);
