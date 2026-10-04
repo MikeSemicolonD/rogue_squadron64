@@ -447,40 +447,48 @@ s32 setManifestEntryName(s32 arg0, u8 *arg1) {
     return 1;
 }
 
-#if 0
-s32 get_manifest_entry_type(u32 arg0, u8 *entry_name) {
-    u32 var_s0;
+static __inline__ struct manifest_entry *findManifestEntryInAnySegment(u32 *seg, u8 *name, u32 flag) {
+    u32 i;
     struct manifest_entry *entry;
 
-    if (arg0 == -1U) {
-        for (var_s0 = 0; var_s0 < 4; var_s0++) {
-            if (D_gManifestTable[var_s0].one == 0) continue;
-            entry = find_manifest_entry(var_s0, entry_name, 1);
-            if (entry != NULL) {
-                arg0 = var_s0;
-                goto why;
-                break;
+    if (*seg == -1U) {
+        for (i = 0; i < 4; i++) {
+            if (gManifestTable[i].one != 0) {
+                entry = find_manifest_entry(i, name, flag);
+                if (entry != NULL) {
+                    *seg = i;
+                    return entry;
+                }
             }
         }
-        entry = NULL;
-    } else {
-        entry = find_manifest_entry(arg0, entry_name, 1);
+        return NULL;
     }
-    why:
+    return find_manifest_entry(*seg, name, flag);
+}
+
+s32 get_manifest_entry_type(u32 seg, u8 *entry_name) {
+    struct manifest_entry *entry = findManifestEntryInAnySegment(&seg, entry_name, 1);
+
     if (entry == NULL) {
         return 0;
     }
-    if ((entry->flags & 0x80) != 0) {
+    if (entry->flags & 0x80) {
         return 2;
-    } else {
-        return 1;
     }
+    return 1;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/04080", get_manifest_entry_type);
-#endif
 
-INCLUDE_ASM("asm/nonmatchings/main/04080", get_asset_size_simple);
+u32 get_asset_size_simple(u32 seg, u8 *entry_name) {
+    struct manifest_entry *entry = findManifestEntryInAnySegment(&seg, entry_name, 0);
+
+    if (entry == NULL) {
+        return 0;
+    }
+    if (!(entry->flags & 4)) {
+        return entry->decompressed_size;
+    }
+    return entry->compressed_size;
+}
 
 s32 zlibReturnZeroStub(void) {
     return 0;

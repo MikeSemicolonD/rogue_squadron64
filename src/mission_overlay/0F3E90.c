@@ -4,6 +4,9 @@
 #include "level_objectives.h"
 #include "mission_overlay/0F3E90.h"
 
+typedef struct { s32 unk0; u8 pad[0x20]; } ModelAnimSlot24;
+extern ModelAnimSlot24 D_mission_overlay_8010C4A0[];
+
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", resolveScriptedNameTokenList);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", computeRandomizedOrientationFrame);
@@ -38,7 +41,17 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType1);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType1WithAnchor);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", setType1ActorVelocity);
+s32 setType1ActorVelocity(void *arg0, f32 arg1, f32 arg2, f32 arg3) {
+    u8 *p;
+    if ((*(u8 *)((u8 *)(arg0) + 0x112)) == 1) {
+        p = (u8 *)arg0 + 8;
+        *(f32 *)(p + 0x7C) = arg2;
+        *(f32 *)(p + 0xCC) = arg3;
+        *(f32 *)(p + 0x60) = arg1 * 0.25f;
+        return 1;
+    }
+    return 0;
+}
 
 f32 setType1ActorField40(void *arg0, f32 arg1) {
     f32 var_fv0;
@@ -51,17 +64,107 @@ f32 setType1ActorField40(void *arg0, f32 arg1) {
     return var_fv0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType2);
+typedef struct { f32 x, y, z; } Vec3Struct_2;
+extern void *getNpcContextField8(u16);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", setType2ActorVelocity);
+s32 initActorAsType2(void *arg0, s32 arg1, f32 arg2, f32 arg3) {
+    u8 *p = (u8 *)arg0 + 8;
+    void *ctx;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType3);
+    *(u8 *)((u8 *)arg0 + 0x112) = 2;
+    ctx = getNpcContextField8(*(u16 *)((u8 *)arg0 + 0x198));
+    *(Vec3Struct_2 *)((u8 *)arg0 + 8) = *(Vec3Struct_2 *)((u8 *)ctx + 0xC);
+    *(f32 *)(p + 0x18) = 0.0f;
+    *(f32 *)(p + 0xC) = *(f32 *)(p + 0x10) = arg3;
+    *(f32 *)(p + 0x14) = arg2;
+    *(s32 *)(p + 0x30) = arg1;
+    *(u8 *)(p + 0x34) = *(u8 *)(p + 0x35) = 0;
+    *(f32 *)(p + 0x2C) = *(f32 *)(p + 0x1C) = *(f32 *)(p + 0x20) = *(f32 *)(p + 0x24) = *(f32 *)(p + 0x28) = *(f32 *)(p + 0x18);
+    return 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", setType3ActorParams);
+s32 setType2ActorVelocity(void *arg0, f32 arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5) {
+    u8 *p;
+    if ((*(u8 *)((u8 *)(arg0) + 0x112)) == 2) {
+        p = (u8 *)arg0 + 8;
+        *(s32 *)(p + 0x18) = 0;
+        *(f32 *)(p + 0x24) = arg1;
+        *(f32 *)(p + 0x28) = arg2;
+        *(f32 *)(p + 0x1C) = arg3;
+        *(f32 *)(p + 0x20) = arg4;
+        *(f32 *)(p + 0x2C) = arg5;
+        return 1;
+    }
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", dispatchEffectByActorType);
+typedef struct { f32 x, y, z; } Vec3Struct_3;
+extern void *getNpcContextField8(u16);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", setType1ActorParams);
+s32 initActorAsType3(void *arg0, s32 arg1, f32 arg2, f32 arg3) {
+    u8 *p = (u8 *)arg0 + 8;
+    void *ctx;
+
+    *(u8 *)((u8 *)arg0 + 0x112) = 3;
+    ctx = getNpcContextField8(*(u16 *)((u8 *)arg0 + 0x198));
+    *(Vec3Struct_3 *)((u8 *)arg0 + 8) = *(Vec3Struct_3 *)((u8 *)ctx + 0xC);
+    *(f32 *)(p + 0x18) = 0.0f;
+    *(f32 *)(p + 0xC) = *(f32 *)(p + 0x10) = arg3;
+    *(f32 *)(p + 0x14) = arg2;
+    *(s32 *)(p + 0x30) = arg1;
+    *(u8 *)(p + 0x34) = *(u8 *)(p + 0x35) = 0;
+    *(f32 *)(p + 0x2C) = *(f32 *)(p + 0x1C) = *(f32 *)(p + 0x20) = *(f32 *)(p + 0x24) = *(f32 *)(p + 0x28) = *(f32 *)(p + 0x18);
+    return 1;
+}
+
+s32 setType3ActorParams(void *arg0, f32 arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5) {
+    u8 *p;
+    if ((*(u8 *)((u8 *)(arg0) + 0x112)) == 3) {
+        p = (u8 *)arg0 + 8;
+        *(s32 *)(p + 0x18) = 0;
+        *(f32 *)(p + 0x24) = arg1;
+        *(f32 *)(p + 0x28) = arg2;
+        *(f32 *)(p + 0x1C) = arg3;
+        *(f32 *)(p + 0x20) = arg4;
+        *(f32 *)(p + 0x2C) = arg5;
+        return 1;
+    }
+    return 0;
+}
+
+extern void executeActorType1Effect(void *, f32);
+extern void executeActorType2Effect(void *, f32);
+extern void executeActorType3Effect(void *, f32);
+extern void executeActorType4Effect(void *, f32);
+
+void dispatchEffectByActorType(void *arg0, f32 arg1) {
+    switch (*(u8 *)((u8 *)arg0 + 0x112)) {
+    case 1:
+        executeActorType1Effect(arg0, arg1);
+        break;
+    case 2:
+        executeActorType2Effect(arg0, arg1);
+        break;
+    case 3:
+        executeActorType3Effect(arg0, arg1);
+        break;
+    case 4:
+        executeActorType4Effect(arg0, arg1);
+        break;
+    }
+}
+
+s32 setType1ActorParams(void *arg0, f32 arg1, s8 arg2, s8 arg3, s8 arg4, s32 arg5) {
+    if ((*(u8 *)((u8 *)(arg0) + 0x112)) == 1) {
+        (*(f32 *)((u8 *)(arg0) + 0x10C)) = arg1;
+        (*(s8 *)((u8 *)(arg0) + 0x104)) = arg2;
+        (*(s8 *)((u8 *)(arg0) + 0x105)) = arg3;
+        (*(s8 *)((u8 *)(arg0) + 0x106)) = arg4;
+        (*(s32 *)((u8 *)(arg0) + 0x108)) = arg5;
+        return 1;
+    }
+    return 0;
+}
 
 void updateObjectFlags110(void *arg0, s32 arg1, s32 arg2) {
     (*(u16 *)((u8 *)(arg0) + 0x110)) = (u16) (((*(u16 *)((u8 *)(arg0) + 0x110)) | arg1) & ~arg2);
@@ -74,7 +177,35 @@ void resetType1FxFields(void *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", updateType1AnimRamp);
+void updateType1AnimRamp(void *arg0, f32 arg1, f32 arg2, f32 arg3, u8 arg4) {
+    u8 *p;
+    u8 type = *(u8 *)((u8 *)arg0 + 0x112);
+    f32 delta;
+
+    if (type == 1) {
+        p = (u8 *)arg0 + 8;
+        if (arg4 == type) {
+            *(f32 *)(p + 0x50) = *(f32 *)(p + 0x48) * arg1;
+        } else {
+            *(f32 *)(p + 0x50) = arg1;
+        }
+        if (*(f32 *)(p + 0x50) < arg2) {
+            *(f32 *)(p + 0x50) = arg2;
+        }
+        delta = *(f32 *)(p + 0x50) - *(f32 *)(p + 0x48);
+        *(f32 *)(p + 0x4C) = *(f32 *)(p + 0x48);
+        *(f32 *)(p + 0x54) = delta;
+        if (delta != 0.0f) {
+            *(f32 *)(p + 0x58) = 0.0f;
+            if (arg3 > 0.0f) {
+                *(f32 *)(p + 0x5C) = 1.0f / arg3;
+                return;
+            }
+            *(f32 *)(p + 0x48) = *(f32 *)(p + 0x50);
+            *(f32 *)(p + 0x2C) = *(f32 *)(p + 0x48) / *(f32 *)(*(u8 **)(p + 0x24) + 0x24);
+        }
+    }
+}
 
 f32 getActorCurrentValueByType(void *arg0) {
     u8 temp_v1;
@@ -92,13 +223,98 @@ f32 getActorCurrentValueByType(void *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", syncType1ActorFrameToAnchorIfZeroGate);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", spawnNpcAnchoredEffectSlot);
+typedef struct {
+    u16 unk0;
+    u16 unk2;
+    u16 unk4;
+    s16 unk6;
+    s32 unk8;
+} SpawnSlotMsg;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", load_model_animation);
+extern u16 findNpcInScaledBoxRegionExcludingPair(void *, u16, f32, u16, u16, s32);
+extern s32 slotDispatcherIter(u16, s32, void *);
+extern void *getNpcContextField8(u16);
+extern u16 D_main_bss_8013957C;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", reset_model_animations);
+s32 spawnNpcAnchoredEffectSlot(void *arg0, f32 arg1, s32 arg2) {
+    SpawnSlotMsg msg;
+    u16 id;
+    u16 slot;
+    s32 ret;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", reset_and_free_model_animations);
+    ret = 0;
+    slot = findNpcInScaledBoxRegionExcludingPair(getNpcContextField8(*(u16 *)((u8 *)arg0 + 0x198)), *(u16 *)((u8 *)arg0 + 0x198), arg1, 0xFFFF, D_main_bss_8013957C, 0);
+    if (slot != 0xFFFF) {
+        id = *(u16 *)((u8 *)arg0 + 0x198);
+        slotDispatcherIter(slot, 6, &id);
+        if (arg2 != 0) {
+            msg.unk0 = 0xFFFF;
+            msg.unk2 = 0xFFFF;
+            msg.unk4 = 7;
+            msg.unk6 = arg2;
+            msg.unk8 = 0;
+            slotDispatcherIter(slot, 5, &msg);
+        }
+        ret = 1;
+    }
+    return ret;
+}
+
+extern s32 rs_strcmp(u8 *, u8 *);
+extern u8 *rs_strcpy(u8 *, u8 *);
+extern void *load_asset(char *);
+extern void model_animation_offset_convert(void *);
+
+void *load_model_animation(char *name) {
+    s32 i;
+    s32 freeSlot;
+
+    i = 0;
+    freeSlot = -1;
+    for (; i < 16; i++) {
+        if (D_mission_overlay_8010C4A0[i].unk0 != 0) {
+            if (rs_strcmp(D_mission_overlay_8010C4A0[i].pad, (u8 *)name) == 0) {
+                return (void *)D_mission_overlay_8010C4A0[i].unk0;
+            }
+        } else {
+            freeSlot = i;
+        }
+    }
+    if (freeSlot == -1) {
+        return NULL;
+    }
+    rs_strcpy(D_mission_overlay_8010C4A0[freeSlot].pad, (u8 *)name);
+    D_mission_overlay_8010C4A0[freeSlot].unk0 = (s32)load_asset(name);
+    model_animation_offset_convert((void *)D_mission_overlay_8010C4A0[freeSlot].unk0);
+    return (void *)D_mission_overlay_8010C4A0[freeSlot].unk0;
+}
+
+extern void resetModelAnimSlotTable(void);
+
+s32 reset_model_animations(void) {
+    s32 i;
+
+    resetModelAnimSlotTable();
+    for (i = 15; i >= 0; i--) {
+        D_mission_overlay_8010C4A0[i].unk0 = 0;
+    }
+    return 1;
+}
+
+extern void rs_free(void *);
+
+s32 reset_and_free_model_animations(void) {
+    s32 i;
+
+    for (i = 0; i < 16; i++) {
+        if (*(void **)&D_mission_overlay_8010C4A0[i].unk0 != NULL) {
+            rs_free(*(void **)&D_mission_overlay_8010C4A0[i].unk0);
+        }
+        D_mission_overlay_8010C4A0[i].unk0 = 0;
+    }
+    resetModelAnimSlotTable();
+    return 1;
+}
 
 #if 0
 // The major mismatch with this is that the original code accesses a bunch of information

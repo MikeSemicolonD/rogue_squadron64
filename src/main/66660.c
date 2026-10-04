@@ -6,9 +6,21 @@ INCLUDE_ASM("asm/nonmatchings/main/66660", buildPositionAndCallTransformHelper);
 
 INCLUDE_ASM("asm/nonmatchings/main/66660", projectModelBoundsToScreen);
 
-INCLUDE_ASM("asm/nonmatchings/main/66660", applyDatItemWorldOffset);
+extern void evalCubicSplineAtTime(void *, s32, f32 *);
 
-INCLUDE_ASM("asm/nonmatchings/main/66660", setupActorAnchorTransformType1);
+void applyDatItemWorldOffset(void *spline, f32 *offset, f32 *out) {
+    evalCubicSplineAtTime(spline, 0, out);
+    out[0] += offset[0];
+    out[1] += offset[1];
+    out[2] += offset[2];
+}
+
+extern void buildPositionAndCallTransformHelper(void *, void *, void *, void *, f32, f32, f32);
+
+void setupActorAnchorTransformType1(void *arg0, void *arg1, void *arg2, void *arg3, f32 arg4) {
+    buildPositionAndCallTransformHelper(arg0, arg1, arg2, arg3, 1.0f, 1.0f, arg4);
+    *(s32 *)((u8 *)arg3 + 8) = 0;
+}
 
 f32 quadraticEaseInOut(f32 arg0) {
     f32 temp_fv1;

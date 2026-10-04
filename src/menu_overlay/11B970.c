@@ -1008,7 +1008,7 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuBackdropAndPickRando
 extern s32 D_menu_overlay_800CCE18;
 s32 registerServiceWorker(s32, s32, s32, s32 *);
 s32 startServiceWorker(s32);
-extern s32 tickSongAssetLoadWorker;
+void tickSongAssetLoadWorker(s32 *);
 
 void initSongAssetLoadWorker(s32 arg0) {
     s32 temp_v0;

@@ -66,6 +66,12 @@ void findNamedEntryInCurrentObject(s32 arg0) {
     findModelChildNodeByName(*D_mission_overlay_8010C090, arg0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", copyCurrentObjectMatrix);
+typedef struct {
+    s32 m[12];
+} ObjMatrix3x4;
+
+void copyCurrentObjectMatrix(ObjMatrix3x4 *out) {
+    *out = *(ObjMatrix3x4 *)(*D_mission_overlay_8010C090 + 0x28);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A6958);
