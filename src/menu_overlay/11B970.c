@@ -738,7 +738,10 @@ void setMaterialFadeTargetIfIdle(void *arg0, s32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setCraftMaterialTextureByName);
+void setMaterialTextureByName(u8 a, s32 b, s32 c);
+void setCraftMaterialTextureByName(u8 arg0, s32 arg1) {
+    setMaterialTextureByName(arg0, arg1, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuBackdropAndPickRandom);
 
