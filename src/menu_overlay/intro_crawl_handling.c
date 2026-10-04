@@ -139,7 +139,18 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", freeModelViewe
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", releaseModelViewerModelAssets);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", setModelViewerObjectTransform);
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+void addVec3At0x24(void *, f32, f32, f32);
+void mat3x3InverseInto(void *, void *);
+extern u8 D_menu_overlay_800CFFB0[];
+extern u8 D_menu_overlay_800D039C[];
+
+void *setModelViewerObjectTransform(f32 arg0) {
+    initVec4TripletFromArgs(D_menu_overlay_800CFFB0, 0.625f, 0.625f, 1.0f);
+    addVec3At0x24(D_menu_overlay_800CFFB0, 0.0f, arg0, 0.0f);
+    mat3x3InverseInto(D_menu_overlay_800D039C, D_menu_overlay_800CFFB0);
+    return D_menu_overlay_800CFFB0;
+}
 
 s32 runMusyXTaskLocked();
 
@@ -192,7 +203,7 @@ void appendNodeToListHead(ListOwner10 *owner, ListNode *node) {
     node->prev = p;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/intro_crawl_handling", D_menu_overlay_800A7BC4);
+__asm__(".section .rodata\n.word 0x000520C0\n.word 0x00832021\n.section .text");
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", tickMultiPartVoiceLine);
 
