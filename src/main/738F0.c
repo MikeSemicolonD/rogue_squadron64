@@ -18,7 +18,7 @@ typedef struct {
 
 extern void heavyRandomBurstNpcHandler(void);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", initWaterSprayParticles);
+__asm__(".section .rodata\n.align 2\nD_main_8003CEF0:\n.asciz \"gnrc_stuff/wtrspray\"\n.align 2\n.section .text");
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003CF04);
 
@@ -26,13 +26,97 @@ INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003CF10);
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003CF20);
 
-INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003CF38);
+typedef struct {
+    u8 pad0[0xC];
+    s32 unkC;
+    f32 unk10;
+    s32 unk14;
+    u8 pad18[8];
+    u8 unk20;
+    u8 pad21[0xF];
+} WaterSprayRec;
+typedef struct {
+    s16 unk0;
+    f32 unk4;
+    f32 unk8;
+    s32 unkC;
+    s8 unk10;
+    union {
+        s32 w[4];
+        char c[13];
+    } name;
+} WaterTexDesc;
+typedef struct {
+    u8 pad[0x1C];
+    struct { u8 pad[8]; s32 unk8; } *unk1C;
+} MeshdefList;
+extern s32 D_main_bss_8013A8B0;
+extern s32 D_main_bss_8013A8B4;
+extern s32 D_main_bss_8013A8B8;
+extern WaterSprayRec D_main_bss_8013A8C0;
+extern WaterSprayRec D_main_bss_8013A8F0;
+extern WaterSprayRec D_main_bss_8013A920;
+extern u8 D_main_bss_8013A944;
+extern char D_main_8003CEF0[];
+extern char D_main_8003CF04[];
+extern s32 D_main_8003CF10[];
+extern char D_main_8003CF20[];
+extern void load_hmt_and_hob(char *, s32, s32, s32);
+extern MeshdefList *walkMeshdef0List(char *);
+extern u16 findTextureByName(char *);
+extern void releaseTextureLutEntry(s32);
+extern void *load_asset(char *);
+extern void full_header_image_offset_convert(void *, void *);
+extern s32 registerHmtTextureInTable(void *, void *, s32);
+extern void rs_free(void *);
+extern void setMaterialFlagByIdInMeshTree(s32, s32, s32);
+extern void releaseMeshAsset(void *);
+extern s32 loadAssetIntoNewSlot(char *, char *);
+extern void setPoolEntryPhaseAndMarkActive(u16, f32, s32);
 
-INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003CF3C);
+void initWaterSprayParticles(void) {
+    WaterTexDesc d;
+    MeshdefList *mesh;
+    u16 tex;
+    void *asset;
+    u8 *hdr;
+    s32 mat;
 
-INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003CF40);
-
-INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003CF44);
+    D_main_bss_8013A8B0 = 0;
+    D_main_bss_8013A8C0.unk20 = 0;
+    D_main_bss_8013A8C0.unkC = 0;
+    D_main_bss_8013A8C0.unk14 = 0;
+    D_main_bss_8013A8F0.unk20 = 0;
+    D_main_bss_8013A8F0.unkC = 0;
+    D_main_bss_8013A8F0.unk14 = 0;
+    D_main_bss_8013A920.unk20 = 0;
+    D_main_bss_8013A920.unkC = 0;
+    D_main_bss_8013A920.unk14 = 0;
+    D_main_bss_8013A8C0.unk10 = 2.0f;
+    D_main_bss_8013A8F0.unk10 = 1.5f;
+    D_main_bss_8013A920.unk10 = 0.5f;
+    load_hmt_and_hob(D_main_8003CEF0, 0, 0, 0);
+    mesh = walkMeshdef0List(D_main_8003CF04);
+    tex = findTextureByName((char *)D_main_8003CF10);
+    releaseTextureLutEntry(tex);
+    asset = load_asset(D_main_8003CF20);
+    hdr = (u8 *)asset + 4;
+    d.unk0 = 1;
+    d.unkC = 0;
+    d.unk10 = 1;
+    d.unk4 = 1.0f;
+    d.unk8 = 1.0f;
+    __builtin_memcpy(d.name.c, D_main_8003CF10, 13);
+    full_header_image_offset_convert(hdr, hdr);
+    mat = registerHmtTextureInTable(&d, hdr, 0);
+    rs_free(asset);
+    setMaterialFlagByIdInMeshTree(mesh->unk1C->unk8, tex, mat & 0xFFFF);
+    releaseMeshAsset(mesh);
+    setPoolEntryPhaseAndMarkActive(loadAssetIntoNewSlot((char *)D_main_8003CF10, D_main_8003CF20), 12.0f, 0);
+    D_main_bss_8013A944 = 1;
+    D_main_bss_8013A8B4 = 0;
+    D_main_bss_8013A8B8 = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", npcWaterSprayUpdate);
 
@@ -56,7 +140,60 @@ INCLUDE_ASM("asm/nonmatchings/main/738F0", triggerDistanceScaledExplosion);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", triggerObjectDestructionEffects);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", transformLimbStrideAnchorsLocal);
+#include "main/192E0.h"
+#include "main/1D000.h"
+#include "main/5A750.h"
+extern void *getNpcContextField8(u16);
+typedef struct {
+    u8 pad0[0x5C];
+    Vec3f a;
+    Vec3f b;
+} LimbAnchors;
+typedef struct {
+    LimbAnchors *anchors;
+    u8 pad4[0x24];
+    Mat4x3 m;
+} LimbObj;
+typedef struct {
+    u8 pad[0xC];
+    LimbObj *obj;
+} LimbCtx;
+extern u8 *getNpcContextByIndex(u16);
+
+void transformLimbStrideAnchorsLocal(u16 idx, f32 *out, f32 *out2) {
+    Mat4x3 inv;
+    Mat4x3 basis;
+    Vec3f pa;
+    Vec3f pb;
+    LimbObj *obj;
+    LimbAnchors *an;
+    f32 *a;
+    f32 *b;
+    f32 s;
+    f32 (*m)[3];
+
+    obj = ((LimbCtx *)getNpcContextByIndex(idx))->obj;
+    an = obj->anchors;
+    m = obj->m;
+    a = an->a;
+    b = an->b;
+    transformVec3ByMat34(m, a, pa);
+    transformVec3ByMat34(m, b, pb);
+    __asm__ volatile("sqrt.s %0, %1" : "=f"(s) : "f"(obj->m[0][0] * obj->m[0][0] + m[1][0] * m[1][0] + m[2][0] * m[2][0]));
+    out[0] = (an->b[0] - an->a[0]) * s;
+    __asm__ volatile("sqrt.s %0, %1" : "=f"(s) : "f"(m[0][1] * m[0][1] + m[1][1] * m[1][1] + m[2][1] * m[2][1]));
+    out[1] = (b[1] - a[1]) * s;
+    __asm__ volatile("sqrt.s %0, %1" : "=f"(s) : "f"(m[0][2] * m[0][2] + m[1][2] * m[1][2] + m[2][2] * m[2][2]));
+    out[2] = (b[2] - a[2]) * s;
+    if (out2 != NULL) {
+        out2[0] = pa[0] + (pb[0] - pa[0]) * 0.5f;
+        out2[1] = pa[1] + (pb[1] - pa[1]) * 0.5f;
+        out2[2] = pa[2] + (pb[2] - pa[2]) * 0.5f;
+        mat34CrossRowsAndCopyPos(basis, getNpcContextField8(idx), 1.0f);
+        mat3x3InverseInto(inv, basis);
+        transformVec3ByMat34(inv, out2, out2);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", randomParticleWithParentNpcHandler);
 

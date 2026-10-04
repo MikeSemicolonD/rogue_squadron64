@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 #include "common_variables.h"
 
 #include "main/01720.h"
@@ -417,7 +418,65 @@ s32 freeManifestSegmentAssets(s32 arg0) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/04080", findAssetAcrossSegments);
+static __inline__ struct manifest_entry *findManifestEntryInAnySegment(u32 *seg, u8 *name, u32 flag) {
+    u32 i;
+    struct manifest_entry *entry;
+
+    if (*seg == -1U) {
+        for (i = 0; i < 4; i++) {
+            if (gManifestTable[i].one != 0) {
+                entry = find_manifest_entry(i, name, flag);
+                if (entry != NULL) {
+                    *seg = i;
+                    return entry;
+                }
+            }
+        }
+        return NULL;
+    }
+    return find_manifest_entry(*seg, name, flag);
+}
+
+s32 findAssetAcrossSegments(u32 arg0, union D_80111100_type *arg1, u32 arg2, u8 *arg3, u16 arg4) {
+    u16 sp10[12];
+    struct manifest_entry *entry;
+    union D_80111100_type *msg;
+    s32 idx;
+    s32 next;
+    u16 *reply;
+
+    entry = findManifestEntryInAnySegment(&arg2, arg3, 0);
+    if (entry == NULL) {
+        return 0;
+    }
+    idx = D_main_bss_80111248;
+    next = idx + 1;
+    D_main_bss_80111248 = next % 8;
+    D_main_bss_80111250 -= 1;
+    *(u16 *)&gServiceWorkerMesgBuf[idx] = 0x8000;
+    msg = &gServiceWorkerMesgBuf[idx];
+    msg->flag_8001.unk14 = arg0;
+    msg->flag_8000.source = entry;
+    msg->flag_8000.size = arg4;
+    msg->flag_8000.offset = arg2;
+    if (arg1 == NULL) {
+        msg->flag_8000.next = (union D_80111100_type *)sp10;
+        sp10[0] = 0x80FF;
+        sendServiceMessage(arg0, D_main_bss_80110D54, msg, 1);
+        do {
+            reply = (u16 *)recvServiceMessage(arg0);
+            if (*reply == 0x80FF) {
+                break;
+            }
+            postMessageToServiceWorker(arg0, reply);
+        } while (*reply != 0x80FF);
+        return ((s32 *)reply)[3];
+    }
+    *(u16 *)arg1 = 0xFFFF;
+    msg->flag_8000.next = arg1;
+    sendServiceMessage(arg0, D_main_bss_80110D54, msg, 1);
+    return -1;
+}
 
 extern s32 sendServiceMessage(s32, s32, void *, s32);
 
@@ -447,25 +506,6 @@ s32 teardownAssetDma(u32 arg0, void *arg1) {
         postMessageToServiceWorker(arg0, reply);
     } while (*reply != 0x80FF);
     return 1;
-}
-
-static __inline__ struct manifest_entry *findManifestEntryInAnySegment(u32 *seg, u8 *name, u32 flag) {
-    u32 i;
-    struct manifest_entry *entry;
-
-    if (*seg == -1U) {
-        for (i = 0; i < 4; i++) {
-            if (gManifestTable[i].one != 0) {
-                entry = find_manifest_entry(i, name, flag);
-                if (entry != NULL) {
-                    *seg = i;
-                    return entry;
-                }
-            }
-        }
-        return NULL;
-    }
-    return find_manifest_entry(*seg, name, flag);
 }
 
 u32 get_asset_size_extra(u32 seg, u8 *entry_name) {

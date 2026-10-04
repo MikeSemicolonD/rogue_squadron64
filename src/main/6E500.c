@@ -138,10 +138,77 @@ void applyAccountUnlocksToSettings(void) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/6E500", applyAccountUnlocksToSettings);
+void applyAccountUnlocksToSettings(void) {
+    u32 i;
+
+    gGameSettings.unlockAndSettingsFlags[1] = gSaveDataBody.unk00;
+    for (i = 0; (u8)i < 1; i++) {
+        gGameSettings.unlockAndSettingsFlags[(u8)i] = (gGameSettings.unlockAndSettingsFlags[(u8)i] & ~0x8B) | (gSaveDataBody.unk04 & 0x8B);
+    }
+    gGameSettings.cheatCodeFlags[0] = 0;
+    gGameSettings.cheatCodeFlags[1] = 0;
+    gGameSettings.musicVolume = gSaveDataBody.musicVolume;
+    gGameSettings.soundFxVolume = gSaveDataBody.soundFxVolume;
+    gGameSettings.speechVolume = gSaveDataBody.speechVolume;
+    gGameSettings.controllerSetting = gSaveDataBody.controllerSetting;
+    gGameSettings.languageSelect = gSaveDataBody.unkA3[5];
+    i = 0;
+    do {
+        u8 idx = i;
+        if ((gSaveDataBody.cheatCodeFlags[idx >> 5] & (1 << (i & 0x1F))) && isCheatCodeIndexAllowed(idx)) {
+            gGameSettings.cheatCodeFlags[idx >> 5] = gGameSettings.cheatCodeFlags[idx >> 5] | (1 << (i & 0x1F));
+        }
+        i++;
+    } while ((u8)i < 0x1D);
+    if (gGameSettings.unk23 == 0) {
+        gGameSettings.unlockAndSettingsFlags[1] &= ~1;
+        if (gSaveDataBody.unkA3[6] == 1) {
+            serializeSettingsToSaveAndPersist();
+        }
+    } else {
+        if (gSaveDataBody.unkA3[6] == 0) {
+            gGameSettings.unlockAndSettingsFlags[1] |= 1;
+            serializeSettingsToSaveAndPersist();
+        }
+    }
+}
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", serializeSettingsToSaveAndPersist);
+void serializeSettingsToSaveAndPersist(void) {
+    u8 sp18[16];
+    u32 i;
+
+    gSaveDataBody.cheatCodeFlags[0] = 0;
+    gSaveDataBody.cheatCodeFlags[1] = 0;
+    gSaveDataBody.unk00 = gGameSettings.unlockAndSettingsFlags[1];
+    gSaveDataBody.unk04 = gGameSettings.unlockAndSettingsFlags[0] & 0x8B;
+    gSaveDataBody.musicVolume = gGameSettings.musicVolume;
+    gSaveDataBody.soundFxVolume = gGameSettings.soundFxVolume;
+    gSaveDataBody.speechVolume = gGameSettings.speechVolume;
+    gSaveDataBody.controllerSetting = gGameSettings.controllerSetting;
+    gSaveDataBody.unkA3[5] = gGameSettings.languageSelect;
+    i = 0;
+    do {
+        u8 idx = i;
+        if ((gGameSettings.cheatCodeFlags[idx >> 5] & (1 << (i & 0x1F))) && isCheatCodeIndexAllowed(idx)) {
+            gSaveDataBody.cheatCodeFlags[idx >> 5] |= 1 << (i & 0x1F);
+        }
+        i++;
+    } while ((u8)i < 0x1D);
+    gSaveDataBody.unkA2 = 0x3A;
+    gSaveDataBody.unkA3[6] = gGameSettings.unk23;
+    gSaveDataBody.unkAC = gGameSettings.nabooStarfighterCheatHash;
+    if (D_main_800A0A60 == -1) {
+        if (!(saveLoadDispatcher(1, 0, 0, sp18, &gSaveDataBody, 0xB0) & 0xFF)) {
+            gGameSettings.unk2C = 1;
+        }
+        if (!(saveLoadDispatcher(1, 0, 1, sp18, &gSaveDataBody, 0xB0) & 0xFF)) {
+            gGameSettings.unk2C = 1;
+        }
+    } else {
+        triggerSaveMessage();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", setUnlockBitAndPersist);
 
@@ -176,7 +243,51 @@ void applyVolumeSettingsToMixer(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", resetGameSettingsAndMissionStats);
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", generateUnlockString);
+extern u32 D_main_bss_80130B18;
+extern char gUnlockString[];
+char *getGameOrFrontText(s32 textId);
+
+char *generateUnlockString(u8 arg0) {
+    s32 flags;
+    s32 isBonus;
+    char *head;
+
+    isBonus = 0;
+    flags = gGameSettings.unlockAndSettingsFlags[0] & 0x7FFE00;
+    flags &= ~D_main_bss_80130B18;
+    if (arg0 == 4 || arg0 == 9) {
+        isBonus = 1;
+    }
+    head = getGameOrFrontText(isBonus == 1 ? 0xD3 : 0xD2);
+    if (flags & 0x200) {
+        sprintf(gUnlockString, "%s %s%s", head, getGameOrFrontText(0x4B), getGameOrFrontText(0x4D));
+    }
+    if (flags & 0x400) {
+        sprintf(gUnlockString, "%s %s%s", head, getGameOrFrontText(0x4B), getGameOrFrontText(0x50));
+    }
+    if (flags & 0x800) {
+        sprintf(gUnlockString, "%s %s", head, getGameOrFrontText(0x51));
+    }
+    if (flags & 0x1000) {
+        sprintf(gUnlockString, "%s %s%s", head, getGameOrFrontText(0x4B), getGameOrFrontText(0x53));
+    }
+    if (flags & 0x2000) {
+        sprintf(gUnlockString, "%s %s", head, getGameOrFrontText(0x55));
+    }
+    if (flags & 0x4000) {
+        sprintf(gUnlockString, "%s %s", head, getGameOrFrontText(0x56));
+    }
+    if (flags & 0x8000) {
+        sprintf(gUnlockString, "%s %s%s", head, getGameOrFrontText(0x4B), getGameOrFrontText(0x52));
+    }
+    if (flags & 0x10000) {
+        sprintf(gUnlockString, "%s %s%s", head, getGameOrFrontText(0x4B), getGameOrFrontText(0x4C));
+    }
+    if (flags == 0) {
+        return NULL;
+    }
+    return gUnlockString;
+}
 
 s32 getActiveAccountsBitmask(void) {
     return gSaveDataBody.unk50;

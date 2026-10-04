@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "PR/ultratypes.h"
 #include "game_settings.h"
@@ -206,7 +207,67 @@ void gracefulMenuShutdown(void) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", extractTextBeforeFmtChar);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", composeInterpolatedNodeMatrices);
+typedef struct {
+    u8 pad[0x4C];
+    u32 flags;
+    f32 pos[3];
+    f32 scale[3];
+    f32 quat[4];
+    f32 offs[3];
+} NodeXform;
+void clearVec4QuadStruct(void *);
+void addVec3At0x24(void *, f32, f32, f32);
+void applyScaleToMat3x4(void *, f32, f32, f32);
+void composeQuatToMat3x4(void *, void *);
+void composeRotationMatrixSlot2(void *, f32);
+
+void composeInterpolatedNodeMatrices(u8 *arg0, u8 *arg1, NodeXform *arg2, NodeXform *arg3, f32 arg4) {
+    s32 i;
+    u16 j;
+    u8 *dst;
+    NodeXform *s;
+    f32 ang;
+    s32 fl;
+
+    if (arg0 != NULL) {
+        if (arg1 != NULL) {
+            for (i = 0; (u16)i < 2; i++) {
+                dst = arg1 + 0x1C;
+                if ((u16)i == 0) {
+                    dst = arg0 + 0x1C;
+                }
+                j = i & 0xFFFF;
+                s = arg3;
+                if (j == 0) {
+                    s = arg2;
+                }
+                clearVec4QuadStruct(dst);
+                if (s->flags & 1) {
+                    addVec3At0x24(dst, -s->pos[0], -s->pos[1], -s->pos[2]);
+                }
+                if (s->flags & 2) {
+                    applyScaleToMat3x4(dst, s->scale[0], s->scale[1], s->scale[2]);
+                }
+                if (s->flags & 4) {
+                    composeQuatToMat3x4(dst, s->quat);
+                }
+                ang = arg4;
+                if (j != 0) {
+                    ang = -ang;
+                }
+                composeRotationMatrixSlot2(dst, ang);
+                fl = s->flags;
+                if ((fl & 9) == 9) {
+                    addVec3At0x24(dst, s->offs[0] + s->pos[0], s->offs[1] + s->pos[1], s->offs[2] + s->pos[2]);
+                } else if ((fl & 9) == 8) {
+                    addVec3At0x24(dst, s->offs[0], s->offs[1], s->offs[2]);
+                } else if (fl & 1) {
+                    addVec3At0x24(dst, s->pos[0], s->pos[1], s->pos[2]);
+                }
+            }
+        }
+    }
+}
 
 extern char D_menu_overlay_800A5804[];
 void hangarLoadShadows(void) {
