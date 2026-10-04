@@ -53,7 +53,20 @@ f32 setType1ActorField40(void *arg0, f32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType2);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", setType2ActorVelocity);
+s32 setType2ActorVelocity(void *arg0, f32 arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5) {
+    u8 *p;
+    if ((*(u8 *)((u8 *)(arg0) + 0x112)) == 2) {
+        p = (u8 *)arg0 + 8;
+        *(s32 *)(p + 0x18) = 0;
+        *(f32 *)(p + 0x24) = arg1;
+        *(f32 *)(p + 0x28) = arg2;
+        *(f32 *)(p + 0x1C) = arg3;
+        *(f32 *)(p + 0x20) = arg4;
+        *(f32 *)(p + 0x2C) = arg5;
+        return 1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType3);
 
