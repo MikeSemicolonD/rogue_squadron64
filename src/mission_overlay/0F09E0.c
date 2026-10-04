@@ -675,7 +675,48 @@ s32 copyPipeDelimitedField(u8 *s, s32 field, u8 *out) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", copyRandomPipeDelimitedField);
+s32 copyRandomPipeDelimitedField(u8 *arg0, u8 *arg1) {
+    s32 field;
+    s32 count;
+    s32 ret;
+    u8 *s;
+    u8 *o;
+    u8 c;
+
+    if (arg0[0] != 0) {
+        field = (s16)rand() % *arg0++;
+        o = arg1;
+        s = arg0;
+        c = *s;
+        count = 0;
+        while (c != 0) {
+            if (c == '|') {
+                s++;
+                count++;
+            } else if (s[1] == 0) {
+                count++;
+            }
+            if (count == field) {
+                while (*s != 0 && *s != 0x7C) {
+                    *o++ = *s++;
+                }
+                *o = 0;
+                ret = 0;
+                if (*s != 0) {
+                    ret = field + 1;
+                }
+                goto done;
+            }
+            s++;
+            c = *s;
+        }
+        ret = 0;
+done:
+        return ret;
+    }
+    *arg1 = 0;
+    return 0;
+}
 
 s32 returnZero_800F3258(void) {
     return 0;
