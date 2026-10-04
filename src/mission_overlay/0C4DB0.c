@@ -52,7 +52,11 @@ void getAvailableShipsForLevel(void) {
     (*(s32 *)((u8 *)(temp_s1) + 0xDCC)) = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", accumulateClampedFloatField);
+void accumulateClampedFloatField(void *arg0, f32 arg1) {
+    if (*(f32 *)((u8 *)arg0 + 0xDCC) < 1.0f) {
+        *(f32 *)((u8 *)arg0 + 0xDCC) += arg1;
+    }
+}
 
 u8 getDisplayItemStateByte(void *arg0) {
     return (*(u8 *)((u8 *)(arg0) + 0xDD0));
@@ -60,4 +64,4 @@ u8 getDisplayItemStateByte(void *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", fake_func_800C64A4);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C4DB0", D_mission_overlay_800A6870);
+static u32 D_mission_overlay_800A6874[] __attribute__((section(".rodata"))) = { 0x93C30004, 0x3C01801D, 0x00220821 };
