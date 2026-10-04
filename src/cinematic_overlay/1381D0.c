@@ -683,7 +683,56 @@ f32 cinematicComputeDt(void) {
     return dt;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicInitializer);
+typedef struct {
+    u8 pad0[0xC];
+    u8 *unkC;
+} CineHolder;
+struct CineObj {
+    u8 pad0[0x14];
+    u32 unk14;
+    f32 unk18;
+    f32 unk1C;
+    f32 unk20;
+    f32 unk24;
+    f32 unk28;
+};
+struct CineSize {
+    u8 pad0[0x10];
+    s32 w;
+    s32 h;
+};
+extern s32 D_cinematic_overlay_800B0934;
+extern u8 D_cinematic_overlay_800B0938;
+extern f32 D_cinematic_overlay_800B1EE8;
+extern u8 gBootConfig;
+extern CineHolder *initCinematicSceneAssets(s32, s32);
+extern void insertLookupEntry(s32, void *, s32);
+extern void setLookupEntryField5ByKey(s32, void *, s32);
+extern void beginSceneRenderFrame(s32);
+
+void cinematicInitializer(s32 arg0, struct CineSize *arg1, f32 arg2) {
+    CineHolder *v0;
+    struct CineObj *s0;
+
+    if (D_cinematic_overlay_800B0934 == 0) {
+        D_cinematic_overlay_800B0938 = 0;
+        D_cinematic_overlay_800B1EE8 = arg2 * 30.0f;
+        v0 = initCinematicSceneAssets(0x40, 0x10);
+        s0 = (struct CineObj *)v0->unkC;
+        s0->unk24 = (f32)arg1->w * 0.015625f;
+        s0->unk28 = (f32)arg1->h * 0.0625f;
+        D_cinematic_overlay_800B0934 = (s32)v0;
+        s0->unk18 = -((f32)arg1->w * 0.5f);
+        s0->unk1C = -((f32)arg1->h * 0.5f);
+        s0->unk14 |= 0x02400003;
+        s0->unk20 = -100.0f;
+        insertLookupEntry(arg0, s0, 0);
+        setLookupEntryField5ByKey(arg0, s0, 1);
+    }
+    if (!(*(s32 *)(&gBootConfig + 0x44) & 0x80)) {
+        beginSceneRenderFrame(8);
+    }
+}
 
 extern s32 D_cinematic_overlay_800B0934;
 
