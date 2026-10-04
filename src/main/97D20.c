@@ -41,7 +41,19 @@ void registerSndMacroTable(u16 *ids, u8 *base) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/97D20", registerSndCurveTable);
+extern void factor5SortedTableInsertTaggedValue(u16, void *, u16);
+
+void registerSndCurveTable(u16 *ids, u8 *base) {
+    u8 *e;
+
+    while (*ids != 0xFFFF) {
+        e = findSndChunkEntry(base + *(s32 *)(base + 0xC), *ids);
+        if (e != NULL) {
+            factor5SortedTableInsertTaggedValue(*ids, e + 0xC, *(u16 *)(e + 0xA));
+        }
+        ids++;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/97D20", registerSndSampleTable);
 
