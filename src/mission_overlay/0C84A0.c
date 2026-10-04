@@ -40,7 +40,39 @@ void spawnEffectOnNamedDatItem(char *name, f32 arg1, s32 arg2, f32 arg3) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", initActorTowardNamedDatItem);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", initAnchoredActorTowardNamedDatItem);
+void *getLevelDatItemByName(char *);
+u8 *getNpcContextByIndex(u16);
+u8 initActorAsType1WithAnchor(void *, void *, f32, f32, f32, f32, f32);
+
+s32 initAnchoredActorTowardNamedDatItem(char *name, char *targetName) {
+    u8 *item;
+    void *target;
+    u8 *npc;
+    f32 yaw;
+    f32 pitch;
+
+    item = getLevelDatItemByName(name);
+    if (item == NULL) {
+        return 0;
+    }
+    if (*(u16 *)(item + 6) == 0xFFFF) {
+        return 0;
+    }
+    target = getLevelDatItemByName(targetName);
+    if (target == NULL) {
+        return 0;
+    }
+    npc = *(u8 **)(getNpcContextByIndex(*(u16 *)(item + 6)) + 0x10);
+    if (npc == NULL) {
+        return 0;
+    }
+    if (npc[0x112] != 1) {
+        return 0;
+    }
+    yaw = *(f32 *)(npc + 0x4C);
+    pitch = *(f32 *)(npc + 0x50);
+    return initActorAsType1WithAnchor(npc, target, pitch, 0.0f, 0.0f, 0.0f, yaw);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", getDatItemHealth);
 
