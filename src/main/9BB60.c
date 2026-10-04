@@ -21,7 +21,24 @@ INCLUDE_ASM("asm/nonmatchings/main/9BB60", loadSpeechFile);
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", initMusyXVoiceTable);
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", findFreeSpeechVoiceSlot);
+typedef struct {
+    u8 active;
+    u8 pad[0x1227];
+} SpeechVoiceSlot;
+
+extern SpeechVoiceSlot D_main_bss_80154620[];
+
+void findFreeSpeechVoiceSlot(void) {
+    s32 i;
+
+    do {
+        for (i = 0; i < 1; i++) {
+            if (D_main_bss_80154620[i].active != 0) {
+                break;
+            }
+        }
+    } while (i != 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", shutdownMusyXVoices);
 
