@@ -5,6 +5,8 @@
 #include "main/192E0.h"
 #include "main/1D000.h"
 
+#define SQRTF_ASM(out, in) __asm__("sqrt.s %0, %1" : "=f"(out) : "f"(in))
+
 INCLUDE_ASM("asm/nonmatchings/main/1D000", sinfApprox);
 
 f32 constMinusSinfApprox(f32 arg0) {
@@ -329,7 +331,28 @@ void quatFromAxisAngleSafe(Vec4f arg0, Vec3f arg1, f32 arg2) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/1D000", quatFromAxisAngleSafe);
+f32 sinf(f32);
+f32 cosf(f32);
+
+void quatFromAxisAngleSafe(f32 *q, Vec3f axis, f32 angle) {
+    f32 half;
+    f32 len;
+
+    half = angle * 0.008726646f;
+    SQRTF_ASM(len, axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
+    if ((half != 0.0f) & (len != 0.0f)) {
+        q[0] = cosf(half);
+        half = sinf(half) / len;
+        q[1] = axis[0] * half;
+        q[2] = axis[1] * half;
+        q[3] = axis[2] * half;
+    } else {
+        q[3] = 0.0f;
+        q[2] = 0.0f;
+        q[1] = 0.0f;
+        q[0] = 1.0f;
+    }
+}
 #endif
 
 void quatFromAxisAngle(Vec4f arg0, Vec3f arg1, f32 arg2) {
