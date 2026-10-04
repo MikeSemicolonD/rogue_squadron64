@@ -11,7 +11,18 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", registerSiCallback);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", findAndZeroTableSlotMatching);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", clearFourWordTable);
+extern s32 D_main_bss_8011A8B0;
+
+void clearFourWordTable(void) {
+    s32 i;
+    s32 *p;
+
+    i = 3;
+    p = &D_main_bss_8011A8B0;
+    do {
+        *p-- = 0;
+    } while (--i >= 0);
+}
 
 #if 0
 // I strongly suspect this file is compiled with O3, and that this function gets inlined
