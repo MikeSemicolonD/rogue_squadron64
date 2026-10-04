@@ -172,7 +172,25 @@ void appendNodeToListTail(ListOwner20 *owner, ListNode *node) {
     node->prev = p;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", appendNodeToListHead);
+typedef struct {
+    u8 pad[0x10];
+    ListNode *list;
+} ListOwner10;
+
+void appendNodeToListHead(ListOwner10 *owner, ListNode *node) {
+    ListNode *p;
+
+    if (owner->list == NULL) {
+        owner->list = node;
+        return;
+    }
+    p = owner->list;
+    while (p->next != NULL) {
+        p = p->next;
+    }
+    p->next = node;
+    node->prev = p;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/intro_crawl_handling", D_menu_overlay_800A7BC4);
 
