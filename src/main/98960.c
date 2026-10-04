@@ -73,7 +73,41 @@ INCLUDE_ASM("asm/nonmatchings/main/98960", compute3DSourceSpatialMix);
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", applyVoice3DMixParams);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", updateActive3DAudioSource);
+extern f32 D_main_8003DEC0;
+extern u8 gMusyXActiveFlag;
+s32 factor5MutexAcquire();
+s32 factor5MutexRelease();
+
+typedef struct {
+    s32 x, y, z;
+} Vec3i;
+
+typedef struct {
+    u8 pad0[0xC];
+    Vec3i pos;
+    Vec3i vel;
+    f32 unk24;
+    f32 unk28;
+    f32 unk2C;
+} Active3DSource;
+
+s32 updateActive3DAudioSource(Active3DSource *arg0, Vec3i *arg1, Vec3i *arg2, u8 arg3) {
+    f32 v;
+
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        v = (f32)arg3 / D_main_8003DEC0;
+        arg0->pos = *arg1;
+        arg0->vel = *arg2;
+        arg0->unk28 = v;
+        if (v < arg0->unk2C) {
+            arg0->unk2C = v;
+        }
+        factor5MutexRelease();
+        return 1;
+    }
+    return 0;
+}
 
 extern u8 gMusyXActiveFlag;
 
