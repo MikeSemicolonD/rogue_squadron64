@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "crafts.h"
 #include "hud.h"
@@ -85,7 +86,19 @@ void resetSecondaryWeaponCount(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", getActiveHudInstanceTargetPosition);
+typedef struct {
+    u32 x;
+    u32 y;
+    u32 z;
+} HudTargetPos;
+
+s32 getActiveHudInstanceTargetPosition(HudTargetPos *arg0) {
+    if (D_mission_overlay_8010CA30[0].secondaryWeapon == 4 && D_mission_overlay_8010CA30[0].secondaryWeaponState != 0 && *(u8 *)&D_mission_overlay_8010CA30[0].unknown_words214[5] != 0) {
+        *arg0 = *(HudTargetPos *)&D_mission_overlay_8010CA30[0].unknown_words214[2];
+        return 1;
+    }
+    return 0;
+}
 
 s32 func_mission_overlay_800FEECC(void) {
     s32 var_a0;
