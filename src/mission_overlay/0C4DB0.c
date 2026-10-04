@@ -39,7 +39,29 @@ void resetCraftSelectionCounter(void) {
     D_mission_overlay_8010C080 = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", registerObjectAndResolveDatItem);
+s32 getLevelDatItemByName(char *);
+extern void *D_mission_overlay_8010C000[];
+typedef struct { u8 pad[0x2C]; s32 nameOffset; } RegisteredObject;
+void registerObjectAndResolveDatItem(RegisteredObject *obj) {
+    s32 item;
+
+    if (D_mission_overlay_8010C080 < 0x20) {
+        D_mission_overlay_8010C000[D_mission_overlay_8010C080++] = obj;
+        if (obj->nameOffset != 0) {
+            char *name = (char *)(obj->nameOffset + (s32)obj);
+            if (*name == 0x2D) {
+                obj->nameOffset = 0;
+            } else {
+                item = getLevelDatItemByName(name);
+                if (item != 0) {
+                    obj->nameOffset = item;
+                } else {
+                    obj->nameOffset = 0;
+                }
+            }
+        }
+    }
+}
 
 s32 findMatchingTextureRecursive(u16, void *, void *, s32);
 void *getCraftRecordByIdx(s32);
