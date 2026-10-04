@@ -232,7 +232,14 @@ f32 vec3Length(Vec3f v) {
     return len;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1D000", normalize_vector);
+void normalize_vector(Vec3f v) {
+    register f32 len asm("$f0");
+
+    SQRTF_ASM(len, v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    v[0] /= len;
+    v[1] /= len;
+    v[2] /= len;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1D000", vec3NormalizeInto);
 
