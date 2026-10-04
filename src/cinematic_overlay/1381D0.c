@@ -536,7 +536,31 @@ s32 matchKeywordWithPriority(u8 **ctx, u8 *word, s32 priority) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicComputeDt);
+f32 floatModulo(f32, f32);
+void timeSnapshotFiller(void *);
+extern s32 D_main_bss_8013889C;
+
+f32 cinematicComputeDt(void) {
+    f32 snap[10];
+    f32 dt;
+    f32 mod;
+
+    timeSnapshotFiller(snap);
+    dt = snap[8];
+    D_main_bss_8013889C += 1;
+    mod = floatModulo(dt, snap[7]);
+    if (mod > 0.0f) {
+        if ((mod / snap[7]) < 0.5f) {
+            dt -= mod;
+        } else {
+            dt = (dt + snap[7]) - mod;
+        }
+    }
+    if (dt <= 0.0f) {
+        dt = 0.016666668f;
+    }
+    return dt;
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicInitializer);
 
