@@ -153,7 +153,83 @@ s32 isAudioVoiceActive(u8 *voice) {
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", play3DSoundEvent);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", play3DSoundEventVariant);
+extern u8 D_main_bss_80152D20[];
+extern s32 D_main_bss_80153414;
+extern f32 D_main_8003DEC8;
+extern void compute3DSourceSpatialMix(u8 *, f32 *, f32 *, f32 *, f32 *, f32 *);
+extern s32 bsearchFactor5TableByU16Key(u16, s32, s32);
+extern void applyVoice3DMixParams(void *, f32, f32, f32, f32, f32);
+
+s32 play3DSoundEventVariant(u8 *arg0, Vec3i *arg1, Vec3i *arg2, f32 arg3, f32 arg4, s32 arg5, u16 arg6, u16 arg7, u8 arg8, u8 arg9)
+{
+  f32 sp18;
+  f32 sp1C;
+  f32 sp20;
+  f32 sp24;
+  f32 sp28;
+  int new_var;
+  u8 *s0;
+  u8 *head;
+  s32 r;
+  f32 va;
+  f32 vb;
+  s32 t7;
+  u32 fl;
+  if (gMusyXActiveFlag != 0)
+  {
+    new_var = arg7;
+    t7 = new_var;
+    factor5MutexAcquire();
+    s0 = arg0;
+    if (s0 == 0)
+    {
+      s0 = D_main_bss_80152D20;
+    }
+    va = ((f32) arg8) / D_main_8003DEC8;
+    vb = ((f32) arg9) / D_main_8003DEC8;
+    *((s32 *) (s0 + 8)) = arg5;
+    *((Vec3i *) (s0 + 0xC)) = *arg1;
+    *((Vec3i *) (s0 + 0x18)) = *arg2;
+    *((f32 *) (s0 + 0x24)) = arg3;
+    *((u16 *) (s0 + 0x3C)) = arg6;
+    *((f32 *) (s0 + 0x30)) = arg4;
+    *((s32 *) (s0 + 0x38)) = t7;
+    *((f32 *) (s0 + 0x28)) = va;
+    *((f32 *) (s0 + 0x2C)) = vb;
+    if (arg0 == 0)
+    {
+      compute3DSourceSpatialMix(s0, &sp18, &sp1C, &sp20, &sp24, &sp28);
+      if (sp18 != 0.0f)
+      {
+        r = bsearchFactor5TableByU16Key(*((u16 *) (s0 + 0x3C)), 0x7F, 0x40);
+        *((s32 *) (s0 + 0x34)) = r;
+        if (r != (-1))
+        {
+          applyVoice3DMixParams(s0, sp18, sp20, sp24, sp28, sp1C);
+          factor5MutexRelease();
+          return *((s32 *) (s0 + 0x34));
+        }
+      }
+    }
+    else
+    {
+      head = (u8 *) D_main_bss_80153414;
+      *((u8 **) (s0 + 0)) = head;
+      if (head != 0)
+      {
+        *((u8 **) (head + 4)) = s0;
+      }
+      fl = *((u32 *) (s0 + 8));
+      *((s32 *) (s0 + 0x34)) = -1;
+      *((s32 *) (s0 + 4)) = 0;
+      D_main_bss_80153414 = (s32) s0;
+      *((u16 *) (s0 + 0x3E)) = 0;
+      *((u32 *) (s0 + 8)) = fl | 0x30000;
+    }
+    factor5MutexRelease();
+  }
+  return -1;
+}
 
 extern s32 D_main_bss_80153414;
 extern u8 gMusyXActiveFlag;
