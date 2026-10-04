@@ -9,7 +9,65 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", loadJfifAsset);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", resetJfifDecodeState);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", freeJfifDecodeState);
+void rs_free(void *);
+
+void freeJfifDecodeState(u8 *arg0) {
+    u8 i;
+    u8 *p;
+    u8 *p2;
+    void *q;
+
+    if (arg0 != NULL) {
+        i = 0;
+        do {
+            if ((arg0[0x48] >> i) & 1) {
+                p = arg0 + i * 0xA8;
+                rs_free(*(void **)(p + 0x5C));
+                rs_free(*(void **)(p + 0x60));
+            }
+            i++;
+        } while (i < 4);
+        i = 0;
+        do {
+            p2 = arg0 + i * 0x2C;
+            q = *(void **)(p2 + 0x708);
+            i++;
+            if (q != NULL) {
+                rs_free(q);
+            }
+        } while (i < 3);
+        q = *(void **)(arg0 + 0x77C);
+        if (q != NULL) {
+            rs_free(q);
+        }
+        q = *(void **)(arg0 + 0x50);
+        if (q != NULL) {
+            *(void **)(arg0 + 0x50) = (u8 *)q - 0x100;
+            rs_free((u8 *)q - 0x100);
+        }
+        q = *(void **)(arg0 + 0x7D8);
+        if (q != NULL) {
+            rs_free(q);
+        }
+        q = *(void **)(arg0 + 0x7DC);
+        if (q != NULL) {
+            rs_free(q);
+        }
+        q = *(void **)(arg0 + 0x7E0);
+        if (q != NULL) {
+            rs_free(q);
+        }
+        q = *(void **)(arg0 + 0x7E4);
+        if (q != NULL) {
+            rs_free(q);
+        }
+        q = *(void **)(arg0 + 0x30);
+        if (q != NULL) {
+            rs_free(q);
+        }
+    }
+    rs_free(arg0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifSOIMarker);
 
