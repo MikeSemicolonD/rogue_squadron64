@@ -122,7 +122,21 @@ INCLUDE_ASM("asm/nonmatchings/main/67690", tickSpeechSubsystem);
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", resetSpeechSubsystem);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", finalizeCurrentSpeechBuffer);
+void shutdownMusyXVoices(void);
+s32 rs_free(s32);
+s32 teardownAssetDma(s32, s32);
+extern s32 D_main_bss_80138920;
+extern s32 D_main_bss_80139B70;
+extern s32 D_main_bss_80139B74;
+s32 finalizeCurrentSpeechBuffer(void) {
+    shutdownMusyXVoices();
+    if (D_main_bss_80139B74 != 0) {
+        rs_free(D_main_bss_80139B74);
+    } else {
+        teardownAssetDma(D_main_bss_80138920, D_main_bss_80139B70);
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", initSpeechPlaybackState);
 
