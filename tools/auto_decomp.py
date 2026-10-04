@@ -79,7 +79,7 @@ def m2c(func, s_path, c_path, extra):
         return None, "cpp failed"
     pathlib.Path("/tmp/auto_ctx.c").write_text(ctx.stdout)
     r = subprocess.run([sys.executable, "-m", "m2c.main", "-t", "mips-gcc-c", "--valid-syntax",
-                        "--context", "/tmp/auto_ctx.c", "--globals=used", *[e for e in extra if e != "no-protos"], str(s_path)],
+                        "--context", "/tmp/auto_ctx.c", "--globals=used", *[e for e in extra if e.startswith("--")], str(s_path)],
                        capture_output=True, text=True)
     if r.returncode or not r.stdout.strip():
         return None, "m2c failed"
@@ -89,6 +89,11 @@ def m2c(func, s_path, c_path, extra):
     if bad:
         return None, bad.group(0)
     code = re.sub(r"\s*/\* extern \*/", "", code)
+    if "structargs" in extra or "structargs_all" in extra:
+        import struct_args
+        code = struct_args.struct_args(code, None if "structargs_all" in extra else 0x10)
+        if code is None:
+            return None, "no struct args"
     if "no-protos" in extra:
         code = "\n".join(l for l in code.splitlines() if not re.match(r"^[A-Za-z_][\w \*]*\b\w+\(.*\);$", l) or l.startswith("extern"))
     declared = set(re.findall(r"\b(D_\w+|[a-z]\w*)\b(?=\s*(?:\[.*\])?;)", "\n".join(l for l in code.splitlines() if l.startswith("extern"))))
