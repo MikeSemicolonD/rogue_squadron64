@@ -170,7 +170,48 @@ struct DisplayListBuffer *reclaimDisplayListChunk(void) {
 }
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", allocateDisplayListBuffer);
+extern Gfx *D_main_bss_801163D4;
+extern struct DisplayListBuffer **D_main_bss_801163FC;
+extern struct DisplayListBuffer **D_main_bss_8011A7DC;
+
+Gfx *allocateDisplayListBuffer(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    struct DisplayListBuffer *buf;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    buf = chunk;
+    if (*D_main_bss_801163FC == NULL) {
+        *D_main_bss_801163FC = buf;
+    } else {
+        (*D_main_bss_8011A7DC)->next = buf;
+        buf->prev = *D_main_bss_8011A7DC;
+    }
+    buf->next = NULL;
+    *D_main_bss_8011A7DC = buf;
+    D_main_bss_801163D4 = &buf->displayList[0x1F];
+    return buf->displayList;
+}
 
 extern struct DisplayListBuffer **D_main_bss_8011A4C4;
 
