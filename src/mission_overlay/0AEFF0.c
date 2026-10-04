@@ -58,7 +58,31 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", initPlayerCraftMovementMo
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", tryPlaySpatialSoundWithGates);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", scheduleSceneFormatMessageTimed);
+u8 isRumbleSlotActive(u8);
+s32 startRumbleEffect(u8, void *);
+s32 stopRumbleEffect(s32);
+extern s32 D_main_bss_80130B50;
+extern u32 D_mission_overlay_8010CA20;
+extern u8 D_mission_overlay_8010BBD0[][12];
+
+void scheduleSceneFormatMessageTimed(u8 *arg0, s32 arg1) {
+    if (D_main_bss_80130B50 & 0x60) {
+        return;
+    }
+    if (D_mission_overlay_8010CA20 != 0) {
+        return;
+    }
+    if (arg1 < *(s32 *)(arg0 + 0x1C4) && isRumbleSlotActive(arg0[0xBB])) {
+        return;
+    }
+    if (*(s32 *)(arg0 + 0x1C0) != -1) {
+        stopRumbleEffect(*(s32 *)(arg0 + 0x1C0));
+    }
+    *(s32 *)(arg0 + 0x1C0) = startRumbleEffect(arg0[0xBB], D_mission_overlay_8010BBD0[arg1]);
+    if (*(s32 *)(arg0 + 0x1C0) != -1) {
+        *(s32 *)(arg0 + 0x1C4) = arg1;
+    }
+}
 
 s32 stopRumbleEffect(s32);
 
