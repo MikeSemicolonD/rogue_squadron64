@@ -208,15 +208,7 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", extractTextBeforeFmtChar);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", composeInterpolatedNodeMatrices);
 
-#if 0
-/*
-`D_menu_overlay_800A5804` is "pl_crafts/shadows_TM", but its placement in the file is a little odd.
-I suspect this is tied to the oddities surrounding `hangarGenerateSecondaryWeaponString`.
-
-I'm beginning to suspect that this file isn't match-able until the rodata weirdness is resolved
-
-As currently written, the .text section of this function is 100% matching
-*/
+extern char D_menu_overlay_800A5804[];
 void hangarLoadShadows(void) {
     struct material_entry sp10;
     struct full_image_header *temp_s4;
@@ -224,12 +216,11 @@ void hangarLoadShadows(void) {
     s32 var_s2;
     s32 var_v1;
 
-    temp_s4 = load_asset("pl_crafts/shadows_TM");
+    temp_s4 = load_asset(D_menu_overlay_800A5804);
     for (var_s2 = 0; var_s2 < 14; var_s2++) {
         var_s1 = temp_s4;
-        // I really, really do not like this loop. Its the wrong way to solve the problem
         for (var_v1 = 0; var_v1 < var_s2; var_v1++) {
-            var_s1 = (struct full_image_header*)(((u32)var_s1 + var_s1->image_size + 7) & ~3);
+            var_s1 = (struct full_image_header *)(((u32)var_s1 + var_s1->image_size + 7) & ~3);
         }
         full_header_image_offset_convert(&var_s1->ent, (u32)&var_s1->ent);
         var_s1->ent.flags_type |= 0x2000;
@@ -238,9 +229,6 @@ void hangarLoadShadows(void) {
     }
     rs_free(temp_s4);
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarLoadShadows);
-#endif
 
 typedef struct {
     u8 pad[0x27];
