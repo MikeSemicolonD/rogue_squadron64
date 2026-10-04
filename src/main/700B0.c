@@ -119,7 +119,23 @@ void scaleVec3ByRandomRange(Vec3f arg0, f32 arg1, f32 arg2) {
     arg0[2] *= temp_fv0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnDebris1Npc);
+extern u8 D_main_bss_80130B63;
+s32 npcDebris1Update(struct D_80130BB8_type *self, u16 arg1, void *arg2);
+
+typedef struct { s32 a; s32 b; f32 c; f32 d; f32 e; } Debris1Args;
+
+void spawnDebris1Npc(s32 arg0, s32 arg1, f32 arg2, f32 arg3, f32 arg4) {
+    Debris1Args args;
+
+    if ((D_main_bss_80130B63 != 0) || (findLargestFreeHeapChunk() >= 0x3A98U)) {
+        args.a = arg0;
+        args.b = arg1;
+        args.e = arg3;
+        args.d = arg2;
+        args.c = arg4;
+        spawnNpcOfType(npcDebris1Update, &args, 1U, 0xFU);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedEffectIfBudgetOk);
 
