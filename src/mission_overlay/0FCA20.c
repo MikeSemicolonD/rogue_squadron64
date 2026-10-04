@@ -46,7 +46,36 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", teardownHudInstancesAndUn
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", dispatchHudInstanceWeaponEffect);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", refreshPlayerSecondaryWeaponHud);
+u8 configurePlayerSecondaryWeaponHud(u8, u8, u8, s32);
+extern u8 D_main_bss_80130B12;
+extern u32 D_main_bss_80130B4C;
+extern u8 gMissionState[];
+
+u8 refreshPlayerSecondaryWeaponHud(u8 arg0) {
+    s32 flag;
+
+    if (arg0 == 0) {
+        switch (D_main_bss_80130B12) {
+            case 2:
+            case 3:
+                flag = (D_main_bss_80130B4C >> 10) & 1;
+                break;
+            case 5:
+            case 8:
+                flag = (D_main_bss_80130B4C >> 12) & 1;
+                break;
+            case 4:
+                flag = (D_main_bss_80130B4C >> 15) & 1;
+                break;
+            default:
+                flag = 0;
+                break;
+        }
+    } else {
+        flag = 0;
+    }
+    return configurePlayerSecondaryWeaponHud(arg0, gMissionState[2], gMissionState[3], flag);
+}
 
 void resetTransientPlayerStateFlags(void) {
     u8 var_s1;
