@@ -140,7 +140,49 @@ void requestCinematicNodeEvent(s32 idx) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", resetSceneNodeShakeStateArray);
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    u8 unk8;
+    s32 unkC;
+    s32 unk10;
+    s32 unk14;
+    s32 unk18;
+    s32 unk1C;
+    s32 unk20;
+    f32 unk24;
+    f32 unk28;
+    f32 unk2C;
+    s32 unk30;
+    f32 unk34;
+    u8 pad38[0x20];
+} SceneNodeShakeState;
+extern SceneNodeShakeState D_main_bss_80137D08[][2];
+void resetSceneNodeShakeStateArray(void) {
+    s32 i;
+    s32 j;
+
+    for (i = 0; i < 1; i++) {
+        for (j = 0; j < 2; j++) {
+            SceneNodeShakeState *s = &D_main_bss_80137D08[i][j];
+
+            s->unk0 = 0;
+            s->unk4 = 0;
+            s->unk8 = 0;
+            s->unkC = 0;
+            s->unk10 = 0;
+            s->unk14 = 0;
+            s->unk18 = 0;
+            s->unk1C = 0;
+            s->unk20 = 0;
+            s->unk2C = 1.0f;
+            s->unk28 = 1.0f;
+            s->unk24 = 1.0f;
+            s->unk30 = 0;
+            s->unk34 = 1.0f;
+        }
+    }
+}
 
 void clearSceneNodeMotionFields(void) {
     s32 i;
