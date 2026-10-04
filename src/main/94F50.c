@@ -190,7 +190,17 @@ void queueAudioVoiceCmd(u8 arg0, u16 arg1, s32 arg2, u8 arg3) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", getSongStateByteByHandle);
+u8 getSongStateByteByHandle(u32 handle) {
+    s32 slot;
+
+    if (gMusyXActiveFlag != 0) {
+        slot = findSongSlotByHandle(handle);
+        if (slot != -1) {
+            return D_main_bss_80149A00[slot].unkEC4;
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongChannelParamByHandle);
 
