@@ -658,7 +658,36 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", transformSceneMeshVertices);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuModelViewerScreen);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuScreenCameraViewport);
+void setRenderStateFlagByteThree(s32);
+void setRenderStateFlagByteTwo(s32);
+void setFrameLevelStateBytes(s32, s32, s32);
+void loadCharTextureSet(void *, s32, s32, s32);
+void resetPlayerSlotAllChannels(u16, u8);
+extern s32 D_menu_overlay_800CF074;
+void initMenuScreenCameraViewport(void) {
+    D_menu_overlay_800CF090.unk10 = 0x280;
+    D_menu_overlay_800CF090.unk14 = 0x1E0;
+    D_menu_overlay_800CF090.unk18 = 0x140;
+    D_menu_overlay_800CF090.unk4 = 0;
+    D_menu_overlay_800CF090.unk8 = 0;
+    D_menu_overlay_800CF090.unkC = 0;
+    D_menu_overlay_800CF090.unk1C = 0xF0;
+    D_menu_overlay_800CF090.unk20 = 45.0f;
+    D_menu_overlay_800CF090.unk24 = 0.1171875f;
+    D_menu_overlay_800CF090.unk28 = 93.75f;
+    setRenderStateFlagByteOne(1);
+    setRenderStateFlagByteThree(1);
+    setRenderStateFlagByteTwo(1);
+    setFrameLevelStateBytes(0, 0, 0);
+    selectRenderPresetByIndex(0);
+    selectSecondaryPresetByIndex(0);
+    clearVec4QuadStruct(D_menu_overlay_800CF090.unk2C);
+    D_menu_overlay_800CF074 = 0;
+    D_main_bss_8013889C = 0;
+    D_menu_overlay_800CF078 = allocateSlotTable(0x10);
+    loadCharTextureSet(D_menu_overlay_800CF078, 9, 0xB, 0x80);
+    resetPlayerSlotAllChannels(9, 0x14);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateMenuItemAnimationState);
 
