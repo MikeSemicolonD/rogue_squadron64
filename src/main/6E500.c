@@ -375,7 +375,21 @@ s32 classifySaveStateFromInput(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", loadSaveDataIfNotLoaded);
+u8 loadOrSaveEepromRecord(s32, s32, s32, void *, s32);
+s32 loadSaveDataIfNotLoaded(void) {
+    struct GameSettings *gs = &gGameSettings;
+    u8 r;
+
+    if (*(u8 *)&gs->unk2C != 0) {
+        return 0;
+    }
+    r = loadOrSaveEepromRecord(1, 0, 0, &gSaveDataBody, 0xB0);
+    if (r) {
+        r = loadOrSaveEepromRecord(1, 0, 1, &gSaveDataBody, 0xB0);
+    }
+    gs->nabooStarfighterCheatHash = *(u32 *)&gSaveDataBody.unkAC;
+    return r == 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", persistSaveDataBody);
 
