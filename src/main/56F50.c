@@ -217,7 +217,15 @@ s32 readFirstNameTreeEntry(void **arg0, void *arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", readFirstNameTreeEntryFromNode);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", enqueueMeshTypeForCleanup);
+extern u16 D_main_bss_8013A490;
+extern u8 D_main_8013A498[];
+
+void enqueueMeshTypeForCleanup(u8 *arg0) {
+    if (arg0[0xB] != 0 && !(*(u16 *)(arg0 + 8) & 0x20)) {
+        D_main_8013A498[++D_main_bss_8013A490] = arg0[0xB];
+        arg0[0xB] = 0;
+    }
+}
 
 void walkListAndUpdateFlagsAt0xC(struct meshdef1 *arg0, u32 arg1, u32 arg2) {
     if (arg0 != NULL) {
