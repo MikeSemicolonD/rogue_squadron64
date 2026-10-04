@@ -36,7 +36,7 @@ BUILD_DIRS := $(C_DIRS:%=build/%) $(ASM_DIRS:%=build/%)
 
 SYMBOL_FILES := undefined_funcs_auto.txt undefined_syms_auto.txt symbol_files/cinematic_overlay.txt symbol_files/libultra.txt symbol_files/main_overlay.txt symbol_files/menu_overlay.txt symbol_files/mission_overlay.txt symbol_files/zlib.txt
 
-.PHONY: clean
+.PHONY: clean check
 
 build/tyler.z64: build/tyler.elf
 	$(OBJCOPY) $< $@ -O binary
@@ -86,6 +86,9 @@ build/%.o: %.s | $(BUILD_DIRS)
 build/%.o: %.bin
 	@mkdir -p $(@D)
 	$(LD) -r -b binary -o $@ $<
+
+check: build/tyler.z64
+	sha1sum -c roguesquadron.sha1 || $(PYTHON) $(TOOLSDIR)/first_diff.py build/tyler.z64 rogue_squadron.z64 --map build/tyler.elf.map
 
 clean:
 	rm -rf $(BUILD_DIRS)
