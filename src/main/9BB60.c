@@ -27,7 +27,34 @@ void stopVoice(void *arg0);
 void stopVoiceSlotSynced(s32 index);
 u32 consumeVoiceSamples(void *voice, u32 count);
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", findVoiceSlotByAge);
+extern s32 D_main_bss_80154648;
+
+s32 findVoiceSlotByAge(s32 index) {
+    u32 i;
+
+    for (;;) {
+        for (i = 0; i < 1; i++) {
+            if (D_main_bss_80154620[i].active != 0) {
+                if (i != index) {
+                    if (D_main_bss_80154620[i].handle == D_main_bss_80154648) {
+                        break;
+                    }
+                }
+            }
+        }
+        if (i == 1) {
+            break;
+        }
+        if (++D_main_bss_80154648 == -1) {
+            D_main_bss_80154648 = 0;
+        }
+    }
+    D_main_bss_80154620[index].handle = D_main_bss_80154648;
+    if (++D_main_bss_80154648 == -1) {
+        D_main_bss_80154648 = 0;
+    }
+    return D_main_bss_80154620[index].handle;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", allocAndConfigureNewVoice);
 
