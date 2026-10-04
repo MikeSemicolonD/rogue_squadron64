@@ -188,7 +188,66 @@ s32 computeActorAnchorDeltaAfterLOS(u8 *obj) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", evaluateTargetTrackingVisibility);
+extern f32 cosf(f32);
+
+s32 evaluateTargetTrackingVisibility(u8 *obj, f32 arg1, f32 arg2) {
+    PendingChildNpc *p = (PendingChildNpc *)(obj + 0x114);
+    f32 v[3];
+    f32 *a;
+    f32 *b;
+    f32 d2;
+    f32 dot;
+    f32 len;
+    f32 c;
+    f32 r;
+    f32 th;
+    f32 cs;
+    u16 idx;
+
+    if (p->unk21 == 0) {
+        return 0;
+    }
+    if (p->unk20 == 0) {
+        return 0;
+    }
+    if (p->unk1C == 0xFFFF) {
+        return 0;
+    }
+    if (p->unk1E == 0xFFFF) {
+        return 0;
+    }
+    if (p->unk1A == 0xFFFF) {
+        return 0;
+    }
+    idx = findActiveNpcInSlotChain(p->unk1C, 0) & 0xFFFF;
+    if (idx == 0xFFFF || (*(u16 *)((u8 *)getNpcContextByIndex(idx) + 0x14) & 0x10)) {
+        clearPendingChildNpcInline(p);
+        return 0;
+    }
+    a = getNpcContextField8(*(u16 *)(obj + 0x198));
+    r = arg1 * 0.25f;
+    cs = cosf(arg2 * 0.017453292f);
+    b = getNpcContextField8(idx);
+    v[0] = b[0] - a[0];
+    v[1] = b[1] - a[1];
+    v[2] = b[2] - a[2];
+    d2 = v[0] * v[0] + v[2] * v[2];
+    th = cs;
+    if (!(r * r < d2)) {
+        dot = vec3Dot(a + 3, v);
+        len = vec3Length(a + 3);
+        c = dot / (len * vec3Length(v));
+        if (d2 < 1.0f) {
+            if (0.0f <= c) {
+                return 1;
+            }
+        }
+        if (!(c < th)) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", tickObjectAnimSubstruct);
 
