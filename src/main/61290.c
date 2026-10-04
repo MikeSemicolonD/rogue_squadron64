@@ -67,7 +67,14 @@ void spawnRandomScaleColoredEffectFromCaller(s32 arg0, s32 arg1, s32 arg2, s32 a
     spawnNpcOfType(randomlyScaledColoredEffectNpcHandler, &params, 1, 0xA);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61290", spawnMinimalRandomNpc);
+void spawnMinimalRandomNpc(s32 arg0, s32 arg1, s32 arg2) {
+    s32 params[3];
+
+    params[0] = arg0;
+    params[1] = arg1;
+    params[2] = arg2;
+    spawnNpcOfType(minimalRandomNpcHandler, params, 1, 0xA);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61290", fake_func_800613B8);
 
