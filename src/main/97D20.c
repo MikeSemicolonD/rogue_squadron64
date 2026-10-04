@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/main/97D20", resetSongSubsystemCounter);
 
@@ -18,7 +19,9 @@ INCLUDE_ASM("asm/nonmatchings/main/97D20", parseSndFiles);
 
 INCLUDE_ASM("asm/nonmatchings/main/97D20", unloadLastSndFileGroup);
 
-INCLUDE_ASM("asm/nonmatchings/main/97D20", returnZeroAudioStub);
+s32 returnZeroAudioStub(void) {
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/97D20", playSongByIdLockCtl);
 

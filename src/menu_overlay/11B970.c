@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "game_settings.h"
 
@@ -615,7 +616,10 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", loadControllerModel);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", loadHelmetModel);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", resetMenuElementInputState);
+void resetMenuElementInputState(void *arg0) {
+    (*(s8 *)((u8 *)(arg0) + 0x95)) = 0;
+    (*(s16 *)((u8 *)(arg0) + 0x98)) = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateCraftSelectFlags);
 

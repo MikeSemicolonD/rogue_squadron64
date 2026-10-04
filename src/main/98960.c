@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", clearStreamedVoiceFlags);
 
@@ -8,7 +9,9 @@ INCLUDE_ASM("asm/nonmatchings/main/98960", flushStreamedVoiceBuffers);
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", startStreamedSampleVoice);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", streamSampleCountToByteSize);
+s32 streamSampleCountToByteSize(s32 arg0) {
+    return (arg0 + 4) * 2;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", setVoiceVolumePanLocked);
 

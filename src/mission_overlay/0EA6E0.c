@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EA6E0", func_mission_overlay_800E9AE0);
 
@@ -16,7 +17,11 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0EA6E0", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EA6E0", npcAtPtUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EA6E0", resetObjectPoolListHead);
+extern s32 D_mission_overlay_8010C0C0;
+
+void resetObjectPoolListHead(void) {
+    D_mission_overlay_8010C0C0 = 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0EA6E0", D_mission_overlay_800A87B0);
 

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/main/06560", initMemoryPack);
 
@@ -12,7 +13,11 @@ INCLUDE_ASM("asm/nonmatchings/main/06560", initSaveData);
 
 INCLUDE_ASM("asm/nonmatchings/main/06560", freeSaveDataBuffer);
 
-INCLUDE_ASM("asm/nonmatchings/main/06560", setSaveDataCallback);
+extern s32 D_main_bss_801126F0;
+
+void setSaveDataCallback(s32 arg0) {
+    D_main_bss_801126F0 = arg0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/06560", saveLoadDispatcher);
 

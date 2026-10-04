@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", calculateDatItemDistanceToPlayer);
 
@@ -16,7 +17,11 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", getDatItemHealthPercentag
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", despawnEffectOnNamedDatItem);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", setLevelObjectTrackingScalar);
+extern f32 D_main_bss_8013973C;
+
+void setLevelObjectTrackingScalar(f32 arg0) {
+    D_main_bss_8013973C = arg0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", playObjectiveVoiceLine1);
 

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanResetState);
 
@@ -44,7 +45,9 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanState4);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanState5);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanStateNoop);
+s32 npcWingmanStateNoop(void) {
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanState6);
 

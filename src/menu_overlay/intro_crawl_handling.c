@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 #include "common_variables.h"
 
 #include "main/08120.h"
@@ -129,7 +130,9 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", tickMultiPartV
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", mallocVoiceLineStruct);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", setVoiceLineLoopFlag);
+void setVoiceLineLoopFlag(void *arg0) {
+    (*(s8 *)((u8 *)(arg0) + 0x1E)) = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", fake_func_800CC038);
 

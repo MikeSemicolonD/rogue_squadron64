@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", allocAndInitDoublyLinkedNodePool12);
 
@@ -32,7 +33,11 @@ INCLUDE_ASM("asm/nonmatchings/main/42AF0", computeGridLayerScrollOffset);
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", teardownAnimatedMapGridLayer);
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", setGridLayerScrollX);
+extern f32 D_main_bss_80130C50;
+
+void setGridLayerScrollX(f32 arg0) {
+    D_main_bss_80130C50 = arg0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", setGridLayerScrollBounds);
 

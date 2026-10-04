@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", computeTrackedObjectWorldAnchor);
 
@@ -14,11 +15,19 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", emitEffectParticlesAlongP
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", loadEffectModelInstancePool);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", resetEffectSequenceState);
+extern s8 D_mission_overlay_8010B6E8;
+
+void resetEffectSequenceState(void) {
+    D_mission_overlay_8010B6E8 = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", freeEffectModelInstancePool);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", getEffectModelPoolHandle);
+extern s32 D_mission_overlay_8010B738;
+
+s32 getEffectModelPoolHandle(void) {
+    return D_mission_overlay_8010B738;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", beginCameraViewTransition);
 

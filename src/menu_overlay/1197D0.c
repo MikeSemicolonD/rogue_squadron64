@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "compiler/gcc/string.h"
 
@@ -79,7 +80,9 @@ void decrementTextTextureRefcount(void) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", setChildPosFromI16Pair);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", getStructField0xC);
+s32 getStructField0xC(void *arg0) {
+    return (*(s32 *)((u8 *)(arg0) + 0xC));
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", rasterizeFormatMessageGlyphs);
 

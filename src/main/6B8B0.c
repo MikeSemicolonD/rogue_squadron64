@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 #include "common_variables.h"
 
 #include "crafts.h"
@@ -401,9 +402,15 @@ s32 isCraftAvailableByIdx(s32 craftId) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6B8B0", getBootConfigField12);
+extern s32 gBootConfig;
 
-INCLUDE_ASM("asm/nonmatchings/main/6B8B0", getBootConfigField14);
+u16 getBootConfigField12(void) {
+    return (*(u16 *)((u8 *)(&gBootConfig) + 0x12));
+}
+
+u16 getBootConfigField14(void) {
+    return (*(u16 *)((u8 *)(&gBootConfig) + 0x14));
+}
 
 s32 getLevelCutsceneActorCallbackPrimary(void) {
     if ((gGameSettings.unlockAndSettingsFlags[1] & 1) &&

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "font.h"
 #include "main/61FC0.h"
@@ -45,7 +46,11 @@ INCLUDE_ASM("asm/nonmatchings/main/61FC0", setPlayerSlotAnimationFlag);
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", setMenuOverlayHeaderState);
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", setMenuOverlayHeaderCallback);
+extern s32 D_main_bss_80139968;
+
+void setMenuOverlayHeaderCallback(s32 arg0) {
+    D_main_bss_80139968 = arg0;
+}
 
 void setPlayerSlotEntryRGB(u16 arg0, u16 arg1, struct rgba *arg2) {
     struct ui_element *temp_v1;
@@ -66,7 +71,9 @@ void clearPlayerSlotPointerAndFlag(u16 arg0) {
     temp_v0->unk100 = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", isAnimInstanceActive);
+s32 isAnimInstanceActive(void *arg0) {
+    return (*(s8 *)((u8 *)(arg0) + 1)) != 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", getPlayerAnimChannelEntryByIds);
 
@@ -76,7 +83,9 @@ s32 identityReturnArg(s32 arg0) {
     return arg0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", getPlayerSlotAnimChannelCount);
+s32 getPlayerSlotAnimChannelCount(void *arg0) {
+    return (*(s32 *)((u8 *)(arg0) + 0x44C));
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", markStructInitializedOnce);
 

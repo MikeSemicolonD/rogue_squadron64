@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "main/08510.h"
 #include "main/1EE30.h"
@@ -125,7 +126,11 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", disableScreenColorOverlay);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", frameStartReset);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", clearStructPair2C30);
+s32 clearStructPair2C30(void *arg0) {
+    (*(s32 *)((u8 *)(arg0) + 0x2C)) = 0;
+    (*(s32 *)((u8 *)(arg0) + 0x30)) = 0;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", waitForPrevFrameDone);
 

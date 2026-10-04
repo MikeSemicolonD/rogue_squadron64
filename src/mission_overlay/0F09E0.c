@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "main/1D000.h"
 #include "mission_overlay/0F09E0.h"
@@ -214,7 +215,9 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", clearPendingChildNpc);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setObjectFlagBit4);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", clearObjectFlagBit4);
+void clearObjectFlagBit4(void *arg0) {
+    (*(u16 *)((u8 *)(arg0) + 0x14)) = (u16) ((*(u16 *)((u8 *)(arg0) + 0x14)) & 0xFFEF);
+}
 
 void computeAnchorRelativePositionByDistanceRatio(Vec3f arg0, Mat4x3 arg1, f32 arg2, Vec3f arg3) {
     Vec3f sp10;
@@ -253,7 +256,10 @@ f32 getEffectIntensity(void *arg0) {
     return (*(f32 *)((u8 *)(arg0) + 0x14C));
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setEffectIntensity);
+s32 setEffectIntensity(void *arg0, s32 arg1) {
+    (*(s32 *)((u8 *)(arg0) + 0x14C)) = arg1;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", triggerCueWithSlotEffect);
 

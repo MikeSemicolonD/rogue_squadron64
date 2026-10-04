@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", initHangarDisplayItemTimers);
 
@@ -46,7 +47,11 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", getConfigFloatPair);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", accumulateVectorInObjectFrame);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", getConfigFloatValue);
+extern f32 D_mission_overlay_8010A200;
+
+f32 getConfigFloatValue(void) {
+    return D_mission_overlay_8010A200;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", findNamedEntryInCurrentObject);
 

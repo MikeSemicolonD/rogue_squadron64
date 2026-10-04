@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", findVoiceSlotByAge);
 
@@ -36,6 +37,8 @@ INCLUDE_ASM("asm/nonmatchings/main/9BB60", consumeVoiceSamples);
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", advanceVoiceStateToPlaying);
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", stopVoice);
+void stopVoice(void *arg0) {
+    (*(s8 *)((u8 *)(arg0) + 0x11DD)) = 4;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", fake_func_8009C2C8);

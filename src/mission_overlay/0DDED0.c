@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", D_mission_overlay_800A7DE0);
 
@@ -30,7 +31,11 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0DDED0", func_mission_overlay_800D
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0DDED0", npcGroundTransportUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0DDED0", resetCraftSubsystemGlobal);
+extern s32 D_mission_overlay_8010C0A0;
+
+void resetCraftSubsystemGlobal(void) {
+    D_mission_overlay_8010C0A0 = 0;
+}
 
 void func_mission_overlay_800DFB84(void) {
 }
