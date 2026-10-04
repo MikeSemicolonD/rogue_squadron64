@@ -372,50 +372,41 @@ INCLUDE_ASM("asm/nonmatchings/main/04080", findAssetAcrossSegments);
 
 INCLUDE_ASM("asm/nonmatchings/main/04080", teardownAssetDma);
 
-#if 0
-s32 get_asset_size_extra(s32 arg0, u8 *arg1) {
-    s32 var_a0;
-    u32 var_s0;
-    s32 size;
-    struct D_80110A80_entry *var_s1;
-    struct manifest_entry *var_a1;
-    struct manifest_entry *var_v0;
+static __inline__ struct manifest_entry *findManifestEntryInAnySegment(u32 *seg, u8 *name, u32 flag) {
+    u32 i;
+    struct manifest_entry *entry;
 
-    if (arg0 == -1) {
-        for (var_s0 = 0; var_s0 < 4; var_s0++) {
-            if (D_gManifestTable[var_s0].one == 0) continue;
-
-            var_v0 = find_manifest_entry(var_s0, arg1, 0U);
-            if (var_v0 != NULL) {
-                arg0 = var_s0;
-                var_a1 = var_v0;
-                goto tyler;
+    if (*seg == -1U) {
+        for (i = 0; i < 4; i++) {
+            if (gManifestTable[i].one != 0) {
+                entry = find_manifest_entry(i, name, flag);
+                if (entry != NULL) {
+                    *seg = i;
+                    return entry;
+                }
             }
         }
-        var_a1 = NULL;
-    } else {
-        var_v0 = find_manifest_entry(arg0, arg1, 0U);
-        var_a1 = var_v0;
+        return NULL;
     }
-tyler:
-    if (var_a1 != NULL) {
-        size = 0;
-    } else {
-        var_a0 = 0;
-        if ((D_gManifestTable[arg0].unk4C != 0) && (var_a1->compressed_size != -1U)) {
-            var_a0 = ((var_a1->flags & 0x44) == 0) << 6;
-        }
-        if ((var_a1->flags & 4) != 0) {
-            size = var_a1->compressed_size + var_a0;
-        } else {
-            size = var_a1->decompressed_size + var_a0;
-        }
-    }
-    return size;
+    return find_manifest_entry(*seg, name, flag);
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/04080", get_asset_size_extra);
-#endif
+
+u32 get_asset_size_extra(u32 seg, u8 *entry_name) {
+    struct manifest_entry *entry = findManifestEntryInAnySegment(&seg, entry_name, 0);
+    s32 extra;
+
+    if (entry == NULL) {
+        return 0;
+    }
+    extra = 0;
+    if (gManifestTable[seg].unk4C != 0 && entry->compressed_size != -1U) {
+        extra = ((entry->flags & 0x44) == 0) << 6;
+    }
+    if (!(entry->flags & 4)) {
+        return entry->decompressed_size + extra;
+    }
+    return entry->compressed_size + extra;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/04080", setupAssetDma);
 
@@ -445,25 +436,6 @@ s32 setManifestEntryName(s32 arg0, u8 *arg1) {
         gManifestTable[arg0].unk20[0] = '\0';
     }
     return 1;
-}
-
-static __inline__ struct manifest_entry *findManifestEntryInAnySegment(u32 *seg, u8 *name, u32 flag) {
-    u32 i;
-    struct manifest_entry *entry;
-
-    if (*seg == -1U) {
-        for (i = 0; i < 4; i++) {
-            if (gManifestTable[i].one != 0) {
-                entry = find_manifest_entry(i, name, flag);
-                if (entry != NULL) {
-                    *seg = i;
-                    return entry;
-                }
-            }
-        }
-        return NULL;
-    }
-    return find_manifest_entry(*seg, name, flag);
 }
 
 s32 get_manifest_entry_type(u32 seg, u8 *entry_name) {

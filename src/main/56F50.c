@@ -158,13 +158,60 @@ u8 checkAndReturnByteFlagAsU8(void *arg0, s32 arg1, void *arg2, void *arg3) {
     return transformVec3ToNpcLocalWithScale(arg0, 0, arg2, arg3, &out);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", lookupHmtMaterialByName);
+u8 *lookupHmtMaterialByName(void **arg0, u8 *name, s32 *out) {
+    u8 *e = *(u8 **)((u8 *)*arg0 + 0x28);
+    u8 *idx;
+    s32 i;
+
+    if (e == NULL) {
+        return NULL;
+    }
+    idx = e + 9;
+    while (*e != 0) {
+        for (i = 0; i < 9; i++) {
+            if (e[i] != name[i]) {
+                break;
+            }
+            if (e[i] == 0) {
+                if (out != NULL) {
+                    u8 *p = *(u8 **)((u8 *)*arg0 + 0x14);
+
+                    p += *idx * 8;
+                    *out = *(s32 *)(p + 8);
+                }
+                return (u8 *)arg0 + (*idx * 0x4C + 0xC);
+            }
+        }
+        e += 0xA;
+        idx += 0xA;
+    }
+    return NULL;
+}
 
 f32 getNpcContextFloatAt34(void **arg0) {
     return (*(f32 *)((u8 *)(*arg0) + 0x34));
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", findModelChildNodeByName);
+u8 *findModelChildNodeByName(void **arg0, u8 *name) {
+    u8 *e = *(u8 **)((u8 *)*arg0 + 0x2C);
+    u32 i;
+
+    if (e == NULL) {
+        return NULL;
+    }
+    while (*(s32 *)e != 0) {
+        for (i = 0; i < 7; i++) {
+            if ((e + i)[4] != name[i]) {
+                break;
+            }
+            if ((e + i)[4] == 0) {
+                return e;
+            }
+        }
+        e += 0xC;
+    }
+    return NULL;
+}
 
 void applyFlagsToMeshTreeOrList(void **arg0, struct meshdef1 *arg1, u32 arg2, u32 arg3) {
     if (arg0 != NULL) {
