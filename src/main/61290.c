@@ -30,7 +30,14 @@ void spawnRandomScaleEffectDefault(s32 arg0) {
     spawnNpcOfType(randomlyScaledEffectNpcHandler, &params, 1, 0xA);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61290", spawnNpcType0xAFromTemplate);
+void spawnNpcType0xAFromTemplate(s32 arg0, f32 scale) {
+    RandomScaleEffectParams params;
+
+    params.unk0 = arg0;
+    params.unk8 = scale;
+    params.unkC = scale;
+    spawnNpcOfType(randomlyScaledEffectNpcHandler, &params, 1, 0xA);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61290", spawnRandomScaleColoredEffectAltVariant);
 
