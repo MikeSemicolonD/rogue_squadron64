@@ -114,7 +114,107 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", npcAtStUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", playerAtStInit);
+#include "game_settings.h"
+typedef struct {
+    u8 p00[0xB4];
+    s16 fB4;
+    u8 pB6[0xC0 - 0xB6];
+    f32 fC0;
+    f32 fC4;
+    u8 pC8[0xD8 - 0xC8];
+    s32 fD8;
+    s32 fDC;
+    s32 fE0;
+    u8 pE4[4];
+    f32 fE8;
+    f32 fEC;
+    f32 fF0;
+    f32 fF4;
+    f32 fF8;
+    f32 fFC;
+    u8 p100[4];
+    f32 f104;
+    f32 f108;
+    f32 f10C;
+    f32 f110;
+    f32 f114;
+    f32 f118;
+    s32 f11C;
+    f32 f120;
+    f32 f124;
+    f32 f128;
+    f32 f12C;
+    f32 f130;
+    f32 f134;
+    f32 f138;
+    s32 f13C;
+    f32 f140;
+    f32 f144;
+    f32 f148;
+    s32 f14C;
+    f32 f150;
+    f32 f154;
+    s16 f158;
+    u8 p15A[6];
+    s32 f160;
+    s32 f164;
+    s32 f168;
+    u8 p16C[4];
+    s32 f170;
+    s32 f174;
+    s32 f178;
+    u8 p17C[4];
+    s16 f180;
+    u8 p182[0x194 - 0x182];
+    s32 f194;
+} AtStPlayer;
+
+extern AtStPlayer D_main_bss_80137DBC;
+void initPlayerCraftMovementMode(AtStPlayer *);
+s32 refreshPlayerSecondaryWeaponHud(s32, void *, s32);
+
+void playerAtStInit(s32 arg0, s16 arg1)
+{
+  AtStPlayer *p = &D_main_bss_80137DBC;
+  register u32 mask asm("$6");
+  p->f180 = arg1;
+  p->fB4 = 0;
+  initPlayerCraftMovementMode(p);
+  mask = 0xFEFFFFFF;
+  p->f11C = (p->f14C = (p->f13C = 0));
+  p->fE0 = (p->fDC = (p->fD8 = 0));
+  p->f158 = 0;
+  p->fC0 = 150.0f;
+  p->fC4 = 150.0f;
+  p->fE8 = 2.625f;
+  p->fEC = 2.625f;
+  p->fF0 = 0.11875f;
+  p->fF4 = 0.11875f;
+  p->fF8 = 1.4f;
+  p->fFC = 1.8f;
+  p->f104 = 15.0f;
+  p->f108 = 10.0f;
+  p->f10C = 1.0f;
+  p->f110 = -40.0f;
+  p->f114 = -40.0f;
+  p->f118 = 35.0f;
+  p->f120 = 35.0f;
+  p->f124 = 35.0f;
+  p->f130 = 0.75f;
+  p->f134 = 3.0f;
+  p->f138 = 20.0f;
+  p->f140 = 10.0f;
+  p->f144 = 60.0f;
+  p->f148 = 10.0f;
+  p->f150 = 5.0f;
+  p->f154 = 40.0f;
+  p->f128 = 0.2f;
+  p->f12C = 0.15f;
+  p->f174 = (p->f168 = (p->f164 = (p->f170 = (p->f160 = 0))));
+  p->f194 = 4;
+  gGameSettings.unlockAndSettingsFlags[0] &= mask;
+  p->f178 = refreshPlayerSecondaryWeaponHud(0, &gGameSettings, 0xFEFFFFFF) & 0xFF;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A721C);
 
