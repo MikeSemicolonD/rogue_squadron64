@@ -154,7 +154,17 @@ void setSpeechVolume(u8 vol) {
     applySpeechVolumeScalar(D_main_bss_80139C88);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", isSpeechSlotActive);
+extern s32 D_main_80139B80[];
+s32 isVoiceHandleActive(s32);
+u8 isSpeechSlotActive(u8 slot) {
+    if (slot != 0) {
+        s32 h = D_main_80139B80[slot - 1];
+        if (h != -1) {
+            return isVoiceHandleActive(h);
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", stopSpeechSlotIfActive);
 
