@@ -122,7 +122,23 @@ void computeAimAnglesFromObjectPositions(Mat4x3 arg0, Mat4x3 arg1, Vec3f arg2, f
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", setupSceneNodeTransitionBetweenNodes);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", requestCinematicNodeEvent);
+extern s32 D_8010CA20;
+extern u8 D_main_8009EBBC;
+extern s32 D_main_8009EBC0;
+extern s32 D_main_8009EC10;
+extern s32 D_8010C9E0;
+void requestCinematicNodeEvent(s32 idx) {
+    u8 *p;
+
+    if (D_8010CA20 == 0) {
+        p = D_main_bss_80138D18[idx].unk4;
+        if (!(*(u16 *)p & 0x10) || *(s32 *)(p + 8) == 3) {
+            D_main_8009EBBC = 1;
+            D_main_8009EC10 = D_main_8009EBC0;
+            D_8010C9E0 |= 0x40;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", resetSceneNodeShakeStateArray);
 
