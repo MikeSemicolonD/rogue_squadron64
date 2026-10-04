@@ -60,7 +60,31 @@ void dispatchEffectObjectBehavior(s32 idx, s32 kind, s32 arg2) {
     updateEffectObjectTransformPieces(D_main_8009EB98[kind], idx, arg2, 0.046875f, gPlayers[idx].inner.unk178[0x14]);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", registerSceneNodeAndInvertRotation);
+typedef struct {
+    u8 pad0[4];
+    void *unk4;
+    s32 unk8;
+    s32 unkC;
+    s32 unk10;
+    s32 unk14;
+    u8 pad18[0x4C];
+    s32 unk64;
+    s32 unk68;
+    s32 unk6C;
+    s32 unk70;
+    u8 pad74[0xD0];
+} SceneNode;
+extern s32 D_main_bss_80138260;
+extern SceneNode *D_main_bss_80138894;
+extern SceneNode D_main_bss_80138D18[];
+void registerSceneNodeAndInvertRotation(u8 *obj, u8 *node) {
+    if (D_main_bss_80138260 == 1) {
+        D_main_bss_80138894->unk4 = node;
+    } else {
+        D_main_bss_80138D18[*(s32 *)(node + 0xC)].unk4 = node;
+    }
+    mat3x3InverseInto(obj + 0x2C, node + 0x28);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", initTransformNodeFromVectors);
 
