@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Preprocesses an input asm file to match asn64's reordering and macro expansion, then passes it to the provided assembler.
 
+import re
 import sys
 import subprocess
 from typing import *
@@ -62,6 +63,11 @@ compare_mnemonics: Set[str] = {
     "c.lt.s", "c.le.s", "c.eq.s",
     "c.lt.d", "c.le.d", "c.eq.d"
 }
+
+INDEXED_LOADS = {"lb", "lbu", "lh", "lhu", "lw", "lwc1"}
+# symbol[+/-offset](base) where the symbol is a name, not a number, and the base is not $0
+INDEXED_SYMBOL_RE = re.compile(r"^([A-Za-z_.][\w.]*(?:[+-](?:0x[0-9A-Fa-f]+|\d+))?)\((\$(?!0\b)\w+)\)$")
+
 
 def get_line_tokens(line: str) -> List[str]:
     stripped: str = line.strip().split("#")[0].strip()
@@ -291,6 +297,39 @@ with open(input_filename, mode="r") as input_file:
                     )
                     mfhilo_delay_count = 3 # Set to 3 so it becomes 2 after the decrement
                     mfhilo_delay_location = len(preprocessed) + 1
+            elif identifier == "remu":
+                # Insert nops if there was a mflo/mfhi recently right after it
+                while mfhilo_delay_count > 0:
+                    preprocessed.append("\tnop\n")
+                    mfhilo_delay_count -= 1
+                # Expanded like asn64: divu, then the divide-by-zero check, then mfhi
+                operands = [s.strip() for s in tokens[1].split(",")]
+                if operands[0] != "$0":
+                    remu_branch_label: str = f"BRANCH_LABEL_{generated_symbol_count}"
+                    generated_symbol_count += 1
+                    line = (
+                         "\t.set noat\n"
+                        f"\tdivu $0,{operands[1]},{operands[2]}\n"
+                        f"\tbnez {operands[2]},{remu_branch_label}\n"
+                         "\tnop\n"
+                         "\tbreak 0x7\n"
+                        f"{remu_branch_label}:\n"
+                        f"\tmfhi {operands[0]}\n"
+                         "\t.set at\n"
+                    )
+                    mfhilo_delay_count = 3 # Set to 3 so it becomes 2 after the decrement
+                    mfhilo_delay_location = len(preprocessed) + 1
+            elif identifier in INDEXED_LOADS and len(tokens) > 1 and "," in tokens[1] and INDEXED_SYMBOL_RE.match(tokens[1].split(",", 1)[1].strip()):
+                # asn64 builds symbol+register addresses in $at; modern gas uses the destination register for loads
+                dest = tokens[1].split(",", 1)[0].strip()
+                m = INDEXED_SYMBOL_RE.match(tokens[1].split(",", 1)[1].strip())
+                line = (
+                     "\t.set noat\n"
+                    f"\tlui $at,%hi({m.group(1)})\n"
+                    f"\taddu $at,$at,{m.group(2)}\n"
+                    f"\t{identifier} {dest},%lo({m.group(1)})($at)\n"
+                     "\t.set at\n"
+                )
             elif identifier in ["mflo", "mfhi"]:
                 mfhilo_delay_count = 3 # Set to 3 so it becomes 2 after the decrement
                 mfhilo_delay_location = len(preprocessed) + 1
