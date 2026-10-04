@@ -126,7 +126,13 @@ INCLUDE_ASM("asm/nonmatchings/main/56F50", createMeshInstanceFromSource);
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", setMeshInstanceLodAndRebuildNodes);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", checkAndReturnByteFlagAsU8);
+extern s32 transformVec3ToNpcLocalWithScale(void *, s32, void *, void *, void *);
+
+u8 checkAndReturnByteFlagAsU8(void *arg0, s32 arg1, void *arg2, void *arg3) {
+    s32 out;
+
+    return transformVec3ToNpcLocalWithScale(arg0, 0, arg2, arg3, &out);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", lookupHmtMaterialByName);
 
