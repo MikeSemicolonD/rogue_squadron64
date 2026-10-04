@@ -27,7 +27,66 @@ f32 D_main_8009ECB0[] = {
     200.0f,
 };
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", initNpcBookkeepingTables);
+extern u16 D_main_bss_80139494;
+extern u8 D_main_8013A498[];
+extern u16 D_main_bss_8013A490;
+extern u16 D_main_bss_801394E4;
+extern u16 D_main_bss_801394E2;
+extern void *D_main_bss_801394E8;
+extern u8 D_main_801394F0[];
+extern u8 D_main_bss_80139550;
+extern s32 D_main_bss_80139554;
+void *rs_malloc(u32, u16);
+
+void initNpcBookkeepingTables(void)
+{
+  s32 i;
+  u16 *hp;
+  u8 *q;
+  u16 ff;
+  u16 ff2;
+  i = 0;
+  do
+  {
+    hobObjectListItems[i].nextIndex = 1;
+    hobObjectListItems[i].nextIndex = i + hobObjectListItems[i].nextIndex;
+    i = i + 1;
+  }
+  while (i < 0x60);
+  ff2 = (D_main_bss_80139494 = 0xFFFF);
+ do { i = 0x18; hp = hobObjectHashMap; hp += 0x18; } while (0);
+  do
+  {
+    *hp = ff2;
+    i--;
+    hp--;
+  }
+  while (i >= 0);
+  i = 0;
+  do
+  {
+    D_main_8013A498[i] = i + 1;
+    i = i + 1;
+  }
+  while (i < 0x80);
+  D_main_bss_8013A490 = 0x7F;
+  numHobObjectsLoaded = 0;
+  D_main_bss_801394E4 = 0;
+  D_main_bss_801394E2 = 0;
+  D_main_bss_801394E8 = rs_malloc(0x4380, 0);
+  i = 0x5F;
+  q = D_main_801394F0 + i;
+  do
+  {
+    *q = i;
+    i--;
+    q--;
+  }
+  while (i >= 0);
+  i = 0x60;
+  D_main_bss_80139550 = i;
+  D_main_bss_80139554 = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", load_hmt_and_hob);
 
