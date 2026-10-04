@@ -84,7 +84,51 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", tickProgressChannel);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", raycastTerrainAndNpcs);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initActorRenderDescriptorIfUninit);
+typedef struct { f32 x, y, z; } Vec3Cp2;
+
+void *getNpcContextField8(u16);
+void parseDatItemCommon(void *, void *);
+void datItemSetObjectiveBooleanCount(s32, s32, s32, s32, s32, s32);
+
+s32 initActorRenderDescriptorIfUninit(u8 *arg0, u8 arg1, u8 *arg2, u8 arg3, s32 *arg4) {
+    s32 *p;
+    s32 *q = arg4;
+    Vec3Cp2 *npc;
+
+    if (arg0[0x1A7] == 0) {
+        *(u16 *)(arg2 + 6) = 0xFFFF;
+        if (arg1 == 0 && !(*(u32 *)(arg0 + 0x1A4) & 0xFF00FF00)) {
+            if (arg3 == 1) {
+                npc = getNpcContextField8(*(u16 *)(arg0 + 0x198));
+                *(Vec3Cp2 *)(arg2 + 0x10) = *npc;
+            }
+            parseDatItemCommon(arg2, arg2 + 0x10);
+        }
+    } else {
+        if (*(u16 *)(arg2 + 6) == *(u16 *)(arg0 + 0x198)) {
+            *(u16 *)(arg2 + 6) = 0xFFFF;
+        }
+        if (arg1 == 0 && !(*(u32 *)(arg0 + 0x1A4) & 0xFF00FF00)) {
+            p = *(s32 **)(arg0 + 0x19C);
+            if (p != NULL) {
+                *p = *p - 1;
+            }
+        } else {
+            p = *(s32 **)(arg0 + 0x19C);
+            if (p != NULL) {
+                *p = *p - 1;
+            }
+            p = *(s32 **)(arg0 + 0x1A0);
+            if (p != NULL) {
+                *p = *p + 1;
+            }
+        }
+    }
+    if (arg0[0x1A5] != 0 && arg4 != NULL) {
+        datItemSetObjectiveBooleanCount(q[0], q[1], q[2], q[3], q[4], q[5]);
+    }
+    return 1;
+}
 
 void *getNpcContextField8(u16);
 void computeBillboardFacingVector(void *, void *);
