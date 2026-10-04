@@ -312,7 +312,47 @@ s32 findFreeCellBitSlot(JfifBitReader *arg0, u8 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", allocCellBitGroup);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", allocCellGeometryBuffer);
+void allocCellGeometryBuffer(u8 *arg0) {
+    f32 sp[4];
+    f32 *dst;
+    u8 *src;
+    s32 i;
+    s32 j;
+    s32 off;
+
+    i = 0;
+    if (*(u16 *)(arg0 + 4) & 0x20) {
+        dst = sp;
+        src = arg0;
+        do {
+            f32 t = *(f32 *)(src + 0x18);
+            src += 4;
+            i += 1;
+            *dst = t;
+            dst += 1;
+        } while (i < 4);
+    } else {
+        sp[0] = 1.402f;
+        sp[1] = 1.772f;
+        sp[2] = 0.71414f;
+        sp[3] = 0.34414f;
+    }
+    *(void **)(arg0 + 0x7D8) = rs_malloc(0x400, *(u16 *)(arg0 + 0xE));
+    *(void **)(arg0 + 0x7DC) = rs_malloc(0x400, *(u16 *)(arg0 + 0xE));
+    *(void **)(arg0 + 0x7E0) = rs_malloc(0x400, *(u16 *)(arg0 + 0xE));
+    *(void **)(arg0 + 0x7E4) = rs_malloc(0x400, *(u16 *)(arg0 + 0xE));
+    i = 0;
+    j = -0x80;
+    do {
+        off = i * 4;
+        *(s32 *)(off + *(s32 *)(arg0 + 0x7D8)) = (((s32)(sp[0] * 65536.0f + 0.5f) * j) + 0x8000) >> 16;
+        *(s32 *)(off + *(s32 *)(arg0 + 0x7DC)) = (((s32)(sp[1] * 65536.0f + 0.5f) * j) + 0x8000) >> 16;
+        *(s32 *)(off + *(s32 *)(arg0 + 0x7E0)) = -(s32)(sp[2] * 65536.0f + 0.5f) * j;
+        i += 1;
+        *(s32 *)(off + *(s32 *)(arg0 + 0x7E4)) = (-(s32)(sp[3] * 65536.0f + 0.5f) * j) + 0x8000;
+        j += 1;
+    } while (i < 0x100);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", buildDebrisMeshFromCells);
 
@@ -364,4 +404,4 @@ void allocZeroedCellRecord(CellRecord *rec) {
     }
 }
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/jfif_handling", D_menu_overlay_800A78A8);
+static u32 D_menu_overlay_800A78AC[] __attribute__((section(".rodata"))) = { 0x0C020B28 };
