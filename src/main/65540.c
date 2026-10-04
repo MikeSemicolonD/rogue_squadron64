@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "level_objectives.h"
 
@@ -12,7 +13,73 @@ INCLUDE_ASM("asm/nonmatchings/main/65540", setupNpcUpdateFunctions);
 
 INCLUDE_ASM("asm/nonmatchings/main/65540", spawnDatStructureNpcByType);
 
-INCLUDE_ASM("asm/nonmatchings/main/65540", parseDatSpawnPositions);
+extern u8 D_main_bss_80130B63;
+
+s32 parseDatSpawnPositions(u8 *arg0) {
+    if (D_main_bss_80130B63 == 0 && arg0[3] != 0) {
+        return 0;
+    }
+    switch (*(u16 *)arg0) {
+        case 0x0:
+        case 0x14:
+        case 0x18:
+        case 0x4C:
+        case 0x52:
+            return 1;
+        case 0xC:
+        case 0xD:
+        case 0xE:
+        case 0xF:
+        case 0x12:
+        case 0x13:
+        case 0x1E:
+        case 0x1F:
+        case 0x21:
+        case 0x24:
+        case 0x25:
+        case 0x27:
+        case 0x28:
+        case 0x29:
+        case 0x2A:
+        case 0x2B:
+        case 0x2C:
+        case 0x2D:
+        case 0x2E:
+        case 0x2F:
+        case 0x30:
+        case 0x31:
+        case 0x34:
+        case 0x35:
+        case 0x37:
+        case 0x3B:
+        case 0x3C:
+        case 0x3D:
+        case 0x3E:
+        case 0x40:
+        case 0x41:
+        case 0x42:
+        case 0x43:
+        case 0x46:
+        case 0x47:
+        case 0x48:
+        case 0x4A:
+        case 0x4D:
+        case 0x50:
+            return (*(s32 *)(arg0 + 0x88) != 0) ? 1 : 2;
+        case 0x33:
+        case 0x36:
+        case 0x44:
+        case 0x4B:
+        case 0x4F:
+            return (*(s32 *)(arg0 + 0x6C) != 0) ? 1 : 2;
+        case 0x32:
+            return (*(s32 *)(arg0 + 0x6C) != 0) ? 1 : 2;
+        case 0x19:
+            return (*(s32 *)(arg0 + 0x40) != 0) ? 1 : 2;
+        default:
+            return 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/65540", isDatItemConditionMet);
 
