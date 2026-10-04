@@ -61,7 +61,8 @@ struct GameSettings {
     /* 0x24 */ u8  unk26;
     /* 0x24 */ u8  unk27;
     /* 0x28 */ u32 nabooStarfighterCheatHash;
-    /* 0x2C */ u32 unk2C;
+    /* 0x2C */ u8  unk2C;
+    /* 0x2D */ u8  unk2D[3];
 }; // size 0x30
 
 extern struct GameSettings gGameSettings; // 0x80130B40
