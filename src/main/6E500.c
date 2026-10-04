@@ -145,7 +145,34 @@ INCLUDE_ASM("asm/nonmatchings/main/6E500", serializeSettingsToSaveAndPersist);
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", setUnlockBitAndPersist);
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", applyVolumeSettingsToMixer);
+void applyMusicOrSfxVolume(u8, s32, s32, s32);
+void setMusyXVoiceTickGate(s32);
+void setSpeechVolume(u8);
+void applyVolumeSettingsToMixer(void) {
+    u8 music;
+    u8 sfx;
+    u8 speech;
+
+    music = gGameSettings.musicVolume;
+    sfx = gGameSettings.soundFxVolume;
+    speech = gGameSettings.speechVolume;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~2;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~4;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~8;
+    if (music == 0) {
+        gGameSettings.unlockAndSettingsFlags[1] |= 2;
+    }
+    if (sfx == 0) {
+        gGameSettings.unlockAndSettingsFlags[1] |= 4;
+    }
+    if (speech == 0) {
+        gGameSettings.unlockAndSettingsFlags[1] |= 8;
+    }
+    applyMusicOrSfxVolume(music, 0, 1, 0);
+    applyMusicOrSfxVolume(sfx, 0, 0, 1);
+    setSpeechVolume(speech);
+    setMusyXVoiceTickGate(((u8 *)&gGameSettings.unlockAndSettingsFlags[1])[3] & 0x80);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", resetGameSettingsAndMissionStats);
 
