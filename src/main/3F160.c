@@ -197,7 +197,34 @@ void destroyNpcSlotByIndex(u16 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/3F160", revalidateNpcSlotIterator);
+typedef struct {
+    u16 idx;
+    u16 next;
+    u16 nextNext;
+} NpcSlotChainPos;
+
+u16 revalidateNpcSlotIterator(NpcSlotChainPos *pos) {
+    u16 idx;
+
+    idx = pos->next;
+    if (idx != gNpcSlotList[pos->idx].next_idx && (idx == 0xFFFF || pos->nextNext != gNpcSlotList[idx].next_idx || (pos->nextNext != 0xFFFF && idx != gNpcSlotList[pos->nextNext].prev_idx))) {
+        return 0xFFFF;
+    }
+    while (idx != 0xFFFF) {
+        if (gNpcSlotList[idx].unk00 != NULL) {
+            pos->idx = idx;
+            pos->next = gNpcSlotList[idx].next_idx;
+            if (pos->next != 0xFFFF) {
+                pos->nextNext = gNpcSlotList[pos->next].next_idx;
+            } else {
+                pos->nextNext = 0xFFFF;
+            }
+            return gNpcSlotList[idx].unk00->unk16;
+        }
+        idx = gNpcSlotList[idx].next_idx;
+    }
+    return 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/3F160", relinkNpcSlotToNewParentGroup);
 
@@ -238,12 +265,6 @@ void freeNpcSlotArray(void) {
     rs_free(gNpcSlotList);
     gNpcSlotList = NULL;
 }
-
-typedef struct {
-    u16 idx;
-    u16 next;
-    u16 nextNext;
-} NpcSlotChainPos;
 
 u16 findActiveNpcInSlotChain(u16 idx, NpcSlotChainPos *out) {
     while (idx != 0xFFFF) {
