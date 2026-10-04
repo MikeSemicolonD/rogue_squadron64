@@ -7,7 +7,7 @@ f32  calculateDatItemDistanceToPlayer(char*);
 f32  getScaledPlayerCraftSpeed(void);
 void spawnEffectOnNamedDatItem(u8*, f32, s32, f32);
 s32  initAnchoredActorTowardNamedDatItem(u8*, u8*);
-s32  getDatItemHealth(u8*);
+s32  getDatItemHealth(char*);
 f32  getDatItemHealthPercentage(u8*);
 void setLevelObjectTrackingScalar(f32);
 void playObjectiveVoiceLine1(u32);
