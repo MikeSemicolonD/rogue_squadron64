@@ -155,7 +155,30 @@ s32 setActiveRenderListPtr(s32 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitColorFillRect);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", setScreenColorOverlay);
+extern s8 D_main_bss_8011A88C;
+extern s16 D_main_bss_8011A880;
+extern s16 D_main_bss_8011A882;
+extern s16 D_main_bss_8011A884;
+extern u16 D_main_bss_8011A886;
+extern u8 D_main_bss_8011A888;
+extern u8 D_main_bss_8011A889;
+extern u8 D_main_bss_8011A88A;
+extern s8 D_main_bss_8011A88D;
+extern s8 D_main_bss_8011A88E;
+
+s32 setScreenColorOverlay(s8 arg0, s16 arg1, s16 arg2, s16 arg3, u16 arg4, u8 arg5, u8 arg6, u8 arg7) {
+    D_main_bss_8011A88C = 1;
+    D_main_bss_8011A880 = arg1;
+    D_main_bss_8011A882 = arg2;
+    D_main_bss_8011A884 = arg3;
+    D_main_bss_8011A88D = arg0;
+    D_main_bss_8011A88E = 0;
+    D_main_bss_8011A888 = arg5;
+    D_main_bss_8011A889 = arg6;
+    D_main_bss_8011A88A = arg7;
+    D_main_bss_8011A886 = arg4;
+    return 1;
+}
 
 extern s8 D_main_bss_8011A88C;
 
@@ -330,7 +353,20 @@ s32 setRenderStateFlagByteThree(s8 arg0) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", setViewStateBytesAndFadeScale);
+extern s8 D_main_bss_8011A875;
+extern s8 D_main_bss_8011A874;
+extern s8 D_main_bss_8011A873;
+extern f32 D_main_bss_8011A878;
+extern f32 D_main_bss_8011A87C;
+
+s32 setViewStateBytesAndFadeScale(s8 arg0, s8 arg1, s8 arg2, f32 arg3, f32 arg4) {
+    D_main_bss_8011A873 = arg0;
+    D_main_bss_8011A874 = arg1;
+    D_main_bss_8011A875 = arg2;
+    D_main_bss_8011A878 = arg3;
+    D_main_bss_8011A87C = (32.0f / arg4) + arg3;
+    return 1;
+}
 
 extern s8 D_main_bss_8011A873;
 extern s8 D_main_bss_8011A874;
