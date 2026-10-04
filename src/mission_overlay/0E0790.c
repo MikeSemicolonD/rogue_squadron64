@@ -17,7 +17,53 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", applyCraftAnimAndDetailPa
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7FB0);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", playAttachmentMaterialSoundVariantA);
+typedef struct {
+    f32 m[12];
+} AttachMtxA;
+
+extern char D_mission_overlay_800A7FB0[];
+typedef struct {
+    u8 pad0[0x24];
+    f32 f24;
+    f32 f28;
+    f32 f2C;
+} AttachTblEntry;
+
+extern AttachTblEntry D_mission_overlay_8010ABA0[];
+extern s32 D_main_bss_80137CE4;
+void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
+void setObjectSubstructF10IfReady(s32, f32, s32);
+void resolveNpcAttachmentPos(s32, void *, f32, f32);
+u8 tickProgressChannel(s32, void *, s32, f32 *);
+void triggerCueWithSlotEffect(s32, s32, void *, void *, s32, f32, f32);
+void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+
+s32 playAttachmentMaterialSoundVariantA(u8 *arg0, s32 arg1) {
+    AttachMtxA mtx;
+    f32 progress;
+    f32 scale;
+    u8 *npc;
+    u8 *sub;
+
+    npc = *(u8 **)(arg0 + 4);
+    sub = *(u8 **)(*(u8 **)(npc + 0x38) + 0x1A8);
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), D_mission_overlay_800A7FB0, arg1, &mtx, 0, 0);
+    if (arg1 != 3) {
+        setObjectSubstructF10IfReady(*(s32 *)(npc + 0x38), 0.033333335f, 0);
+        if (arg1 == 0) {
+            *(s32 *)(sub + 0x10) = 0;
+        }
+    }
+    scale = *(f32 *)(*(u8 **)(npc + 0x34) + D_main_bss_80137CE4 * 4 + 0xF4);
+    if (scale != 0.0f) {
+        resolveNpcAttachmentPos(*(s32 *)(npc + 0x38), &mtx, D_mission_overlay_8010ABA0[npc[0xB2]].f24, scale);
+    }
+    if (tickProgressChannel(*(s32 *)(npc + 0x38), &mtx, 0, &progress) == 1) {
+        triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 2, &mtx, &D_mission_overlay_8010ABA0[npc[0xB2]], 0, D_mission_overlay_8010ABA0[npc[0xB2]].f24, progress);
+        play3DSoundEvent(0, npc, npc + 0x24, 15.0f, 0.31f, 0, 0x1D, 0x6E, 0x28);
+    }
+    return 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7FB8);
 
