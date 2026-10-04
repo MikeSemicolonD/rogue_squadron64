@@ -241,7 +241,14 @@ void normalize_vector(Vec3f v) {
     v[2] /= len;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1D000", vec3NormalizeInto);
+void vec3NormalizeInto(Vec3f dst, Vec3f src) {
+    register f32 len asm("$f0");
+
+    SQRTF_ASM(len, src[0] * src[0] + src[1] * src[1] + src[2] * src[2]);
+    dst[0] = src[0] / len;
+    dst[1] = src[1] / len;
+    dst[2] = src[2] / len;
+}
 
 f32 vec3Dot(Vec3f arg0, Vec3f arg1) {
     return (arg0[0] * arg1[0]) + (arg0[1] * arg1[1]) + (arg0[2] * arg1[2]);
