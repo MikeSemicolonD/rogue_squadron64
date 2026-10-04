@@ -772,7 +772,27 @@ void shutdownSongAssetLoadWorker(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", tickSongAssetLoadWorker);
+void *recvServiceMessage(s32);
+void sendServiceMessage(s32, s32, void *, s32);
+void rs_free(void *);
+typedef struct {
+    u8 pad0[0x14];
+    s32 unk14;
+    s32 unk18;
+    s32 unk1C;
+} SongLoadMsg;
+void tickSongAssetLoadWorker(s32 *arg0) {
+    s32 reply[6];
+    SongLoadMsg *msg;
+
+    while (1) {
+        msg = recvServiceMessage(*arg0);
+        parseLoadedSndSection(msg->unk14);
+        loadSongAssetByName(*arg0, msg->unk18);
+        sendServiceMessage(*arg0, msg->unk1C, reply, 0);
+        rs_free(msg);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", fake_func_800C5898);
 
