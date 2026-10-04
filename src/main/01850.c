@@ -55,7 +55,33 @@ INCLUDE_ASM("asm/nonmatchings/main/01850", runVideoFrameTick);
 
 INCLUDE_ASM("asm/nonmatchings/main/01850", main);
 
-INCLUDE_ASM("asm/nonmatchings/main/01850", preNmiResetThread);
+extern OSMesgQueue D_main_8010DFD8;
+extern OSMesg D_main_8010D598;
+extern OSViMode osViModeTable[];
+void noopHandler_80004FD0(void);
+void initRumblePakSlots(void);
+void preNmiResetThread(void *arg) {
+    osCreateMesgQueue(&D_main_8010DFD8, &D_main_8010D598, 1);
+    osSetEventMesg(OS_EVENT_PRENMI, &D_main_8010DFD8, NULL);
+    osRecvMesg(&D_main_8010DFD8, NULL, OS_MESG_BLOCK);
+    D_main_bss_8010D210 = 1;
+    switch (osTvType) {
+        case 0:
+            osViSetMode(&osViModeTable[14]);
+            break;
+        case 1:
+            osViSetMode(&osViModeTable[0]);
+            break;
+        case 2:
+            osViSetMode(&osViModeTable[28]);
+            break;
+    }
+    osViBlack(1);
+    noopHandler_80004FD0();
+    initRumblePakSlots();
+    while (1) {
+    }
+}
 
 void idle_thread_handle(void) {
     osCreateViManager(0xFE);
