@@ -56,7 +56,92 @@ INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicSlotUpdate);
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", setupCutsceneLevel);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", initCinematicDispatchSlots);
+typedef struct {
+    s32 unk0;
+    void *unk4;
+    void *unk8;
+    void *unkC;
+    void *unk10;
+    void *unk14;
+    s32 unk18;
+    s32 unk1C;
+    s32 unk20;
+    u8 pad24[0x24];
+    void *unk48;
+} CineDispatch;
+
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    s32 unk8;
+    s32 unkC;
+    s32 unk10;
+    s32 unk14;
+    s32 unk18;
+    s32 unk1C;
+    s32 unk20;
+} CineBlock;
+
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    s32 unk8;
+    s32 unkC;
+    void *unk10;
+    s32 unk14;
+} CineNode;
+
+typedef struct {
+    s32 unk0;
+    void *unk4;
+} CinePair;
+
+extern u8 D_cinematic_overlay_800B09C0[];
+extern CinePair D_cinematic_overlay_800B09D0;
+extern u8 D_cinematic_overlay_800B09E0[];
+extern CineDispatch D_cinematic_overlay_800B0A00;
+extern CineBlock D_cinematic_overlay_800B0A50;
+extern CineNode D_cinematic_overlay_800B0AB0;
+void clearStructPair2C30(void *);
+void extractOrthonormalFrameFromStruct(void *, void *);
+void setVec3At0x24(void *, s32, s32, s32);
+
+void initCinematicDispatchSlots(s32 *arg0, void *arg1) {
+    u32 i;
+
+    i = 0;
+    *arg0 = 0;
+    do {
+        *(u32 *)(D_cinematic_overlay_800B09C0 + (i & 0xFF) * 4) = 0;
+        i++;
+    } while ((i & 0xFF) < 4);
+    D_cinematic_overlay_800B0A00.unk0 = (s32)arg0;
+    D_cinematic_overlay_800B0A00.unk4 = D_cinematic_overlay_800B09C0;
+    D_cinematic_overlay_800B0A00.unk8 = D_cinematic_overlay_800B09C0 + 4;
+    D_cinematic_overlay_800B0A00.unkC = D_cinematic_overlay_800B09C0 + 8;
+    D_cinematic_overlay_800B0A00.unk10 = D_cinematic_overlay_800B09C0 + 0xC;
+    D_cinematic_overlay_800B0A00.unk14 = &D_cinematic_overlay_800B09D0;
+    D_cinematic_overlay_800B0A00.unk48 = &D_cinematic_overlay_800B0A50;
+    D_cinematic_overlay_800B09D0.unk0 = 0;
+    D_cinematic_overlay_800B09D0.unk4 = D_cinematic_overlay_800B09E0;
+    extractOrthonormalFrameFromStruct(&D_cinematic_overlay_800B0A00.unk18, arg1);
+    D_cinematic_overlay_800B0AB0.unkC = 0;
+    D_cinematic_overlay_800B0AB0.unk8 = 0;
+    D_cinematic_overlay_800B0AB0.unk4 = 0;
+    D_cinematic_overlay_800B0AB0.unk0 = 0;
+    D_cinematic_overlay_800B0AB0.unk14 = 0;
+    D_cinematic_overlay_800B0AB0.unk10 = &D_cinematic_overlay_800B0A50;
+    setVec3At0x24((u8 *)&D_cinematic_overlay_800B0AB0 + 0x1C, D_cinematic_overlay_800B0A00.unk18, D_cinematic_overlay_800B0A00.unk1C, D_cinematic_overlay_800B0A00.unk20);
+    D_cinematic_overlay_800B0A50.unk8 = 0;
+    D_cinematic_overlay_800B0A50.unk4 = 0;
+    D_cinematic_overlay_800B0A50.unk0 = 0;
+    D_cinematic_overlay_800B0A50.unkC = 0x49000000;
+    D_cinematic_overlay_800B0A50.unk10 = 0;
+    D_cinematic_overlay_800B0A50.unk18 = 0;
+    D_cinematic_overlay_800B0A50.unk14 = 0;
+    D_cinematic_overlay_800B0A50.unk20 = 0;
+    clearStructPair2C30(&D_cinematic_overlay_800B0A50);
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicSlotBatchDispatch);
 
