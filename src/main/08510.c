@@ -172,7 +172,40 @@ struct DisplayListBuffer *reclaimDisplayListChunk(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", allocateDisplayListBuffer);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", allocDLBlockToFillRectList);
+extern struct DisplayListBuffer **D_main_bss_8011A4C4;
+
+Gfx *allocDLBlockToFillRectList(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    if (*D_main_bss_8011A4C4 != NULL) {
+        (*D_main_bss_8011A4C4)->prev = chunk;
+    }
+    chunk->next = *D_main_bss_8011A4C4;
+    *D_main_bss_8011A4C4 = chunk;
+    return chunk->displayList;
+}
 
 extern struct DisplayListBuffer **D_main_bss_8011A4AC;
 
