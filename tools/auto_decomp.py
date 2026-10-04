@@ -129,6 +129,17 @@ def makefile_with_gcc272(c_path):
     lines.insert(last + 1, target + GCC272_LINE)
     return "\n".join(lines)
 
+def declaration_for(name):
+    """The context's own declaration of a global declared later in the file, else an s32 extern."""
+    ctx = pathlib.Path("/tmp/auto_ctx.c").read_text()
+    m = re.search(r"^extern [^;(]*\b" + re.escape(name) + r"\b[^;(]*;", ctx, re.M)
+    if m:
+        return m.group(0) + "\n"
+    m = re.search(r"^[A-Za-z_][\w \*]*\b" + re.escape(name) + r"\([^;{]*\);", ctx, re.M)
+    if m:
+        return m.group(0) + "\n"
+    return f"extern s32 {name};\n"
+
 def try_func(func, c_path, s_path, variants):
     original = read(c_path)
     original_mk = read("Makefile")
@@ -155,8 +166,13 @@ def try_func(func, c_path, s_path, variants):
             write("Makefile", original_mk)
             continue
         m = pat.search(base)
-        write(c_path, base[:m.start()] + code.rstrip("\n").replace("\n", nl) + base[m.end():])
-        ok, reason = rom_matches()
+        for _ in range(4):
+            write(c_path, base[:m.start()] + code.rstrip("\n").replace("\n", nl) + base[m.end():])
+            ok, reason = rom_matches()
+            und = re.search(r"`(\w+)' undeclared", reason)
+            if ok or not und or und.group(1).startswith(("sp", "saved_reg", "temp_", "var_")):
+                break
+            code = declaration_for(und.group(1)) + code
         if ok:
             return True, "match " + " ".join(extra)
         write(c_path, original)
