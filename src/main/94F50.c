@@ -166,7 +166,16 @@ void applySongU16ParamCmdLocked(s32 arg0, s32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", quiesceSongSlotCmd);
+s32 quiesceSongSlotCmd(s32 handle) {
+    handle = findSongSlotByHandle(handle);
+    if (handle != -1) {
+        if (handle >= 0) {
+            D_main_bss_80149A00[handle].unkEC0 = 1;
+        } else {
+            D_main_bss_80149A00[handle & 0x7FFFFFFF].unkEEE &= ~8;
+        }
+    }
+}
 
 s32 quiesceSongSlotCmd(s32);
 
