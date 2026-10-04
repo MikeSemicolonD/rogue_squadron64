@@ -410,7 +410,43 @@ void scheduleCutsceneActionSlot(s16 id, f32 arg1, f32 arg2, f32 arg3) {
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", composeInterpolatedNodeMatricesAlt);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", tickCutsceneNpcSlots);
+void setNpcForwardVectorByIndex(u16, f32 *);
+
+typedef struct {
+    u8 pad0[0x88];
+    u8 mat[0x30];
+    u16 slot;
+    u8 padBA[0x13C - 0xBA];
+} CutNpcSlotB;
+
+void tickCutsceneNpcSlots(void *arg0) {
+    f32 a[3];
+    f32 b[3];
+    u32 i;
+    u16 slot;
+    s32 next;
+
+    i = 0;
+    if (*(u16 *)((u8 *)arg0 + 0x4A) != 0) {
+        do {
+            slot = ((CutNpcSlotB *)D_cinematic_overlay_800B1900)[i].slot;
+            if (slot != 0xFFFF) {
+                next = getNextSlotNpcTypeId(slot) & 0xFFFF;
+                if (next != 0xFFFF) {
+                    a[0] = 0.0f;
+                    a[1] = -0.1f;
+                    a[2] = -0.4f;
+                    transformVec3ByMat34((void *)((CutNpcSlotB *)D_cinematic_overlay_800B1900)[i].mat, a, b);
+                    setNpcForwardVectorByIndex(next, b);
+                } else {
+                    destroyNpcSlotChain(slot);
+                    ((CutNpcSlotB *)D_cinematic_overlay_800B1900)[i].slot = next;
+                }
+            }
+            i++;
+        } while (i < *(u16 *)((u8 *)arg0 + 0x4A));
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", despawnCutsceneNpcSlot);
 
