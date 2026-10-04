@@ -103,7 +103,62 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A59C4);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", spawnOrientedEffectWithEasedSpin);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", handleLevelSelectStartConfirm);
+extern u8 D_menu_overlay_800CDABB;
+extern s8 D_menu_overlay_800CDABC;
+extern u8 D_menu_overlay_800CDABE;
+extern s8 D_menu_overlay_800CDAC0;
+extern u8 D_menu_overlay_800CDAC7;
+extern u8 D_menu_overlay_800CDAC8;
+extern s32 D_menu_overlay_800CDACC;
+extern s32 D_menu_overlay_800CDFA8;
+extern s32 D_menu_overlay_800CDFAC;
+extern f32 D_menu_overlay_800CE6A8;
+extern u8 bridgeMenuState;
+extern u8 bridgeTransitionState;
+extern s32 getControllerNewButtonsPressed(u8);
+extern s32 getGameOrFrontText(s32);
+extern s32 isAnimInstanceActive(s32);
+extern s32 isPlayerShipActive();
+extern void markStructInitializedOnce(s32);
+extern void startPlayerSlotAnimationChannel(s32, s32);
+extern void stopVoiceByHandleLocked(s32);
+extern void bsearchFactor5TableByU16Key(s32, s32, s32);
+
+void handleLevelSelectStartConfirm(void) {
+    u8 start = 0;
+    if ((u8)(bridgeMenuState - 2) < 2U) {
+        if (bridgeTransitionState == 0 && D_menu_overlay_800CDAC0 == 0) {
+            if (getControllerNewButtonsPressed(D_menu_overlay_800CDAC8) & 0x4000) {
+                start = D_menu_overlay_800CDABE == 0;
+            }
+        }
+    }
+    if ((start != 0) || (D_menu_overlay_800CDABE != 0)) {
+        if (!(isAnimInstanceActive(D_menu_overlay_800CDFA8) & 0xFF)) {
+            if (D_menu_overlay_800CDABB != 0) {
+                markStructInitializedOnce(D_menu_overlay_800CDFAC);
+                if (D_menu_overlay_800CC700 != -1) {
+                    stopVoiceByHandleLocked(D_menu_overlay_800CC700);
+                    D_menu_overlay_800CC700 = -1;
+                }
+                D_menu_overlay_800CDABB = 0;
+                D_menu_overlay_800CDABC = 1;
+            }
+            if (D_menu_overlay_800CDAC7 == 1) {
+                startPlayerSlotAnimationChannel(D_menu_overlay_800CDFA8, getGameOrFrontText(0x39));
+                bsearchFactor5TableByU16Key(0x19, 0x5F, 0x40);
+                bridgeMenuState = 2;
+                D_menu_overlay_800CDAC7 = 0;
+                D_menu_overlay_800CE6A8 = 1.0f;
+            } else if (!(isPlayerShipActive() & 0xFF)) {
+                playExitSoundAndToggleScreenMeshes();
+                bridgeMenuState = 4;
+                bridgeTransitionState = 0;
+                D_menu_overlay_800CDACC = 0xFFFFFE;
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", tickMenuTransitionState);
 
