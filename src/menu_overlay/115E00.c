@@ -194,7 +194,52 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", layoutMenuTextRow);
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A5BA4);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", printLevelSelectWeaponText);
+extern u32 D_main_bss_80130B4C;
+extern char D_menu_overlay_800A5BA4[];
+void setPlayerSlotAnimationFlag(s32, char *, s32, s32, s16);
+
+void printLevelSelectWeaponText(u8 arg0) {
+    char buf[0x100];
+    char *a;
+    char *b;
+    char *c;
+    char *d;
+    char *e;
+    s32 flags;
+    s32 n;
+    s32 i;
+    u16 y;
+
+    n = 0;
+    flags = getAvailablePlayerCraftFlagsIgnoreUnlocks(arg0);
+    i = 0;
+    do {
+        if (flags & (1 << i)) {
+            n++;
+        }
+        i++;
+    } while ((u8)i < 9U);
+    a = getGameOrFrontText(0x48);
+    if (D_main_bss_80130B4C & 0x200) {
+        b = getGameOrFrontText(0x4B);
+    } else {
+        b = D_menu_overlay_800A5BA4;
+    }
+    c = getGameOrFrontText(0x4D);
+    d = getGameOrFrontText(0x4A);
+    if (D_main_bss_80130B4C & 0x10000) {
+        e = getGameOrFrontText(0x4B);
+    } else {
+        e = D_menu_overlay_800A5BA4;
+    }
+    sprintf(buf, "%s%s%s\n%s%s%s", a, b, c, d, e, getGameOrFrontText(0x4C));
+    y = 0xFFD0;
+    if (n == 1) {
+        y = 0xFFFD;
+    }
+    setPlayerSlotAnimationFlag(2, buf, 1, -0x100, y);
+    setPlayerSlotEntryRGB(2, 1, &bridgeWhiteColor);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", startSlotLoopAnimWithVoiceSync);
 
