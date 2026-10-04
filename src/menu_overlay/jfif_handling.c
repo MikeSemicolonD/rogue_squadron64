@@ -76,7 +76,64 @@ s32 buildCellSlotTableAndFindFree(JfifHuffState *state, u8 index) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", findFreeCellBitSlot);
+typedef struct {
+    u8 pad0[0x34];
+    u8 *cur;
+    u8 pad38[0xC];
+    u16 bitbuf;
+    u16 bitcnt;
+    u8 pad48[5];
+    u8 eof;
+} JfifBitReader;
+
+s32 findFreeCellBitSlot(JfifBitReader *arg0, u8 arg1) {
+    u8 var_t0 = 0;
+    u8 temp_a1 = arg1;
+    s32 var_a3;
+    s32 temp_a3;
+    u16 temp_v0;
+    u16 temp_v0_4;
+    u16 temp_v1;
+    u8 *temp_v0_2;
+    u8 var_v1;
+    u8 t;
+
+    var_a3 = 0;
+    if (temp_a1 != 0) {
+        do {
+            temp_v0 = arg0->bitcnt;
+            temp_a3 = var_a3 * 2;
+            if (temp_v0 == 0) {
+                arg0->bitcnt = 8;
+                if (arg0->eof == 0) {
+                    temp_v0_2 = arg0->cur;
+                    var_v1 = *temp_v0_2;
+                    arg0->cur = temp_v0_2 + 1;
+                } else {
+                    var_v1 = 0;
+                }
+                arg0->bitbuf = var_v1;
+                if (var_v1 == 0xFF) {
+                    t = *arg0->cur++;
+                    if (t == 0xD9) {
+                        arg0->eof = 1;
+                    }
+                }
+                temp_v0_4 = arg0->bitbuf;
+                var_a3 = temp_a3 + ((temp_v0_4 >> 7) & 1);
+                arg0->bitcnt = arg0->bitcnt - 1;
+                arg0->bitbuf = temp_v0_4 * 2;
+            } else {
+                arg0->bitcnt = temp_v0 - 1;
+                temp_v1 = arg0->bitbuf * 2;
+                var_a3 = temp_a3 + ((temp_v1 >> 8) & 1);
+                arg0->bitbuf = temp_v1;
+            }
+            var_t0++;
+        } while (var_t0 < temp_a1);
+    }
+    return var_a3;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", allocCellBitGroup);
 
