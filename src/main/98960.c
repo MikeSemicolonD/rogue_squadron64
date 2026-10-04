@@ -42,7 +42,21 @@ s32 streamSampleCountToByteSize(s32 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", setVoiceVolumePanLocked);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", stopStreamedVoice);
+extern u8 gMusyXActiveFlag;
+s32 factor5MutexAcquire();
+s32 factor5MutexRelease();
+void silenceVoiceSlot(s32);
+
+void stopStreamedVoice(s32 arg0) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        if (D_main_bss_80152A20[arg0].active == 1) {
+            D_main_bss_80152A20[arg0].active = 0;
+            silenceVoiceSlot(arg0);
+        }
+        factor5MutexRelease();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", compute3DSourceSpatialMix);
 
