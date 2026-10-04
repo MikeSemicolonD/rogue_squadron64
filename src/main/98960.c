@@ -273,7 +273,60 @@ s32 unlinkMusyXListNode(void *arg0) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", enqueueSoundInPriorityGroup);
+typedef struct SndNode {
+    struct SndNode *next;
+    f32 pri;
+    void *snd;
+} SndNode;
+typedef struct {
+    s32 id;
+    s32 unk4;
+    SndNode *head;
+} SndGroup;
+extern SndGroup D_main_bss_80152D70[];
+extern u8 D_main_bss_80152EF0;
+extern SndNode D_main_bss_80153290[];
+extern u8 D_main_bss_80153410;
+
+void enqueueSoundInPriorityGroup(void *arg0, f32 arg1) {
+    s32 i;
+    SndNode *prev;
+    SndNode *cur;
+    s32 cnt;
+    s32 k;
+
+    for (i = 0; i < D_main_bss_80152EF0; i++) {
+        if (*(s32 *)((u8 *)arg0 + 0x38) == D_main_bss_80152D70[i].id) {
+            break;
+        }
+    }
+    if (i == D_main_bss_80152EF0) {
+        D_main_bss_80152D70[i].unk4 = 0;
+        D_main_bss_80152D70[i].head = 0;
+        cnt = *(s32 *)((u8 *)arg0 + 0x38);
+        D_main_bss_80152EF0++;
+        D_main_bss_80152D70[i].id = cnt;
+    }
+    cur = D_main_bss_80152D70[i].head;
+    prev = 0;
+    while (cur != 0) {
+        if (arg1 < cur->pri) {
+            break;
+        }
+        prev = cur;
+        cur = cur->next;
+    }
+    if (prev == 0) {
+        D_main_bss_80152D70[i].head = &D_main_bss_80153290[D_main_bss_80153410];
+    } else {
+        prev->next = &D_main_bss_80153290[D_main_bss_80153410];
+    }
+    k = D_main_bss_80153410;
+    D_main_bss_80153290[k].next = cur;
+    D_main_bss_80153290[k].snd = arg0;
+    D_main_bss_80153410 = k + 1;
+    D_main_bss_80153290[k].pri = arg1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", enqueueSpatialSoundInPriorityGroup);
 
