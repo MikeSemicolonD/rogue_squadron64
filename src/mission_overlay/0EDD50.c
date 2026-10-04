@@ -115,7 +115,66 @@ void popActiveSoundDescriptor(void) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", preloadSceneReferencedSongs);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", stageSongFromRequestDescriptor);
+extern SoundDescriptor D_mission_overlay_8010C1A0;
+extern s32 D_mission_overlay_8010C140;
+typedef struct {
+    f32 unk0;
+    u8 pad4[0x4];
+    u32 unk8;
+    u32 unkC;
+    u8 pad10[0x10];
+    u16 unk20;
+    u16 unk22;
+    u16 unk24;
+    u16 unk26;
+    u8 pad28[8];
+    u8 unk30;
+    u8 unk31;
+} SongRequest;
+typedef struct {
+    f32 unk0;
+    u8 pad4[0x14];
+    s32 unk18;
+    s32 unk1C;
+    u16 unk20;
+    u16 unk22;
+    u16 unk24;
+    u8 unk26;
+    u8 unk27;
+} SongStage;
+extern SongStage D_mission_overlay_8010C430;
+
+void stageSongFromRequestDescriptor(SongRequest *arg0) {
+    D_mission_overlay_8010C1A0.unk0 = -1;
+    D_mission_overlay_8010C1A0.unkA = arg0->unk20;
+    if (arg0->unk20 >= 2) {
+        D_mission_overlay_8010C1A0.unk4 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].a;
+        D_mission_overlay_8010C1A0.unk6 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].b;
+        D_mission_overlay_8010C1A0.unk8 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].c;
+    } else {
+        D_mission_overlay_8010C1A0.unk4 = 0xFFFF;
+        D_mission_overlay_8010C1A0.unk6 = 0xFFFF;
+        D_mission_overlay_8010C1A0.unk8 = 0;
+    }
+    ((SoundCueRequest *)&D_mission_overlay_8010C1A0)->unkC = 0;
+    ((SoundCueRequest *)&D_mission_overlay_8010C1A0)->unkD = 0;
+    ((SoundCueRequest *)&D_mission_overlay_8010C1A0)->unkE = 0;
+    ((SoundCueRequest *)&D_mission_overlay_8010C1A0)->unkF = 0;
+    ((SoundCueRequest *)&D_mission_overlay_8010C1A0)->unk10 = 0;
+    ((SoundCueRequest *)&D_mission_overlay_8010C1A0)->unk12 = 0;
+    D_mission_overlay_8010C430.unk0 = arg0->unk0;
+    D_mission_overlay_8010C430.unk18 = arg0->unk8;
+    D_mission_overlay_8010C430.unk1C = arg0->unkC;
+    D_mission_overlay_8010C430.unk20 = arg0->unk22;
+    D_mission_overlay_8010C430.unk22 = arg0->unk24;
+    D_mission_overlay_8010C430.unk24 = arg0->unk26;
+    D_mission_overlay_8010C430.unk26 = arg0->unk30;
+    D_mission_overlay_8010C430.unk27 = arg0->unk31;
+    *(SoundDescriptor *)&D_mission_overlay_8010C140 = D_mission_overlay_8010C1A0;
+    tickActiveSongSlots();
+    D_mission_overlay_8010C1A0.unk0 = gSoundDesc0E0.unk0;
+    D_mission_overlay_8010C400 = D_mission_overlay_8010C1A0;
+}
 
 extern f32 D_mission_overlay_80109FE0;
 extern s32 D_mission_overlay_8010C110;
