@@ -126,7 +126,29 @@ INCLUDE_ASM("asm/nonmatchings/main/4D900", requestCinematicNodeEvent);
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", resetSceneNodeShakeStateArray);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", clearSceneNodeMotionFields);
+void clearSceneNodeMotionFields(void) {
+    s32 i;
+
+    if (D_main_bss_80138260 == 1) {
+        D_main_bss_80138894->unk8 = 0;
+        D_main_bss_80138894->unk14 = 0;
+        D_main_bss_80138894->unk10 = 0;
+        D_main_bss_80138894->unk70 = 0;
+        D_main_bss_80138894->unk6C = 0;
+        D_main_bss_80138894->unk68 = 0;
+        D_main_bss_80138894->unk64 = 0;
+        return;
+    }
+    for (i = 0; i < 1; i++) {
+        D_main_bss_80138D18[i].unk8 = 0;
+        D_main_bss_80138D18[i].unk14 = 0;
+        D_main_bss_80138D18[i].unk10 = 0;
+        D_main_bss_80138D18[i].unk70 = 0;
+        D_main_bss_80138D18[i].unk6C = 0;
+        D_main_bss_80138D18[i].unk68 = 0;
+        D_main_bss_80138D18[i].unk64 = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", refreshAllSceneNodeInverseTransforms);
 
