@@ -19,7 +19,17 @@ typedef struct {
 
 extern EffectModelInstance *D_mission_overlay_8010B6E0;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", computeTrackedObjectWorldAnchor);
+void computeTrackedObjectWorldAnchor(s8 *obj) {
+    EffectModelInstance *pool = D_mission_overlay_8010B6E0;
+
+    if (pool[((u8 *)obj)[1]].active) {
+        *(f32 *)(obj + 0x40) = pool[((u8 *)obj)[1]].unk0 + pool[((u8 *)obj)[1]].unk18;
+        *(f32 *)(obj + 0x44) = pool[((u8 *)obj)[1]].unk4 + pool[((u8 *)obj)[1]].unk24;
+        *(f32 *)(obj + 0x48) = pool[((u8 *)obj)[1]].unk8 + pool[((u8 *)obj)[1]].unk30;
+    } else {
+        *(f32 *)(obj + 0x40) = *(f32 *)(obj + 0x44) = *(f32 *)(obj + 0x48) = 0.0f;
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0ADF80", D_mission_overlay_800A53E0);
 
