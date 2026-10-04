@@ -11,7 +11,47 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", flashMissionAlertObjectsA
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", beginMissionEndTransition);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", endMissionEndTransition);
+typedef struct {
+    u8 pad0[0x1A];
+    u16 mask;
+    u8 pad1C[8];
+} MissionObjectiveDef;
+
+void setAudioFaderRampLocked(s32, s32, s32);
+void endSpeechTimingWindow(void);
+void clearControllerPakPresence(u8);
+extern s32 D_mission_overlay_8010CA1C;
+extern u8 D_mission_overlay_8010C9F1;
+extern u8 D_main_bss_80137CF4;
+extern u8 D_main_bss_80138838;
+extern u8 D_main_bss_80138925;
+extern MissionObjectiveDef D_mission_overlay_8010BE18[];
+extern u16 D_mission_overlay_8010BFA8[];
+extern u8 gPlayers[][0x2A0];
+
+s32 endMissionEndTransition(void) {
+    s32 i;
+
+    if (D_mission_overlay_8010CA20 == 5) {
+        D_mission_overlay_8010CA20 = 0;
+        D_mission_overlay_8010CA1C &= ~1;
+        if (D_mission_overlay_8010C9F1 != 0) {
+            D_mission_overlay_8010CA1C &= ~0x100;
+        }
+        D_main_bss_80137CF4 = 0;
+        D_main_bss_80138925 = 0;
+        setAudioFaderRampLocked(0x7F, 500, 0xFD);
+        setAudioFaderRampLocked(0x7F, 500, 0xFE);
+        endSpeechTimingWindow();
+        for (i = 0; i < 1; i++) {
+            if (gPlayers[i][0] != 0 && D_main_bss_80137CF4 == 0 && D_main_bss_80138838 == 0) {
+                D_mission_overlay_8010BFA8[i] &= ~D_mission_overlay_8010BE18[i].mask;
+            }
+            clearControllerPakPresence(i);
+        }
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", requestMissionTransitionMode);
 
@@ -158,12 +198,6 @@ void func_mission_overlay_800FBC4C(f32 dt) {
         D_mission_overlay_8010CA20 = 0;
     }
 }
-
-typedef struct {
-    u8 pad0[0x1A];
-    u16 mask;
-    u8 pad1C[8];
-} MissionObjectiveDef;
 
 void playSimpleAudioCmd(s32, s32, s32);
 extern MissionObjectiveDef D_mission_overlay_8010BE18[];
