@@ -7,13 +7,68 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", initPlayerCraftTrailBuffe
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", computeCraftSelectTurnFromInput);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", populateCutsceneSubtitleTextIds);
+extern s32 D_mission_overlay_8010B740[];
+extern u8 D_mission_overlay_8010B780[];
+extern u8 gGameSettings;
+
+void populateCutsceneSubtitleTextIds(void) {
+    s32 i;
+    u8 *p;
+
+    i = 13;
+    p = D_mission_overlay_8010B780 + i;
+    do {
+        *p-- = 0;
+    } while (--i >= 0);
+    D_mission_overlay_8010B740[0] = (gGameSettings != 0xF) ? 0x104 : 0x28C;
+    D_mission_overlay_8010B740[1] = (gGameSettings != 0xF) ? 0x272 : 0x28C;
+    D_mission_overlay_8010B740[2] = (gGameSettings != 0xF) ? 0x134 : 0x28C;
+    D_mission_overlay_8010B740[3] = (gGameSettings != 0xF) ? 0x122 : 0x206;
+    D_mission_overlay_8010B740[4] = (gGameSettings != 0xF) ? 0x123 : 0x207;
+    D_mission_overlay_8010B740[5] = (gGameSettings != 0xF) ? 0x124 : 0x208;
+    D_mission_overlay_8010B740[6] = (gGameSettings != 0xF) ? 0x12B : 0x20F;
+    D_mission_overlay_8010B740[7] = (gGameSettings != 0xF) ? 0x12E : 0x212;
+    D_mission_overlay_8010B740[8] = (gGameSettings != 0xF) ? 0x12F : 0x213;
+    D_mission_overlay_8010B740[9] = (gGameSettings != 0xF) ? 0x12D : 0x211;
+    D_mission_overlay_8010B740[10] = (gGameSettings != 0xF) ? 0x130 : 0x214;
+    D_mission_overlay_8010B740[11] = (gGameSettings != 0xF) ? 0x131 : 0x28C;
+    D_mission_overlay_8010B740[12] = (gGameSettings != 0xF) ? 0x132 : 0x28C;
+    D_mission_overlay_8010B740[13] = (gGameSettings != 0xF) ? 0x133 : 0x28C;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", playRandomCutsceneVoiceLine);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", integrateCraftVelocityAndCollide);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", playCutsceneObjectImpactSound);
+s32 isTerrainCellBlockedAtWorldXz(f32, f32, void *);
+void play3DSoundEvent(void *, void *, void *, f32, f32, s32, s32, s32, s32);
+extern u32 D_mission_overlay_8010CA20;
+extern u8 D_main_bss_80138058[];
+
+void playCutsceneObjectImpactSound(u8 *obj) {
+    struct player_struct *players;
+
+    if (obj[0x24C] != 0) {
+        return;
+    }
+    if (D_mission_overlay_8010CA20 != 0) {
+        return;
+    }
+    players = gPlayers;
+    if (!(*(u16 *)&players[*(s32 *)(obj + 0xB8)].inner.unk178[2] & 1)) {
+        return;
+    }
+    obj[0x24C] = 1;
+    switch (isTerrainCellBlockedAtWorldXz(*(f32 *)(obj + 4), *(f32 *)(obj + 0xC), D_main_bss_80138058)) {
+        default:
+        case 0:
+            play3DSoundEvent(obj + 0x208, obj + 4, obj + 0x28, 18.0f, 0.6f, 0xF, 0x7E, 0x7D, 0x50);
+            break;
+        case 1:
+            play3DSoundEvent(obj + 0x208, obj + 4, obj + 0x28, 18.0f, 0.6f, 0xF, 0x7F, 0x7D, 0x50);
+            break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", tickCutsceneObject);
 

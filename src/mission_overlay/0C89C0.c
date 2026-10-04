@@ -15,7 +15,58 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C89C0", spawnNpcImpactEffectVaria
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C89C0", updateNpcOrientationFromMotion);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C89C0", setupNpcModelForState);
+void releaseMeshAsset(void *);
+void *walkMeshdef0List(char *);
+void initVec4TripletFromArgs(void *, s32, s32, s32);
+void composeRotationMatrixSlot0(void *, s32);
+void composeRotationMatrixSlot1(void *, s32);
+void composeRotationMatrixSlot2(void *, s32);
+void addVec3At0x24(void *, s32, s32, s32);
+extern char D_mission_overlay_800A6A0C[];
+extern char D_mission_overlay_800A6A18[];
+extern char D_mission_overlay_800A6A24[];
+extern char D_mission_overlay_800A6A30[];
+
+typedef struct {
+    u8 pad0[0x1C];
+    s32 rot[3];
+    s32 scale[3];
+} NpcModelTemplate;
+
+typedef struct {
+    s32 pos[3];
+    u8 padC[0x24];
+    u8 *mesh;
+    NpcModelTemplate *tmpl;
+    u8 pad38[0x38];
+    s16 state;
+} NpcModelOwner;
+
+void setupNpcModelForState(NpcModelOwner *npc) {
+    NpcModelTemplate *tmpl;
+
+    releaseMeshAsset(npc->mesh);
+    switch (npc->state) {
+        case 2:
+            npc->mesh = walkMeshdef0List(D_mission_overlay_800A6A0C);
+            break;
+        case 3:
+            npc->mesh = walkMeshdef0List(D_mission_overlay_800A6A18);
+            break;
+        case 4:
+            npc->mesh = walkMeshdef0List(D_mission_overlay_800A6A24);
+            break;
+        default:
+            npc->mesh = walkMeshdef0List(D_mission_overlay_800A6A30);
+            break;
+    }
+    tmpl = npc->tmpl;
+    initVec4TripletFromArgs(npc->mesh + 0x28, tmpl->scale[0], tmpl->scale[1], tmpl->scale[2]);
+    composeRotationMatrixSlot0(npc->mesh + 0x28, tmpl->rot[0]);
+    composeRotationMatrixSlot1(npc->mesh + 0x28, tmpl->rot[1]);
+    composeRotationMatrixSlot2(npc->mesh + 0x28, tmpl->rot[2]);
+    addVec3At0x24(npc->mesh + 0x28, npc->pos[0], npc->pos[1], npc->pos[2]);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C89C0", D_mission_overlay_800A6A0C);
 

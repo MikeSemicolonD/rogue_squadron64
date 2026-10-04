@@ -191,11 +191,40 @@ s32 isPlayerShipActive(void) {
     return D_menu_overlay_800CC85C != 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", destroyPlayerShipRecord);
+void removeLookupTableEntry(s32, s32);
+void requestViFeatureChange(s32);
+extern u8 gBootConfig[];
+
+void destroyPlayerShipRecord(s32 arg0) {
+    if (D_menu_overlay_800CC85C != 0) {
+        removeLookupTableEntry(arg0, *(s32 *)((u8 *)D_menu_overlay_800CC85C + 0xC));
+        D_menu_overlay_800CC85C = 0;
+        D_menu_overlay_800CC850--;
+        if (!(*(s32 *)(gBootConfig + 0x44) & 0x80)) {
+            requestViFeatureChange(8);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", spawnProjectileObject);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", copyMorphTargetVertices);
+typedef struct {
+    u8 pad0[8];
+    u32 count;
+    u8 *morph;
+    u8 pad10[4];
+    u16 *verts;
+} MorphMesh;
+
+void copyMorphTargetVertices(MorphMesh *arg0, MorphMesh *arg1, u16 base) {
+    u32 i;
+
+
+
+    for (i = 0; i < arg0->count; i++) {
+        (*(u16 **)(arg0->morph + 0xC))[i] = arg0->verts[i] = arg1->verts[i + base];
+    }
+}
 
 #if 0
 // Text matching, have not check if rodata works yet
@@ -214,7 +243,21 @@ char *buildPrefixedAssetName(char *arg0) {
     return D_menu_overlay_800CE6B0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", buildPrefixedAssetName);
+extern char strMenuAlpha[];
+
+char *buildPrefixedAssetName(char *arg0) {
+    char *alpha;
+    s32 len;
+    u32 i;
+
+    alpha = strMenuAlpha;
+    rs_strcpy(D_menu_overlay_800CE6B0, arg0);
+    len = strlen(D_menu_overlay_800CE6B0);
+    for (i = 0; i < strlen(alpha) + 1; i++) {
+        D_menu_overlay_800CE6B0[len + i] = alpha[i];
+    }
+    return D_menu_overlay_800CE6B0;
+}
 #endif
 
 typedef struct {

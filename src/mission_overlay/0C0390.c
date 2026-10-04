@@ -187,9 +187,22 @@ void broadcastSceneShutdownAndCleanup(void) {
     getAvailableShipsForLevel();
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", broadcastSceneEventWithPayload);
+s32 slotDispatcherIter(u16, s32, void *);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", setRenderObjectTargetOrClear);
+void broadcastSceneEventWithPayload(struct rgba *payload, f32 arg1) {
+    D_mission_overlay_8010BFD8 = *payload;
+    slotDispatcherIter(D_mission_overlay_8010BFD0, 5, &arg1);
+}
+
+void setRenderObjectTargetOrClear(u8 *obj, u16 id, struct rgba *payload) {
+    if (id != 0xFFFF) {
+        *(s32 *)(obj + 0x28) = id << 16;
+        *(s32 *)(obj + 0x20) &= ~0x100;
+        *(struct rgba *)(obj + 0x44) = *payload;
+    } else {
+        *(s32 *)(obj + 0x20) |= 0x100;
+    }
+}
 
 f32 getPlayerHealthPercentage(s32 arg0) {
     if ((gPlayers[arg0].inner.currentHealth <= 0.0f)) {

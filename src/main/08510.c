@@ -7,7 +7,19 @@
 // Interim BSS externs
 extern struct DisplayListBuffer *D_main_bss_801163B0;
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", registerSiCallback);
+extern s32 D_main_bss_8011A8A4[];
+
+s32 registerSiCallback(void (*cb)(void)) {
+    s32 i;
+
+    for (i = 0; i < 4; i++) {
+        if (D_main_bss_8011A8A4[i] == 0) {
+            D_main_bss_8011A8A4[i] = (s32)cb;
+            return 1;
+        }
+    }
+    return 0;
+}
 
 extern s32 D_main_bss_8011A8A4[];
 
@@ -391,7 +403,48 @@ s32 enqueueMeshForDeferredRelease(struct meshdef1 *arg0) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", recordDeferredDrawRefVariant);
+extern Gfx *D_main_bss_8011D090;
+extern u8 D_main_bss_8011D094;
+void recordDeferredDrawRefVariant(s32 ref, s32 flags, s32 kind) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    u8 *cnt;
+
+    if (flags & 0x40000000) {
+        if (D_main_bss_8011D094 >= 0x40) {
+            chunk = D_main_bss_801163B0;
+            if (chunk == NULL) {
+                chunk = findAndUnlinkSmallestEntry();
+                if (chunk != NULL) {
+                    tail = chunk;
+                    while (tail->next != NULL) {
+                        tail = tail->next;
+                    }
+                    tail->next = D_main_bss_801163B0;
+                    if (D_main_bss_801163B0 != NULL) {
+                        D_main_bss_801163B0->prev = tail;
+                    }
+                    D_main_bss_801163B0 = chunk;
+                    chunk->prev = NULL;
+                }
+                chunk = D_main_bss_801163B0;
+            }
+            D_main_bss_801163B0 = D_main_bss_801163B0->next;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = NULL;
+            }
+            if (*D_main_bss_8011A4BC != NULL) {
+                (*D_main_bss_8011A4BC)->prev = chunk;
+            }
+            chunk->next = *D_main_bss_8011A4BC;
+            *D_main_bss_8011A4BC = chunk;
+            D_main_bss_8011D090 = chunk->displayList;
+            D_main_bss_8011D094 = 0;
+        }
+        cnt = &D_main_bss_8011D094;
+        ((s32 *)D_main_bss_8011D090)[(*cnt)++] = (ref & 0xFFFFFF) | (kind << 24);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", commitMeshDrawBatchRefs);
 
@@ -516,21 +569,258 @@ void computeFrameDeltaTime(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", timeSnapshotFiller);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", bufferArbiterProducerScanWait);
+s32 osRecvMesg(void *, void *, s32);
+void osYieldThread(void);
+void bufferArbiterMarkSlotReady(void);
+void bufferArbiterProducerMark(void);
+void waitOnVideoQueue(void);
+void awaitFrameSyncMesgBlock(void);
+void signalFrameSyncMesgNonblock(void);
+extern u8 D_main_bss_8011A818[];
+extern u8 D_main_8011A7E8[];
+extern u8 D_main_bss_8011A89E;
+extern u8 D_main_bss_8011A89D;
+extern s8 D_main_bss_8011A89A;
+extern u8 D_main_bss_80128EAA[];
+extern u8 D_main_bss_80128EAD;
+
+void bufferArbiterProducerScanWait(void) {
+    u32 i;
+    volatile u8 *pending = &D_main_bss_8011A89E;
+    s32 stateA;
+    s32 stateB;
+    u8 *count;
+
+    if (*pending != 0) {
+        osRecvMesg(D_main_bss_8011A818, NULL, 1);
+        *pending = 0;
+        osYieldThread();
+    }
+    bufferArbiterMarkSlotReady();
+    if (D_main_bss_8011A89D != 0) {
+        osRecvMesg(D_main_8011A7E8, NULL, 1);
+        D_main_bss_8011A89D = 0;
+        osYieldThread();
+    }
+    D_main_bss_8011A89A = 0;
+    bufferArbiterProducerMark();
+    stateA = 3;
+    count = &D_main_bss_80128EAD;
+    stateB = 4;
+    do {
+        i = 0;
+        waitOnVideoQueue();
+        awaitFrameSyncMesgBlock();
+        for (i = 0; i < *count; i++) {
+            if (D_main_bss_80128EAA[i] == stateA || D_main_bss_80128EAA[i] == stateB) {
+                break;
+            }
+        }
+        signalFrameSyncMesgNonblock();
+    } while (i != D_main_bss_80128EAD);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", submitGfxFrame);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", recordDeferredDrawRefA);
+extern Gfx *D_main_bss_801163B8;
+extern u8 D_main_bss_801163BC;
+void recordDeferredDrawRefA(s32 flags, s32 ref) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    u8 *cnt;
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", recordDeferredDrawRefB);
+    if (flags & 0x40000000) {
+        if (D_main_bss_801163BC >= 0x40) {
+            chunk = D_main_bss_801163B0;
+            if (chunk == NULL) {
+                chunk = findAndUnlinkSmallestEntry();
+                if (chunk != NULL) {
+                    tail = chunk;
+                    while (tail->next != NULL) {
+                        tail = tail->next;
+                    }
+                    tail->next = D_main_bss_801163B0;
+                    if (D_main_bss_801163B0 != NULL) {
+                        D_main_bss_801163B0->prev = tail;
+                    }
+                    D_main_bss_801163B0 = chunk;
+                    chunk->prev = NULL;
+                }
+                chunk = D_main_bss_801163B0;
+            }
+            D_main_bss_801163B0 = D_main_bss_801163B0->next;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = NULL;
+            }
+            if (*D_main_bss_8011A4B8 != NULL) {
+                (*D_main_bss_8011A4B8)->prev = chunk;
+            }
+            chunk->next = *D_main_bss_8011A4B8;
+            *D_main_bss_8011A4B8 = chunk;
+            D_main_bss_801163B8 = chunk->displayList;
+            D_main_bss_801163BC = 0;
+        }
+        cnt = &D_main_bss_801163BC;
+        ((s32 *)D_main_bss_801163B8)[(*cnt)++] = ref;
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", recordDeferredDrawRefC);
+void recordDeferredDrawRefB(s32 flags) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    u8 *cnt;
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", recordDeferredDrawRefD);
+    if (flags & 0x40000000) {
+        if (D_main_bss_801163BC >= 0x40) {
+            chunk = D_main_bss_801163B0;
+            if (chunk == NULL) {
+                chunk = findAndUnlinkSmallestEntry();
+                if (chunk != NULL) {
+                    tail = chunk;
+                    while (tail->next != NULL) {
+                        tail = tail->next;
+                    }
+                    tail->next = D_main_bss_801163B0;
+                    if (D_main_bss_801163B0 != NULL) {
+                        D_main_bss_801163B0->prev = tail;
+                    }
+                    D_main_bss_801163B0 = chunk;
+                    chunk->prev = NULL;
+                }
+                chunk = D_main_bss_801163B0;
+            }
+            D_main_bss_801163B0 = D_main_bss_801163B0->next;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = NULL;
+            }
+            if (*D_main_bss_8011A4B8 != NULL) {
+                (*D_main_bss_8011A4B8)->prev = chunk;
+            }
+            chunk->next = *D_main_bss_8011A4B8;
+            *D_main_bss_8011A4B8 = chunk;
+            D_main_bss_801163B8 = chunk->displayList;
+            D_main_bss_801163BC = 0;
+        }
+        cnt = &D_main_bss_801163BC;
+        ((s32 *)D_main_bss_801163B8)[(*cnt)++] = 0;
+    }
+}
+
+void recordDeferredDrawRefC(s32 flags, s32 ref) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+
+
+    if (flags & 0x40000000) {
+        if (D_main_bss_801163BC >= 0x40) {
+            chunk = D_main_bss_801163B0;
+            if (chunk == NULL) {
+                chunk = findAndUnlinkSmallestEntry();
+                if (chunk != NULL) {
+                    tail = chunk;
+                    while (tail->next != NULL) {
+                        tail = tail->next;
+                    }
+                    tail->next = D_main_bss_801163B0;
+                    if (D_main_bss_801163B0 != NULL) {
+                        D_main_bss_801163B0->prev = tail;
+                    }
+                    D_main_bss_801163B0 = chunk;
+                    chunk->prev = NULL;
+                }
+                chunk = D_main_bss_801163B0;
+            }
+            D_main_bss_801163B0 = D_main_bss_801163B0->next;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = NULL;
+            }
+            if (*D_main_bss_8011A4B8 != NULL) {
+                (*D_main_bss_8011A4B8)->prev = chunk;
+            }
+            chunk->next = *D_main_bss_8011A4B8;
+            *D_main_bss_8011A4B8 = chunk;
+            D_main_bss_801163B8 = chunk->displayList;
+            D_main_bss_801163BC = 0;
+        }
+        ((s32 *)D_main_bss_801163B8)[D_main_bss_801163BC++] = ref;
+    }
+}
+
+void recordDeferredDrawRefD(s32 flags) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+
+
+    if (flags & 0x40000000) {
+        if (D_main_bss_801163BC >= 0x40) {
+            chunk = D_main_bss_801163B0;
+            if (chunk == NULL) {
+                chunk = findAndUnlinkSmallestEntry();
+                if (chunk != NULL) {
+                    tail = chunk;
+                    while (tail->next != NULL) {
+                        tail = tail->next;
+                    }
+                    tail->next = D_main_bss_801163B0;
+                    if (D_main_bss_801163B0 != NULL) {
+                        D_main_bss_801163B0->prev = tail;
+                    }
+                    D_main_bss_801163B0 = chunk;
+                    chunk->prev = NULL;
+                }
+                chunk = D_main_bss_801163B0;
+            }
+            D_main_bss_801163B0 = D_main_bss_801163B0->next;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = NULL;
+            }
+            if (*D_main_bss_8011A4B8 != NULL) {
+                (*D_main_bss_8011A4B8)->prev = chunk;
+            }
+            chunk->next = *D_main_bss_8011A4B8;
+            *D_main_bss_8011A4B8 = chunk;
+            D_main_bss_801163B8 = chunk->displayList;
+            D_main_bss_801163BC = 0;
+        }
+        ((s32 *)D_main_bss_801163B8)[D_main_bss_801163BC++] = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", reserveAndEmitDLEntry);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", reserveAlignedDLSpace);
+s32 reserveAndEmitDLEntry(s32, s32);
+extern s32 *D_main_bss_8011A438;
+extern s32 D_main_bss_8011A43C;
+extern u8 D_main_bss_8011A440;
+
+s32 reserveAlignedDLSpace(s32 gfx, u8 *out, u8 n, s32 *ptr, s32 arg4) {
+    u8 *used = &D_main_bss_8011A440;
+    s32 base;
+    s32 *g;
+
+    if (*used + n > 0x40) {
+        g = D_main_bss_8011A438;
+        g[0] = ((((D_main_bss_8011A440 * 4) + 0xF) & 0xFFF0) - 1) & 0xFFFF | 0x02000000;
+        g[1] = D_main_bss_8011A43C;
+        gfx = reserveAndEmitDLEntry(gfx, arg4);
+    }
+    base = *used * 4;
+    out[1] = base;
+    if (n == 1) {
+        out[2] = out[3] = out[0] = base;
+    } else {
+        out[2] = base + 4;
+        out[3] = base + 8;
+        if (n == 3) {
+            out[0] = out[1];
+        } else {
+            out[0] = base + 0xC;
+        }
+    }
+    *ptr = D_main_bss_8011A43C + D_main_bss_8011A440 * 4;
+    D_main_bss_8011A440 += n;
+    return gfx;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005A0);
 
@@ -568,15 +858,47 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", transformLightByType);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", appendRdpStateDl);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", selectRenderPresetByIndex);
+extern s32 D_main_80037760[];
+extern s32 D_main_bss_8011A858;
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", selectSecondaryPresetByIndex);
+s32 selectRenderPresetByIndex(u8 arg0) {
+    D_main_bss_8011A858 = D_main_80037760[arg0];
+    return 1;
+}
+
+extern s32 D_main_80037770[];
+extern s32 D_main_bss_8011A85C;
+
+s32 selectSecondaryPresetByIndex(u8 arg0) {
+    D_main_bss_8011A85C = D_main_80037770[arg0];
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitMaterialTexturedDL);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitMaterialTexturedDLAlt);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", resetSceneLightsAndMaterials);
+extern u32 D_main_bss_8011A8B8;
+extern struct D_main_bss_8011A444 *D_main_bss_8010E8AC;
+extern s32 D_main_bss_80114380;
+extern u8 D_main_bss_8010F8B0[];
+extern s32 D_main_bss_801143A4;
+extern u8 D_main_bss_8011A454;
+
+void resetSceneLightsAndMaterials(void) {
+    u32 i;
+    u32 *count = &D_main_bss_8011A8B8;
+
+    D_main_bss_8011A454 = 1;
+    for (i = 0; i < *count; i++) {
+        ((u8 *)D_main_bss_8010E8AC)[i] = 0;
+    }
+    D_main_bss_80114380 = 0;
+    for (i = 0; i < 0x400; i++) {
+        D_main_bss_8010F8B0[i] = 0;
+    }
+    D_main_bss_801143A4 = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", transformSceneLights);
 
