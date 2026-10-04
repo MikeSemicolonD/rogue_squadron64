@@ -67,9 +67,36 @@ INCLUDE_ASM("asm/nonmatchings/main/94F50", advanceSongRegion);
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", updateSongTempoTickRate);
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", getSongParamByHandle);
+static inline s32 findSongSlotByHandle(u32 handle) {
+    u32 i;
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", isSongHandleActive);
+    for (i = 0; i < 8; i++) {
+        if (D_main_bss_80149A00[i].unkEC1 == 0 && D_main_bss_80149A00[i].unk000 == (handle & 0x7FFFFFFF)) {
+            return i | (handle & 0x80000000);
+        }
+    }
+    return -1;
+}
+u16 getSongParamByHandle(u32 handle) {
+    s32 slot;
+
+    if (gMusyXActiveFlag != 0) {
+        slot = findSongSlotByHandle(handle);
+        if (slot != -1) {
+            if (slot >= 0) {
+                return D_main_bss_80149A00[slot].unkEC6;
+            }
+        }
+    }
+    return 0;
+}
+
+s32 isSongHandleActive(u32 handle) {
+    if (gMusyXActiveFlag != 0) {
+        return findSongSlotByHandle(handle) != -1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", stopSongByHandle);
 
@@ -93,21 +120,41 @@ void tickSongSequenceLocked(s32 arg0) {
     }
 }
 
-#if 0
 void tickActiveSongs(void) {
-    u32 var_s0;
+    u32 i;
 
-    for (var_s0 = 0; var_s0 < 8; var_s0++) {
-        tickSongSequence(D_main_bss_80149A00[var_s0].unk000);
+    for (i = 0; i < 8; i++) {
+        tickSongSequence(D_main_bss_80149A00[i].unk000);
     }
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/94F50", tickActiveSongs);
-#endif
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongPauseStateByHandle);
+s32 setSongPauseStateByHandle(u32 handle, u8 paused) {
+    s32 slot;
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", applySongU16ParamCmd);
+    if (gMusyXActiveFlag != 0) {
+        slot = findSongSlotByHandle(handle);
+        if (slot != -1) {
+            if (slot >= 0) {
+                D_main_bss_80149A00[slot].unkEC5 = paused == 0;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
+
+s32 applySongU16ParamCmd(s32 handle, s32 value) {
+    handle = findSongSlotByHandle(handle);
+    if (handle != -1) {
+        if (handle >= 0) {
+            D_main_bss_80149A00[handle].unkEC2 = value;
+        } else {
+            handle &= 0x7FFFFFFF;
+            D_main_bss_80149A00[handle].unkEEC = value;
+            D_main_bss_80149A00[handle].unkEEE |= 0x20;
+        }
+    }
+}
 
 s32 applySongU16ParamCmd(s32, s32);
 
@@ -119,7 +166,16 @@ void applySongU16ParamCmdLocked(s32 arg0, s32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", quiesceSongSlotCmd);
+s32 quiesceSongSlotCmd(s32 handle) {
+    handle = findSongSlotByHandle(handle);
+    if (handle != -1) {
+        if (handle >= 0) {
+            D_main_bss_80149A00[handle].unkEC0 = 1;
+        } else {
+            D_main_bss_80149A00[handle & 0x7FFFFFFF].unkEEE &= ~8;
+        }
+    }
+}
 
 s32 quiesceSongSlotCmd(s32);
 
@@ -131,7 +187,20 @@ void quiesceSongSlotCmdLocked(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongParamPairCmd);
+s32 setSongParamPairCmd(s32 handle, s32 a, s32 b) {
+    handle = findSongSlotByHandle(handle);
+    if (handle != -1) {
+        if (handle >= 0) {
+            D_main_bss_80149A00[handle].unk110[0] = a;
+            D_main_bss_80149A00[handle].unk110[1] = b;
+        } else {
+            handle &= 0x7FFFFFFF;
+            D_main_bss_80149A00[handle].unkEC8[7] = a;
+            D_main_bss_80149A00[handle].unkEC8[8] = b;
+            D_main_bss_80149A00[handle].unkEEE |= 0x10;
+        }
+    }
+}
 
 s32 setSongParamPairCmd(s32, s32, s32);
 
@@ -154,9 +223,30 @@ void queueAudioVoiceCmd(u8 arg0, u16 arg1, s32 arg2, u8 arg3) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", getSongStateByteByHandle);
+u8 getSongStateByteByHandle(u32 handle) {
+    s32 slot;
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongChannelParamByHandle);
+    if (gMusyXActiveFlag != 0) {
+        slot = findSongSlotByHandle(handle);
+        if (slot != -1) {
+            return D_main_bss_80149A00[slot].unkEC4;
+        }
+    }
+    return 0;
+}
+
+void setAudioFaderState(u8, s32);
+void setSongChannelParamByHandle(u32 handle, u8 ch, u8 val) {
+    s32 slot;
+
+    if (gMusyXActiveFlag != 0) {
+        slot = findSongSlotByHandle(handle);
+        if (slot != -1) {
+            D_main_bss_80149A00[slot].unk528[ch] = val;
+            setAudioFaderState(val, 2);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", processSongByHandle);
 

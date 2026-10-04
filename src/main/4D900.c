@@ -2,6 +2,28 @@
 
 #include "main/1D000.h"
 #include "main/4D900.h"
+#include "player.h"
+
+extern void *D_main_8009EB98[];
+void updateEffectObjectTransformPieces(void *, s32, s32, f32, s32);
+typedef struct {
+    u8 unk0;
+    u8 pad1[3];
+    void *unk4;
+    s32 unk8;
+    s32 unkC;
+    s32 unk10;
+    s32 unk14;
+    u8 pad18[0x4C];
+    s32 unk64;
+    s32 unk68;
+    s32 unk6C;
+    s32 unk70;
+    u8 pad74[0xD0];
+} SceneNode;
+extern s32 D_main_bss_80138260;
+extern SceneNode *D_main_bss_80138894;
+extern SceneNode D_main_bss_80138D18[];
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", applyPlayerVehicleStateUpdate);
 
@@ -49,15 +71,49 @@ INCLUDE_ASM("asm/nonmatchings/main/4D900", initEffectObjectFromLevelData);
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", destroyEffectObjectAndAssets);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", deactivateEffectObject);
+void destroyNpcSlotChain(u16);
+void deactivateEffectObject(s32 idx) {
+    u8 *obj;
+
+    *(u16 *)D_main_bss_80138D18[idx].unk4 &= ~1;
+    obj = D_main_bss_80138D18[idx].unk4;
+    if (*(u16 *)(obj + 0xF4) != 0xFFFF) {
+        destroyNpcSlotChain(*(u16 *)(obj + 0xF4));
+        *(u16 *)(obj + 0xF4) = 0xFFFF;
+    }
+    updateEffectObjectTransformPieces(D_main_8009EB98[gPlayers[idx].inner.unk0B4], idx, (s32)((u8 *)&gPlayers[0].inner.posX + idx * sizeof(struct player_struct)), 0.046875f, gPlayers[idx].inner.unk178[0x14]);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", refreshEffectObjectCamerasAndState);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", dispatchEffectObjectBehavior);
+void dispatchEffectObjectBehavior(s32 idx, s32 kind, s32 arg2) {
+    updateEffectObjectTransformPieces(D_main_8009EB98[kind], idx, arg2, 0.046875f, gPlayers[idx].inner.unk178[0x14]);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", registerSceneNodeAndInvertRotation);
+static inline void registerSceneNodeInline(u8 *obj, u8 *node) {
+    if (D_main_bss_80138260 == 1) {
+        D_main_bss_80138894->unk4 = node;
+    } else {
+        D_main_bss_80138D18[*(s32 *)(node + 0xC)].unk4 = node;
+    }
+    mat3x3InverseInto(obj + 0x2C, node + 0x28);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", initTransformNodeFromVectors);
+void registerSceneNodeAndInvertRotation(u8 *obj, u8 *node) {
+    registerSceneNodeInline(obj, node);
+}
+
+void buildOrientationFromPosAndAngles(void *, void *, void *);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} TransformNodeVec3;
+void initTransformNodeFromVectors(u8 *node, TransformNodeVec3 *a, TransformNodeVec3 *b) {
+    buildOrientationFromPosAndAngles(node + 0x28, a, b);
+    *(TransformNodeVec3 *)(node + 0x10) = *a;
+    *(TransformNodeVec3 *)(node + 0x1C) = *b;
+}
 
 // The argument types for `arg0` and `arg1` are almost certainly wrong, but function isn't called anywhere so who cares
 void computeAimAnglesFromObjectPositions(Mat4x3 arg0, Mat4x3 arg1, Vec3f arg2, f32 arg3) {
@@ -83,13 +139,105 @@ void computeAimAnglesFromObjectPositions(Mat4x3 arg0, Mat4x3 arg1, Vec3f arg2, f
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", setupSceneNodeTransitionBetweenNodes);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", requestCinematicNodeEvent);
+extern s32 D_8010CA20;
+extern u8 D_main_8009EBBC;
+extern s32 D_main_8009EBC0;
+extern s32 D_main_8009EC10;
+extern s32 D_8010C9E0;
+void requestCinematicNodeEvent(s32 idx) {
+    u8 *p;
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", resetSceneNodeShakeStateArray);
+    if (D_8010CA20 == 0) {
+        p = D_main_bss_80138D18[idx].unk4;
+        if (!(*(u16 *)p & 0x10) || *(s32 *)(p + 8) == 3) {
+            D_main_8009EBBC = 1;
+            D_main_8009EC10 = D_main_8009EBC0;
+            D_8010C9E0 |= 0x40;
+        }
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", clearSceneNodeMotionFields);
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    u8 unk8;
+    s32 unkC;
+    s32 unk10;
+    s32 unk14;
+    s32 unk18;
+    s32 unk1C;
+    s32 unk20;
+    f32 unk24;
+    f32 unk28;
+    f32 unk2C;
+    s32 unk30;
+    f32 unk34;
+    u8 pad38[0x20];
+} SceneNodeShakeState;
+extern SceneNodeShakeState D_main_bss_80137D08[][2];
+void resetSceneNodeShakeStateArray(void) {
+    s32 i;
+    s32 j;
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", refreshAllSceneNodeInverseTransforms);
+    for (i = 0; i < 1; i++) {
+        for (j = 0; j < 2; j++) {
+            SceneNodeShakeState *s = &D_main_bss_80137D08[i][j];
+
+            s->unk0 = 0;
+            s->unk4 = 0;
+            s->unk8 = 0;
+            s->unkC = 0;
+            s->unk10 = 0;
+            s->unk14 = 0;
+            s->unk18 = 0;
+            s->unk1C = 0;
+            s->unk20 = 0;
+            s->unk2C = 1.0f;
+            s->unk28 = 1.0f;
+            s->unk24 = 1.0f;
+            s->unk30 = 0;
+            s->unk34 = 1.0f;
+        }
+    }
+}
+
+void clearSceneNodeMotionFields(void) {
+    s32 i;
+
+    if (D_main_bss_80138260 == 1) {
+        D_main_bss_80138894->unk8 = 0;
+        D_main_bss_80138894->unk14 = 0;
+        D_main_bss_80138894->unk10 = 0;
+        D_main_bss_80138894->unk70 = 0;
+        D_main_bss_80138894->unk6C = 0;
+        D_main_bss_80138894->unk68 = 0;
+        D_main_bss_80138894->unk64 = 0;
+        return;
+    }
+    for (i = 0; i < 1; i++) {
+        D_main_bss_80138D18[i].unk8 = 0;
+        D_main_bss_80138D18[i].unk14 = 0;
+        D_main_bss_80138D18[i].unk10 = 0;
+        D_main_bss_80138D18[i].unk70 = 0;
+        D_main_bss_80138D18[i].unk6C = 0;
+        D_main_bss_80138D18[i].unk68 = 0;
+        D_main_bss_80138D18[i].unk64 = 0;
+    }
+}
+
+void destroyEffectObjectTypeNpcSlots(void);
+void refreshAllSceneNodeInverseTransforms(void) {
+    s32 i;
+
+    destroyEffectObjectTypeNpcSlots();
+    for (i = 0; i < 1; i++) {
+        SceneNode *n = &D_main_bss_80138D18[i];
+
+        if (n->unk0 != 0) {
+            registerSceneNodeInline((u8 *)n + 8, n->unk4);
+        }
+    }
+}
 
 // The argument types for `arg0` and `arg1` are probably wrong, but this function is unused so who cares
 void computeAimAnglesFromPoints(Vec3f arg0, Vec3f arg1, Vec3f arg2, f32 arg3) {

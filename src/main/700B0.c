@@ -139,9 +139,55 @@ void sendSlotActionTwelve(u16 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", walkDatTreeAndCollectSubtypes);
+typedef struct DatTreeNode {
+    u8 unk0;
+    u8 unk1;
+    s16 unk2;
+    u8 unk4;
+    u8 pad5;
+    u8 unk6;
+    u8 pad7;
+    struct DatTreeNode *unk8;
+    u8 padC[0x2C];
+} DatTreeNode;
+extern u8 D_main_bss_8013A898;
+extern u8 *D_main_bss_8013A89C;
+void rs_free(void *);
+void walkDatTreeAndCollectSubtypes(DatTreeNode *n) {
+    s32 i;
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", walkDatTreeAndScaleLeafByFloat);
+    if (n->unk0 == 0xFF) {
+        return;
+    }
+    if (n->unk0 & 0x80) {
+        for (i = 0; i < n->unk4; i++) {
+            if (n->unk8[i].unk6 != 0) {
+                D_main_bss_8013A89C[D_main_bss_8013A898++] = n->unk8[i].unk6;
+            }
+        }
+        rs_free(n->unk8);
+        n->unk0 = 0xFF;
+    } else if (n->unk6 != 0) {
+        D_main_bss_8013A89C[D_main_bss_8013A898++] = n->unk6;
+    }
+}
+
+extern u16 D_main_800A0AA0[][4];
+void walkDatTreeAndScaleLeafByFloat(DatTreeNode *n, s32 arg1, f32 scale) {
+    s32 i;
+
+    if (n->unk0 & 0x80) {
+        for (i = 0; i < n->unk4; i++) {
+            walkDatTreeAndScaleLeafByFloat(&n->unk8[i], arg1, scale);
+        }
+    } else {
+        n->unk2 = n->unk2 + D_main_800A0AA0[n->unk0 & 0x1F][n->unk1] * scale;
+        if (n->unk2 > 0x100) {
+            n->unk2 = 0;
+            n->unk1 = (n->unk1 + 1) & 3;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", fake_func_80072CE8);
 

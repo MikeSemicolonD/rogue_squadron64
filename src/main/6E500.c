@@ -216,7 +216,7 @@ void initializeNumLives(void) {
 }
 
 extern struct account_data D_main_bss_8013A550;
-void packAccountProgressBits(struct account_data *, u8 *, s32);
+void packAccountProgressBits(u8 *, u8 *, s32);
 struct account_data *loadAccountDataIntoStruct(u8 arg0) {
     s32 lvl;
 
@@ -226,7 +226,7 @@ struct account_data *loadAccountDataIntoStruct(u8 arg0) {
     D_main_bss_8013A550.unk05 = lvl;
     D_main_bss_8013A550.unk0C = gGameSettings.unlockAndSettingsFlags[0] & 0x7FFE00;
     D_main_bss_8013A550.accountNumber = gMissionState.accountNumber;
-    packAccountProgressBits(&D_main_bss_8013A550, gMissionState.medalPerLevel, lvl);
+    packAccountProgressBits((u8 *)&D_main_bss_8013A550, gMissionState.medalPerLevel, lvl);
     copyAccountRecordAndMarkActive(&D_main_bss_8013A550, arg0);
     return &D_main_bss_8013A550;
 }
@@ -239,7 +239,16 @@ void parseAccountDataBytes(u8 *src, u8 *dst) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", packAccountProgressBits);
+void packAccountProgressBits(u8 *dst, u8 *src, s32 arg2) {
+    u8 i;
+
+    for (i = 0; i < 5; i++) {
+        *(i + dst + 6) = 0;
+    }
+    for (i = 0; i < 19; i++) {
+        *((i >> 2) + dst + 6) |= (src[i] & 3) << ((i & 3) * 2);
+    }
+}
 
 struct EliteRogueData *getSaveScratchBufferPtr(void) {
     return gSaveDataBody.highscores;
@@ -356,7 +365,7 @@ void clearAccountRecordAndMarkInactive(u8 arg0) {
 s32 registerServiceWorker(s32, s32, s32, s32 *);
 s32 startServiceWorker(s32);
 extern s8 D_main_bss_8013A5B1;
-extern s32 saveServiceWorker;
+void saveServiceWorker(s32 *);
 
 void registerSaveService(s32 arg0) {
     s32 temp_v0;
@@ -456,7 +465,23 @@ void triggerSaveMessage(void) {
     sendServiceMessage(D_main_bss_80138920, D_main_800A0A60, temp_v0, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", saveServiceWorker);
+void *recvServiceMessage(s32);
+void saveServiceWorker(s32 *arg0) {
+    u8 buf[0x10];
+    void *msg;
+
+    rs_memset(buf, 0, 0x10);
+    while (1) {
+        msg = recvServiceMessage(*arg0);
+        if (!saveLoadDispatcher(1, 0, 0, buf, &gSaveDataBody, 0xB0)) {
+            gGameSettings.unk2C = 1;
+        }
+        if (!saveLoadDispatcher(1, 0, 1, buf, &gSaveDataBody, 0xB0)) {
+            gGameSettings.unk2C = 1;
+        }
+        rs_free(msg);
+    }
+}
 
 s32 isSaveStateNotPending(void) {
     return gSaveDataBody.unkA2 != 0x3A;

@@ -26,9 +26,51 @@ void *getLevelDatItemByName(char *name) {
     return getDatItemByName((struct dat_file_header *)D_main_bss_801375D8, name);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/47220", getDatItemByName);
+static inline void *getDatItemInline(struct dat_file_header *hdr, char *name) {
+    u8 *s;
+    u8 *t;
+    u32 hash = 0xFFFF;
+    struct data_hashmap_bucket *b;
 
-INCLUDE_ASM("asm/nonmatchings/main/47220", findDatItemInTableByName);
+    s = (u8 *)name;
+    while (*s != 0) {
+        hash = *s++ + (u16)hash * 33;
+    }
+    b = hdr->buckets[hash & 0xFF];
+    if (b == NULL) {
+        return NULL;
+    }
+    for (; b->dat_entry != (void *)-1; b++) {
+        s = (u8 *)name;
+        t = (u8 *)b->entry_name;
+        while (*s == *t) {
+            if (*s == 0) {
+                break;
+            }
+            s++;
+            t++;
+        }
+        if (*s == 0 && *t == 0) {
+            return b->dat_entry;
+        }
+    }
+    return NULL;
+}
+
+void *getDatItemByName(struct dat_file_header *hdr, char *name) {
+    return getDatItemInline(hdr, name);
+}
+
+void *findDatItemInTableByName(struct dat_file_header *hdr, u32 *out, char *name) {
+    u8 *item = getDatItemInline(hdr, name);
+
+    if (item != NULL && out != NULL) {
+        out[0] = *(u32 *)(item + 0x1C);
+        out[1] = *(u32 *)(item + 0x20);
+        out[2] = *(u32 *)(item + 0x20) + *(u32 *)(item + 0x1C) * 12;
+    }
+    return item;
+}
 
 extern s32 D_main_bss_801375F8;
 extern s32 D_8010CA1C;

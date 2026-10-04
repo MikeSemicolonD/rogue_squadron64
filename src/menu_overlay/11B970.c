@@ -658,7 +658,36 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", transformSceneMeshVertices);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuModelViewerScreen);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuScreenCameraViewport);
+void setRenderStateFlagByteThree(s32);
+void setRenderStateFlagByteTwo(s32);
+void setFrameLevelStateBytes(s32, s32, s32);
+void loadCharTextureSet(void *, s32, s32, s32);
+void resetPlayerSlotAllChannels(u16, u8);
+extern s32 D_menu_overlay_800CF074;
+void initMenuScreenCameraViewport(void) {
+    D_menu_overlay_800CF090.unk10 = 0x280;
+    D_menu_overlay_800CF090.unk14 = 0x1E0;
+    D_menu_overlay_800CF090.unk18 = 0x140;
+    D_menu_overlay_800CF090.unk4 = 0;
+    D_menu_overlay_800CF090.unk8 = 0;
+    D_menu_overlay_800CF090.unkC = 0;
+    D_menu_overlay_800CF090.unk1C = 0xF0;
+    D_menu_overlay_800CF090.unk20 = 45.0f;
+    D_menu_overlay_800CF090.unk24 = 0.1171875f;
+    D_menu_overlay_800CF090.unk28 = 93.75f;
+    setRenderStateFlagByteOne(1);
+    setRenderStateFlagByteThree(1);
+    setRenderStateFlagByteTwo(1);
+    setFrameLevelStateBytes(0, 0, 0);
+    selectRenderPresetByIndex(0);
+    selectSecondaryPresetByIndex(0);
+    clearVec4QuadStruct(D_menu_overlay_800CF090.unk2C);
+    D_menu_overlay_800CF074 = 0;
+    D_main_bss_8013889C = 0;
+    D_menu_overlay_800CF078 = allocateSlotTable(0x10);
+    loadCharTextureSet(D_menu_overlay_800CF078, 9, 0xB, 0x80);
+    resetPlayerSlotAllChannels(9, 0x14);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateMenuItemAnimationState);
 
@@ -895,7 +924,49 @@ void spawnMenuListItemSprite(void *list, u8 idx) {
     D_menu_overlay_800CFA68[0x74] = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", createUiSpriteAt);
+typedef struct {
+    u8 pad0[8];
+    u16 unk8;
+    u16 unkA;
+    s32 unkC;
+    u8 pad10[4];
+    s32 flags;
+    f32 x;
+    f32 y;
+    u8 pad20[4];
+    f32 unk24;
+    f32 unk28;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 pad2F;
+} UiSprite;
+void *getStructField0xC(s32);
+u8 *createUiSpriteAt(s32 tex, s32 x, s32 y) {
+    UiSprite *s = rs_malloc(0x78, 0);
+    UiSprite *b;
+    s32 *src;
+
+    rs_memset(s, 0, 0x78);
+    src = getStructField0xC(tex);
+    b = &s[1];
+    s->x = b->x = (s16)x;
+    s->y = b->y = (s16)y;
+    s->unk28 = b->unk28 = 1.0f;
+    s->unk24 = b->unk24 = 1.0f;
+    s->flags |= 3;
+    b->flags |= 3;
+    s->unkC = b->unkC = src[3];
+    s->unk8 = b->unk8 = 2;
+    s->unkA = b->unkA = 1;
+    s->r = 0xFF;
+    s->g = 0x8F;
+    s->b = 0x20;
+    b->r = 0x18;
+    b->g = 0x28;
+    b->b = 0x48;
+    return (u8 *)s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateUiSpriteScrollAndAlpha);
 
@@ -1003,7 +1074,38 @@ void setCraftMaterialTextureByName(u8 arg0, s32 arg1) {
     setMaterialTextureByName(arg0, arg1, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuBackdropAndPickRandom);
+void initWaterSprayEffectAndSfx(void);
+typedef struct {
+    s32 *name;
+    u8 pad4[0xC];
+} MenuBackdropAsset;
+extern MenuBackdropAsset D_menu_overlay_800CD184[];
+typedef struct {
+    u8 unk0;
+    u8 unk1;
+    u8 pad2[2];
+    s32 unk4;
+    s32 unk8;
+    s32 padC;
+    s32 unk10;
+    u8 pad14[0x3C];
+} MenuBackdropState;
+MenuBackdropState *initMenuBackdropAndPickRandom(void) {
+    MenuBackdropState *s = rs_malloc(0x50, 0);
+    u8 i;
+
+    rs_memset(s, 0, 0x50);
+    for (i = 0; i < 18; i++) {
+        load_hmt_and_hob(D_menu_overlay_800CD184[i].name, 0, 0, 0);
+    }
+    initWaterSprayEffectAndSfx();
+    s->unk0 = 2;
+    s->unk1 = (s16)rand() % 18;
+    s->unk4 = 0;
+    s->unk8 = 0;
+    s->unk10 = 0;
+    return s;
+}
 
 extern s32 D_menu_overlay_800CCE18;
 s32 registerServiceWorker(s32, s32, s32, s32 *);
