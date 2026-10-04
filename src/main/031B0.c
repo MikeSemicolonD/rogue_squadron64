@@ -1,7 +1,13 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/031B0", getResetVectorRegion);
+extern u8 osAppNMIBuffer[];
+
+s32 getResetVectorRegion(u8 **start, u32 *size) {
+    *start = osAppNMIBuffer;
+    *size = 0x80000400 - (u32)osAppNMIBuffer;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/031B0", fatalErrorHalt);
 
