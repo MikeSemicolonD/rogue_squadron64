@@ -136,7 +136,78 @@ s32 endMissionEndTransition(void) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", requestMissionTransitionMode);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", setupMissionTransitionScreenOverlay);
+typedef struct {
+    u8 pad0[0x14];
+    s32 f14;
+    u8 pad18[8];
+    f32 f20;
+} Bss80138D20;
+
+typedef struct {
+    s32 a;
+    s32 b;
+    s32 c;
+} Vec3i;
+
+void buildGridCellAdjacencyTable(void);
+void despawnCraftAnimationSlotNpcs(u8);
+s32 getBootConfigField12(void);
+s32 getBootConfigField14(void);
+void initEffectObjectFromLevelData(s32, s32);
+void lookupActivePlayerCraftGridCell(void);
+void releaseFlaggedMeshInstanceMeshes(s32);
+void setGridLayerScrollX(f32);
+void setScreenColorOverlay(s32, s32, s32, s32, s32, s32, s32, s32);
+void setSubtitleOverlayScreenPos(s32, s32);
+extern s32 D_main_8009EBC0;
+extern s32 D_main_8009EC10;
+extern Vec3i D_main_bss_801375F8;
+extern Bss80138D20 D_main_bss_80138D20;
+extern s32 D_mission_overlay_8010BFDC;
+extern s32 D_mission_overlay_8010C9E8;
+extern f32 D_mission_overlay_8010C9EC;
+extern u8 D_mission_overlay_8010C9F0;
+
+s32 setupMissionTransitionScreenOverlay(void) {
+    s32 temp_s0;
+    s32 temp_s1;
+    s32 temp_s2;
+    Bss80138D20 *p;
+    Vec3i *temp_v0;
+
+    if (D_mission_overlay_8010CA20 != 7 && D_mission_overlay_8010CA20 != 0) {
+        return 0;
+    }
+    {
+        if (D_main_8009EC10 != D_main_8009EBC0) {
+            temp_v0 = getLevelDatItemByName(D_main_8009EC10);
+            D_main_bss_801375F8 = *(Vec3i *)((u8 *)temp_v0 + 0x10);
+            D_mission_overlay_8010CA1C |= 8;
+            lookupActivePlayerCraftGridCell();
+        }
+        initEffectObjectFromLevelData(0, D_main_8009EC10);
+        p = &D_main_bss_80138D20;
+        setGridLayerScrollX(1.3176471f);
+        p->f20 = 49.330357f;
+        p->f14 = ((getBootConfigField14() & 0xFFFF) * 0xAA) / 224;
+        temp_s0 = (getBootConfigField14() & 0xFFFF) - p->f14;
+        temp_s0 = temp_s0 / 2;
+        temp_s2 = temp_s0 + 1;
+        temp_s1 = getBootConfigField12() & 0xFFFF;
+        setScreenColorOverlay(0, 0, temp_s0 & 0xFFFF, temp_s1, (getBootConfigField14() - temp_s2) & 0xFFFF, 0, 0, 0);
+        setSubtitleOverlayScreenPos(0, -4);
+        D_mission_overlay_8010BFDC = 0;
+        D_mission_overlay_8010CA20 = 7;
+        D_mission_overlay_8010C9F0 = 0;
+        D_mission_overlay_8010C9EC = 0.0f;
+        D_mission_overlay_8010CA1C |= 0x104;
+        D_mission_overlay_8010C9E8 = 3;
+        buildGridCellAdjacencyTable();
+        releaseFlaggedMeshInstanceMeshes(0);
+        despawnCraftAnimationSlotNpcs(0);
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", tickMissionTransitionAndTeardown);
 
