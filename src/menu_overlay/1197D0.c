@@ -281,7 +281,10 @@ void spawnHudReticleAtMeshBounds(s32 arg0, HudMeshRef *arg1, s32 arg2, u8 arg3) 
     createHudSpritePair(arg0, arg1->unk20, c, b->w, b->h, arg2, arg3);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", positionHudSpriteOffset);
+void layoutHudSpriteScreenRect(s32 a, s32 b, s32 c);
+void positionHudSpriteOffset(s32 a, s32 b, s32 c) {
+    layoutHudSpriteScreenRect(a, b, c + 0x20);
+}
 
 s32 insertLookupEntry(s32, u8 *, s32);
 u8 *rs_malloc(s32, s32);
