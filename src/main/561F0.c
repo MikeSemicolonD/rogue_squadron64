@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/main/561F0", initPlayerStructs);
 

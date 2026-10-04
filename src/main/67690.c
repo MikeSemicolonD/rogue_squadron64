@@ -156,8 +156,6 @@ void endSpeechTimingWindow(void) {
     D_main_bss_80139C8D = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", getSpeechPlaybackElapsedTime);
-
 extern s32 D_main_80139B80[];
 s32 isVoiceHandleActive(s32);
 extern u8 subtitleSlotHead;
@@ -172,6 +170,22 @@ static inline u8 speechSlotActiveInline(u8 slot) {
     }
     return 0;
 }
+f32 getVoicePlaybackProgressByKey(s32, f32 *);
+extern u16 D_main_bss_80139C74;
+s32 getSpeechPlaybackElapsedTime(f32 *out) {
+    f32 total;
+    f32 progress;
+
+    if (!speechSlotActiveInline(D_main_80139C73)) {
+        return -1;
+    }
+    if (out != NULL) {
+        progress = getVoicePlaybackProgressByKey(D_main_80139B80[D_main_80139C73 - 1], &total);
+        *out = total - progress;
+    }
+    return D_main_bss_80139C74;
+}
+
 u8 isSpeechBusyOrQueued(void) {
     if (subtitleSlotTail == subtitleSlotHead && !speechSlotActiveInline(D_main_80139C73)) {
         return 1;
