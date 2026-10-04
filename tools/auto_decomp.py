@@ -116,18 +116,38 @@ def with_types(text, nl):
         return text.replace(anchor, anchor + '#include "common_types.h"' + nl, 1)
     return '#include "common_types.h"' + nl + text
 
+GCC272_LINE = "N64CC = $(GCC272SN0001)"
+
+def makefile_with_gcc272(c_path):
+    """Returns the Makefile text with c_path's object built by GCC 2.7.2 SN0001, or None if it already is."""
+    mk = read("Makefile")
+    target = "build/" + str(c_path)[:-2] + ".s: "
+    if target + GCC272_LINE in mk:
+        return None
+    lines = mk.split("\n")
+    last = max(i for i, l in enumerate(lines) if l.endswith(GCC272_LINE))
+    lines.insert(last + 1, target + GCC272_LINE)
+    return "\n".join(lines)
+
 def try_func(func, c_path, s_path, variants):
     original = read(c_path)
+    original_mk = read("Makefile")
     nl = "\r\n" if "\r\n" in original else "\n"
     pat = re.compile(r'^INCLUDE_ASM\("[^"]+", ' + re.escape(func) + r'\);', re.M)
     reason = "no variant"
     base = with_types(original, nl)
     for extra in variants:
+        if "gcc272" in extra:
+            mk = makefile_with_gcc272(c_path)
+            if mk is None:
+                continue
+            write("Makefile", mk)
         write(c_path, base)
-        code, err = m2c(func, s_path, c_path, extra)
+        code, err = m2c(func, s_path, c_path, [e for e in extra if e != "gcc272"])
         if err:
             reason = err
             write(c_path, original)
+            write("Makefile", original_mk)
             continue
         m = pat.search(base)
         write(c_path, base[:m.start()] + code.rstrip("\n").replace("\n", nl) + base[m.end():])
@@ -135,6 +155,7 @@ def try_func(func, c_path, s_path, variants):
         if ok:
             return True, "match " + " ".join(extra)
         write(c_path, original)
+        write("Makefile", original_mk)
     pathlib.Path(c_path).touch()
     return False, reason
 
@@ -153,7 +174,7 @@ def main():
     ok, _ = rom_matches()
     if not ok:
         sys.exit("auto_decomp: baseline ROM does not match; fix that first")
-    variants = [[], ["--no-andor"], ["--no-casts"], ["no-protos"]]
+    variants = [[], ["gcc272"], ["--no-andor"], ["gcc272", "--no-andor"], ["--no-casts"], ["no-protos"]]
     matched_since_commit, tried = [], 0
     with open(a.log, "a") as log:
         for n, func, c_path, s_path in candidates(skip):
@@ -178,7 +199,7 @@ def main():
     print("final ROM", "OK" if ok else "MISMATCH", flush=True)
 
 def commit(funcs):
-    subprocess.run(["git", "add", "src"], check=True)
+    subprocess.run(["git", "add", "src", "Makefile"], check=True)
     msg = f"Match {len(funcs)} functions\n\n" + "\n".join(funcs) + "\n"
     subprocess.run(["git", "-c", "user.name=Michael Frye", "-c", "user.email=legoguy217@gmail.com",
                     "commit", "-q", "-m", msg], check=True)
