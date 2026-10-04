@@ -715,24 +715,6 @@ void shutdownMenuMessagingAndSpeech(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", cueMenuScreenAudioA);
-
-s32 loadSongAssetByName(s32, s32);
-s32 parseLoadedSndSection(s32);
-s32 playSimpleAudioCmd(s32, s32, s32);
-extern s32 D_main_bss_80138920;
-
-void preloadMenuMusicSetA(void) {
-    parseLoadedSndSection(0xC);
-    parseLoadedSndSection(0x1D);
-    loadSongAssetByName(D_main_bss_80138920, 0x1C);
-    loadSongAssetByName(D_main_bss_80138920, 0x35);
-    loadSongAssetByName(D_main_bss_80138920, 0x36);
-    loadSongAssetByName(D_main_bss_80138920, 0x37);
-    playSimpleAudioCmd(0x7F, 0x32, 0xFE);
-    playSimpleAudioCmd(0x78, 0x32, 0xFD);
-}
-
 typedef struct {
     u16 unk0;
     u16 unk2;
@@ -749,6 +731,45 @@ typedef struct {
     u16 unk24;
 } MenuScreenAudioCue;
 void syncMusyXIfActive();
+extern MenuScreenAudioCue D_menu_overlay_800CE700;
+extern s32 D_main_bss_80138920;
+s32 loadSongAssetByName(s32, s32);
+s32 parseLoadedSndSection(s32);
+s32 playSimpleAudioCmd(s32, s32, s32);
+
+void cueMenuScreenAudioA(void) {
+    parseLoadedSndSection(1);
+    loadSongAssetByName(D_main_bss_80138920, 1);
+    playSimpleAudioCmd(0x7F, 0x32, 0xFE);
+    playSimpleAudioCmd(0x78, 0x32, 0xFD);
+    D_menu_overlay_800CE700.unk0 = 0xA0;
+    D_menu_overlay_800CE700.unk1A = 1;
+    D_menu_overlay_800CE700.unk2 = 0x9B;
+    D_menu_overlay_800CE700.unk12 = 0x78;
+    D_menu_overlay_800CE700.unk1B = 0x41;
+    D_menu_overlay_800CE700.unk1E = 0x51E;
+    D_menu_overlay_800CE700.unk20 = 0xF5C;
+    D_menu_overlay_800CE700.unk22 = 0x1999;
+    D_menu_overlay_800CE700.unk1C = 1;
+    D_menu_overlay_800CE700.unk24 = 0x800;
+    syncMusyXIfActive(&D_menu_overlay_800CE700);
+}
+
+s32 loadSongAssetByName(s32, s32);
+s32 parseLoadedSndSection(s32);
+s32 playSimpleAudioCmd(s32, s32, s32);
+extern s32 D_main_bss_80138920;
+
+void preloadMenuMusicSetA(void) {
+    parseLoadedSndSection(0xC);
+    parseLoadedSndSection(0x1D);
+    loadSongAssetByName(D_main_bss_80138920, 0x1C);
+    loadSongAssetByName(D_main_bss_80138920, 0x35);
+    loadSongAssetByName(D_main_bss_80138920, 0x36);
+    loadSongAssetByName(D_main_bss_80138920, 0x37);
+    playSimpleAudioCmd(0x7F, 0x32, 0xFE);
+    playSimpleAudioCmd(0x78, 0x32, 0xFD);
+}
 extern MenuScreenAudioCue D_menu_overlay_800CF020;
 void cueMenuScreenAudioB(void) {
     parseLoadedSndSection(0x1D);
