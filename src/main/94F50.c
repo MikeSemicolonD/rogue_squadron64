@@ -91,7 +91,12 @@ u16 getSongParamByHandle(u32 handle) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", isSongHandleActive);
+s32 isSongHandleActive(u32 handle) {
+    if (gMusyXActiveFlag != 0) {
+        return findSongSlotByHandle(handle) != -1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", stopSongByHandle);
 
