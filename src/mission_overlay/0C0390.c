@@ -157,7 +157,72 @@ void setHudSecondaryWeaponInfo(struct func_800C0084_type *arg0) {
     arg0->secondaryWeaponLevel = secondaryWeaponLevel;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", findHudElementExtremes);
+typedef struct {
+    s16 x;
+    s16 y;
+    s16 z;
+    s16 w;
+} HudPt;
+
+void findHudElementExtremes(u8 *out, u8 **objp, s32 flag) {
+    HudPt *base;
+    u32 idx;
+    u32 i;
+    s32 f;
+
+    *(s32 *)(*objp + 0xC) &= ~8;
+    *(s32 *)(*objp + 0xC) |= 0x20000;
+    *(s32 *)(out + 0x20) = 0xC;
+    *(s32 *)(out + 0x24) = 0x0A0C9005;
+    *(s32 *)(out + 0x28) = 0;
+    base = *(HudPt **)(*objp + 0x24);
+
+    idx = 0;
+    for (i = 1; i < 4; i++) {
+        if (base[i].x <= base[idx].x && base[i].y <= base[idx].y) {
+            idx = i;
+        }
+    }
+    *(u16 *)(out + 0x2C) = idx;
+
+    idx = 0;
+    for (i = 1; i < 4; i++) {
+        if (base[i].x >= base[idx].x && base[i].y <= base[idx].y) {
+            idx = i;
+        }
+    }
+    *(u16 *)(out + 0x2E) = idx;
+
+    idx = 0;
+    for (i = 1; i < 4; i++) {
+        if (base[i].x >= base[idx].x && base[i].y >= base[idx].y) {
+            idx = i;
+        }
+    }
+    *(u16 *)(out + 0x30) = idx;
+
+    idx = 0;
+    for (i = 1; i < 4; i++) {
+        if (base[i].x <= base[idx].x && base[i].y >= base[idx].y) {
+            idx = i;
+        }
+    }
+    f = *(s32 *)(out + 0x20);
+    *(u16 *)(out + 0x32) = idx;
+    *(u16 *)(out + 0x34) = 0;
+    *(u16 *)(out + 0x36) = 0;
+    *(u16 *)(out + 0x38) = 0x1000;
+    *(u16 *)(out + 0x3A) = 0;
+    *(u16 *)(out + 0x3C) = 0x1000;
+    *(u16 *)(out + 0x3E) = 0x1000;
+    *(u16 *)(out + 0x40) = 0;
+    *(u16 *)(out + 0x42) = 0x1000;
+    *(s32 *)(out + 0x20) = f | 0x180;
+    if (flag & 0xFF) {
+        *(s32 *)(out + 0x20) = f | 0x182;
+    }
+    *(u8 **)(*(u8 **)(*objp + 0x20) + 8) = out + 0x20;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", handleHUD);
 
