@@ -5,6 +5,8 @@
 #include "main/192E0.h"
 #include "main/1D000.h"
 
+#define SQRTF_ASM(out, in) __asm__("sqrt.s %0, %1" : "=f"(out) : "f"(in))
+
 INCLUDE_ASM("asm/nonmatchings/main/1D000", sinfApprox);
 
 f32 constMinusSinfApprox(f32 arg0) {
@@ -223,43 +225,30 @@ void buildRotationMatrixSlot2(Mat4x3 arg0, f32 arg1) {
     arg0[2][2] = 1.0f;
 }
 
-#if 0
-f32 vec3Length(Vec3f arg0) {
-    return sqrtf((arg0[0] * arg0[0]) + (arg0[1] * arg0[1]) + (arg0[2] * arg0[2]));
+f32 vec3Length(Vec3f v) {
+    f32 len;
+
+    SQRTF_ASM(len, v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    return len;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/1D000", vec3Length);
-#endif
 
-#if 0
-void normalize_vector(Vec3f arg0) {
-    f32 x2, y2, z2;
-    f32 temp_fv0_2;
+void normalize_vector(Vec3f v) {
+    register f32 len asm("$f0");
 
-    x2 = arg0[0] * arg0[0];
-    y2 = arg0[1] * arg0[1];
-    z2 = arg0[2] * arg0[2];
-    arg0[0] = arg0[0] / sqrtf(x2 + y2 + z2);
-    arg0[2] = arg0[2] / sqrtf(x2 + y2 + z2);
-    arg0[1] = arg0[1] / sqrtf(x2 + y2 + z2);
+    SQRTF_ASM(len, v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    v[0] /= len;
+    v[1] /= len;
+    v[2] /= len;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/1D000", normalize_vector);
-#endif
 
-#if 0
-void vec3NormalizeInto(Vec3f arg0, Vec3f arg1) {
-    f32 temp_fv0;
-    f32 why;
+void vec3NormalizeInto(Vec3f dst, Vec3f src) {
+    register f32 len asm("$f0");
 
-    temp_fv0 = sqrtf((arg1[0] * arg1[0]) + (arg1[1] * arg1[1]) + (arg1[2] * arg1[2]));
-    arg0[0] = (arg1[0] / temp_fv0);
-    arg0[1] = (arg1[1] / temp_fv0);
-    arg0[2] = (arg1[2] / temp_fv0);
+    SQRTF_ASM(len, src[0] * src[0] + src[1] * src[1] + src[2] * src[2]);
+    dst[0] = src[0] / len;
+    dst[1] = src[1] / len;
+    dst[2] = src[2] / len;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/1D000", vec3NormalizeInto);
-#endif
 
 f32 vec3Dot(Vec3f arg0, Vec3f arg1) {
     return (arg0[0] * arg1[0]) + (arg0[1] * arg1[1]) + (arg0[2] * arg1[2]);
@@ -329,7 +318,28 @@ void quatFromAxisAngleSafe(Vec4f arg0, Vec3f arg1, f32 arg2) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/1D000", quatFromAxisAngleSafe);
+f32 sinf(f32);
+f32 cosf(f32);
+
+void quatFromAxisAngleSafe(f32 *q, Vec3f axis, f32 angle) {
+    f32 half;
+    f32 len;
+
+    half = angle * 0.008726646f;
+    SQRTF_ASM(len, axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
+    if ((half != 0.0f) & (len != 0.0f)) {
+        q[0] = cosf(half);
+        half = sinf(half) / len;
+        q[1] = axis[0] * half;
+        q[2] = axis[1] * half;
+        q[3] = axis[2] * half;
+    } else {
+        q[3] = 0.0f;
+        q[2] = 0.0f;
+        q[1] = 0.0f;
+        q[0] = 1.0f;
+    }
+}
 #endif
 
 void quatFromAxisAngle(Vec4f arg0, Vec3f arg1, f32 arg2) {

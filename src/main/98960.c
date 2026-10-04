@@ -3,7 +3,10 @@
 
 typedef struct {
     u8 active;
-    u8 pad[0x17];
+    u8 pad1[7];
+    void *unk8;
+    void *unkC;
+    u8 pad10[8];
 } StreamedVoice;
 
 extern u8 D_main_bss_80141AD0;
@@ -19,7 +22,17 @@ void clearStreamedVoiceFlags(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", serviceStreamedVoices);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", flushStreamedVoiceBuffers);
+void copyFourHalfwordsWriteback(void *, void *);
+
+void flushStreamedVoiceBuffers(void) {
+    s32 i;
+
+    for (i = 0; i < D_main_bss_80141AD0; i++) {
+        if (D_main_bss_80152A20[i].active == 1) {
+            copyFourHalfwordsWriteback(D_main_bss_80152A20[i].unk8, D_main_bss_80152A20[i].unkC);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", startStreamedSampleVoice);
 
@@ -57,8 +70,10 @@ INCLUDE_ASM("asm/nonmatchings/main/98960", play3DSoundEventVariant);
 extern s32 D_main_bss_80153414;
 extern u8 gMusyXActiveFlag;
 s32 flagVoiceChainForStop(s32);
+s32 factor5MutexAcquire();
+s32 factor5MutexRelease();
 
-s32 factor5RemoveListNode(void *arg0) {
+inline s32 factor5RemoveListNode(void *arg0) {
     s32 temp_a0;
     void **temp_v1_2;
     void *temp_v1;
@@ -104,7 +119,16 @@ s32 mostlyMusyxFlagGatedHelper(void *arg0) {
     return var_s1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", tickAndReap3DAudioVoices);
+void tickAndReap3DAudioVoices(void) {
+    void *node = (void *)D_main_bss_80153414;
+    void *next;
+
+    while (node != NULL) {
+        next = *(void **)node;
+        factor5RemoveListNode(node);
+        node = next;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", setMusyX3DProperties);
 

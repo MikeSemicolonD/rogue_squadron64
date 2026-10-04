@@ -240,7 +240,39 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", initCinematicSceneAssets);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", dispatchCinematicFromMainLoop);
+extern u8 D_cinematic_overlay_800B0B1E;
+
+void cinematicLoopBody(s32, s32, u8);
+
+void dispatchCinematicFromMainLoop(u8 *medals, u8 arg1) {
+    u8 allBronze = 1;
+    u8 allSilver = allBronze;
+    u8 allGold = allBronze;
+    u8 i;
+
+    for (i = 0; i < 16; i++) {
+        if (medals[i] < 3) {
+            allGold = 0;
+        }
+        if (medals[i] < 2) {
+            allSilver = 0;
+        }
+        if (medals[i] == 0) {
+            allBronze = 0;
+        }
+    }
+    D_cinematic_overlay_800B0B1E = 0;
+    if (allBronze) {
+        D_cinematic_overlay_800B0B1E = 1;
+    }
+    if (allSilver) {
+        D_cinematic_overlay_800B0B1E = 2;
+    }
+    if (allGold) {
+        D_cinematic_overlay_800B0B1E = 3;
+    }
+    cinematicLoopBody(3, 2, arg1);
+}
 
 u8 shouldShowCutsceneForLevelStage(u8 levelId, u8 arg1) {
     u8 ret;
@@ -263,39 +295,39 @@ u8 shouldShowCutsceneForLevelStage(u8 levelId, u8 arg1) {
     return ret;
 }
 
-#if 0
-// Due to the strings, this likely isn't match-able until the whole file is matched
+extern char D_cinematic_overlay_800A54CC[];
+extern char D_cinematic_overlay_800A54F4[];
+extern char D_cinematic_overlay_800A550C[];
+extern char D_cinematic_overlay_800A5524[];
+
 char *getAssetNameForNpcType(u8 datSubType) {
     switch (datSubType) {
-    case DAT_UNKNOWN_00:
-    case DAT_TYPE_0_GENERIC_BUILDING:
-    case DAT_TYPE_0_21:
-    case DAT_TYPE_0_IMPERIAL_TRAIN_PILLAR:
-    case DAT_TYPE_0_IMPERIAL_PLATFORM:
-    case DAT_TYPE_0_POWER_GENERATOR:
-    case DAT_TYPE_0_4B:
-        return NULL;
-    case DAT_TYPE_0_TALORAAN_TURRET:
-        return "b_ttu_hi";
-    case DAT_TYPE_0_RADAR_DISH:
-        return "b_lrsp";
-    case DAT_TYPE_0_REBEL_TRANSPORT:
-        return "reb_transport";
-    case DAT_TYPE_0_REBEL_COMBAT:
-        return "r_combat";
-    case DAT_TYPE_0_MEGA_TURRENT:
-        return "megaturret";
-    case DAT_TYPE_0_REBEL_TURRET:
-        return "r_tur_hi";
-    case DAT_TYPE_0_GUN_TURRET:
-        return "i_gtu_hi";
-    default:
-        return NULL;
+        case DAT_UNKNOWN_00:
+        case DAT_TYPE_0_GENERIC_BUILDING:
+        case DAT_TYPE_0_21:
+        case DAT_TYPE_0_IMPERIAL_TRAIN_PILLAR:
+        case DAT_TYPE_0_IMPERIAL_PLATFORM:
+        case DAT_TYPE_0_POWER_GENERATOR:
+        case DAT_TYPE_0_4B:
+            return NULL;
+        case DAT_TYPE_0_TALORAAN_TURRET:
+            return D_cinematic_overlay_800A5524;
+        case DAT_TYPE_0_RADAR_DISH:
+            return "b_lrsp";
+        case DAT_TYPE_0_REBEL_TRANSPORT:
+            return "reb_transport";
+        case DAT_TYPE_0_REBEL_COMBAT:
+            return "r_combat";
+        case DAT_TYPE_0_MEGA_TURRENT:
+            return D_cinematic_overlay_800A54F4;
+        case DAT_TYPE_0_REBEL_TURRET:
+            return D_cinematic_overlay_800A550C;
+        case DAT_TYPE_0_GUN_TURRET:
+            return D_cinematic_overlay_800A54CC;
+        default:
+            return NULL;
     }
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", getAssetNameForNpcType);
-#endif
 
 Vec3f *func_cinematic_overlay_800AEA18(void) {
     return D_cinematic_overlay_800B1A08;
@@ -445,7 +477,28 @@ void maybeLoadYwingCutscene(s32 arg0, s32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", buildBobbingObjectMatrix);
+extern f32 D_cinematic_overlay_800B0B2C;
+
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+void composeRotationMatrixSlot2(void *, f32);
+void composeRotationMatrixSlot0(void *, f32);
+void addVec3At0x24(void *, f32, f32, f32);
+void composeQuatToMat3x4(void *, void *);
+f32 sinf(f32);
+
+void buildBobbingObjectMatrix(Vec3f pos, void *out) {
+    u8 *obj;
+
+    if (D_cinematic_overlay_800B0B18 != 0) {
+        obj = (u8 *)D_cinematic_overlay_800B0B18 + 0x28;
+        initVec4TripletFromArgs(obj, 0.1f, 0.1f, 0.1f);
+        composeRotationMatrixSlot2(obj, sinf(D_cinematic_overlay_800B0B2C * 1.2f) * 4.0f);
+        composeRotationMatrixSlot0(obj, sinf(D_cinematic_overlay_800B0B2C + D_cinematic_overlay_800B0B2C) * 1.5f);
+        addVec3At0x24(obj, 0.0f, 0.089999996f, 0.49f);
+        composeQuatToMat3x4(obj, out);
+        addVec3At0x24(obj, pos[0], pos[1], pos[2]);
+    }
+}
 
 void cinematicShutdownAudioAndAssets(void) {
     finalizeCurrentSpeechBuffer();

@@ -32,7 +32,17 @@ INCLUDE_ASM("asm/nonmatchings/main/55250", setPoolEntryPhaseAndMarkActive);
 
 INCLUDE_ASM("asm/nonmatchings/main/55250", setPoolEntryPhase);
 
-INCLUDE_ASM("asm/nonmatchings/main/55250", getPoolEntryFrameIndex);
+typedef struct {
+    s32 unk0;
+    s16 frameCount;
+    u16 flags;
+    u32 frame;
+    u32 phase;
+} PoolEntry;
+
+u32 getPoolEntryFrameIndex(u16 index) {
+    return (((PoolEntry *)D_main_bss_80137C84)[index].frame >> 8) % ((PoolEntry *)D_main_bss_80137C84)[index].frameCount;
+}
 
 typedef struct {
     u8 unk0[4];

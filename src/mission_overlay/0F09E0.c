@@ -301,7 +301,19 @@ s16 getObjectDetailLevel(void *arg0) {
     return (*(s16 *)((u8 *)(arg0) + 0x19A));
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initActorMotionParams);
+f32 cosf(f32);
+s32 rand(void);
+
+void initActorMotionParams(u8 *actor, f32 angleA, f32 speedA, f32 angleB, f32 speedB) {
+    *(f32 *)(actor + 0x114) = cosf(angleA * 0.017453292f);
+    *(f32 *)(actor + 0x118) = speedA * 0.25f;
+    *(f32 *)(actor + 0x11C) = cosf(angleB * 0.017453292f);
+    *(f32 *)(actor + 0x120) = speedB * 0.25f;
+    *(f32 *)(actor + 0x124) = (s16)((s16)rand() % 30) * 0.033333335f;
+    actor[0x136] = 0;
+    actor[0x137] = 0;
+    actor[0x135] = 1;
+}
 
 s32 transformMeshPartIntoWorld(s32, s32);
 s32 zmemcpy(s32, s32, s32);
