@@ -187,7 +187,20 @@ void quiesceSongSlotCmdLocked(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongParamPairCmd);
+s32 setSongParamPairCmd(s32 handle, s32 a, s32 b) {
+    handle = findSongSlotByHandle(handle);
+    if (handle != -1) {
+        if (handle >= 0) {
+            D_main_bss_80149A00[handle].unk110[0] = a;
+            D_main_bss_80149A00[handle].unk110[1] = b;
+        } else {
+            handle &= 0x7FFFFFFF;
+            D_main_bss_80149A00[handle].unkEC8[7] = a;
+            D_main_bss_80149A00[handle].unkEC8[8] = b;
+            D_main_bss_80149A00[handle].unkEEE |= 0x10;
+        }
+    }
+}
 
 s32 setSongParamPairCmd(s32, s32, s32);
 
