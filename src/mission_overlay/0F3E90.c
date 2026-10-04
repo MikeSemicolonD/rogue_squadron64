@@ -95,7 +95,27 @@ s32 setType3ActorParams(void *arg0, f32 arg1, f32 arg2, f32 arg3, f32 arg4, f32 
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", dispatchEffectByActorType);
+extern void executeActorType1Effect(void *, f32);
+extern void executeActorType2Effect(void *, f32);
+extern void executeActorType3Effect(void *, f32);
+extern void executeActorType4Effect(void *, f32);
+
+void dispatchEffectByActorType(void *arg0, f32 arg1) {
+    switch (*(u8 *)((u8 *)arg0 + 0x112)) {
+    case 1:
+        executeActorType1Effect(arg0, arg1);
+        break;
+    case 2:
+        executeActorType2Effect(arg0, arg1);
+        break;
+    case 3:
+        executeActorType3Effect(arg0, arg1);
+        break;
+    case 4:
+        executeActorType4Effect(arg0, arg1);
+        break;
+    }
+}
 
 s32 setType1ActorParams(void *arg0, f32 arg1, s8 arg2, s8 arg3, s8 arg4, s32 arg5) {
     if ((*(u8 *)((u8 *)(arg0) + 0x112)) == 1) {
