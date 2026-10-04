@@ -60,7 +60,53 @@ INCLUDE_ASM("asm/nonmatchings/main/42AF0", buildGridCellMeshForFace);
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", buildVisibleTerrainGridAroundCamera);
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", markLowLodCellsInGrid);
+extern f32 D_main_8003A53C;
+void markLowLodCellsInGrid(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
+    s32 x0;
+    s32 x1;
+    s32 y0;
+    s32 y1;
+    s32 x;
+    u16 *cell;
+    u8 *info;
+    f32 o;
+    f32 sc;
+
+    o = D_main_bss_80136DC0.unk20;
+    __asm__("lwc1 %0, D_main_8003A53C" : "=f"(sc));
+    x0 = (s32)((arg0 - o) * sc);
+    if (x0 < 0) {
+        x0 = 0;
+    }
+    x1 = (s32)((arg1 - o) * sc);
+    if (x1 >= (s32)D_main_bss_80136DC0.unk38) {
+        x1 = D_main_bss_80136DC0.unk38 - 1;
+    }
+    o = D_main_bss_80136DC0.unk2C;
+    y0 = (s32)((arg2 - o) * sc);
+    if (y0 < 0) {
+        y0 = 0;
+    }
+    y1 = (s32)((arg3 - o) * sc);
+    if (y1 >= (s32)D_main_bss_80136DC0.unk3A) {
+        y1 = D_main_bss_80136DC0.unk3A - 1;
+    }
+    if (y1 >= y0) {
+        do {
+            x = x0;
+            if (x1 >= x) {
+                do {
+                    cell = (u16 *)(((x + y0 * D_main_bss_80136DC0.unk38) * 2) + (s32)D_main_bss_80136DC0.unk0);
+                    *cell |= 0x8000;
+                    info = (u8 *)((*(u16 *)(((x + y0 * D_main_bss_80136DC0.unk38) * 2) + (s32)D_main_bss_80136DC0.unk0) & 0x1FFF) * 0x1E + (s32)D_main_bss_80136DC0.unk4);
+                    info[2] |= 1;
+                    x++;
+                } while (x1 >= x);
+            }
+            y0++;
+        } while (y1 >= y0);
+    }
+}
 
 extern f32 D_main_8003A540;
 
