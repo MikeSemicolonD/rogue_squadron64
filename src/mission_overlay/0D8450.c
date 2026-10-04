@@ -1,7 +1,42 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanResetState);
+extern void rs_memset(void *, s32, s32);
+extern s32 setNpcHealth(s32, void *, void *);
+extern void initActorMotionParams(s32, f32, f32, f32, f32);
+extern void setObjectDetailLevel(s32, s32);
+extern void *lookupHmtMaterialByName(s32, char *, s32 *);
+extern s32 D_main_bss_80137CE4;
+
+void npcWingmanResetState(void *arg0) {
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+    u8 *def = *(u8 **)(npc + 0x34);
+
+    rs_memset(npc + 0x68, 0, 0x30);
+    if (setNpcHealth(*(s32 *)(npc + 0x38), def + 0x6C, def) > 0) {
+        initActorMotionParams(*(s32 *)(npc + 0x38), ((f32 *)(def + 0xC0))[D_main_bss_80137CE4], ((f32 *)(def + 0xC4))[D_main_bss_80137CE4], ((f32 *)(def + 0xC8))[D_main_bss_80137CE4], ((f32 *)(def + 0xCC))[D_main_bss_80137CE4]);
+        setObjectDetailLevel(*(s32 *)(npc + 0x38), *(s32 *)(def + 0xAC));
+        npc[0x5C] = 0;
+    } else {
+        npc[0x5C] = 4;
+        npc[0x84] = 1;
+    }
+    npc[0x53] = 0;
+    npc[0xF4] = 0;
+    if (*(s32 *)(def + 0x8C) == 0) {
+        if (*(s32 *)(def + 0xB4) == 0) {
+            *(f32 *)(npc + 0xE4) = 0.0f;
+            *(f32 *)(npc + 0xE8) = 0.0f;
+        } else {
+            *(f32 *)(npc + 0xE4) = 10.0f;
+            *(f32 *)(npc + 0xE8) = 1.0f;
+        }
+        *(s32 *)(npc + 0xEC) = 0;
+        *(void **)(npc + 0x98) = lookupHmtMaterialByName(*(s32 *)(npc + 0x30), "wngrot_a", NULL);
+        *(void **)(npc + 0x9C) = lookupHmtMaterialByName(*(s32 *)(npc + 0x30), "wngrot_b", NULL);
+        npc[0xF0] = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", func_mission_overlay_800D7974);
 
@@ -298,7 +333,7 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A7CF8);
 
-extern void setNpcHealth(s32, void *, void *);
+extern s32 setNpcHealth(s32, void *, void *);
 extern void setObjectDetailLevel(s32, s32);
 extern void initActorMotionParams(s32, f32, f32, f32, f32);
 extern void initObjectAnimSubstruct(s32, f32, f32, f32, f32, void *, s32, f32, f32, s32);
