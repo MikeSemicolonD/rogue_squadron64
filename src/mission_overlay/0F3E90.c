@@ -221,7 +221,41 @@ f32 getActorCurrentValueByType(void *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", syncType1ActorFrameToAnchorIfZeroGate);
+#include "main/1D000.h"
+#include "main/192E0.h"
+#include "main/3F160.h"
+#include "main/5A750.h"
+
+f32 sinf(f32);
+
+void syncType1ActorFrameToAnchorIfZeroGate(u8 *arg0, Vec3f arg1) {
+    Mat4x3 sp10;
+    Mat4x3 sp40;
+    Vec3f sp70;
+    f32 ang;
+    f32 s;
+    u8 *s1;
+
+    if (arg0[0x112] == 1) {
+        s1 = arg0 + 8;
+        if (*(f32 *)(s1 + 0xE8) == 0.0f) {
+            mat34CrossRowsAndCopyPos(sp10, getNpcContextField8(*(u16 *)(arg0 + 0x198)), 1.0f);
+            mat3x3InverseInto(sp40, sp10);
+            rotateVec3ByMat3x3(sp40, arg1, sp70);
+            if (sp70[0] != 0.0f || sp70[1] != 0.0f) {
+                normalize_vector(sp70);
+                ang = atan2Approx(sp70[0], sp70[1]);
+                s = sinf(2.0f * ang);
+                *(f32 *)(s1 + 0xE4) = ang * 57.29578f;
+                s = s * 45.0f;
+                *(f32 *)(s1 + 0xE8) = vec3Length(arg1);
+                *(f32 *)(s1 + 0xEC) = 0.0f;
+                *(f32 *)(s1 + 0xF0) = 0.5f;
+                *(f32 *)(s1 + 0x14) += s;
+            }
+        }
+    }
+}
 
 typedef struct {
     u16 unk0;
@@ -495,4 +529,4 @@ s32 addTimerHandle(void (*handle)(), f32 timerValue) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", fake_func_800FA248);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0F3E90", D_mission_overlay_800A8F64);
+static u32 D_mission_overlay_800A8F68[] __attribute__((section(".rodata"))) = { 0xAFBF002C, 0xAFBE0028 };
