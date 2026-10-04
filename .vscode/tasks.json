@@ -1,0 +1,85 @@
+{
+    // Tasks run in bash with the toolchain from tools/setup_wsl.sh. On Windows, open the folder through the WSL extension.
+    "version": "2.0.0",
+    "options": {
+        "shell": { "executable": "bash", "args": ["-lc"] }
+    },
+    "tasks": [
+        {
+            "label": "Setup toolchain (once)",
+            "type": "shell",
+            "command": "sh tools/setup_wsl.sh",
+            "problemMatcher": []
+        },
+        {
+            "label": "Split ROM (splat)",
+            "type": "shell",
+            "command": ". ~/opt/rs64env.sh && splat split roguesquadron.yaml",
+            "problemMatcher": []
+        },
+        {
+            "label": "Build",
+            "type": "shell",
+            "command": ". ~/opt/rs64env.sh && make -j$(nproc)",
+            "problemMatcher": "$gcc",
+            "group": "build"
+        },
+        {
+            "label": "Build and check ROM matches",
+            "type": "shell",
+            "command": ". ~/opt/rs64env.sh && make -j$(nproc) check",
+            "problemMatcher": "$gcc",
+            "group": { "kind": "build", "isDefault": true }
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "make clean",
+            "problemMatcher": []
+        },
+        {
+            "label": "Diff function (asm-differ)",
+            "type": "shell",
+            "command": ". ~/opt/rs64env.sh && python3 tools/asm-differ/diff.py -mw ${input:functionName}",
+            "problemMatcher": "$gcc"
+        },
+        {
+            "label": "Decompile function with m2c",
+            "type": "shell",
+            "command": ". ~/opt/rs64env.sh && sh tools/m2c_func.sh ${input:functionName}",
+            "problemMatcher": []
+        },
+        {
+            "label": "Auto-decompile (m2c, keep only matches)",
+            "type": "shell",
+            "command": ". ~/opt/rs64env.sh && python3 tools/auto_decomp.py --limit ${input:autoLimit}",
+            "problemMatcher": []
+        },
+        {
+            "label": "Show progress",
+            "type": "shell",
+            "command": ". ~/opt/rs64env.sh && python3 tools/progress.py",
+            "problemMatcher": []
+        },
+        {
+            "label": "Run tool tests",
+            "type": "shell",
+            "command": ". ~/opt/rs64env.sh && python3 tools/test_first_diff.py && python3 tools/test_progress.py",
+            "problemMatcher": [],
+            "group": "test"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "functionName",
+            "type": "promptString",
+            "description": "Function name (as in asm/nonmatchings)"
+        },
+        {
+            "id": "autoLimit",
+            "type": "promptString",
+            "description": "How many functions to try",
+            "default": "50"
+        }
+    ]
+}
