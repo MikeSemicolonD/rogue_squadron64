@@ -183,6 +183,15 @@ void setPlayerSlotEnabledFlag(u16 arg0, u8 arg1) {
     D_main_8009FC10[arg0]->unk102 = arg1 == 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", invokeMenuOverlayHeaderCallback);
+s16 invokeMenuOverlayHeaderCallback(s16 arg0) {
+    s16 ret;
+
+    if (D_main_bss_80139960 & 8) {
+        ret = ((s16 (*)(s16))D_main_bss_80139968)(arg0);
+    } else {
+        ret = 0;
+    }
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", fake_func_80064294);
