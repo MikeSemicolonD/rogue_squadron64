@@ -174,7 +174,35 @@ void resetType1FxFields(void *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", updateType1AnimRamp);
+void updateType1AnimRamp(void *arg0, f32 arg1, f32 arg2, f32 arg3, u8 arg4) {
+    u8 *p;
+    u8 type = *(u8 *)((u8 *)arg0 + 0x112);
+    f32 delta;
+
+    if (type == 1) {
+        p = (u8 *)arg0 + 8;
+        if (arg4 == type) {
+            *(f32 *)(p + 0x50) = *(f32 *)(p + 0x48) * arg1;
+        } else {
+            *(f32 *)(p + 0x50) = arg1;
+        }
+        if (*(f32 *)(p + 0x50) < arg2) {
+            *(f32 *)(p + 0x50) = arg2;
+        }
+        delta = *(f32 *)(p + 0x50) - *(f32 *)(p + 0x48);
+        *(f32 *)(p + 0x4C) = *(f32 *)(p + 0x48);
+        *(f32 *)(p + 0x54) = delta;
+        if (delta != 0.0f) {
+            *(f32 *)(p + 0x58) = 0.0f;
+            if (arg3 > 0.0f) {
+                *(f32 *)(p + 0x5C) = 1.0f / arg3;
+                return;
+            }
+            *(f32 *)(p + 0x48) = *(f32 *)(p + 0x50);
+            *(f32 *)(p + 0x2C) = *(f32 *)(p + 0x48) / *(f32 *)(*(u8 **)(p + 0x24) + 0x24);
+        }
+    }
+}
 
 f32 getActorCurrentValueByType(void *arg0) {
     u8 temp_v1;
