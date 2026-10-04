@@ -66,7 +66,14 @@ void pushActiveSoundDescriptor(void) {
     D_mission_overlay_8010C310++;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", popActiveSoundDescriptor);
+void popActiveSoundDescriptor(void) {
+    D_mission_overlay_8010C310--;
+    D_mission_overlay_8010C170.unk0 = D_mission_overlay_8010C320[D_mission_overlay_8010C310].unk0;
+    D_mission_overlay_8010C170.unk4 = D_mission_overlay_8010C320[D_mission_overlay_8010C310].unk4;
+    D_mission_overlay_8010C170.unk6 = D_mission_overlay_8010C320[D_mission_overlay_8010C310].unk6;
+    D_mission_overlay_8010C170.unk8 = D_mission_overlay_8010C320[D_mission_overlay_8010C310].unkA;
+    D_mission_overlay_8010C170.unkA = D_mission_overlay_8010C320[D_mission_overlay_8010C310].unk8;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", preloadSceneReferencedSongs);
 
