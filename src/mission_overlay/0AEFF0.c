@@ -83,7 +83,30 @@ void setPlayerSlotPositionVec3(u8 idx, PlayerSlotVec3 *v) {
     *(PlayerSlotVec3 *)&p[idx].inner.unk178[8] = *v;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", destroySceneNpcsAndUnlink);
+u16 getNextSlotNpcTypeId(u16);
+void destroyNpcSlotByIndex(u16);
+void destroyNpcSlotChain(u16);
+void factor5RemoveListNode(void *);
+
+void destroySceneNpcsAndUnlink(u8 *arg0) {
+    u16 id;
+
+    if (*(u16 *)(arg0 + 0x1CC) != 0xFFFF) {
+        for (;;) {
+            id = getNextSlotNpcTypeId(*(u16 *)(arg0 + 0x1CC));
+            if (id == 0xFFFF) {
+                break;
+            }
+            destroyNpcSlotByIndex(id);
+        }
+        destroyNpcSlotChain(*(u16 *)(arg0 + 0x1CC));
+        *(u16 *)(arg0 + 0x1CC) = 0xFFFF;
+    }
+    if (arg0[0x24C] != 0) {
+        arg0[0x24C] = 0;
+        factor5RemoveListNode(arg0 + 0x208);
+    }
+}
 
 extern f32 D_mission_overlay_801096B0;
 
