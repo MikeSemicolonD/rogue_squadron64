@@ -142,7 +142,90 @@ done:
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", processPendingSoundCueRequest);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", tickSongFadeTimer);
+extern u8 gFadeA __asm__("D_mission_overlay_8010C2FC");
+extern u8 gFadeB __asm__("D_mission_overlay_8010C2FD");
+extern f32 gFadeT __asm__("D_mission_overlay_8010C300");
+extern f32 gFadeLimit __asm__("D_mission_overlay_8010C304");
+extern s32 gFadeC __asm__("D_mission_overlay_8010C308");
+extern s32 gFadeD __asm__("D_mission_overlay_8010C30C");
+extern s32 gSongHandle __asm__("D_mission_overlay_8010C0E0");
+extern s32 gSongHandle4 __asm__("D_mission_overlay_8010C0E4");
+extern s32 gSongHandleB4 __asm__("D_mission_overlay_8010C1A4");
+extern u8 gFlag260 __asm__("D_mission_overlay_8010C260");
+extern u8 gFlag264 __asm__("D_mission_overlay_8010C264");
+extern u8 gFlag266 __asm__("D_mission_overlay_8010C266");
+extern u8 gFlag2F1 __asm__("D_mission_overlay_8010C2F1");
+extern u8 gFlag2F4 __asm__("D_mission_overlay_8010C2F4");
+extern u32 gFlags9E0 __asm__("D_mission_overlay_8010C9E0");
+extern u8 D_mission_overlay_8010C269;
+extern u8 D_mission_overlay_8010C2F2;
+extern u8 D_mission_overlay_8010C2F3;
+extern u8 D_mission_overlay_8010C262;
+extern s32 gDescA[] __asm__("D_mission_overlay_8010C110");
+extern s32 gDescB[] __asm__("D_mission_overlay_8010C140");
+typedef struct { s32 a[9]; } Blk8;
+extern s32 getSongParamByHandle(s32);
+extern u8 isSongHandleActive(s32);
+extern void processPendingSoundCueRequest(void);
+extern void tickActiveSongSlots(void);
+s32 shouldSwitchToPendingSong();
+void stopSongAndRebuildActiveCueList(u8);
+
+void tickSongFadeTimer(f32 arg0) {
+    u8 t;
+    u8 s;
+    if (gFadeA == 1) {
+        gFadeT = gFadeT + arg0;
+        if (gFadeLimit <= gFadeT) {
+            D_mission_overlay_8010C262 = 1;
+            gFadeA = 0;
+            D_mission_overlay_8010C2F2 = 0;
+        }
+    } else {
+        s = gFadeB;
+        if (s == 1) {
+            if (gFadeD == -1) {
+                gFadeD = getSongParamByHandle(gSongHandle) & 0xFFFF;
+                gFadeC += gFadeD;
+            }
+            if ((getSongParamByHandle(gSongHandle) & 0xFFFF) >= gFadeC) {
+                D_mission_overlay_8010C262 = s;
+                gFadeB = 0;
+                D_mission_overlay_8010C2F2 = 0;
+            }
+        }
+    }
+    if (gFlag264 != 0) {
+        if (!isSongHandleActive(gSongHandle)) {
+            gFlag264 = 0;
+            gFlag266 = 1;
+            gFlags9E0 |= 0x100;
+            D_mission_overlay_8010C262 = 1;
+        }
+    }
+    t = gFlag2F1;
+    if (t == 1) {
+        D_mission_overlay_8010C2F3 = D_mission_overlay_8010C2F2;
+        D_mission_overlay_8010C2F2 = shouldSwitchToPendingSong();
+        if (D_mission_overlay_8010C2F2 != D_mission_overlay_8010C2F3) {
+            gFlag2F4 = t;
+            D_mission_overlay_8010C2F3 = D_mission_overlay_8010C2F2;
+            D_mission_overlay_8010C262 = t;
+        }
+    }
+    if (D_mission_overlay_8010C262 == 1) {
+        processPendingSoundCueRequest();
+        if (gFlag260 == 0) {
+            D_mission_overlay_8010C262 = 0;
+            if (gSongHandle4 != gDescA[1]) {
+                *(Blk8 *)gDescB = *(Blk8 *)gDescA;
+                tickActiveSongSlots();
+            }
+        }
+    } else if (D_mission_overlay_8010C269 == 1 && gSongHandle4 == gSongHandleB4) {
+        stopSongAndRebuildActiveCueList(1);
+    }
+}
 
 void pushActiveSoundDescriptor(void) {
     D_mission_overlay_8010C320[D_mission_overlay_8010C310].unk0 = D_mission_overlay_8010C400.unk0;
