@@ -13,7 +13,35 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", playRandomCutsceneVoiceLi
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", integrateCraftVelocityAndCollide);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", playCutsceneObjectImpactSound);
+s32 isTerrainCellBlockedAtWorldXz(f32, f32, void *);
+void play3DSoundEvent(void *, void *, void *, f32, f32, s32, s32, s32, s32);
+extern u32 D_mission_overlay_8010CA20;
+extern u8 D_main_bss_80138058[];
+
+void playCutsceneObjectImpactSound(u8 *obj) {
+    struct player_struct *players;
+
+    if (obj[0x24C] != 0) {
+        return;
+    }
+    if (D_mission_overlay_8010CA20 != 0) {
+        return;
+    }
+    players = gPlayers;
+    if (!(*(u16 *)&players[*(s32 *)(obj + 0xB8)].inner.unk178[2] & 1)) {
+        return;
+    }
+    obj[0x24C] = 1;
+    switch (isTerrainCellBlockedAtWorldXz(*(f32 *)(obj + 4), *(f32 *)(obj + 0xC), D_main_bss_80138058)) {
+        default:
+        case 0:
+            play3DSoundEvent(obj + 0x208, obj + 4, obj + 0x28, 18.0f, 0.6f, 0xF, 0x7E, 0x7D, 0x50);
+            break;
+        case 1:
+            play3DSoundEvent(obj + 0x208, obj + 4, obj + 0x28, 18.0f, 0.6f, 0xF, 0x7F, 0x7D, 0x50);
+            break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", tickCutsceneObject);
 
