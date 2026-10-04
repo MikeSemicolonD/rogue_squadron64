@@ -196,7 +196,31 @@ f32 computeTurnVectorAndDistanceToTarget(Mat4x3 arg0, Vec3f arg1, struct Struct3
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", computeTurnVectorAndDistanceToTarget);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", isPointInsideTriggerVolume);
+typedef struct {
+    u8 active;
+    u8 pad1[7];
+    Mat4x3 matrix;
+    u8 pad38[0x144 - 0x38];
+} TriggerVolume;
+
+extern TriggerVolume D_main_bss_80138D18[];
+
+u8 transformVec3ToNpcLocalWithScale(Mat4x3, s32, f32 *, f32, f32 *);
+
+s32 isPointInsideTriggerVolume(f32 *point, f32 scale) {
+    s32 i;
+    f32 local[2];
+
+    TriggerVolume *tv;
+
+    for (i = 0; i < 1; i++) {
+        tv = &D_main_bss_80138D18[i];
+        if (tv->active != 0 && transformVec3ToNpcLocalWithScale(tv->matrix, 0, point, scale, local)) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 void *getNpcContextByIndex(u16);
 
