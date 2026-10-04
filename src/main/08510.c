@@ -277,7 +277,40 @@ Gfx *allocDLBlockToListC(void) {
     return chunk->displayList;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", allocDLBlockToListD);
+extern struct DisplayListBuffer **D_main_bss_8011A4BC;
+
+Gfx *allocDLBlockToListD(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    if (*D_main_bss_8011A4BC != NULL) {
+        (*D_main_bss_8011A4BC)->prev = chunk;
+    }
+    chunk->next = *D_main_bss_8011A4BC;
+    *D_main_bss_8011A4BC = chunk;
+    return chunk->displayList;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", drainMeshReleaseQueue);
 
