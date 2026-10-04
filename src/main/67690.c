@@ -120,7 +120,40 @@ INCLUDE_ASM("asm/nonmatchings/main/67690", queueSpeechClipWithPriority);
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", tickSpeechSubsystem);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", resetSpeechSubsystem);
+extern s32 D_main_80139B80[];
+s32 isVoiceHandleActive(s32);
+extern u8 subtitleSlotHead;
+extern u8 subtitleSlotTail;
+extern u8 subtitleSlotsAvailable;
+extern u8 D_main_80139C73;
+extern s32 D_main_bss_80139C78;
+extern f32 D_main_bss_80139C7C;
+extern s8 D_main_bss_80139C8E;
+void stopVoiceByHandle(s32);
+
+void resetSpeechSubsystem(void) {
+    s32 *p;
+    s32 slot = D_main_80139C73;
+    u8 i = slot - 1;
+
+    if (i < 8) {
+        s32 *base = D_main_80139B80;
+        p = base + (u8)(slot - 1);
+        if (*p != -1) {
+            if ((u8)isVoiceHandleActive(*p)) {
+                stopVoiceByHandle(*p);
+            }
+            *p = -1;
+        }
+    }
+    subtitleSlotTail = 0;
+    subtitleSlotHead = 0;
+    subtitleSlotsAvailable = 0x10;
+    D_main_80139C73 = 0;
+    D_main_bss_80139C78 = 0;
+    D_main_bss_80139C7C = 0.0f;
+    D_main_bss_80139C8E = 1;
+}
 
 void shutdownMusyXVoices(void);
 s32 rs_free(s32);
