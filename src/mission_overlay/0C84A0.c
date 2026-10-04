@@ -27,7 +27,11 @@ void setLevelObjectTrackingScalar(f32 arg0) {
     D_main_bss_8013973C = arg0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", playObjectiveVoiceLine1);
+void playSpeechClip(s32, s32, s32, s32);
+
+void playObjectiveVoiceLine1(s32 arg0) {
+    playSpeechClip(arg0, 0x73, 0, 0x43);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", playObjectiveVoiceLine2);
 
