@@ -405,7 +405,34 @@ s32 setEffectIntensity(void *arg0, s32 arg1) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", triggerCueWithSlotEffect);
+typedef struct {
+    s16 type;
+    u8 pad2[0x16];
+    f32 value;
+    u8 mode;
+} CueSlotMessage;
+
+f32 getEffectIntensity(void *);
+s32 dispatchCueByCategory(s32, u16, s32, s32, u8, f32, f32);
+s32 slotDispatcherIter(u16, s32, void *);
+
+u16 triggerCueWithSlotEffect(u8 *npc, s32 arg1, s32 arg2, s32 arg3, u8 arg4, f32 arg5, f32 arg6) {
+    CueSlotMessage msg;
+    s32 id;
+
+    id = dispatchCueByCategory(arg1, *(u16 *)(npc + 0x198), arg2, arg3, arg4, arg5, getEffectIntensity(npc));
+    if (arg6 >= 0.0f) {
+        msg.value = arg6;
+        if (arg6 == 0.0f) {
+            msg.mode = 2;
+        } else {
+            msg.mode = 1;
+        }
+        msg.type = 2;
+        slotDispatcherIter(id, 10, &msg);
+    }
+    return id;
+}
 
 s32 copyPipeDelimitedField(u8 *s, s32 field, u8 *out) {
     s32 count = 0;
