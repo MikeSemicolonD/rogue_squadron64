@@ -258,7 +258,23 @@ u8 findNameTreeEntryIndexByName(void **arg0, u8 *name, s32 *outIndex) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", findNameTreeEntryNodeByName);
+u8 *findNameTreeEntryNodeByName(void **arg0, u8 *name, s32 idx) {
+    u8 *e = *(u8 **)((u8 *)*arg0 + 0x30);
+    s32 i;
+
+    while (*e != 0) {
+        for (i = 0; i < 6; i++) {
+            if (e[i] != name[i] || e[i] == 0) {
+                break;
+            }
+        }
+        if (e[i] == name[i] && e[i] == 0) {
+            return e + idx * 0x24 + 8;
+        }
+        e = e + e[7] * 0x24 + 8;
+    }
+    return NULL;
+}
 
 s32 rs_strcpy(void *, void *);
 
