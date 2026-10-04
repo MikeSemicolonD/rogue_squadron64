@@ -951,7 +951,31 @@ void getControllerSettingsTitle(char *title) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", playMenuElementTransitionAnim);
+void activateAnimationKeyframe(s32, s32, u8);
+extern s8 D_menu_overlay_800CF162;
+void playMenuElementTransitionAnim(f32 arg0, u8 a1, u8 a2, u8 a3, u8 a4) {
+    u8 i;
+    if (a2) {
+        for (i = 2; i < 5; i++) {
+            activateAnimationKeyframe(5, i, (u8)(arg0 * 254.0f));
+        }
+    }
+    if (a1) {
+        i = 0;
+        do {
+            if (i == D_menu_overlay_800CF162) {
+                if (!a3) {
+                    goto next;
+                }
+            } else if (a4) {
+                goto next;
+            }
+            D_menu_overlay_800CF180[i].unk1C = arg0;
+next:
+            i++;
+        } while (i < 3);
+    }
+}
 
 s32 applyFlagsToMeshTreeOrList(s32, s32, s32, s32);
 s32 loadHelmetModel();
