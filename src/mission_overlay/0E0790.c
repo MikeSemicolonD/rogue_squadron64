@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7F60);
 
@@ -52,8 +53,16 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", tickWalkerCraftWithLimbsA
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", npcTrainCarUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", playDualTextureAttachmentCueMode0);
+void playDualTextureAttachmentCue(s32, s32, s32);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", playDualTextureAttachmentCueMode1);
+void playDualTextureAttachmentCueMode0(s32 arg0, s32 arg1) {
+    playDualTextureAttachmentCue(arg0, arg1, 0);
+}
+
+void playDualTextureAttachmentCue(s32, s32, s32);
+
+void playDualTextureAttachmentCueMode1(s32 arg0, s32 arg1) {
+    playDualTextureAttachmentCue(arg0, arg1, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", fake_func_800E406C);
