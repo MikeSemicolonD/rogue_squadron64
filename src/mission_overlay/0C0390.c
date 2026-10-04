@@ -187,7 +187,12 @@ void broadcastSceneShutdownAndCleanup(void) {
     getAvailableShipsForLevel();
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", broadcastSceneEventWithPayload);
+s32 slotDispatcherIter(u16, s32, void *);
+
+void broadcastSceneEventWithPayload(struct rgba *payload, f32 arg1) {
+    D_mission_overlay_8010BFD8 = *payload;
+    slotDispatcherIter(D_mission_overlay_8010BFD0, 5, &arg1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", setRenderObjectTargetOrClear);
 
