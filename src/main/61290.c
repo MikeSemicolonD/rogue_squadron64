@@ -7,7 +7,50 @@ INCLUDE_ASM("asm/nonmatchings/main/61290", randomlyScaledColoredEffectNpcHandler
 
 INCLUDE_ASM("asm/nonmatchings/main/61290", minimalRandomNpcHandler);
 
-INCLUDE_ASM("asm/nonmatchings/main/61290", loadExplosionTextures);
+extern u8 D_main_bss_80130B63;
+extern u8 D_main_bss_80139870[];
+extern u8 D_main_bss_80139898[];
+extern u8 D_main_bss_80139900[];
+extern u8 D_main_bss_80139910[];
+extern u8 D_main_bss_8013990C[];
+extern u8 D_main_bss_801398C0[16][4];
+extern u8 D_main_bss_80139920[16][4];
+extern s32 gCurrentLevel;
+extern s32 isCraftAvailableByIdx(s32);
+extern void loadAssetAndIterateSubchunks(char *, char *, u8 *, s32, s32);
+extern u8 *load_asset(char *);
+extern void rs_free(void *);
+
+void loadExplosionTextures(void) {
+    u8 *pal;
+    s32 i;
+    s8 alpha;
+    u8 t;
+
+    if (D_main_bss_80130B63 == 0) {
+        loadAssetAndIterateSubchunks("explo2_IMGS", "explo_tex", D_main_bss_80139870, 0, isCraftAvailableByIdx(5) ? 0 : 3);
+    } else {
+        loadAssetAndIterateSubchunks("explo2_IMGS", "explo_tex", D_main_bss_80139870, 0, 0);
+        loadAssetAndIterateSubchunks("explo2hi_IMGS", "explh_tex", D_main_bss_80139898, 0, 0);
+    }
+    loadAssetAndIterateSubchunks("ionexp_IMGS", "iexplo_tx", D_main_bss_80139900, 0, 0);
+    loadAssetAndIterateSubchunks("ionex2_IMGS", "iexpl2_tx", D_main_bss_80139910, 0, 0);
+    loadAssetAndIterateSubchunks("smkexp_IMGS", "sexplo_tx", D_main_bss_8013990C, 0, 0);
+    pal = load_asset("smkexp_PAL");
+    for (i = 0; i < 16; i++) {
+        D_main_bss_80139920[i][0] = pal[gCurrentLevel * 4 + 0];
+        D_main_bss_80139920[i][1] = pal[gCurrentLevel * 4 + 1];
+        t = pal[gCurrentLevel * 4 + 2];
+        D_main_bss_80139920[i][3] = -1 - i * 16;
+        D_main_bss_80139920[i][2] = t;
+        D_main_bss_801398C0[i][0] = pal[gCurrentLevel * 4 + 0x80];
+        D_main_bss_801398C0[i][1] = pal[gCurrentLevel * 4 + 0x81];
+        t = pal[gCurrentLevel * 4 + 0x82];
+        D_main_bss_801398C0[i][3] = -1 - i * 16;
+                D_main_bss_801398C0[i][2] = t;
+    }
+    rs_free(pal);
+}
 
 typedef struct {
     s32 unk0;
