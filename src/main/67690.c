@@ -201,7 +201,29 @@ s32 finalizeCurrentSpeechBuffer(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", initSpeechPlaybackState);
+extern u8 subtitleSlotHead;
+extern u8 subtitleSlotTail;
+extern u8 subtitleSlotsAvailable;
+extern u8 D_main_80139C73;
+extern s32 D_main_bss_80139C78;
+extern f32 D_main_bss_80139C7C;
+extern s8 D_main_bss_80139C8C;
+
+void initSpeechPlaybackState(void)
+{
+  u8 t;
+  u8 *p = &D_main_80139C73;
+  t = *p;
+  subtitleSlotTail = 0;
+  subtitleSlotHead = 0;
+  subtitleSlotsAvailable = 0x10;
+  *p = 0;
+  D_main_bss_80139C78 = 0;
+  *((s32 *) (&D_main_bss_80139C7C)) = 0;
+  D_main_bss_80139C8C = 1;
+  *p = t;
+  D_main_bss_80139C7C = 1.0f;
+}
 
 extern s8 D_main_bss_80139C8C;
 extern s8 D_main_bss_80139C8E;
