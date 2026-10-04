@@ -208,7 +208,13 @@ s32 getObjectiveCount(s32 countIndex) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", getAndSetByteAtLevelStateTable);
+extern u8 D_main_bss_801399F8[];
+u8 getAndSetByteAtLevelStateTable(s32 arg0, u8 arg1) {
+    u8 *p = arg0 + D_main_bss_801399F8;
+    u32 old = *p;
+    *p = arg1;
+    return old;
+}
 
 void setObjectiveHiddenFlag(s32 arg0, s32 arg1) {
     u32 temp_a1;
