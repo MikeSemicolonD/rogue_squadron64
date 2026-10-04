@@ -403,7 +403,48 @@ s32 enqueueMeshForDeferredRelease(struct meshdef1 *arg0) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", recordDeferredDrawRefVariant);
+extern Gfx *D_main_bss_8011D090;
+extern u8 D_main_bss_8011D094;
+void recordDeferredDrawRefVariant(s32 ref, s32 flags, s32 kind) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    u8 *cnt;
+
+    if (flags & 0x40000000) {
+        if (D_main_bss_8011D094 >= 0x40) {
+            chunk = D_main_bss_801163B0;
+            if (chunk == NULL) {
+                chunk = findAndUnlinkSmallestEntry();
+                if (chunk != NULL) {
+                    tail = chunk;
+                    while (tail->next != NULL) {
+                        tail = tail->next;
+                    }
+                    tail->next = D_main_bss_801163B0;
+                    if (D_main_bss_801163B0 != NULL) {
+                        D_main_bss_801163B0->prev = tail;
+                    }
+                    D_main_bss_801163B0 = chunk;
+                    chunk->prev = NULL;
+                }
+                chunk = D_main_bss_801163B0;
+            }
+            D_main_bss_801163B0 = D_main_bss_801163B0->next;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = NULL;
+            }
+            if (*D_main_bss_8011A4BC != NULL) {
+                (*D_main_bss_8011A4BC)->prev = chunk;
+            }
+            chunk->next = *D_main_bss_8011A4BC;
+            *D_main_bss_8011A4BC = chunk;
+            D_main_bss_8011D090 = chunk->displayList;
+            D_main_bss_8011D094 = 0;
+        }
+        cnt = &D_main_bss_8011D094;
+        ((s32 *)D_main_bss_8011D090)[(*cnt)++] = (ref & 0xFFFFFF) | (kind << 24);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", commitMeshDrawBatchRefs);
 
