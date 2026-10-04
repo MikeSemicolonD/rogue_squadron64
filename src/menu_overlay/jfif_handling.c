@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/jfif_handling", D_menu_overlay_800A76E0);
 
@@ -44,6 +45,22 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", buildDebrisMeshFromCe
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", cloneCellBufferWithAlloc);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", allocZeroedCellRecord);
+typedef struct {
+    u8 pad0[0xE];
+    u16 heapTag;
+    u8 pad10[0x77C - 0x10];
+    u8 *cells[16];
+} CellRecord;
+
+void *rs_malloc(u32, u16);
+
+void allocZeroedCellRecord(CellRecord *rec) {
+    u8 *buf = rs_malloc(0x800, rec->heapTag);
+    u8 i;
+
+    for (i = 0; i < 16; i++) {
+        rec->cells[i] = buf + i * 0x80;
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/jfif_handling", D_menu_overlay_800A78A8);
