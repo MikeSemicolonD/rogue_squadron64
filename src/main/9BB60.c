@@ -102,7 +102,35 @@ s32 stopVoiceByHandle(s32 handle) {
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", isVoiceHandleActive);
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", setVoiceMixByKey);
+extern u8 D_main_bss_80154621[];
+extern u8 D_main_bss_80154622[];
+extern u8 D_main_bss_80154623[];
+extern s32 D_main_bss_8015462C[];
+extern void setVoiceVolumePanLocked(s32, s32, s32, s32, s32);
+
+s32 setVoiceMixByKey(s32 arg0, s8 arg1, s8 arg2, s8 arg3, u8 arg4) {
+    s32 index;
+    s32 off;
+    s32 h;
+
+    if (speechFileLoaded) {
+        index = findVoiceSlotByHandle(arg0);
+        if (index != -1) {
+            lockSpeechVoices();
+            index = index * 0x1228;
+            h = *(s32 *)((u8 *)D_main_bss_8015462C + index);
+            if (h != -1) {
+                setVoiceVolumePanLocked(h, arg1 & 0xFF, arg2 & 0xFF, arg3 & 0xFF, arg4);
+            }
+            D_main_bss_80154622[index] = arg2;
+            D_main_bss_80154623[index] = arg3;
+            D_main_bss_80154621[index] = arg1;
+            unlockSpeechVoices();
+            return 1;
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", serviceVoicePoolFrame);
 
