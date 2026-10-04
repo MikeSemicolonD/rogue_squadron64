@@ -77,7 +77,66 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A7824);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanState0);
+extern char D_mission_overlay_800A781C[];
+extern char D_mission_overlay_800A7820[];
+extern char D_mission_overlay_800A7824[];
+extern void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
+extern u8 npcWingmanStateEffectShared(void *, void *, f32, u8);
+extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+
+s32 npcWingmanState0(void *arg0) {
+    u8 sp28[0x30];
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+    char *name = NULL;
+    s32 idx = 0;
+    s32 r;
+    s32 st = npc[0x53];
+
+    if (st < 4) {
+        if (st >= 2) goto effect;
+    } else if (st == 5) {
+        goto effect;
+    }
+    {
+        switch (npc[0x5E]) {
+        case 0:
+            name = D_mission_overlay_800A781C;
+            idx = 0;
+            break;
+        case 1:
+            name = D_mission_overlay_800A781C;
+            idx = 1;
+            break;
+        case 2:
+            name = D_mission_overlay_800A7820;
+            idx = 0;
+            break;
+        case 3:
+            name = D_mission_overlay_800A7820;
+            idx = 1;
+            break;
+        }
+        npc[0x5E] = (npc[0x5E] + 1) & 3;
+        lookupHmtTextureByName(*(s32 *)(npc + 0x30), name, idx, sp28, 0, 0);
+        r = npcWingmanStateEffectShared(npc, sp28, 0.0f, npc[0x53]) & 0xFF;
+        if (r == 1) {
+            if (npc[0x53] == r) {
+                play3DSoundEvent(0, npc, npc + 0x24, 20.0f, 0.2f, 0, 0x34, 0x78, 0x3C);
+            } else {
+                play3DSoundEvent(0, npc, npc + 0x24, 20.0f, 0.2f, 0, 2, 0x5A, 0x28);
+            }
+        }
+    }
+    goto done;
+effect:
+    {
+        npc[0x5E] = (npc[0x5E] & 1) ^ 1;
+        lookupHmtTextureByName(*(s32 *)(npc + 0x30), D_mission_overlay_800A7824, npc[0x5E], sp28, 0, 0);
+        npcWingmanStateEffectShared(npc, sp28, 0.0f, npc[0x53]);
+    }
+done:
+    return 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A7834);
 
