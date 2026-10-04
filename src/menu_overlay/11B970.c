@@ -899,7 +899,18 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", createUiSpriteAt);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateUiSpriteScrollAndAlpha);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMenuAnimGroupFrame);
+void activateAnimationKeyframe(s32, s32, u8);
+void setMenuAnimGroupFrame(f32 t) {
+    u8 v = t * 254.0f;
+    u8 i;
+
+    for (i = 0; i < 4; i++) {
+        activateAnimationKeyframe(5, i, v);
+    }
+    for (i = 2; i < 16; i++) {
+        activateAnimationKeyframe(8, i, v);
+    }
+}
 
 void loadCharTextureSet(void *, s32, s32, s32);
 void resetPlayerSlotAllChannels(u16, u8);
