@@ -38,7 +38,20 @@ void despawnCraftAnimationSlotNpcs(u8 slot) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", despawnCraftAnimationSlotNpcsAndMarkStopping);
+void despawnCraftAnimationSlotNpcsAndMarkStopping(u8 slot) {
+    u8 i;
+    u8 j;
+
+    D_mission_overlay_8010CF20[slot].unk10 = 2;
+    for (i = 0; i < 2; i++) {
+        for (j = 0; j < *D_mission_overlay_8010CF20[slot].unk4; j++) {
+            if (D_mission_overlay_8010CF20[slot].npcs[i][j] != 0xFFFF) {
+                destroyNpcSlotByIndex(D_mission_overlay_8010CF20[slot].npcs[i][j]);
+                D_mission_overlay_8010CF20[slot].npcs[i][j] = 0xFFFF;
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", allocateCraftAnimationStateForSlot);
 
