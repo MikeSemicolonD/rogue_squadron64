@@ -50,7 +50,66 @@ void initVoiceSubtitleSystem(void) {
     *(u8 *)(D_main_bss_80139010 + 5) = *(u8 *)(*(s32 *)(slot + 0x10) + 7);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56630", linkHudNodeAndComputeScreenPos);
+typedef struct {
+    u16 unk0;
+    u8 pad2;
+    u8 unk3;
+    u8 pad4[8];
+    s16 unkC;
+    u8 padE[4];
+    s16 unk12;
+    s16 unk14;
+} HudOverlayInfo;
+
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    s16 *unk4_s16;
+} HudNodeMeshInfo;
+
+typedef struct HudNode {
+    struct HudNode *next;
+    struct HudNode *prev;
+    u16 unk8;
+    u8 padA[6];
+    HudNodeMeshInfo *mesh;
+    u8 pad14[4];
+    f32 unk18;
+    f32 unk1C;
+} HudNode;
+
+typedef struct {
+    u8 pad0[8];
+    HudNode *unk8;
+    u8 padC[4];
+    s32 unk10;
+    s32 unk14;
+} HudOwner;
+
+extern s32 D_main_bss_80139010;
+#define HUD_INFO ((HudOverlayInfo *)D_main_bss_80139010)
+extern u16 D_main_bss_80139014;
+
+void linkHudNodeAndComputeScreenPos(HudOwner *arg0) {
+    HudNode *node;
+    HudNode *old;
+
+    if ((HUD_INFO->unk0 != 0xFFFF) && (HUD_INFO->unk3 != 0)) {
+        node = (HudNode *)getPlayerSlotFieldAt34(D_main_bss_80139014, 0);
+        old = arg0->unk8;
+        node->next = old;
+        if (old != NULL) {
+            old->prev = node;
+        }
+        node->prev = NULL;
+        arg0->unk8 = node;
+        node->unk18 = (f32)((-arg0->unk10 / 2) + HUD_INFO->unk12);
+        node->unk1C = (f32)((arg0->unk14 / 2) + HUD_INFO->unk14 + HUD_INFO->unkC);
+        if ((u32)(HUD_INFO->unk0 - 0x222) < 2U) {
+            node->unk18 = (f32)(((arg0->unk10 / 2) - ((s16 *)node->mesh)[node->unk8 * 2 - 2]) - (((s16 *)node->mesh)[2] * 5));
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56630", tickVoiceSubtitleDisplay);
 
