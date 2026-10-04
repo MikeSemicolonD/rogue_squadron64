@@ -44,7 +44,38 @@ s32 getRsHeapMaxAllocSize(void) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/05F80", allocRsHeapBlock);
+void *allocRsHeapBlock(s32 size, s32 *owner) {
+    RsHeapBlock *b;
+    RsHeapBlock *n;
+    u32 need;
+    void *ret;
+
+    if (gRsHeapBase != NULL) {
+        b = gRsHeapBase;
+        need = ((size + 15) & ~15) + 16;
+        while (b->next != NULL) {
+            if ((u32)b->size >= need && b->owner == NULL) {
+                n = (RsHeapBlock *)((u8 *)b + need);
+                ret = (u8 *)b + 0x10;
+                n->size = b->size - need;
+                n->prev = b;
+                n->next = b->next;
+                n->owner = NULL;
+                gRsHeapMaxAlloc -= need;
+                b->next->prev = b;
+                b->size = need;
+                b->owner = owner;
+                b->next = n;
+                goto done;
+            }
+            b = b->next;
+        }
+        ret = NULL;
+done:
+        return ret;
+    }
+    return NULL;
+}
 
 void freeRsHeapBlock(void *ptr) {
     RsHeapBlock *b = (RsHeapBlock *)((u8 *)ptr - 0x10);
