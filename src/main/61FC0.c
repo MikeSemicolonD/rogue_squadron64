@@ -22,7 +22,50 @@ INCLUDE_ASM("asm/nonmatchings/main/61FC0", advancePlayerAnimationPhase);
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", initPlayerSlotAnimationChannelFull);
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", startPlayerSlotAnimationChannelFlagged);
+void measurePlayerSlotTextLayout(s32, struct ui_element *, u16, s32, s32, s32);
+void setLookupEntryField5ByKey(void *, struct ui_element *, s32);
+
+void startPlayerSlotAnimationChannelFlagged(u8 *arg0, s32 arg1, s8 arg2) {
+    struct someFontThing *font;
+    struct ui_element *elem;
+    struct ui_element *e2;
+    u32 a0;
+    u32 a1;
+    u16 s5;
+    u16 s4;
+    u8 *s3;
+
+    if (arg0[0x454] == 0) {
+        a0 = arg0[0x3C];
+        a1 = arg0[0x3D];
+        s5 = *(u16 *)(arg0 + 0x40);
+        *(u32 *)(arg0 + 0x30) = 0;
+        *(u32 *)(arg0 + 0x34) = 0;
+        arg0[0x47] = arg2;
+        arg0[0x455] = 0;
+        font = D_main_8009FC10[a0];
+        s4 = *(u16 *)(arg0 + 0x42);
+        font->unk030 |= 1 << a1;
+        font->unk084[a1] = font->unk01F;
+        s3 = (u8 *)font + a1 * 4;
+        elem = font->unk034[a1];
+        elem->xy_offset_pointer = (struct xy_offset *)((u8 *)font->unk0EC + *(u16 *)((u8 *)font + 0xE8) * a1 * 4);
+        elem->texture_id_pointer = (u16 *)((u8 *)font->unk0F0 + *(u16 *)((u8 *)font + 0xE8) * a1 * 2);
+        measurePlayerSlotTextLayout(a0, elem, *(u16 *)((u8 *)font + 0xE8), arg1, (s16)s5, (s16)s4);
+        if (font->unk0F4 != NULL) {
+            setLookupEntryField5ByKey(font->unk0F4, *(struct ui_element **)(s3 + 0x34), elem->texture_count != 0);
+        }
+        if (font->unk01F == 0) {
+            elem->flags |= 1;
+        }
+        *(u16 *)(s3 + 0x98) = s5;
+        *(u16 *)(s3 + 0x9A) = s4;
+        e2 = D_main_8009FC10[arg0[0x3C]]->unk034[arg0[0x3D]];
+        setLookupEntryField5ByKey(*(void **)(arg0 + 0x450), e2, 0);
+        *(u16 *)(arg0 + 0x44) = e2->texture_count;
+        arg0[0x456] = 1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", startPlayerSlotAnimationChannelLooping);
 
