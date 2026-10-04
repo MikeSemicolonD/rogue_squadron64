@@ -72,7 +72,17 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", buildLevelSelectTextTextures
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", buildScaledFormatTextElement);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", processAndDisposeFormatMessage);
+s32 buildFormatMessageGlyphBuffer(void *, void *, s32, s32);
+s32 rasterizeFormatMessageGlyphs(void *, void *, u16);
+void disposeFormatMsgQueueMember(void *arg0, void *arg1);
+
+void processAndDisposeFormatMessage(u8 *arg0, s32 arg1, s32 arg2) {
+    u8 buf[0x78];
+
+    buildFormatMessageGlyphBuffer(arg0, buf, arg1, arg2);
+    rasterizeFormatMessageGlyphs(arg0, buf, *(u16 *)(arg0 + 0xA));
+    disposeFormatMsgQueueMember(arg0, buf);
+}
 
 void decrementTextTextureRefcount(void) {
     D_menu_overlay_800CC850--;
