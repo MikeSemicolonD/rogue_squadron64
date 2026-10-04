@@ -37,7 +37,27 @@ void destroyNpcSlotByIndexU16(s32 arg0) {
     destroyNpcSlotByIndex(arg0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", attachChildNpcByIndex);
+typedef struct {
+    u8 pad0[0x134];
+    s32 children[3];
+} AttachNpcCtx;
+void attachChildNpcByIndex(u16 idx, s32 child) {
+    AttachNpcCtx *ctx = NULL;
+    s32 i;
+
+    if (idx != 0xFFFF) {
+        slotDispatcherIter(idx, 0x1000, &ctx);
+        if (ctx != NULL) {
+            for (i = 0; i < 2; i++) {
+                if (ctx->children[i] == 0) {
+                    ctx->children[i] = child;
+                    ctx->children[i + 1] = 0;
+                    break;
+                }
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/40F10", assignNpcTargetAndPosition);
 
