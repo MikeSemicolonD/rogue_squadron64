@@ -911,7 +911,48 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", heapFreeListDequeue);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitTexturedFaceGeometry);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", transformLightByType);
+f32 cosf(f32);
+f32 vec3Length(f32 *);
+void normalize_vector(f32 *);
+void transformVec3ByMat34(f32 *, f32 *, f32 *);
+void rotateVec3ByMat3x3(f32 *, f32 *, f32 *);
+
+void transformLightByType(u8 *light, f32 *mat) {
+    f32 v[3];
+    f32 out[3];
+    f32 *p;
+    f32 len;
+
+    switch (light[8]) {
+    case 1:
+        rotateVec3ByMat3x3(mat, (f32 *)(light + 0x18), (f32 *)(light + 0x44));
+        normalize_vector((f32 *)(light + 0x44));
+        break;
+    case 2:
+        transformVec3ByMat34(mat, (f32 *)(light + 0xC), (f32 *)(light + 0x38));
+        if (*(f32 *)(light + 0x30) != 0.0f) {
+            v[0] = *(f32 *)(light + 0x30);
+            v[2] = 0.0f;
+            v[1] = 0.0f;
+            rotateVec3ByMat3x3(mat, v, out);
+            *(f32 *)(light + 0x50) = vec3Length(out);
+        }
+        break;
+    case 3:
+        transformVec3ByMat34(mat, (f32 *)(light + 0xC), (f32 *)(light + 0x38));
+        rotateVec3ByMat3x3(mat, (f32 *)(light + 0x18), (f32 *)(light + 0x44));
+        normalize_vector((f32 *)(light + 0x44));
+        if (*(f32 *)(light + 0x30) != 0.0f) {
+            v[0] = *(f32 *)(light + 0x30);
+            v[2] = 0.0f;
+            v[1] = 0.0f;
+            rotateVec3ByMat3x3(mat, v, out);
+            *(f32 *)(light + 0x50) = vec3Length(out);
+        }
+        *(f32 *)(light + 0x54) = cosf(*(f32 *)(light + 0x34) * 0.017453292f / 2.0f);
+        break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", appendRdpStateDl);
 
