@@ -35,6 +35,8 @@ u8 getCraftAnimationSlotFlag(u8 slot) {
     return D_mission_overlay_8010CF20[slot].unk13;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", getCraftAnimationSlotValue);
+f32 getCraftAnimationSlotValue(u8 slot) {
+    return D_mission_overlay_8010CF20[slot].unk14;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/100A00", D_mission_overlay_800A9548);
