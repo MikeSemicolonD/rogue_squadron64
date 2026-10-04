@@ -141,7 +141,33 @@ struct DisplayListBuffer *reclaimDisplayListChunk(void) {
     return temp_a0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/08510", reclaimDisplayListChunk);
+struct DisplayListBuffer *reclaimDisplayListChunk(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    return chunk;
+}
 #endif
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", allocateDisplayListBuffer);
