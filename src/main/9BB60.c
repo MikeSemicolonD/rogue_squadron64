@@ -27,7 +27,13 @@ INCLUDE_ASM("asm/nonmatchings/main/9BB60", shutdownMusyXVoices);
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", accumulateVoiceSampleOffset);
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", dmaVoiceSampleAndSignal);
+void synchronousDmaTransfer(s32 arg0, s32 arg1, s32 arg2);
+s32 osSendMesg(void *mq, void *msg, s32 flag);
+
+void dmaVoiceSampleAndSignal(s32 arg0, s32 arg1, s32 arg2, void *mq) {
+    synchronousDmaTransfer(arg0, arg1, arg2);
+    osSendMesg(mq, 0, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", initMusyXVoiceSlot);
 
