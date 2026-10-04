@@ -19,7 +19,26 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", getDatItemHealth);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", getDatItemHealthPercentage);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", despawnEffectOnNamedDatItem);
+s32 slotDispatcherIter(u16, s32, void *);
+
+typedef struct {
+    s32 value;
+    u8 pad4[0x14];
+    u8 action;
+    u8 pad19[7];
+} DatItemEffectArgs;
+
+void despawnEffectOnNamedDatItem(char *name, s32 arg1) {
+    DatItemEffectArgs args;
+    u8 *item;
+
+    item = getLevelDatItemByName(name);
+    if (item != NULL && *(u16 *)(item + 6) != 0xFFFF && arg1 >= 0 && arg1 < 3) {
+        args.action = 8;
+        args.value = arg1;
+        slotDispatcherIter(*(u16 *)(item + 6), 9, &args);
+    }
+}
 
 extern f32 D_main_bss_8013973C;
 
