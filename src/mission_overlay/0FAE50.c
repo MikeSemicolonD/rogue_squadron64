@@ -84,7 +84,4 @@ s32 advanceMissionObjectiveStageWhenModeOne(void) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", fake_func_800FBE14);
 
-__asm__(".section .rodata
-.word 0x3C018005
-.word 0xC420FED0
-.section .text");
+__asm__(".section .rodata\n.word 0x3C018005\n.word 0xC420FED0\n.section .text");
