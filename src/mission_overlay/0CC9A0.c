@@ -58,7 +58,40 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", npcAtAtHandleDestruction)
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", spawnAtAtFootstepDustBurst);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", updateAtAtLegArticulation);
+extern u8 D_mission_overlay_800A6DCC[];
+extern u8 D_main_bss_80138058[];
+extern void computeWalkerLimbStrideTargets(u16, f32 *, f32 *, f32 *, f32);
+extern f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+extern void spawnAtAtFootstepDustBurst(f32 *);
+
+void updateAtAtLegArticulation(struct Obj *arg0) {
+    Vec3f sp18;
+    Vec3f sp28;
+    Vec3f sp38;
+    Vec3f sp48;
+    f32 sp58[12];
+    s32 j;
+    f32 s;
+
+    lookupHmtTextureByName(arg0->f30, D_mission_overlay_800A6DCC, 0, (u8 *)sp58, 0, 0);
+    computeWalkerLimbStrideTargets(*(u16 *)((u8 *)arg0->f38 + 0x198), sp18, sp28, sp38, 0.7f);
+    sp18[0] = sp58[0] - sp28[0] * 0.5f - sp38[0] * 0.5f;
+    sp18[1] = sp58[1] - sp28[1] * 0.5f - sp38[1] * 0.5f;
+    sp18[2] = sp58[2] - sp28[2] * 0.5f - sp38[2] * 0.5f;
+    j = 0;
+    do {
+        s = (f32)j;
+        sp48[0] = sp18[0] + sp38[0] * 0.5f * s;
+        sp48[2] = sp18[2] + sp38[2] * 0.5f * s;
+        sp48[1] = wrapAngleToCyclicRange(sp48[0], sp48[2], D_main_bss_80138058, 0);
+        spawnAtAtFootstepDustBurst(sp48);
+        sp48[0] = sp18[0] + sp28[0] + sp38[0] * 0.5f * s;
+        sp48[2] = sp18[2] + sp28[2] + sp38[2] * 0.5f * s;
+        j++;
+        sp48[1] = wrapAngleToCyclicRange(sp48[0], sp48[2], D_main_bss_80138058, 0);
+        spawnAtAtFootstepDustBurst(sp48);
+    } while (j < 3);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CC9A0", D_mission_overlay_800A6ECC);
 
