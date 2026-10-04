@@ -8,7 +8,51 @@
 // Interim BSS externs
 extern u16 D_main_bss_8013A528[14];
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", loadCraftShadowTextures);
+#include "textures.h"
+#include "main/1EE30.h"
+#include "main/55AF0.h"
+#include "main/64EA0.h"
+extern char D_main_8003C960[];
+void rs_free(void *);
+
+void loadCraftShadowTextures(s32 arg0) {
+    struct material_entry sp10;
+    struct full_image_header *temp_s4;
+    struct full_image_header *var_s1;
+    s32 var_s2;
+    s32 var_v1;
+
+    var_s2 = arg0;
+    if (D_main_bss_8013A528[var_s2] == 0xFFFF) {
+        temp_s4 = load_asset(D_main_8003C960);
+        do {
+loop_2:
+            var_s1 = temp_s4;
+            for (var_v1 = 0; var_v1 < var_s2; var_v1++) {
+                var_s1 = (struct full_image_header *)(((u32)var_s1 + var_s1->image_size + 7) & ~3);
+            }
+            full_header_image_offset_convert(&var_s1->ent, (u32)&var_s1->ent);
+            var_s1->ent.flags_type |= 0x2000;
+            sp10.material_type = 1;
+            sp10.material_name[0] = 0;
+            D_main_bss_8013A528[var_s2] = registerHmtTextureInTable(&sp10, &var_s1->ent, 1U);
+            var_s2 = 9;
+            if (D_main_bss_8013A528[9] == 0xFFFF) {
+                goto loop_2;
+            }
+            var_s2 = 0xA;
+            if (D_main_bss_8013A528[0xA] == 0xFFFF) {
+                goto loop_2;
+            }
+            var_s2 = 0xB;
+            if (D_main_bss_8013A528[0xB] == 0xFFFF) {
+                goto loop_2;
+            }
+            var_s2 = 0xC;
+        } while (D_main_bss_8013A528[0xC] == 0xFFFF);
+        rs_free(temp_s4);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", applyCentripetalBankingToNpcCorners);
 

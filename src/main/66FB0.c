@@ -115,7 +115,27 @@ u32 data_pad_66FB0 = 0x8FC20040;
 
 INCLUDE_ASM("asm/nonmatchings/main/66FB0", loadSndFiles);
 
-INCLUDE_ASM("asm/nonmatchings/main/66FB0", initAudioListenerFromCamera);
+extern void *D_main_bss_80138D1C;
+extern s32 D_main_bss_80139A80;
+extern f32 D_main_bss_80139B30[3];
+extern f32 D_main_bss_80139B40[3];
+extern f32 D_main_bss_80139B58[3];
+void register3DAudioListenerNode(void *, void *, void *, void *, void *, f32, f32, f32, s32, s32);
+
+void initAudioListenerFromCamera(void) {
+    f32 *cam = D_main_bss_80138D1C;
+
+    D_main_bss_80139B58[0] = cam[0x4C / 4];
+    D_main_bss_80139B58[1] = cam[0x50 / 4];
+    D_main_bss_80139B58[2] = cam[0x54 / 4];
+    D_main_bss_80139B30[0] = cam[0x30 / 4];
+    D_main_bss_80139B30[1] = cam[0x3C / 4];
+    D_main_bss_80139B30[2] = cam[0x48 / 4];
+    D_main_bss_80139B40[0] = -cam[0x2C / 4];
+    D_main_bss_80139B40[1] = -cam[0x38 / 4];
+    D_main_bss_80139B40[2] = -cam[0x44 / 4];
+    register3DAudioListenerNode(&D_main_bss_80139A80, D_main_bss_80139B58, D_main_bss_80139B30, D_main_bss_80139B30, D_main_bss_80139B40, 2.0f, 2.0f, 50.0f, 0, 0x7F);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/66FB0", loadSongAssetByName);
 
@@ -200,7 +220,6 @@ s32 findAudioChannelById(s32 arg0) {
 
 extern void *D_main_bss_80138D1C;
 extern s32 D_main_bss_80139B10;
-extern s32 D_main_bss_80139B58;
 
 void updateAudioListenerPosFromPlayer(void) {
     f32 temp_fv0;
