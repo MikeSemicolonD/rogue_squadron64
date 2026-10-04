@@ -243,7 +243,51 @@ void applyVolumeSettingsToMixer(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", resetGameSettingsAndMissionStats);
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", generateUnlockString);
+extern u32 D_main_bss_80130B18;
+extern char gUnlockString[];
+char *getGameOrFrontText(s32 textId);
+
+char *generateUnlockString(u8 arg0) {
+    s32 flags;
+    s32 isBonus;
+    char *head;
+
+    isBonus = 0;
+    flags = gGameSettings.unlockAndSettingsFlags[0] & 0x7FFE00;
+    flags &= ~D_main_bss_80130B18;
+    if (arg0 == 4 || arg0 == 9) {
+        isBonus = 1;
+    }
+    head = getGameOrFrontText(isBonus == 1 ? 0xD3 : 0xD2);
+    if (flags & 0x200) {
+        sprintf(gUnlockString, "%s %s%s", head, getGameOrFrontText(0x4B), getGameOrFrontText(0x4D));
+    }
+    if (flags & 0x400) {
+        sprintf(gUnlockString, "%s %s%s", head, getGameOrFrontText(0x4B), getGameOrFrontText(0x50));
+    }
+    if (flags & 0x800) {
+        sprintf(gUnlockString, "%s %s", head, getGameOrFrontText(0x51));
+    }
+    if (flags & 0x1000) {
+        sprintf(gUnlockString, "%s %s%s", head, getGameOrFrontText(0x4B), getGameOrFrontText(0x53));
+    }
+    if (flags & 0x2000) {
+        sprintf(gUnlockString, "%s %s", head, getGameOrFrontText(0x55));
+    }
+    if (flags & 0x4000) {
+        sprintf(gUnlockString, "%s %s", head, getGameOrFrontText(0x56));
+    }
+    if (flags & 0x8000) {
+        sprintf(gUnlockString, "%s %s%s", head, getGameOrFrontText(0x4B), getGameOrFrontText(0x52));
+    }
+    if (flags & 0x10000) {
+        sprintf(gUnlockString, "%s %s%s", head, getGameOrFrontText(0x4B), getGameOrFrontText(0x4C));
+    }
+    if (flags == 0) {
+        return NULL;
+    }
+    return gUnlockString;
+}
 
 s32 getActiveAccountsBitmask(void) {
     return gSaveDataBody.unk50;
