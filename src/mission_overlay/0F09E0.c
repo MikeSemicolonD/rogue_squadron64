@@ -328,4 +328,8 @@ s32 returnZero_800F3258(void) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", tallyMidDetailObject);
+void tallyMidDetailObject(u8 *obj) {
+    if ((obj[0x15] >> 6) == 2) {
+        missionStats.enemies_destroyed++;
+    }
+}
