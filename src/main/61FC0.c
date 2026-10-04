@@ -50,7 +50,16 @@ struct ui_element *getPlayerSlotFieldAt34(u16 arg0, u16 arg1) {
     return D_main_8009FC10[arg0]->unk034[arg1];
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", resetPlayerSlotAllChannels);
+void resetPlayerSlotAllChannels(u16 slot, u8 arg1) {
+    struct someFontThing *t = D_main_8009FC10[slot];
+    u32 i;
+
+    if (t->unk0F4 != NULL) {
+        for (i = 0; i < *(u16 *)&t->unk02C; i++) {
+            insertLookupEntry(t->unk0F4, t->unk034[i], arg1);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", setPlayerSlotAnimationFlag);
 
