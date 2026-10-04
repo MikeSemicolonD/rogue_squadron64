@@ -3,6 +3,8 @@
 #include "main/1D000.h"
 #include "mission_overlay/0F09E0.h"
 
+extern s32 D_main_bss_80137CE4;
+
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", func_mission_overlay_800EFDE0);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", isPendingChildNpcActive);
@@ -33,7 +35,12 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initActorRenderDescriptor
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setNpcHealth);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getNpcCurrentHealth);
+s32 getNpcCurrentHealth(u8* npc) {
+    if (npc[0x1A7] != 0) {
+        return *(s32*)(npc + 0x190);
+    }
+    return (*(s32**)(npc + 0x190))[D_main_bss_80137CE4];
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", dealDamageToNpc);
 

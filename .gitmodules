@@ -4,3 +4,9 @@
 [submodule "ultralib"]
 	path = ultralib
 	url = git@github.com:decompals/ultralib.git
+[submodule "tools/asm-differ"]
+	path = tools/asm-differ
+	url = https://github.com/simonlindholm/asm-differ
+[submodule "tools/decomp-permuter"]
+	path = tools/decomp-permuter
+	url = https://github.com/simonlindholm/decomp-permuter
