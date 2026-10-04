@@ -395,8 +395,6 @@ INCLUDE_ASM("asm/nonmatchings/main/1EE30", findMatchingTextureRecursive);
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", findTextureByName);
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", copyTextureDescriptorWithData);
-
 typedef struct {
     u8 b[4];
 } Bytes4;
@@ -411,6 +409,34 @@ typedef struct {
     s32 size;
     u8 *data;
 } TextureDescriptor;
+
+void *rs_malloc(u32, u16);
+void *memcpy(void *, const void *, u32);
+
+s32 copyTextureDescriptorWithData(u16 id, TextureDescriptor *desc, void **buf) {
+    u16 index;
+
+    if (D_main_bss_8011A444[id].material_type & 1) {
+        index = D_main_bss_8011A444[id].D_80128F08_index;
+        desc->id = id;
+        desc->size = D_main_bss_80128F08[index].texture_size;
+        desc->data = D_main_bss_80128F08[index].texture_data;
+        desc->unk6 = *(Bytes4 *)&D_main_bss_80128F08[index].unk04;
+        desc->format = decodeRdpFormatFlags(*(u16 *)&D_main_bss_80128F08[index].unk00);
+        if (*buf == NULL) {
+            *buf = rs_malloc(desc->size, 0);
+            if (*buf == NULL) {
+                return 0;
+            }
+            desc->unk2 = 1;
+        } else {
+            desc->unk2 = 0;
+        }
+        memcpy(buf, desc->data, desc->size);
+        return 1;
+    }
+    return 0;
+}
 
 s32 fillTextureDescriptorNoCopy(u16 id, TextureDescriptor *desc) {
     u16 index;
