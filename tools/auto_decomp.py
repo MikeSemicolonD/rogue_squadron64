@@ -143,7 +143,12 @@ def try_func(func, c_path, s_path, variants):
                 continue
             write("Makefile", mk)
         write(c_path, base)
-        code, err = m2c(func, s_path, c_path, [e for e in extra if e != "gcc272"])
+        if "synth" in extra:
+            import wrapper_synth
+            code = wrapper_synth.synth(func, s_path)
+            err = None if code else "not a wrapper"
+        else:
+            code, err = m2c(func, s_path, c_path, [e for e in extra if e != "gcc272"])
         if err:
             reason = err
             write(c_path, original)
@@ -166,6 +171,7 @@ def main():
     ap.add_argument("--max-insns", type=int, default=10**9)
     ap.add_argument("--limit", type=int, default=10**9)
     ap.add_argument("--commit-every", type=int, default=25)
+    ap.add_argument("--variants", help="comma-separated variants, flags joined by '+', e.g. 'synth,gcc272+--no-andor'")
     a = ap.parse_args()
     skip = set(pathlib.Path(a.skip).read_text().split()) if pathlib.Path(a.skip).exists() else set()
     done = set()
@@ -174,7 +180,9 @@ def main():
     ok, _ = rom_matches()
     if not ok:
         sys.exit("auto_decomp: baseline ROM does not match; fix that first")
-    variants = [[], ["gcc272"], ["--no-andor"], ["gcc272", "--no-andor"], ["--no-casts"], ["no-protos"]]
+    variants = [["synth"], [], ["gcc272"], ["--no-andor"], ["gcc272", "--no-andor"], ["--no-casts"], ["no-protos"]]
+    if a.variants:
+        variants = [v.split("+") if v else [] for v in a.variants.split(",")]
     matched_since_commit, tried = [], 0
     with open(a.log, "a") as log:
         for n, func, c_path, s_path in candidates(skip):
