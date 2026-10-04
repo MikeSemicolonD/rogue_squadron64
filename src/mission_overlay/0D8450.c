@@ -137,9 +137,30 @@ s32 npcWingmanStateNoop(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanState6);
+s32 npcWingmanState6(void *arg0) {
+    u8 tex[0x30];
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+    char *name = NULL;
+    s32 variant = 0;
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A7B00);
+    switch (npc[0x5E]) {
+    case 0:
+        name = D_mission_overlay_800A7844;
+        break;
+    case 1:
+        name = D_mission_overlay_800A7844;
+        variant = 1;
+        break;
+    }
+    npc[0x5E] ^= 1;
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), name, variant, tex, 0, 0);
+    if (npcWingmanStateEffectShared(npc, tex, 0, npc[0x53]) == 1) {
+        play3DSoundEvent(0, npc, npc + 0x24, 20.0f, 0.2f, 0, 0x31, 100, 50);
+    }
+    return 0;
+}
+
+static u32 D_mission_overlay_800A7B04[] __attribute__((section(".rodata"))) = { 0x10600001, 0x00000000, 0x8FC2001C };
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcTieVariantTickEffects);
 
