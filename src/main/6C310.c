@@ -47,7 +47,24 @@ void spawnSplineWalkerCraft(s32 arg0, s32 arg1, s32 arg2, s16 arg3) {
     spawnNpcOfType(splineWalkerCraftNpcHandler, &args, 1, 10);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", spawnStubMarkerNpc);
+void stubNpcHandler();
+typedef struct {
+    f32 x;
+    f32 y;
+    s32 a;
+    s32 b;
+    s16 c;
+} StubMarkerArgs;
+u16 spawnStubMarkerNpc(f32 x, f32 y, s32 a, s32 b, s16 c) {
+    StubMarkerArgs args;
+
+    args.a = a;
+    args.b = b;
+    args.x = x;
+    args.y = y;
+    args.c = c;
+    return spawnNpcOfType(stubNpcHandler, &args, 1, 10);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", load_naboo_starfighter);
 
