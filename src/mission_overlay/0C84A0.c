@@ -38,7 +38,38 @@ void spawnEffectOnNamedDatItem(char *name, f32 arg1, s32 arg2, f32 arg3) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", initActorTowardNamedDatItem);
+u8 initActorAsType1(void *, void *, f32, f32, f32, f32, f32);
+
+s32 initActorTowardNamedDatItem(char *name, char *targetName) {
+    u8 *item;
+    void *target;
+    u8 *npc;
+    f32 yaw;
+    f32 pitch;
+
+    item = getLevelDatItemByName(name);
+    if (item != NULL) {
+        if (*(u16 *)(item + 6) == 0xFFFF) {
+            return 0;
+        }
+        target = getLevelDatItemByName(targetName);
+        if (target == NULL) {
+            return 0;
+        }
+        npc = *(u8 **)(getNpcContextByIndex(*(u16 *)(item + 6)) + 0x10);
+        if (npc != NULL) {
+            if (npc[0x112] == 1) {
+                yaw = *(f32 *)(npc + 0x4C);
+                pitch = *(f32 *)(npc + 0x50);
+            } else {
+                pitch = 0.0f;
+                yaw = pitch;
+            }
+            return initActorAsType1(npc, target, pitch, 0.0f, 0.0f, 0.0f, yaw);
+        }
+    }
+    return 0;
+}
 
 void *getLevelDatItemByName(char *);
 u8 *getNpcContextByIndex(u16);
