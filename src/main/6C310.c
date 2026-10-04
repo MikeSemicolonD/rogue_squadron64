@@ -40,7 +40,10 @@ void *getCraftRecordByIdx(s32 i) {
 }
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", getPlayerCraftRecordByIdx);
+void *getPlayerCraftRecordByIdx(s32 i) {
+    u8 *p = D_main_bss_80137DBC[i];
+    return p + 4;
+}
 
 enum PlayerCraft getPlayerVehicleId(s32 playerId) {
     return gPlayers[playerId].inner.vehicleId;
