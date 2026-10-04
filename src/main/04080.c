@@ -477,7 +477,36 @@ s32 get_manifest_entry_type(u32 arg0, u8 *entry_name) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/04080", get_manifest_entry_type);
+static __inline__ struct manifest_entry *findManifestEntryInAnySegment(u32 *seg, u8 *name, u32 flag) {
+    u32 i;
+    struct manifest_entry *entry;
+
+    if (*seg == -1U) {
+        for (i = 0; i < 4; i++) {
+            if (gManifestTable[i].one != 0) {
+                entry = find_manifest_entry(i, name, flag);
+                if (entry != NULL) {
+                    *seg = i;
+                    return entry;
+                }
+            }
+        }
+        return NULL;
+    }
+    return find_manifest_entry(*seg, name, flag);
+}
+
+s32 get_manifest_entry_type(u32 seg, u8 *entry_name) {
+    struct manifest_entry *entry = findManifestEntryInAnySegment(&seg, entry_name, 1);
+
+    if (entry == NULL) {
+        return 0;
+    }
+    if (entry->flags & 0x80) {
+        return 2;
+    }
+    return 1;
+}
 #endif
 
 INCLUDE_ASM("asm/nonmatchings/main/04080", get_asset_size_simple);
