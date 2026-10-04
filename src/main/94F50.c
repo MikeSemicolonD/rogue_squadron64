@@ -202,7 +202,18 @@ u8 getSongStateByteByHandle(u32 handle) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongChannelParamByHandle);
+void setAudioFaderState(u8, s32);
+void setSongChannelParamByHandle(u32 handle, u8 ch, u8 val) {
+    s32 slot;
+
+    if (gMusyXActiveFlag != 0) {
+        slot = findSongSlotByHandle(handle);
+        if (slot != -1) {
+            D_main_bss_80149A00[slot].unk528[ch] = val;
+            setAudioFaderState(val, 2);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", processSongByHandle);
 
