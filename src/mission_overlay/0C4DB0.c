@@ -17,7 +17,21 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", renderRadarSweep);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", renderRadarMinimap);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", lookupCraftValueByLevelKey);
+extern u8 D_mission_overlay_80109FE4[];
+extern u16 D_mission_overlay_8010BFF0[];
+u16 lookupCraftValueByLevelKey(s32 key) {
+    s32 i;
+
+    for (i = 0; D_mission_overlay_80109FE4[i] != 0xFF; i += 2) {
+        if (D_mission_overlay_80109FE4[i] == key) {
+            break;
+        }
+    }
+    if (D_mission_overlay_80109FE4[i] != 0xFF) {
+        return D_mission_overlay_8010BFF0[i >> 1];
+    }
+    return 0;
+}
 
 extern s16 D_mission_overlay_8010C080;
 
