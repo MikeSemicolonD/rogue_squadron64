@@ -601,7 +601,50 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", postLevelStatScreen);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuShipSelectScreen);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuScreenRenderContext);
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    s32 unk8;
+    s32 unkC;
+    s32 unk10;
+    s32 unk14;
+    s32 unk18;
+    s32 unk1C;
+    f32 unk20;
+    f32 unk24;
+    f32 unk28;
+    f32 unk2C[12];
+} MenuScreenRenderContext;
+extern MenuScreenRenderContext D_menu_overlay_800CF090;
+extern void *D_menu_overlay_800CF078;
+extern void *D_menu_overlay_800CF07C;
+extern s32 D_main_bss_8013889C;
+void setRenderStateFlagByteOne(s32);
+void selectRenderPresetByIndex(s32);
+void selectSecondaryPresetByIndex(s32);
+void clearVec4QuadStruct(void *);
+void *allocateSlotTable(u16);
+void initFormatMessageWorker(s32);
+void initMenuScreenRenderContext(void) {
+    D_menu_overlay_800CF090.unk10 = 0x280;
+    D_menu_overlay_800CF090.unk14 = 0x12C;
+    D_menu_overlay_800CF090.unk18 = 0x140;
+    D_menu_overlay_800CF090.unk4 = 0;
+    D_menu_overlay_800CF090.unk8 = 0;
+    D_menu_overlay_800CF090.unkC = 0;
+    D_menu_overlay_800CF090.unk1C = 0x96;
+    D_menu_overlay_800CF090.unk20 = 45.0f;
+    D_menu_overlay_800CF090.unk24 = 0.1171875f;
+    D_menu_overlay_800CF090.unk28 = 93.75f;
+    setRenderStateFlagByteOne(0);
+    selectRenderPresetByIndex(0);
+    selectSecondaryPresetByIndex(0);
+    clearVec4QuadStruct(D_menu_overlay_800CF090.unk2C);
+    D_menu_overlay_800CF078 = allocateSlotTable(0x40);
+    D_menu_overlay_800CF07C = allocateSlotTable(8);
+    D_main_bss_8013889C = 0;
+    initFormatMessageWorker(5);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuContentStateMachine);
 
