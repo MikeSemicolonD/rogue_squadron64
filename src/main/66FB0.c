@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "main/66FB0.h"
 
@@ -120,7 +121,12 @@ INCLUDE_ASM("asm/nonmatchings/main/66FB0", loadSongAssetByName);
 
 INCLUDE_ASM("asm/nonmatchings/main/66FB0", updateAudioListenerVelocity);
 
-INCLUDE_ASM("asm/nonmatchings/main/66FB0", teardownAudioListenerNode);
+s32 unlinkMusyXListNode(s32 *);
+extern s32 D_main_bss_80139A80;
+
+void teardownAudioListenerNode(void) {
+    unlinkMusyXListNode(&D_main_bss_80139A80);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/66FB0", waitForAnyAudioSlot);
 

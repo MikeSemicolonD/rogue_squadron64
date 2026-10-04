@@ -35,7 +35,11 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", requestCameraSnapToTracke
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", beginCameraTrackedTransition);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", advanceCameraTransitionOnCue);
+void advanceCameraTransitionOnCue(s32 arg0) {
+    if (((u8) (*(s8 *)((u8 *)(&D_mission_overlay_8010B6E8) + 0)) == 3) && ((*(s32 *)((u8 *)(&D_mission_overlay_8010B6E8) + 0x50)) == arg0)) {
+        (*(s8 *)((u8 *)(&D_mission_overlay_8010B6E8) + 0)) = 4;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", isCameraTransitionIdle);
 

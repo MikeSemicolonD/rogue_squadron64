@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "secondary_weapons.h"
 #include "crafts.h"
@@ -272,7 +273,11 @@ INCLUDE_ASM("asm/nonmatchings/main/6E500", registerSaveService);
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", stopSaveServiceWorker);
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", isViModeTypePal);
+s32 getViModeType();
+
+s32 isViModeTypePal(void) {
+    return (getViModeType() & 0xFF) == 1;
+}
 
 void cycleIdleDemoId(void) {
     gGameSettings.demoId = (gGameSettings.demoId + 1) % 6;

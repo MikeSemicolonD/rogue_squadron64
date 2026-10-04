@@ -435,19 +435,27 @@ s32 getLevelCutsceneActorCallbackSecondary(void) {
     return D_main_800A05D0[gGameSettings.currentLevel].unk0C;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6B8B0", getLevelConfigWordA);
+s32 getLevelConfigWordA(void) {
+    return D_main_800A05D0[gGameSettings.currentLevel].unk14;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6B8B0", getLevelConfigWordB);
 
-INCLUDE_ASM("asm/nonmatchings/main/6B8B0", getLevelConfigFloatA);
+f32 getLevelConfigFloatA(void) {
+    return D_main_800A05D0[gGameSettings.currentLevel].unk1C;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/6B8B0", getLevelConfigFloatB);
+f32 getLevelConfigFloatB(void) {
+    return D_main_800A05D0[gGameSettings.currentLevel].unk20;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6B8B0", copyLevelConfigColorTriple);
 
 INCLUDE_ASM("asm/nonmatchings/main/6B8B0", copyLevelConfigPackedWord);
 
-INCLUDE_ASM("asm/nonmatchings/main/6B8B0", getLevelConfigHalfword);
+s16 getLevelConfigHalfword(void) {
+    return D_main_800A05D0[gGameSettings.currentLevel].unk2C;
+}
 
 s32 getLevelExpansionMemoryBudget(void) {
     if (gGameSettings.unk23 != 0) return 0x800;

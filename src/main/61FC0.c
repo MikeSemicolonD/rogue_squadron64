@@ -34,7 +34,9 @@ INCLUDE_ASM("asm/nonmatchings/main/61FC0", initAllPlayerSlots);
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", resetPlayerSlotChannelTransform);
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", getPlayerSlotLookupBase);
+void *getPlayerSlotLookupBase(s32 arg0) {
+    return D_main_8009FC10[arg0 & 0xFF]->unk020;
+}
 
 struct ui_element *getPlayerSlotFieldAt34(u16 arg0, u16 arg1) {
     return D_main_8009FC10[arg0]->unk034[arg1];
@@ -69,7 +71,13 @@ void setPlayerSlotEntryRGB(u16 arg0, u16 arg1, struct rgba *arg2) {
     temp_v1->rgba.b = arg2->b;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", setPlayerSlotPointerAndFlag);
+void setPlayerSlotPointerAndFlag(s32 arg0, void *arg1, s32 arg2) {
+    struct someFontThing *temp_v0;
+
+    temp_v0 = D_main_8009FC10[arg0 & 0xFFFF];
+    temp_v0->unk0FC = arg1;
+    temp_v0->unk100 = arg2 & 0xFF;
+}
 
 void clearPlayerSlotPointerAndFlag(u16 arg0) {
     struct someFontThing *temp_v0;
@@ -95,7 +103,13 @@ s32 getPlayerSlotAnimChannelCount(void *arg0) {
     return (*(s32 *)((u8 *)(arg0) + 0x44C));
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", markStructInitializedOnce);
+void markStructInitializedOnce(void *arg0) {
+    if ((*(u8 *)((u8 *)(arg0) + 0x454)) == 0) {
+        (*(s8 *)((u8 *)(arg0) + 0x456)) = 0;
+        (*(u8 *)((u8 *)(arg0) + 0x454)) = 1U;
+        (*(s32 *)((u8 *)(arg0) + 0x30)) = 0;
+    }
+}
 
 s32 isStructUninitialized(void *arg0) {
     return ((*(s32 *)((u8 *)(arg0) + 0x454)) & 0xFF00FF00) == 0;

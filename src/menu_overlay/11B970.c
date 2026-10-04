@@ -664,7 +664,11 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateMenuElementTimedPositi
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", applyCraftSlotAnimations);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMaterialFadeTargetIfIdle);
+void setMaterialFadeTargetIfIdle(void *arg0, s32 arg1) {
+    if ((*(f32 *)((u8 *)(arg0) + 0xA4)) == 0.0f) {
+        (*(s32 *)((u8 *)(arg0) + 0xAC)) = arg1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setCraftMaterialTextureByName);
 

@@ -40,7 +40,16 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType1WithAncho
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", setType1ActorVelocity);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", setType1ActorField40);
+f32 setType1ActorField40(void *arg0, f32 arg1) {
+    f32 var_fv0;
+
+    var_fv0 = 0.0f;
+    if ((*(u8 *)((u8 *)(arg0) + 0x112)) == 1) {
+        var_fv0 = (*(f32 *)((u8 *)(arg0) + 0x40));
+        (*(f32 *)((u8 *)(arg0) + 0x40)) = arg1;
+    }
+    return var_fv0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType2);
 
@@ -58,7 +67,12 @@ void updateObjectFlags110(void *arg0, s32 arg1, s32 arg2) {
     (*(u16 *)((u8 *)(arg0) + 0x110)) = (u16) (((*(u16 *)((u8 *)(arg0) + 0x110)) | arg1) & ~arg2);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", resetType1FxFields);
+void resetType1FxFields(void *arg0) {
+    if ((*(u8 *)((u8 *)(arg0) + 0x112)) == 1) {
+        (*(s32 *)((u8 *)(arg0) + 0xFC)) = 0;
+        (*(f32 *)((u8 *)(arg0) + 0x100)) = 1.0f;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", updateType1AnimRamp);
 

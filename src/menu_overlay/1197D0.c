@@ -90,13 +90,23 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", disposeFormatMsgQueueMember)
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", initFormatMessageWorker);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", shutdownFormatMessageWorker);
+s32 unregisterServiceWorker(s32);
+extern s32 D_menu_overlay_800CC858;
+
+void shutdownFormatMessageWorker(void) {
+    unregisterServiceWorker(D_menu_overlay_800CC858);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", enqueueFormatMessage);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", pollServiceMessageByte);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", initTextTextureTarget);
+s32 allocTextRenderTarget(s32, s32);
+extern s32 D_menu_overlay_800CC864;
+
+void initTextTextureTarget(void) {
+    D_menu_overlay_800CC864 = allocTextRenderTarget(0x40, 0x10);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", updateTextOverlayLookupEntry);
 

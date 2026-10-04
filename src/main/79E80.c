@@ -1,10 +1,17 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/main/79E80", heavyMechSubEffectNpcHandler);
 
 INCLUDE_ASM("asm/nonmatchings/main/79E80", concatChildTransformAlongChain);
 
-INCLUDE_ASM("asm/nonmatchings/main/79E80", initWaterSprayEffectAndSfx);
+s32 initWaterSprayParticles();
+s32 loadSfxAsset();
+
+void initWaterSprayEffectAndSfx(void) {
+    loadSfxAsset();
+    initWaterSprayParticles();
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/79E80", spawnNpcWithRandomRotation);
 

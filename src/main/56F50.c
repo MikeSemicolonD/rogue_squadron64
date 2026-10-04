@@ -140,7 +140,9 @@ INCLUDE_ASM("asm/nonmatchings/main/56F50", applyFlagsToMeshTreeOrList);
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", setMaterialFlagByIdInMeshTree);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", releaseSceneObjectMeshTree);
+void releaseSceneObjectMeshTree(void **arg0) {
+    recursivelyReleaseMeshTree((*(struct meshdef0 **)((u8 *)(*arg0) + 0x10)));
+}
 
 void recursivelyReleaseMeshTree(struct meshdef0 *arg0) {
     struct meshdef1 *temp_a0;

@@ -59,7 +59,12 @@ f32 getConfigFloatValue(void) {
     return D_mission_overlay_8010A200;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", findNamedEntryInCurrentObject);
+s32 findModelChildNodeByName(s32, s32);
+extern s32 *D_mission_overlay_8010C090;
+
+void findNamedEntryInCurrentObject(s32 arg0) {
+    findModelChildNodeByName(*D_mission_overlay_8010C090, arg0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", copyCurrentObjectMatrix);
 

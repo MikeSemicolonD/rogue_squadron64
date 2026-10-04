@@ -209,7 +209,11 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initActorMotionParams);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getObjectMeshTransformOrLocal);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getObjectNpcTypeId);
+s32 findActiveNpcInSlotChain(u16, s32);
+
+s32 getObjectNpcTypeId(void *arg0) {
+    return findActiveNpcInSlotChain((*(u16 *)((u8 *)(arg0) + 0x130)), 0) & 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", clearPendingChildNpc);
 
@@ -248,7 +252,11 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", applyToObjectSubstructByF
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setObjectSubstructF10IfReady);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setAnimSubstructValueIfActive);
+void setAnimSubstructValueIfActive(void *arg0, f32 arg1) {
+    if (((*(s32 *)((u8 *)(arg0) + 0x18)) != 0) && ((*(u8 *)((u8 *)(arg0) + 0x2B)) != 0)) {
+        (*(f32 *)((u8 *)(arg0) + 0x10)) = arg1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", generatePerpEmitDirectionWithJitter);
 
