@@ -759,7 +759,21 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", createMenuTextElement);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", allocMenuScreenState);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", freeMenuScreenState);
+typedef struct {
+    u8 pad0[0x18];
+    void *unk18;
+    void *unk1C;
+    void *unk20[14];
+} MenuScreenState;
+void freeMenuScreenState(MenuScreenState *arg0) {
+    u8 i;
+
+    rs_free(arg0->unk18);
+    rs_free(arg0->unk1C);
+    for (i = 2; i < 16; i++) {
+        rs_free(arg0->unk20[i - 2]);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateMenuElementTimedPosition);
 
