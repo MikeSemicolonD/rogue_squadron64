@@ -27,7 +27,33 @@ void clearFrameReadyFlag(void) {
     D_main_bss_8010FEFC = NULL;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/02420", ensureHeapInitialized);
+extern u8 D_main_bss_8011A89A;
+extern u8 *D_main_bss_8010FCB0;
+extern u32 D_main_bss_801163E4;
+struct heapBlockHeader *acquireFreeBufferSlot(void);
+s32 computeFramebufferByteSize(void);
+void ensureHeapInitialized(void) {
+    struct heapBlockHeader *base;
+    struct D_main_bss_8010FF08_type region;
+
+    if (D_main_bss_8010FEFC == NULL && D_main_bss_8011A89A == 0 && !(*(u32 *)(D_main_bss_8010FCB0 + 0x44) & 0x80)) {
+        base = acquireFreeBufferSlot();
+        if (*(u32 *)(D_main_bss_8010FCB0 + 0x44) & 0x200) {
+            buildHeapFreeList(&D_main_bss_8010FEFC, 0, NULL, base, (struct heapBlockHeader *)((u32)base + computeFramebufferByteSize()), 1);
+        } else {
+            u32 *end;
+
+            region.dataAddress = (u32)base + computeFramebufferByteSize();
+            end = &D_main_bss_801163E4;
+            region.dataSize = *end - region.dataAddress;
+            if (region.dataSize == 0) {
+                buildHeapFreeList(&D_main_bss_8010FEFC, 0, NULL, base, (struct heapBlockHeader *)((u32)base + computeFramebufferByteSize()), 1);
+            } else {
+                buildHeapFreeList(&D_main_bss_8010FEFC, 1, &region, base, (struct heapBlockHeader *)(*end + computeFramebufferByteSize()), 1);
+            }
+        }
+    }
+}
 
 u32 getTotalFreeHeapSize(void) {
     u32 var_a1;
