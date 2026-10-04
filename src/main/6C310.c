@@ -49,7 +49,10 @@ enum PlayerCraft getPlayerVehicleId(s32 playerId) {
     return gPlayers[playerId].inner.vehicleId;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", getPlayerRecordTargetBuffer);
+void *getPlayerRecordTargetBuffer(s32 i) {
+    u8 *p = D_main_bss_80137DBC[i];
+    return p + 0x34;
+}
 
 u16 getPlayerField2(s32 arg0) {
     return gPlayers[arg0].unk002;
