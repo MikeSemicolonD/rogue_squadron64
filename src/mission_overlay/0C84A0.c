@@ -17,7 +17,23 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", initAnchoredActorTowardNa
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", getDatItemHealth);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", getDatItemHealthPercentage);
+void *getLevelDatItemByName(char *);
+u8 *getNpcContextByIndex(u16);
+f32 getNpcHealthPercentage(void *);
+
+f32 getDatItemHealthPercentage(char *name) {
+    u8 *item;
+    void *npc;
+
+    item = getLevelDatItemByName(name);
+    if (item != NULL && *(u16 *)(item + 6) != 0xFFFF) {
+        npc = *(void **)(getNpcContextByIndex(*(u16 *)(item + 6)) + 0x10);
+        if (npc != NULL) {
+            return getNpcHealthPercentage(npc);
+        }
+    }
+    return 100.0f;
+}
 
 s32 slotDispatcherIter(u16, s32, void *);
 
@@ -82,4 +98,4 @@ void triggerSoundCueByType(void) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", fake_func_800C7DB4);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C84A0", D_mission_overlay_800A6968);
+__asm__(".section .rodata\n.word 0x93C20010\n.section .text");
