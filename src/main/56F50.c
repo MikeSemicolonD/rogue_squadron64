@@ -31,7 +31,41 @@ INCLUDE_ASM("asm/nonmatchings/main/56F50", initNpcBookkeepingTables);
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", load_hmt_and_hob);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", isHobObjectLoaded);
+s32 isHobObjectLoaded(u8 *name) {
+    s32 sum = 0;
+    u8 *p = name;
+    u16 idx;
+    s32 i;
+    u8 *e;
+
+    while (*p != 0) {
+        sum += *p++;
+    }
+    idx = hobObjectHashMap[sum % 25];
+    while (idx != 0xFFFF) {
+        e = (u8 *)hobObjectListItems[idx].object_entry;
+        i = 0;
+        if (name[0] != 0) {
+            p = name;
+            do {
+                if (*p != e[i]) {
+                    goto next;
+                }
+                i++;
+                if (i >= 16) {
+                    break;
+                }
+                p++;
+            } while (*p != 0);
+        }
+        if (name[i] == e[i]) {
+            break;
+        }
+next:
+        idx = hobObjectListItems[idx].nextIndex;
+    }
+    return idx != 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", walkMeshdef0List);
 
@@ -43,7 +77,44 @@ INCLUDE_ASM("asm/nonmatchings/main/56F50", releaseMeshAsset);
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", releaseFlaggedMeshInstanceMeshes);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", getHobObjectByName);
+struct object_entry *getHobObjectByName(u8 *name) {
+    s32 sum = 0;
+    u8 *p = name;
+    s32 idx;
+    s32 i;
+    u8 *e;
+
+    while (*p != 0) {
+        sum += *p++;
+    }
+    idx = hobObjectHashMap[sum % 25];
+    while (idx != 0xFFFF) {
+        e = (u8 *)hobObjectListItems[idx].object_entry;
+        i = 0;
+        if (name[0] != 0) {
+            p = name;
+            do {
+                if (*p != e[i]) {
+                    goto next;
+                }
+                i++;
+                if (i >= 16) {
+                    break;
+                }
+                p++;
+            } while (*p != 0);
+        }
+        if (name[i] == e[i]) {
+            break;
+        }
+next:
+        idx = hobObjectListItems[idx].nextIndex;
+    }
+    if (idx != 0xFFFF && (*(u16 *)((u8 *)hobObjectListItems[idx].object_entry + 0x38) & 1)) {
+        return hobObjectListItems[idx].object_entry;
+    }
+    return NULL;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", addNpcToVisibilityBucket);
 
