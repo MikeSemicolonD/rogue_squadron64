@@ -351,7 +351,24 @@ INCLUDE_ASM("asm/nonmatchings/main/1EE30", fillTextureDescriptorNoCopy);
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", loadAndDecodeTexture);
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", uploadTextureDescriptorData);
+s32 rs_free(void *);
+
+s32 uploadTextureDescriptorData(void *arg0, void *arg1) {
+    s32 var_v0;
+
+    if (D_main_bss_8011A444[(*(u16 *)((u8 *)(arg0) + 0))].material_type & 1) {
+        memcpy((*(void **)((u8 *)(arg0) + 0x10)), arg1, (*(u32 *)((u8 *)(arg0) + 0xC)));
+        var_v0 = 1;
+        if ((*(u8 *)((u8 *)(arg0) + 2)) & 1) {
+            rs_free(arg1);
+            return 1;
+        }
+        /* Duplicate return node #4. Try simplifying control flow for better match */
+        return var_v0;
+    }
+    var_v0 = 0;
+    return var_v0;
+}
 
 u8 *getTextureDataByMaterialId(u16 arg0) {
     return D_main_bss_80128F08[D_main_bss_8011A444[arg0].D_80128F08_index].texture_data;

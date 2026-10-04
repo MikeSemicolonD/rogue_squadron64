@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "main/562A0.h"
 
@@ -41,7 +42,24 @@ char *getGameOrFrontText(s32 textId) {
     return NULL;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/562A0", freeTxtFile);
+s32 rs_free(u16 *);
+s32 teardownAssetDma(s32, s32);
+extern s32 D_main_bss_80138920;
+
+void freeTxtFile(void) {
+    if (languageData.offsets != NULL) {
+        rs_free(languageData.offsets);
+    }
+    if (languageStringOffsets != NULL) {
+        rs_free(languageStringOffsets);
+    }
+    if (D_main_8009ECA4 != -1) {
+        teardownAssetDma(D_main_bss_80138920, D_main_8009ECA4);
+        D_main_8009ECA4 = -1;
+    }
+    languageData.offsets = NULL;
+    languageStringOffsets = NULL;
+}
 
 void loadVoiceTxtFile(u8 *arg0) {
     loadTxtFile(arg0, 1);

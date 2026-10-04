@@ -20,7 +20,27 @@ void resetObjectContextPool(void) {
     clearObjectPoolStateFlag();
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ECD10", freeAllObjectContextPoolNodes);
+s32 rs_free(s32);
+
+void freeAllObjectContextPoolNodes(void) {
+    s32 temp_a0;
+    s32 temp_a0_2;
+
+    if (D_mission_overlay_8010C0D0 != 0) {
+        do {
+            temp_a0 = D_mission_overlay_8010C0D0;
+            D_mission_overlay_8010C0D0 = (*(s32 *)((u8 *)(temp_a0) + 0xC));
+            rs_free(temp_a0);
+        } while (D_mission_overlay_8010C0D0 != 0);
+    }
+    if (D_mission_overlay_8010C0D4 != 0) {
+        do {
+            temp_a0_2 = D_mission_overlay_8010C0D4;
+            D_mission_overlay_8010C0D4 = (*(s32 *)((u8 *)(temp_a0_2) + 0xC));
+            rs_free(temp_a0_2);
+        } while (D_mission_overlay_8010C0D4 != 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ECD10", createAndInitObject);
 

@@ -180,7 +180,38 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", spawnHudReticleAtMeshBounds)
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", positionHudSpriteOffset);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", createHudSpritePair);
+s32 insertLookupEntry(s32, u8 *, s32);
+u8 *rs_malloc(s32, s32);
+extern s32 D_menu_overlay_800CE6F0;
+extern s32 D_menu_overlay_800CE6F2;
+
+void createHudSpritePair(s32 arg0, void *arg1, s32 arg2, s16 arg3, s32 arg4, f32 arg5, u8 arg6) {
+    s32 temp_s3;
+    u8 *temp_v0;
+    u8 *temp_v0_2;
+
+    temp_v0 = rs_malloc(0x30, 0);
+    (*(u8 **)((u8 *)(arg1) + 0)) = temp_v0;
+    temp_v0_2 = rs_malloc(0x30, 0);
+    (*(u8 **)((u8 *)(arg1) + 4)) = temp_v0_2;
+    rs_memset(temp_v0, 0U, 0x30U);
+    rs_memset(temp_v0_2, 0U, 0x30U);
+    (*(s32 *)((u8 *)(arg1) + 8)) = arg2;
+    (*(s16 *)((u8 *)(arg1) + 0x10)) = arg3;
+    temp_s3 = arg6 & 0xFF;
+    (*(f32 *)((u8 *)(arg1) + 0xC)) = arg5;
+    (*(s16 *)((u8 *)(arg1) + 0x12)) = (s16) arg4;
+    (*(s32 **)((u8 *)(temp_v0) + 0xC)) = &D_menu_overlay_800CE6F0;
+    (*(s32 **)((u8 *)(temp_v0_2) + 0xC)) = &D_menu_overlay_800CE6F2;
+    (*(s16 *)((u8 *)(temp_v0_2) + 0xA)) = 1;
+    (*(s16 *)((u8 *)(temp_v0_2) + 8)) = 1;
+    (*(s16 *)((u8 *)(temp_v0) + 0xA)) = 1;
+    (*(s16 *)((u8 *)(temp_v0) + 8)) = 1;
+    (*(s32 *)((u8 *)(temp_v0_2) + 0x14)) = 0x23;
+    (*(s32 *)((u8 *)(temp_v0) + 0x14)) = 0x23;
+    insertLookupEntry(arg0, temp_v0, temp_s3);
+    insertLookupEntry(arg0, temp_v0_2, temp_s3);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", layoutHudSpriteScreenRect);
 

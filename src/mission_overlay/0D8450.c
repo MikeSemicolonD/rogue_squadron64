@@ -33,7 +33,47 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanSteerToward);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanUpdateEngineAudio);
+s32 buildRotationMatrixSlot2(s32, f32);
+f32 cosf(f32);
+u8 isAudioVoiceActive(void *);
+s32 updateActive3DAudioSource(void *, void *, void *, u8);
+
+void npcWingmanUpdateEngineAudio(void *arg0, f32 arg1) {
+    f32 temp_fv0;
+    f32 temp_fv0_2;
+    f32 temp_fv1;
+    u8 temp_v0;
+    void *temp_s1;
+
+    temp_fv1 = (*(f32 *)((u8 *)(arg0) + 0xEC));
+    if (temp_fv1 > 0.0f) {
+        temp_fv0 = (*(f32 *)((u8 *)(arg0) + 0xE8)) + (temp_fv1 * arg1);
+        (*(f32 *)((u8 *)(arg0) + 0xE8)) = temp_fv0;
+        if (temp_fv0 > 1.0f) {
+            (*(f32 *)((u8 *)(arg0) + 0xE8)) = 1.0f;
+            (*(f32 *)((u8 *)(arg0) + 0xEC)) = 0.0f;
+        }
+        (*(f32 *)((u8 *)(arg0) + 0xE4)) = (f32) ((1.0f - ((cosf((*(f32 *)((u8 *)(arg0) + 0xE8)) * 3.1415927f) + 1.0f) * 0.5f)) * 10.0f);
+    } else if (temp_fv1 < 0.0f) {
+        temp_fv0_2 = (*(f32 *)((u8 *)(arg0) + 0xE8)) + (temp_fv1 * arg1);
+        (*(f32 *)((u8 *)(arg0) + 0xE8)) = temp_fv0_2;
+        if (temp_fv0_2 < 0.0f) {
+            (*(f32 *)((u8 *)(arg0) + 0xE8)) = 0.0f;
+            (*(f32 *)((u8 *)(arg0) + 0xEC)) = 0.0f;
+        }
+        (*(f32 *)((u8 *)(arg0) + 0xE4)) = (f32) ((1.0f - ((cosf((*(f32 *)((u8 *)(arg0) + 0xE8)) * 3.1415927f) + 1.0f) * 0.5f)) * 10.0f);
+    }
+    buildRotationMatrixSlot2((*(s32 *)((u8 *)(arg0) + 0x98)) + 0x1C, (*(f32 *)((u8 *)(arg0) + 0xE4)));
+    buildRotationMatrixSlot2((*(s32 *)((u8 *)(arg0) + 0x9C)) + 0x1C, -(*(f32 *)((u8 *)(arg0) + 0xE4)));
+    temp_s1 = arg0 + 0xA0;
+    if ((*(u8 *)((u8 *)(arg0) + 0xF0)) != 0) {
+        temp_v0 = isAudioVoiceActive(temp_s1);
+        (*(u8 *)((u8 *)(arg0) + 0xF0)) = temp_v0;
+        if (temp_v0 & 0xFF) {
+            updateActive3DAudioSource(temp_s1, arg0, arg0 + 0x24, (*(u8 *)((u8 *)(arg0) + 0xF1)));
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanUpdate);
 

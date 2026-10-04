@@ -161,7 +161,24 @@ s32 getAccountUnk51(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", createAccountProfile);
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", initPlayerMissionStateFromSettings);
+extern u8 missionStats;
+
+void initPlayerMissionStateFromSettings(void) {
+    s32 var_s1;
+    u8 *temp_s0;
+
+    var_s1 = 0;
+    do {
+        temp_s0 = &gMissionState.numLives[var_s1];
+        (*(u8 *)((u8 *)(temp_s0) + 2)) = (u8) gGameSettings.secondaryWeapon;
+        var_s1 += 1;
+        (*(s8 *)((u8 *)(temp_s0) + 3)) = getSecondaryWeaponCount(gGameSettings.vehicleId, gGameSettings.secondaryWeapon);
+    } while (var_s1 == 0);
+    gMissionState.completedObjectiveFlags = 0;
+    gMissionState.hiddenObjectiveFlags = 0;
+    gMissionState.numMissionObjectives = 0;
+    rs_memset(&missionStats, 0U, 0x10U);
+}
 
 void initializeNumLives(void) {
     u8 var_v1;

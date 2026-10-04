@@ -382,7 +382,22 @@ u16 lookupCutsceneIdMapping(s32 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", destroyAllNpcsInSlotChain);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", maybeLoadYwingCutscene);
+s32 load_hmt_and_hob(s32 *, s32, s32, s32);
+s32 walkMeshdef0List(s32 *);
+extern s32 D_cinematic_overlay_800A5578;
+extern s32 D_cinematic_overlay_800A5594;
+extern s32 D_cinematic_overlay_800B0B18;
+
+void maybeLoadYwingCutscene(s32 arg0, s32 arg1) {
+    s32 temp_a0;
+
+    temp_a0 = arg0 & 0xFF;
+    D_cinematic_overlay_800B0B18 = 0;
+    if (((temp_a0 == 4) && ((arg1 & 0xFF) == 1)) || ((temp_a0 == 7) && !(arg1 & 0xFF))) {
+        load_hmt_and_hob(&D_cinematic_overlay_800A5578, 0, 1, 0x10000);
+        D_cinematic_overlay_800B0B18 = walkMeshdef0List(&D_cinematic_overlay_800A5594);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", buildBobbingObjectMatrix);
 

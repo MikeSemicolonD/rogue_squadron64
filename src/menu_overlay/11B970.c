@@ -604,7 +604,21 @@ void shutdownMenuMessagingAndSpeech(s32 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", cueMenuScreenAudioA);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", preloadMenuMusicSetA);
+s32 loadSongAssetByName(s32, s32);
+s32 parseLoadedSndSection(s32);
+s32 playSimpleAudioCmd(s32, s32, s32);
+extern s32 D_main_bss_80138920;
+
+void preloadMenuMusicSetA(void) {
+    parseLoadedSndSection(0xC);
+    parseLoadedSndSection(0x1D);
+    loadSongAssetByName(D_main_bss_80138920, 0x1C);
+    loadSongAssetByName(D_main_bss_80138920, 0x35);
+    loadSongAssetByName(D_main_bss_80138920, 0x36);
+    loadSongAssetByName(D_main_bss_80138920, 0x37);
+    playSimpleAudioCmd(0x7F, 0x32, 0xFE);
+    playSimpleAudioCmd(0x78, 0x32, 0xFD);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", cueMenuScreenAudioB);
 
@@ -620,9 +634,46 @@ void getControllerSettingsTitle(char *title) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", playMenuElementTransitionAnim);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", loadControllerModel);
+s32 applyFlagsToMeshTreeOrList(s32, s32, s32, s32);
+s32 loadHelmetModel();
+s32 loadVwingMeshAssets(s32, s32);
+s32 load_hmt_and_hob(s32 *, s32, s32, s32);
+s32 walkMeshdef0List(s32 *);
+extern s32 D_menu_overlay_800A699C;
+extern s32 D_menu_overlay_800A69BC;
+extern s32 D_menu_overlay_800CF0EC;
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", loadHelmetModel);
+void loadControllerModel(void) {
+    s32 temp_v0;
+
+    load_hmt_and_hob(&D_menu_overlay_800A699C, 0, 0, 0);
+    temp_v0 = walkMeshdef0List(&D_menu_overlay_800A69BC);
+    D_menu_overlay_800CF0EC = temp_v0;
+    applyFlagsToMeshTreeOrList(temp_v0, 0, 0x01060000, 0);
+    loadHelmetModel();
+    loadVwingMeshAssets(1, 0);
+}
+
+void *lookupHmtMaterialByName(s32, s32 *, s32);
+extern s32 D_menu_overlay_800A69F4;
+extern s32 D_menu_overlay_800A6A0C;
+extern s32 D_menu_overlay_800A6A14;
+extern s32 D_menu_overlay_800CF100;
+
+s32 loadHelmetModel(void) {
+    s32 temp_v0;
+    s32 temp_v0_2;
+    void *temp_a0;
+
+    load_hmt_and_hob(&D_menu_overlay_800A69F4, 0, 0, 0);
+    temp_v0_2 = walkMeshdef0List(&D_menu_overlay_800A6A0C);
+    D_menu_overlay_800CF100 = temp_v0_2;
+    applyFlagsToMeshTreeOrList(temp_v0_2, 0, 0x60000, 0);
+    temp_a0 = (*(void **)((u8 *)((*(void **)((u8 *)(lookupHmtMaterialByName(D_menu_overlay_800CF100, &D_menu_overlay_800A6A14, 0)) + 0x10))) + 8));
+    temp_v0 = (*(s32 *)((u8 *)(temp_a0) + 0xC)) | 0x800000;
+    (*(s32 *)((u8 *)(temp_a0) + 0xC)) = temp_v0;
+    return temp_v0;
+}
 
 void resetMenuElementInputState(void *arg0) {
     (*(s8 *)((u8 *)(arg0) + 0x95)) = 0;

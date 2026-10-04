@@ -133,7 +133,15 @@ void quiesceSongSlotCmdLocked(s32 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongParamPairCmd);
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongParamPairCmdLocked);
+s32 setSongParamPairCmd(s32, s32, s32);
+
+void setSongParamPairCmdLocked(s32 arg0, s32 arg1, s32 arg2) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        setSongParamPairCmd(arg0, arg1, arg2);
+        factor5MutexRelease();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", queueAudioVoiceCmdLocked);
 

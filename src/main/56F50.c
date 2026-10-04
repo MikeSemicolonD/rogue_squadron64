@@ -193,7 +193,27 @@ INCLUDE_ASM("asm/nonmatchings/main/56F50", findNameTreeEntryIndexByName);
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", findNameTreeEntryNodeByName);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", readFirstNameTreeEntry);
+s32 rs_strcpy(void *, void *);
+
+s32 readFirstNameTreeEntry(void **arg0, void *arg1) {
+    void *temp_s0;
+
+    (*(void **)((u8 *)(arg1) + 8)) = NULL;
+    (*(s8 *)((u8 *)(arg1) + 0)) = 0;
+    (*(s16 *)((u8 *)(arg1) + 6)) = 0;
+    temp_s0 = (*(void **)((u8 *)(*arg0) + 0x30));
+    if (temp_s0 != NULL) {
+        if ((*(u8 *)((u8 *)(temp_s0) + 0)) != 0) {
+            rs_strcpy(arg1, temp_s0);
+            (*(s16 *)((u8 *)(arg1) + 6)) = (s16) (*(u8 *)((u8 *)(temp_s0) + 7));
+            (*(void **)((u8 *)(arg1) + 8)) = (void *) (temp_s0 + ((*(u8 *)((u8 *)(temp_s0) + 7)) * 0x24) + 8);
+            return 1;
+        }
+        /* Duplicate return node #4. Try simplifying control flow for better match */
+        return 0;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", readFirstNameTreeEntryFromNode);
 

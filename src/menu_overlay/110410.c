@@ -75,7 +75,42 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarInitializeShipShadowHo
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", craftSelectionVoiceLineHelper);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", tickEasedCameraKeyframeBlend);
+s32 lerpVec3(s32 *, s32 *, s32, f32);
+f32 quadraticEaseInOut(f32);
+extern f32 D_menu_overlay_800CD704;
+extern f32 D_menu_overlay_800CD708;
+extern s32 D_menu_overlay_800CD800;
+extern s32 D_menu_overlay_800CD810;
+extern s32 D_menu_overlay_800CDA60;
+extern s32 D_menu_overlay_800CDA70;
+
+s32 tickEasedCameraKeyframeBlend(s32 arg0, s32 arg1, f32 arg2) {
+    f32 temp_fv0;
+    f32 temp_fv0_2;
+    s32 var_v0;
+
+    if (D_menu_overlay_800CD708 < 1.0f) {
+        temp_fv0 = D_menu_overlay_800CD708 + (arg2 / 7.5f);
+        D_menu_overlay_800CD708 = temp_fv0;
+        if (temp_fv0 > 1.0f) {
+            D_menu_overlay_800CD708 = 1.0f;
+        }
+    }
+    if (D_menu_overlay_800CD704 < 1.0f) {
+        temp_fv0_2 = D_menu_overlay_800CD704 + (arg2 / 5.0f);
+        D_menu_overlay_800CD704 = temp_fv0_2;
+        if (temp_fv0_2 >= 1.0f) {
+            D_menu_overlay_800CD704 = 1.0f;
+        }
+    }
+    lerpVec3(&D_menu_overlay_800CD810, &D_menu_overlay_800CDA60, arg0, quadraticEaseInOut(D_menu_overlay_800CD708));
+    lerpVec3(&D_menu_overlay_800CD800, &D_menu_overlay_800CDA70, arg1, quadraticEaseInOut(D_menu_overlay_800CD704));
+    var_v0 = 0;
+    if ((D_menu_overlay_800CD704 >= 1.0f) && (D_menu_overlay_800CD708 >= 1.0f)) {
+        var_v0 = 1;
+    }
+    return var_v0;
+}
 
 #if 0
 
@@ -193,7 +228,18 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", setByteAcrossEntryList);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", initCraftSelectVectors);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarSetSecondaryWeaponDisplay);
+s32 setPlayerSlotEntryRGB(s32, s32, s32 *);
+s32 startPlayerSlotAnimationChannelExt(s32, s8 *, s32, s32, s32, s32);
+extern s32 D_menu_overlay_800CDA7C;
+extern s8 D_menu_overlay_800CDA80;
+extern s32 hangarWhiteColor;
+
+void hangarSetSecondaryWeaponDisplay(s32 arg0, s8 arg1) {
+    D_menu_overlay_800CDA7C = startPlayerSlotAnimationChannelExt(2, hangarGenerateSecondaryWeaponString(arg0 & 0xFF, arg1 & 0xFF), 0x10, 1, -0x100, 0x97);
+    setPlayerSlotEntryRGB(2, 1, &hangarWhiteColor);
+    setPlayerSlotEntryRGB(2, 2, &hangarWhiteColor);
+    D_menu_overlay_800CDA80 = arg1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarUpdateSecWeaponIfChanged);
 

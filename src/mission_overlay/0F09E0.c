@@ -215,7 +215,20 @@ s16 getObjectDetailLevel(void *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initActorMotionParams);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getObjectMeshTransformOrLocal);
+s32 transformMeshPartIntoWorld(s32, s32);
+s32 zmemcpy(s32, s32, s32);
+
+s32 getObjectMeshTransformOrLocal(void *arg0, s32 arg1) {
+    void *temp_s0;
+
+    temp_s0 = getNpcContextByIndex(findActiveNpcInSlotChain((*(u16 *)((u8 *)(arg0) + 0x130)), 0) & 0xFFFF);
+    if ((arg1 == 0) || ((*(s32 *)((u8 *)(temp_s0) + 0xC)) == 0)) {
+        return (*(s32 *)((u8 *)(temp_s0) + 8));
+    }
+    zmemcpy(arg1, (*(s32 *)((u8 *)(temp_s0) + 8)), 0x30);
+    transformMeshPartIntoWorld((*(s32 *)((u8 *)(temp_s0) + 0xC)), arg1);
+    return arg1;
+}
 
 s32 findActiveNpcInSlotChain(u16, s32);
 
@@ -223,7 +236,21 @@ s32 getObjectNpcTypeId(void *arg0) {
     return findActiveNpcInSlotChain((*(u16 *)((u8 *)(arg0) + 0x130)), 0) & 0xFFFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", clearPendingChildNpc);
+s32 unregisterAndFreeNpcSlot(u16, void *);
+
+void clearPendingChildNpc(s32 arg0) {
+    void *temp_s0;
+
+    temp_s0 = arg0 + 0x114;
+    if (((*(u8 *)((u8 *)(temp_s0) + 0x20)) == 1) && ((*(u16 *)((u8 *)(temp_s0) + 0x1A)) != 0xFFFF)) {
+        if ((findActiveNpcInSlotChain((*(u16 *)((u8 *)(temp_s0) + 0x1C)), 0) & 0xFFFF) != 0xFFFF) {
+            unregisterAndFreeNpcSlot((*(u16 *)((u8 *)(temp_s0) + 0x1E)), getNpcContextByIndex((*(u16 *)((u8 *)(temp_s0) + 0x1E))));
+        }
+        (*(u16 *)((u8 *)(temp_s0) + 0x1A)) = 0xFFFFU;
+        (*(u16 *)((u8 *)(temp_s0) + 0x1E)) = 0xFFFFU;
+        (*(u8 *)((u8 *)(temp_s0) + 0x20)) = 0U;
+    }
+}
 
 void setObjectFlagBit4(void *arg0) {
     (*(u16 *)((u8 *)(arg0) + 0x14)) = (u16) ((*(u16 *)((u8 *)(arg0) + 0x14)) | 0x10);

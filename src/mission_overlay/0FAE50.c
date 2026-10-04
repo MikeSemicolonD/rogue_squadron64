@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "mission_overlay/0FAE50.h"
 
@@ -42,7 +43,17 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", endMissionCleanup);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", requestSpeechResponseMode2);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", requestSpeechResponseMode1);
+s32 isSpeechBusyOrQueued();
+extern s8 D_main_bss_80130B14;
+extern u8 D_mission_overlay_8010C9F0;
+
+void requestSpeechResponseMode1(void) {
+    if ((D_mission_overlay_8010C9F0 == 0) && (isSpeechBusyOrQueued() != 0)) {
+        D_main_bss_80130B14 = 1;
+        D_mission_overlay_8010C9E0 |= 1;
+        D_mission_overlay_8010C9F0 += 1;
+    }
+}
 
 void func_mission_overlay_800FBBA0(void) {
 }
