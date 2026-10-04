@@ -51,7 +51,30 @@ INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcTexturedEffectUpdate);
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcTexturedEffectUpdateVariant);
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcTexturedEffectUpdateConditional);
+extern void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
+extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+extern void setObjectSubstructF10IfReady(s32, f32, s32);
+extern s32 stepAndTickProgressChannel(s32, void *, f32, s32, f32 *);
+extern void triggerCueWithSlotEffect(s32, s32, void *, void *, s32, f32, f32);
+
+s32 npcTexturedEffectUpdateConditional(void *arg0, s32 arg1) {
+    u8 sp28[0x30];
+    f32 sp58;
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+
+    if (arg1 != 2) {
+        setObjectSubstructF10IfReady(*(s32 *)(npc + 0x38), 0.06666667f, 0);
+        lookupHmtTextureByName(*(s32 *)(npc + 0x30), "a_b_c", arg1, sp28, 0, 0);
+    } else {
+        lookupHmtTextureByName(*(s32 *)(npc + 0x30), "a_b_c", 2, sp28, 0, 0);
+    }
+    if ((stepAndTickProgressChannel(*(s32 *)(npc + 0x38), sp28, 0.5f, 0, &sp58) & 0xFF) == 1) {
+        triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 2, sp28, (u8 *)&D_main_800A0D9C[0].block_o_floats[3] + *(s16 *)(npc + 0xA4) * 0x3C, 0, ((f32 *)((u8 *)&D_main_800A0D9C[0].block_o_floats[3] + *(s16 *)(npc + 0xA4) * 0x3C))[3], sp58);
+        play3DSoundEvent(0, npc, npc + 0x24, 12.0f, 0.3f, 0, 0x16, 0x6E, 0x3C);
+        *(s32 *)(npc + 0x98) = 0;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcTexturedEffectUpdateConditionalAlt);
 
