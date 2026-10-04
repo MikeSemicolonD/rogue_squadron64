@@ -7,7 +7,45 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A7010);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", tickAtStCannonFireEffect);
+struct CfObj { u8 pad0[4]; f32 f4; u8 pad8[0x1C]; u8 pos[0xC]; s32 f30; u8 *f34; s32 f38; u8 pad3C[0x28]; s32 f64; u8 pad68[4]; f32 f6C; };
+typedef struct { u8 pad0[4]; struct CfObj *obj; } CfActor;
+extern u8 D_mission_overlay_800A700C[];
+extern u8 D_mission_overlay_800A7010[];
+extern u8 D_mission_overlay_8010A698[];
+extern s32 D_main_bss_80137CE4;
+s32 lookupHmtTextureByName(s32, u8 *, s32, u8 *, s32, s32);
+s32 setObjectSubstructF10IfReady(s32, f32, s32);
+s32 tickProgressChannel(s32, u8 *, s32, f32 *);
+s32 resolveNpcAttachmentPos(s32, u8 *, f32, f32);
+s32 generatePerpEmitDirectionWithJitter(s32, u8 *, s32);
+s32 triggerCueWithSlotEffect(s32, s32, u8 *, u8 *, s32, f32, f32);
+s32 play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+s32 tickAtStCannonFireEffect(CfActor *arg0, s32 arg1) {
+    u8 buf[0x30];
+    f32 sp58;
+    struct CfObj *o = arg0->obj;
+    f32 fv;
+    s32 r;
+    if (arg1 == 0) {
+        lookupHmtTextureByName(o->f30, D_mission_overlay_800A700C, 0, buf, 0, 0);
+        setObjectSubstructF10IfReady(o->f38, 0.06666667f, 0);
+        o->f6C = ((f32 *)buf)[1] - o->f4;
+        o->f64 = 0;
+    } else {
+        lookupHmtTextureByName(o->f30, D_mission_overlay_800A7010, 0, buf, 0, 0);
+    }
+    fv = *(f32 *)(o->f34 + D_main_bss_80137CE4 * 4 + 0xD8);
+    if (fv != 0.0f) {
+        resolveNpcAttachmentPos(o->f38, buf, 10.0f, fv);
+    }
+    generatePerpEmitDirectionWithJitter(o->f38, buf, 0);
+    r = tickProgressChannel(o->f38, buf, 0, &sp58) & 0xFF;
+    if (r == 1) {
+        triggerCueWithSlotEffect(o->f38, 3, buf, D_mission_overlay_8010A698, r, 10.0f, sp58);
+        play3DSoundEvent(0, o, o->pos, 20.0f, 0.4f, 0, 0xD, 0x78, 0x28);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", updateAtStBodyKinematics);
 
@@ -47,7 +85,7 @@ s32 setNpcHealth(s32, void *, void *);
 void initActorMotionParams(s32, s32, s32, s32, f32);
 void initObjectAnimSubstruct(s32, s32, s32, s32, f32, void *, s32, f32, f32, s32);
 void setObjectDetailLevel(s32, s32);
-void tickAtStCannonFireEffect();
+s32 tickAtStCannonFireEffect();
 extern s32 D_main_bss_80137CE4;
 
 void npcInitFromTemplate(u8 *arg0) {
