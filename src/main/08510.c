@@ -446,7 +446,64 @@ void recordDeferredDrawRefVariant(s32 ref, s32 flags, s32 kind) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", commitMeshDrawBatchRefs);
+void commitMeshDrawBatchRefs(struct meshdef1 *mesh) {
+    struct DisplayListBuffer *p;
+    struct DisplayListBuffer *q;
+    struct DisplayListBuffer *t;
+    struct DisplayListBuffer **hp;
+    struct DisplayListBuffer **hq;
+    s32 sel;
+    s32 n;
+    u32 w;
+    u32 addr;
+
+    if ((mesh->unk0C & 0x10) && (mesh->unk0C & 0x60)) {
+        t = *(struct DisplayListBuffer **)((u8 *)mesh + 0x58);
+        mesh->unk0C &= ~0x60;
+        sel = *(u32 *)&mesh->unk2C[0] & 0x80000000;
+        hp = (struct DisplayListBuffer **)((u8 *)mesh + 0x44);
+        if (sel == 0) {
+            hp = (struct DisplayListBuffer **)((u8 *)mesh + 0x48);
+        }
+        p = *hp;
+        hq = (struct DisplayListBuffer **)((u8 *)mesh + 0x4C);
+        if (sel == 0) {
+            hq = (struct DisplayListBuffer **)((u8 *)mesh + 0x50);
+        }
+        q = *hq;
+        while (p->next != NULL) {
+            p = p->next;
+        }
+        while (q->next != NULL) {
+            q = q->next;
+        }
+        while (t->next != NULL) {
+            t = t->next;
+        }
+        n = 0;
+        if (p != NULL || q != NULL) {
+            do {
+                w = ((u32 *)((u8 *)t + 8))[n];
+                n++;
+                addr = (w & 0xFFFFFF) | 0x80000000;
+                switch (w >> 24) {
+                case 0:
+                    *(void **)(addr + 4) = (u8 *)p + 8;
+                    p = p->prev;
+                    break;
+                case 1:
+                    *(void **)(addr + 4) = (u8 *)q + 8;
+                    q = q->prev;
+                    break;
+                }
+                if (n == 0x40) {
+                    t = t->prev;
+                    n = 0;
+                }
+            } while (p != NULL || q != NULL);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitAllocatedDLCommand);
 
