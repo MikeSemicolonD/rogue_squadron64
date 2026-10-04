@@ -3,10 +3,12 @@
 
 typedef struct {
     u8 active;
-    u8 pad1[7];
+    u8 pad1[3];
+    u8 (*fn)(u32, u32, u32, u32, u32);
     void *unk8;
     void *unkC;
-    u8 pad10[8];
+    u32 cursor;
+    u32 arg;
 } StreamedVoice;
 
 extern u8 D_main_bss_80141AD0;
@@ -20,7 +22,34 @@ void clearStreamedVoiceFlags(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", serviceStreamedVoices);
+extern void writebackDCacheHalfwords(u32, u32);
+extern u32 getVoiceUserField(s32);
+
+void serviceStreamedVoices(void) {
+    s32 i;
+    u32 cur;
+    u32 old;
+
+    for (i = 0; i < D_main_bss_80141AD0; i++) {
+        if (D_main_bss_80152A20[i].active == 1) {
+            cur = getVoiceUserField(i);
+            old = D_main_bss_80152A20[i].cursor;
+            if (old != cur) {
+                if (old < cur) {
+                    if (D_main_bss_80152A20[i].fn((u32)D_main_bss_80152A20[i].unk8 + old * 2, cur - old, 0, 0, D_main_bss_80152A20[i].arg)) {
+                        writebackDCacheHalfwords((u32)D_main_bss_80152A20[i].unk8 + D_main_bss_80152A20[i].cursor * 2, cur - D_main_bss_80152A20[i].cursor);
+                    }
+                } else {
+                    if (D_main_bss_80152A20[i].fn((u32)D_main_bss_80152A20[i].unk8 + old * 2, (u32)D_main_bss_80152A20[i].unkC - old, (u32)D_main_bss_80152A20[i].unk8, cur, D_main_bss_80152A20[i].arg)) {
+                        writebackDCacheHalfwords((u32)D_main_bss_80152A20[i].unk8 + D_main_bss_80152A20[i].cursor * 2, (u32)D_main_bss_80152A20[i].unkC - D_main_bss_80152A20[i].cursor);
+                        writebackDCacheHalfwords((u32)D_main_bss_80152A20[i].unk8, cur);
+                    }
+                }
+            }
+            D_main_bss_80152A20[i].cursor = cur;
+        }
+    }
+}
 
 void copyFourHalfwordsWriteback(void *, void *);
 
