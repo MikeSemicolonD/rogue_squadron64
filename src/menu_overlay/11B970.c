@@ -378,7 +378,48 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", buildHudAmmoReadout);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", readAccountForSelectionScreen);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", resetMaterialTextureEffectSlots);
+typedef struct {
+    s32 unk0;
+    s16 unk4;
+    s16 unk6;
+    f32 unk8;
+    s32 unkC;
+    u8 pad10[4];
+    u8 unk14;
+    u8 unk15;
+    u8 unk16;
+    u8 pad17;
+    s32 unk18;
+    f32 unk1C;
+    u8 unk20;
+    u8 unk21;
+    u8 pad22[0x1F];
+    u8 unk41;
+    u8 pad42[2];
+    s32 unk44;
+} MaterialTexEffectSlot;
+extern MaterialTexEffectSlot D_menu_overlay_800CF180[];
+void resetMaterialTextureEffectSlots(void) {
+    u8 i;
+
+    for (i = 0; i < 3; i++) {
+        MaterialTexEffectSlot *s = &D_menu_overlay_800CF180[i];
+        s->unk0 = 0;
+        s->unk4 = 0;
+        s->unk6 = 0;
+        s->unk8 = 1.0f;
+        s->unkC = 0;
+        s->unk14 = 0;
+        s->unk16 = 0;
+        s->unk18 = 0;
+        s->unk20 = 0;
+        s->unk21 = 0;
+        s->unk41 = 3;
+        s->unk1C = 1.0f;
+        s->unk15 = 1;
+        s->unk44 = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMaterialTextureByName);
 
