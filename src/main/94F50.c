@@ -128,7 +128,20 @@ void tickActiveSongs(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongPauseStateByHandle);
+s32 setSongPauseStateByHandle(u32 handle, u8 paused) {
+    s32 slot;
+
+    if (gMusyXActiveFlag != 0) {
+        slot = findSongSlotByHandle(handle);
+        if (slot != -1) {
+            if (slot >= 0) {
+                D_main_bss_80149A00[slot].unkEC5 = paused == 0;
+                return 1;
+            }
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", applySongU16ParamCmd);
 
