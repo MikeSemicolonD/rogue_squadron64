@@ -600,7 +600,27 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", emitMaterialTexturedDL);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitMaterialTexturedDLAlt);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", resetSceneLightsAndMaterials);
+extern u32 D_main_bss_8011A8B8;
+extern struct D_main_bss_8011A444 *D_main_bss_8010E8AC;
+extern s32 D_main_bss_80114380;
+extern u8 D_main_bss_8010F8B0[];
+extern s32 D_main_bss_801143A4;
+extern u8 D_main_bss_8011A454;
+
+void resetSceneLightsAndMaterials(void) {
+    u32 i;
+    u32 *count = &D_main_bss_8011A8B8;
+
+    D_main_bss_8011A454 = 1;
+    for (i = 0; i < *count; i++) {
+        ((u8 *)D_main_bss_8010E8AC)[i] = 0;
+    }
+    D_main_bss_80114380 = 0;
+    for (i = 0; i < 0x400; i++) {
+        D_main_bss_8010F8B0[i] = 0;
+    }
+    D_main_bss_801143A4 = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", transformSceneLights);
 
