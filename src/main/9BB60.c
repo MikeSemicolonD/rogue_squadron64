@@ -26,6 +26,21 @@ s32 osRecvMesg(void *mq, void *msg, s32 flag);
 void stopVoice(void *arg0);
 void stopVoiceSlotSynced(s32 index);
 u32 consumeVoiceSamples(void *voice, u32 count);
+void osCreateMesgQueue(void *, void *, s32);
+
+extern u8 D_main_bss_80154668[];
+
+static inline void createSpeechLock(void) {
+    osCreateMesgQueue(D_main_bss_80154650, D_main_bss_80154668, 1);
+}
+
+static inline void lockSpeechVoices(void) {
+    osRecvMesg(D_main_bss_80154650, NULL, 1);
+}
+
+static inline void unlockSpeechVoices(void) {
+    osSendMesg(D_main_bss_80154650, NULL, 0);
+}
 
 extern s32 D_main_bss_80154648;
 
@@ -95,7 +110,32 @@ INCLUDE_ASM("asm/nonmatchings/main/9BB60", getVoicePlaybackProgressByKey);
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", loadSpeechFile);
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", initMusyXVoiceTable);
+extern void *speechSampleOffsets;
+extern void *D_main_bss_80154674;
+
+
+void initMusyXVoiceSlot(u8 *voice, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
+s32 streamSampleCountToByteSize(s32);
+void *rs_malloc(u32, u16);
+void registerSiCallback(void (*)(void));
+void serviceVoicePoolFrame(void);
+void osCreateMesgQueue(void *, void *, s32);
+
+void initMusyXVoiceTable(void) {
+    s32 i;
+
+    speechSampleOffsets = 0;
+    for (i = 0; i < 1; i++) {
+        initMusyXVoiceSlot(D_main_80153420[i].data, 0, 0, 0, 0);
+        D_main_bss_80154620[i].active = 0;
+    }
+    createSpeechLock();
+    unlockSpeechVoices();
+    D_main_bss_80154674 = rs_malloc(streamSampleCountToByteSize(0x10E0), 0);
+    registerSiCallback(serviceVoicePoolFrame);
+    speechFileLoaded = 1;
+    D_main_bss_80154648 = 0;
+}
 
 void findFreeSpeechVoiceSlot(void) {
     s32 i;
