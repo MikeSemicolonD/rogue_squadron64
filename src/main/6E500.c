@@ -231,7 +231,13 @@ struct account_data *loadAccountDataIntoStruct(u8 arg0) {
     return &D_main_bss_8013A550;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", parseAccountDataBytes);
+void parseAccountDataBytes(u8 *src, u8 *dst) {
+    u8 i;
+
+    for (i = 0; i < 19; i++) {
+        dst[i] = (*((i >> 2) + src + 6) >> ((i & 3) * 2)) & 3;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", packAccountProgressBits);
 
