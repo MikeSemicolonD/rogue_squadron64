@@ -33,7 +33,9 @@ void playObjectiveVoiceLine1(s32 arg0) {
     playSpeechClip(arg0, 0x73, 0, 0x43);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", playObjectiveVoiceLine2);
+void playObjectiveVoiceLine2(s32 arg0, f32 arg1) {
+    playSpeechClip(arg0, 0x73, arg1, 0x43);
+}
 
 s32 initSpeechPlaybackState();
 
