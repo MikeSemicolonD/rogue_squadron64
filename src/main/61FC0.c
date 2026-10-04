@@ -150,7 +150,23 @@ u16 findCharEntryValueByKey(u16 arg0, u8 arg1) {
     return 0xFFFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", findCharEntryAltValueByKey);
+extern u16 D_main_bss_80139980[];
+u16 findCharEntryAltValueByKey(u16 font, u8 ch) {
+    struct someFontThing *t = D_main_8009FC10[font];
+    u16 i;
+
+    for (i = 0; i < t->symbolCount; i++) {
+        if ((u8)t->symbolList[i] == ch) {
+            return t->unk024[i];
+        }
+    }
+    for (i = 0; i < 6; i++) {
+        if (ch == (u8)(i + 1)) {
+            return D_main_bss_80139980[i];
+        }
+    }
+    return 0xFFFF;
+}
 
 u8 findCharEntryByteByKey(u16 arg0, u8 arg1) {
     s32 var_a2;
