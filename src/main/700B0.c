@@ -137,8 +137,6 @@ void spawnDebris1Npc(s32 arg0, s32 arg1, f32 arg2, f32 arg3, f32 arg4) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedEffectIfBudgetOk);
-
 s32 orientedNpcHandler(struct D_80130BB8_type *self, u16 arg1, void *arg2);
 typedef struct {
     s32 x;
@@ -163,6 +161,9 @@ typedef struct {
 } OrientedSpawnArgs;
 
 void orthonormalizeFrame(OrientedFrame *);
+
+INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedEffectIfBudgetOk);
+
 
 void spawnOrientedEffectIfBudgetOkAlt(f32 *pos, f32 *dir, s32 arg2, f32 arg3, f32 arg4, f32 arg5) {
     OrientedFrame fr;
