@@ -414,7 +414,19 @@ u16 lookupCutsceneIdMapping(s32 arg0) {
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", destroyAllNpcsInSlotChain);
+extern u16 D_main_bss_80139560[];
+
+u16 findActiveNpcInSlotChain(u16, void *);
+void destroyNpcSlotByIndex(u16);
+
+void destroyAllNpcsInSlotChain(s32 chain) {
+    u8 iter[8];
+    u16 idx;
+
+    while ((idx = findActiveNpcInSlotChain(D_main_bss_80139560[chain], iter)) != 0xFFFF) {
+        destroyNpcSlotByIndex(idx);
+    }
+}
 
 s32 load_hmt_and_hob(s32 *, s32, s32, s32);
 s32 walkMeshdef0List(s32 *);
