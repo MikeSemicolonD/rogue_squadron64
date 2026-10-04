@@ -143,7 +143,24 @@ INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedEffectIfBudgetOkAlt);
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedNpc);
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", gameStateByteGatedNpcHelper);
+extern u8 D_main_bss_80130B63;
+s32 orientedNpcHandler(struct D_80130BB8_type *self, u16 arg1, void *arg2);
+
+typedef struct { s32 a; s32 b; s32 c; f32 d; f32 e; f32 f; } OrientedNpcArgs;
+
+void gameStateByteGatedNpcHelper(s32 arg0, s32 arg1, s32 arg2, f32 arg3, f32 arg4, f32 arg5) {
+    OrientedNpcArgs args;
+
+    if ((D_main_bss_80130B63 != 0) || ((findLargestFreeHeapChunk() >= 0x3A98U) && (countDisplayListChunks() >= 0x4E20))) {
+        args.e = arg4;
+        args.a = arg1;
+        args.b = arg2;
+        args.c = arg0;
+        args.d = arg3;
+        args.f = arg5;
+        spawnNpcOfType(orientedNpcHandler, &args, 1U, 0xFU);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnMultiEventNpcWrapper);
 
