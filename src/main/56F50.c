@@ -184,7 +184,72 @@ void applyRgbaTintToMeshVertices(u8 *arg0, u8 *arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", releaseMeshAsset);
+typedef struct MeshAssetSlot {
+    u8 *obj;
+    u8 pad4[4];
+    u16 flags;
+    u8 padA;
+    u8 typeId;
+    u8 padC[0xB4 - 0xC];
+} MeshAssetSlot;
+
+void releaseMeshAsset(MeshAssetSlot *arg0) {
+    s32 k;
+    s32 cnt;
+    u8 *p;
+    u16 *tbl;
+    struct meshdef1 **mp;
+    struct meshdef1 *m;
+    u8 *obj;
+    u16 t;
+
+    obj = arg0->obj;
+    if (!(arg0->flags & 0x1000)) {
+        t = *(u16 *)(obj + 0x3A) - 1;
+        *(u16 *)(obj + 0x3A) = t;
+        if (!(t & 0xFFFF)) {
+            k = 0;
+            p = obj;
+loop1:
+            tbl = *(u16 **)(p + 0x18);
+            if (tbl != NULL) {
+                cnt = tbl[0];
+                mp = (struct meshdef1 **)(tbl + 2);
+                for (; cnt > 0; cnt--, mp++) {
+                    while ((m = *mp) != NULL) {
+                        if (*(u32 *)((u8 *)m + 0xC) & 0x10) {
+                            enqueueMeshForDeferredRelease(m);
+                            *(u32 *)((u8 *)m + 0xC) |= 8;
+                        }
+                        mp++;
+                    }
+                }
+                k++;
+                p += 4;
+                if (k < 4) goto loop1;
+            }
+        }
+    }
+    if (arg0->typeId != 0) {
+        t = D_main_bss_8013A490 + 1;
+        D_main_bss_8013A490 = t;
+        D_main_8013A498[t] = arg0->typeId;
+    }
+    if (arg0->flags & 0x80) {
+        D_main_bss_801394E2 -= 1;
+    }
+    if (arg0->flags & 0x100) {
+        D_main_bss_801394E4 -= 1;
+    }
+    if (arg0->flags & 4) {
+        D_main_801394F0[D_main_bss_80139550++] = (u32)((u8 *)arg0 - (u8 *)D_main_bss_801394E8) / 180;
+        D_main_bss_80139554 -= 1;
+        return;
+    }
+    if ((*(u32 *)((u8 *)arg0 + 8) & 0x10010000) != 0x10000) {
+        rs_free(arg0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", releaseFlaggedMeshInstanceMeshes);
 
