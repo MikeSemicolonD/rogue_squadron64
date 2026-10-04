@@ -9,13 +9,64 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800F
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", flashMissionAlertObjectsAndPrint);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", beginMissionEndTransition);
-
 typedef struct {
     u8 pad0[0x1A];
     u16 mask;
     u8 pad1C[8];
 } MissionObjectiveDef;
+
+s32 countDisplayListChunks(void);
+void serviceRumblePakMotors(void);
+void setAudioFaderRampLocked(s32, s32, s32);
+void beginSpeechTimingWindow(void);
+extern u32 D_mission_overlay_8010CA20;
+extern s32 D_mission_overlay_8010CA1C;
+extern u8 D_mission_overlay_8010C9F1;
+extern u8 D_main_bss_80137CF4;
+extern u8 D_main_bss_80138838;
+extern u8 D_main_bss_80138925;
+extern u8 D_main_bss_80139C8F;
+extern u16 D_main_bss_80130B88[][3];
+extern MissionObjectiveDef D_mission_overlay_8010BE18[];
+extern u16 D_mission_overlay_8010BFA8[];
+typedef struct {
+    u8 active;
+    u8 pad1[0x297];
+    s32 unk298;
+    s32 unk29C;
+} EndMissionPlayer;
+
+extern EndMissionPlayer gPlayers[];
+
+s32 beginMissionEndTransition(void) {
+    s32 i;
+
+    if (countDisplayListChunks() < 15000) {
+        return 0;
+    }
+    if (D_mission_overlay_8010CA20 != 0) {
+        return 1;
+    }
+    D_mission_overlay_8010CA20 = 5;
+    D_main_bss_80137CF4 = 1;
+    D_main_bss_80138925 = 1;
+    D_mission_overlay_8010CA1C |= 1;
+    D_mission_overlay_8010C9F1 = !(D_mission_overlay_8010CA1C & 0x100);
+    D_mission_overlay_8010CA1C |= 0x100;
+    serviceRumblePakMotors();
+    setAudioFaderRampLocked(0x32, 500, 0xFD);
+    setAudioFaderRampLocked(0, 500, 0xFE);
+    beginSpeechTimingWindow();
+    D_main_bss_80139C8F = 0;
+    for (i = 0; i < 1; i++) {
+        if (gPlayers[i].active != 0 && (D_main_bss_80130B88[i][0] & *(u16 *)D_mission_overlay_8010BE18[i].pad0) && D_main_bss_80137CF4 == 0 && D_main_bss_80138838 == 0) {
+            gPlayers[i].unk298 = 0;
+            gPlayers[i].unk29C = 0x1D;
+            D_mission_overlay_8010BFA8[i] |= D_mission_overlay_8010BE18[i].mask;
+        }
+    }
+    return 1;
+}
 
 void setAudioFaderRampLocked(s32, s32, s32);
 void endSpeechTimingWindow(void);
@@ -27,7 +78,7 @@ extern u8 D_main_bss_80138838;
 extern u8 D_main_bss_80138925;
 extern MissionObjectiveDef D_mission_overlay_8010BE18[];
 extern u16 D_mission_overlay_8010BFA8[];
-extern u8 gPlayers[][0x2A0];
+extern EndMissionPlayer gPlayers[];
 
 s32 endMissionEndTransition(void) {
     s32 i;
@@ -44,7 +95,7 @@ s32 endMissionEndTransition(void) {
         setAudioFaderRampLocked(0x7F, 500, 0xFE);
         endSpeechTimingWindow();
         for (i = 0; i < 1; i++) {
-            if (gPlayers[i][0] != 0 && D_main_bss_80137CF4 == 0 && D_main_bss_80138838 == 0) {
+            if (gPlayers[i].active != 0 && D_main_bss_80137CF4 == 0 && D_main_bss_80138838 == 0) {
                 D_mission_overlay_8010BFA8[i] &= ~D_mission_overlay_8010BE18[i].mask;
             }
             clearControllerPakPresence(i);
