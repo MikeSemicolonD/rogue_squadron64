@@ -122,8 +122,26 @@ f32 getWeaponChargeLevel(void) {
     return D_mission_overlay_8010B7A0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", advancePitchTowardTarget);
+extern s32 D_main_bss_80137CE4;
+extern u8 D_mission_overlay_801096B8;
+
+void advancePitchTowardTarget(u8 *arg0, f32 dt) {
+    if (*(f32 *)(arg0 + 0xC0) <= 0.0f || D_main_bss_80137CE4 == 3 || *(f32 *)(arg0 + 0xC0) == *(f32 *)(arg0 + 0xC4) || D_mission_overlay_801096B8 == 0) {
+        return;
+    }
+    switch (*(u16 *)(arg0 + 0xB4)) {
+        case 0:
+        case 1:
+        case 5:
+        case 8:
+            *(f32 *)(arg0 + 0xC0) += *(f32 *)(arg0 + 0xC4) / 180.0f * dt;
+            if (*(f32 *)(arg0 + 0xC4) < *(f32 *)(arg0 + 0xC0)) {
+                *(f32 *)(arg0 + 0xC0) = *(f32 *)(arg0 + 0xC4);
+            }
+            break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", fake_func_800B42BC);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0AEFF0", D_mission_overlay_800A5810);
+__asm__(".section .rodata\n.word 0x27BD0008\n.word 0x03E00008\n.word 0x00000000\n.section .text");
