@@ -135,7 +135,23 @@ void releaseMeshLinkedList(void *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", freeModelViewerMeshChain);
+extern s32 D_menu_overlay_800D0110;
+
+void freeModelViewerMeshChain(u8 *arg0) {
+    s32 *p;
+    s32 *q;
+
+    p = *(s32 **)(arg0 + 0x10);
+    while (p != NULL) {
+        q = p;
+        p = (s32 *)*p;
+        if (q[0x17] != 0) {
+            rs_free(q[0x17]);
+        }
+        rs_free((s32)q);
+    }
+    rs_free(D_menu_overlay_800D0110);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", releaseModelViewerModelAssets);
 
