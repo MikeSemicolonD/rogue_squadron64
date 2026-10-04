@@ -32,6 +32,16 @@ INCLUDE_ASM("asm/nonmatchings/main/5AD20", setupWalkerSpriteTileQuad);
 
 INCLUDE_ASM("asm/nonmatchings/main/5AD20", cinematicSplineWalkerNpcHandler);
 
-INCLUDE_ASM("asm/nonmatchings/main/5AD20", allocAllInitialNpcSlots);
+extern s16 D_main_bss_80139560[];
+
+s16 allocateNpcSlot(void *);
+
+void allocAllInitialNpcSlots(void) {
+    s32 i;
+
+    for (i = 0; i < 0x20; i++) {
+        D_main_bss_80139560[i] = allocateNpcSlot(NULL);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/5AD20", fake_func_8005C61C);
