@@ -788,7 +788,39 @@ void recordDeferredDrawRefD(s32 flags) {
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", reserveAndEmitDLEntry);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", reserveAlignedDLSpace);
+s32 reserveAndEmitDLEntry(s32, s32);
+extern s32 *D_main_bss_8011A438;
+extern s32 D_main_bss_8011A43C;
+extern u8 D_main_bss_8011A440;
+
+s32 reserveAlignedDLSpace(s32 gfx, u8 *out, u8 n, s32 *ptr, s32 arg4) {
+    u8 *used = &D_main_bss_8011A440;
+    s32 base;
+    s32 *g;
+
+    if (*used + n > 0x40) {
+        g = D_main_bss_8011A438;
+        g[0] = ((((D_main_bss_8011A440 * 4) + 0xF) & 0xFFF0) - 1) & 0xFFFF | 0x02000000;
+        g[1] = D_main_bss_8011A43C;
+        gfx = reserveAndEmitDLEntry(gfx, arg4);
+    }
+    base = *used * 4;
+    out[1] = base;
+    if (n == 1) {
+        out[2] = out[3] = out[0] = base;
+    } else {
+        out[2] = base + 4;
+        out[3] = base + 8;
+        if (n == 3) {
+            out[0] = out[1];
+        } else {
+            out[0] = base + 0xC;
+        }
+    }
+    *ptr = D_main_bss_8011A43C + D_main_bss_8011A440 * 4;
+    D_main_bss_8011A440 += n;
+    return gfx;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005A0);
 
