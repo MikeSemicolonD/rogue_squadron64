@@ -220,7 +220,42 @@ f32 getActorCurrentValueByType(void *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", syncType1ActorFrameToAnchorIfZeroGate);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", spawnNpcAnchoredEffectSlot);
+typedef struct {
+    u16 unk0;
+    u16 unk2;
+    u16 unk4;
+    s16 unk6;
+    s32 unk8;
+} SpawnSlotMsg;
+
+extern u16 findNpcInScaledBoxRegionExcludingPair(void *, u16, f32, u16, u16, s32);
+extern s32 slotDispatcherIter(u16, s32, void *);
+extern void *getNpcContextField8(u16);
+extern u16 D_main_bss_8013957C;
+
+s32 spawnNpcAnchoredEffectSlot(void *arg0, f32 arg1, s32 arg2) {
+    SpawnSlotMsg msg;
+    u16 id;
+    u16 slot;
+    s32 ret;
+
+    ret = 0;
+    slot = findNpcInScaledBoxRegionExcludingPair(getNpcContextField8(*(u16 *)((u8 *)arg0 + 0x198)), *(u16 *)((u8 *)arg0 + 0x198), arg1, 0xFFFF, D_main_bss_8013957C, 0);
+    if (slot != 0xFFFF) {
+        id = *(u16 *)((u8 *)arg0 + 0x198);
+        slotDispatcherIter(slot, 6, &id);
+        if (arg2 != 0) {
+            msg.unk0 = 0xFFFF;
+            msg.unk2 = 0xFFFF;
+            msg.unk4 = 7;
+            msg.unk6 = arg2;
+            msg.unk8 = 0;
+            slotDispatcherIter(slot, 5, &msg);
+        }
+        ret = 1;
+    }
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", load_model_animation);
 
