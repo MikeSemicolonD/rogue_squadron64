@@ -6,7 +6,14 @@ INCLUDE_ASM("asm/nonmatchings/main/66660", buildPositionAndCallTransformHelper);
 
 INCLUDE_ASM("asm/nonmatchings/main/66660", projectModelBoundsToScreen);
 
-INCLUDE_ASM("asm/nonmatchings/main/66660", applyDatItemWorldOffset);
+extern void evalCubicSplineAtTime(void *, s32, f32 *);
+
+void applyDatItemWorldOffset(void *spline, f32 *offset, f32 *out) {
+    evalCubicSplineAtTime(spline, 0, out);
+    out[0] += offset[0];
+    out[1] += offset[1];
+    out[2] += offset[2];
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/66660", setupActorAnchorTransformType1);
 
