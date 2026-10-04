@@ -133,7 +133,32 @@ void shutdownFormatMessageWorker(void) {
     unregisterServiceWorker(D_menu_overlay_800CC858);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", enqueueFormatMessage);
+extern s32 D_main_bss_80138920;
+extern s32 D_menu_overlay_800CC854;
+extern s32 D_menu_overlay_800CC858;
+s32 sendServiceMessage(s32, s32, void *, s32);
+
+typedef struct {
+    u8 pad0[0x14];
+    s32 f14;
+    u8 text[0x40];
+    s32 f58;
+    s32 f5C;
+} FormatMsg;
+
+u8 enqueueFormatMessage(s32 arg0, u8 *arg1) {
+    FormatMsg *msg;
+
+    msg = rs_malloc(0x60, 0);
+    rs_memset((u8 *)msg, 0, 0x60);
+    msg->f14 = arg0;
+    msg->f58 = D_main_bss_80138920;
+    msg->f5C = D_menu_overlay_800CC854;
+    rs_strcpy(msg->text, arg1);
+    sendServiceMessage(D_main_bss_80138920, D_menu_overlay_800CC858, msg, 0);
+    D_menu_overlay_800CC854 += 1;
+    return msg->text[0x47];
+}
 
 void *tryRecvServiceMessage(s32);
 extern s32 D_main_bss_80138920;
