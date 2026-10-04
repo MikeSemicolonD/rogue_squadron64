@@ -693,7 +693,23 @@ void *allocCraftPreviewEffectObject(void) {
     return temp_s0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initCraftPreviewEffectWithRandom);
+s32 rand(void);
+void playerTieInterceptorMainUpdate(void *);
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    s32 unk8;
+    u8 unkC;
+    s32 unk10;
+} CraftPreviewEffect;
+void initCraftPreviewEffectWithRandom(CraftPreviewEffect *arg0, s32 arg1, s32 arg2, s32 arg3) {
+    arg0->unkC = rand() & 1;
+    arg0->unk0 = 0;
+    arg0->unk4 = arg2;
+    arg0->unk8 = arg3;
+    arg0->unk10 = 0xCDCD;
+    playerTieInterceptorMainUpdate(arg0);
+}
 
 void initMenuElementScrollAnimParams(void *arg0, s32 arg1, s32 arg2) {
     (*(s32 *)((u8 *)(arg0) + 0x14EC)) = 0;
