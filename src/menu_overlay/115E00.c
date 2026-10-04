@@ -243,7 +243,35 @@ void printLevelSelectWeaponText(u8 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", startSlotLoopAnimWithVoiceSync);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", setupPlayerCraftDisplayAnim);
+void samplePlayerAnimChannel(s32, s32, f32);
+void activateAnimationKeyframe(s32, s32, u8);
+struct ui_element *getPlayerSlotFieldAt34(u16, u16);
+void setPlayerSlotEntryRGB(u16, u16, struct rgba *);
+extern s32 D_menu_overlay_800CDCDC;
+
+void setupPlayerCraftDisplayAnim(void) {
+    u8 i;
+    s32 k;
+
+    setPlayerSlotAnimationFlag(0, "XX", 6, -0x100, 0x72);
+    setPlayerSlotAnimationFlag(0, "XX", 9, -0x100, 0x72);
+    samplePlayerAnimChannel(0, 6, 1.0f);
+    i = 4;
+    samplePlayerAnimChannel(0, 9, 1.0f);
+    relocateLookupEntryToNewKey((struct some_ui_list_root *)D_menu_overlay_800CDCDC, getPlayerSlotFieldAt34(0, 6), 0x19);
+    relocateLookupEntryToNewKey((struct some_ui_list_root *)D_menu_overlay_800CDCDC, getPlayerSlotFieldAt34(0, 9), 0x19);
+    setPlayerSlotAnimationFlag(0, "{", 4, -0x100, 0x76);
+    setPlayerSlotAnimationFlag(0, "{", 7, -0x100, 0x76);
+    setPlayerSlotAnimationFlag(0, "}", 5, -0x100, 0x76);
+    setPlayerSlotAnimationFlag(0, "}", 8, -0x100, 0x76);
+    do {
+        k = i;
+        activateAnimationKeyframe(0, k, 0);
+        setPlayerSlotEntryRGB(0, k, &bridgeWhiteColor);
+        samplePlayerAnimChannel(0, k, 1.0f);
+        i++;
+    } while (i < 10);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", applyPlayerSlotAnimChannelKeyframe);
 

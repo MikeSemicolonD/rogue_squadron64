@@ -1,9 +1,108 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", plotRadarBlipColumn);
+typedef struct { u16 *data; u8 *tbl; u8 pad8[0x30]; u16 w; u16 h; } RadarGridC;
+extern RadarGridC gRadarGridC __asm__("D_main_bss_80136DC0");
+extern u16 D_main_bss_80136DF8;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", plotRadarBlipRow);
+s32 plotRadarBlipColumn(void *arg0v, s32 y) {
+    u8 *arg0 = arg0v;
+    s32 x;
+    s32 xe;
+    s32 h1;
+    s32 off;
+    s32 lo;
+    u8 *col;
+    u16 *p;
+    u8 *tbl;
+    u8 *a0;
+    u8 *a1;
+
+    x = *(s16 *)(arg0 + 0x85E) - 0x10;
+    xe = *(s16 *)(arg0 + 0x85E) + 0x10;
+    h1 = gRadarGridC.h - 1;
+    col = arg0 + (y & 0x1F);
+    if (y < 0) {
+        p = gRadarGridC.data;
+    } else {
+        if (y >= gRadarGridC.w) {
+            p = (u16 *)((u8 *)gRadarGridC.data + (gRadarGridC.w * 2 - 2));
+        } else {
+            p = (u16 *)((u8 *)gRadarGridC.data + y * 2);
+        }
+    }
+    if (x > 0) {
+        if (h1 >= x) {
+            p += x * D_main_bss_80136DF8;
+        } else {
+            p += h1 * D_main_bss_80136DF8;
+        }
+    }
+    tbl = gRadarGridC.tbl;
+    if (x < xe) {
+        do {
+            a0 = tbl + (*p & 0x1FFF) * 0x1E;
+            a1 = col + ((x & 0x1F) << 6);
+            a1[0] = ((((s8)a0[5] + 0x80) * 0x10) / 22 & ~0xF) | ((u32)((a0[7] - 0x80) & 0xFF) / 22);
+            x++;
+            a1[0x20] = ((((s8)a0[0xF] + 0x80) * 0x10) / 22 & ~0xF) | ((u32)((a0[0x11] - 0x80) & 0xFF) / 22);
+            if (x > 0 && x < h1) {
+                p += gRadarGridC.w;
+            }
+        } while (x < xe);
+    }
+}
+
+typedef struct { u16 *data; u8 pad4[0x34]; u16 w; u16 h; } RadarGridR;
+extern RadarGridR D_main_bss_80136DC0;
+extern u8 *D_main_bss_80136DC4;
+
+void plotRadarBlipRow(u8 *arg0, s32 y) {
+    s32 x;
+    s32 xe;
+    s32 w1;
+    s32 lo;
+    s32 off;
+    u8 *row;
+    u16 *p;
+    u8 *tbl;
+    u8 *a0;
+    u8 *a1;
+
+    x = *(s16 *)(arg0 + 0x85C) - 0x10;
+    xe = *(s16 *)(arg0 + 0x85C) + 0x10;
+    w1 = D_main_bss_80136DC0.w - 1;
+    row = arg0 + ((y & 0x1F) << 6);
+    if (y < 0) {
+        p = D_main_bss_80136DC0.data;
+    } else {
+        if (y < D_main_bss_80136DC0.h) {
+            p = D_main_bss_80136DC0.data + y * D_main_bss_80136DC0.w;
+        } else {
+            p = D_main_bss_80136DC0.data + (D_main_bss_80136DC0.h - 1) * D_main_bss_80136DC0.w;
+        }
+    }
+    if (x > 0) {
+        if (w1 >= x) {
+            p += x;
+        } else {
+            p += w1;
+        }
+    }
+    tbl = D_main_bss_80136DC4;
+    if (x < xe) {
+        do {
+            a0 = tbl + (*p & 0x1FFF) * 0x1E;
+            a1 = row + (x & 0x1F);
+            a1[0] = ((((s8)a0[5] + 0x80) * 0x10) / 22 & ~0xF) | ((u32)((a0[7] - 0x80) & 0xFF) / 22);
+            x++;
+            a1[0x20] = ((((s8)a0[0xF] + 0x80) * 0x10) / 22 & ~0xF) | ((u32)((a0[0x11] - 0x80) & 0xFF) / 22);
+            if (x > 0 && x < w1) {
+                p++;
+            }
+        } while (x < xe);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", initializeRadar);
 

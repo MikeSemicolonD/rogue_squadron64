@@ -130,7 +130,59 @@ INCLUDE_ASM("asm/nonmatchings/main/56F50", walkMeshdef0List);
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", instantiateNamedMeshInstance);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", applyRgbaTintToMeshVertices);
+void applyRgbaTintToMeshVertices(u8 *arg0, u8 *arg1) {
+    u8 *t0;
+    u8 *t5;
+    u8 *a0;
+    u8 *v1;
+    u8 *p;
+    s32 t4;
+    s32 t3;
+    s32 t2;
+    s32 a2;
+    s32 a1;
+    u32 off;
+
+    p = *(u8 **)(*(u8 **)(arg0 + 0x1C) + 0x20);
+    t0 = *(u8 **)(p + 8);
+    t4 = *(s32 *)(p + 0xC);
+    t5 = *(u8 **)(*(u8 **)(*(u8 **)(*(u8 **)(*(u8 **)arg0 + 0x10) + 0x10) + 0x20) + 8);
+    t3 = (arg1[0] << 8) / 255;
+    t2 = (arg1[1] << 8) / 255;
+    a2 = (arg1[2] << 8) / 255;
+    a1 = (arg1[3] << 8) / 255;
+    if (t4 > 0) {
+        do {
+            off = (*(u32 *)(t0 + 4) & 0x3F000) >> 10;
+            a0 = t5 + off;
+            v1 = t0 + off;
+            v1[0] = (a0[0] * t3) >> 8;
+            v1[1] = (a0[1] * t2) >> 8;
+            v1[2] = (a0[2] * a2) >> 8;
+            v1[3] = (a0[3] * a1) >> 8;
+            if (*(u32 *)t0 & 0x10) {
+                v1[4] = (a0[4] * t3) >> 8;
+                v1[5] = (a0[5] * t2) >> 8;
+                v1[6] = (a0[6] * a2) >> 8;
+                v1[7] = (a0[7] * a1) >> 8;
+                v1[8] = (a0[8] * t3) >> 8;
+                v1[9] = (a0[9] * t2) >> 8;
+                v1[10] = (a0[10] * a2) >> 8;
+                v1[11] = (a0[11] * a1) >> 8;
+                if (*(u32 *)t0 & 8) {
+                    v1[12] = (a0[0] * t3) >> 8;
+                    v1[13] = (a0[1] * t2) >> 8;
+                    v1[14] = (a0[2] * a2) >> 8;
+                    v1[15] = (a0[3] * a1) >> 8;
+                }
+            }
+            t4 -= 1;
+            off = (*(u32 *)(t0 + 4) & 0x3F000000) >> 22;
+            t0 += off;
+            t5 += off;
+        } while (t4 > 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", releaseMeshAsset);
 

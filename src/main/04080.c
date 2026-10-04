@@ -229,7 +229,56 @@ struct manifest_entry *find_manifest_entry(s32 idx, u8 *entry_name) {
     return NULL;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/04080", find_manifest_entry);
+extern u8 D_main_80000470;
+
+struct manifest_entry *find_manifest_entry(s32 idx, u8 *entry_name, u32 arg2) {
+    u8 sp10[0x100];
+    u8 sp110[0x18];
+    s32 temp_v1;
+    s32 var_s4;
+    u8 *var_s5;
+    u8 *temp_v0_2;
+    struct manifest_entry *var_s2;
+
+    rs_strcpy(sp10, gManifestTable[idx].unk20);
+    if ((sp10[0] != 0) && (sp10[strlen(sp10) - 1] != '/')) {
+        rs_strcat(sp10, &D_main_80000470);
+    }
+    rs_strcat(sp10, entry_name);
+    rs_strcat(sp10, &D_main_80000470);
+    var_s5 = sp10;
+    var_s2 = gManifestTable[idx].manifest;
+    var_s4 = gManifestTable[idx].entry_count;
+    temp_v0_2 = strchr(var_s5, '/');
+    rs_strncpy(sp110, var_s5, temp_v0_2 - var_s5);
+    sp110[temp_v0_2 - var_s5] = 0;
+    var_s5 = temp_v0_2 + 1;
+    do {
+        if (rs_strncmp(sp110, var_s2->name, 0x10) != 0) {
+            if ((var_s2->flags & 0x80) != 0) {
+                temp_v1 = var_s2->directory_size >> 5;
+                var_s2 += temp_v1;
+                var_s4 -= temp_v1;
+            } else {
+                var_s2++;
+                var_s4--;
+            }
+        } else {
+            if (!(var_s2->flags & 0x80)) {
+                return var_s2;
+            } else {
+                var_s4 = var_s2->directory_size >> 5;
+                temp_v0_2 = strchr(var_s5, '/');
+                rs_strncpy(sp110, var_s5, temp_v0_2 - var_s5);
+                sp110[temp_v0_2 - var_s5] = 0;
+                var_s5 = temp_v0_2 + 1;
+                var_s4--;
+                var_s2++;
+            }
+        }
+    } while (var_s4 > 0);
+    return NULL;
+}
 #endif
 
 s32 pushEventToRingBuffer(union D_80111100_type *arg0) {
