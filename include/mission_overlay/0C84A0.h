@@ -3,7 +3,7 @@
 
 #include "PR/ultratypes.h"
 
-f32  calculateDatItemDistanceToPlayer(u8*);
+f32  calculateDatItemDistanceToPlayer(char*);
 f32  getScaledPlayerCraftSpeed(void);
 void spawnEffectOnNamedDatItem(u8*, f32, s32, f32);
 s32  initAnchoredActorTowardNamedDatItem(u8*, u8*);
