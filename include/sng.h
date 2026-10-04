@@ -94,12 +94,15 @@ struct D_main_bss_80149A00_type {
     UNIDENTIFIED_TYPE *unkEBC;                       /* 0xEBC */
     u8  unkEC0;                                      /* 0xEC0 */
     u8  unkEC1;                                      /* 0xEC2 */
-    u8  unkEC2;                                      /* 0xEC2 */
-    u8  unkEC3;                                      /* 0xEC3 */
+    u16 unkEC2;                                      /* 0xEC2 */
     u8  unkEC4;                                      /* 0xEC4 */
     u8  unkEC5;                                      /* 0xEC5 */
     u16 unkEC6;                                      /* 0xEC6 */
-    u32 unkEC8[0x00C];                               /* 0xEC8 */
+    u32 unkEC8[0x009];                               /* 0xEC8 */
+    u16 unkEEC;                                      /* 0xEEC */
+    u8  unkEEE;                                      /* 0xEEE */
+    u8  unkEEF;                                      /* 0xEEF */
+    u32 unkEF0[0x002];                               /* 0xEF0 */
 }; // size 0xEF8
 
 #endif

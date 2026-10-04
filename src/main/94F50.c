@@ -143,7 +143,18 @@ s32 setSongPauseStateByHandle(u32 handle, u8 paused) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", applySongU16ParamCmd);
+s32 applySongU16ParamCmd(s32 handle, s32 value) {
+    handle = findSongSlotByHandle(handle);
+    if (handle != -1) {
+        if (handle >= 0) {
+            D_main_bss_80149A00[handle].unkEC2 = value;
+        } else {
+            handle &= 0x7FFFFFFF;
+            D_main_bss_80149A00[handle].unkEEC = value;
+            D_main_bss_80149A00[handle].unkEEE |= 0x20;
+        }
+    }
+}
 
 s32 applySongU16ParamCmd(s32, s32);
 
