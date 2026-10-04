@@ -37,7 +37,49 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/intro_crawl_handling", D_menu_over
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", runModelViewerLoop);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", initModelViewer);
+extern s32 D_menu_overlay_800D0360;
+extern s32 D_menu_overlay_800D0364;
+extern s32 D_menu_overlay_800D03CC;
+typedef struct {
+    u8 pad0[4];
+    s32 unk4;
+    s32 unk8;
+    s32 unkC;
+    s32 unk10;
+    s32 unk14;
+    s32 unk18;
+    s32 unk1C;
+    f32 unk20;
+    f32 unk24;
+    f32 unk28;
+} ModelViewerView;
+extern ModelViewerView D_menu_overlay_800D0370;
+void selectRenderPresetByIndex(s32);
+void setViewStateTripletBytes(s32, s32, s32);
+void setMissionLevelInitByte(s32);
+s32 allocateSlotTable(s32);
+void loadCharTextureSet(s32, s32, s32, s32);
+s32 loadDatFile(char *);
+
+void initModelViewer(void) {
+    D_menu_overlay_800D0370.unk10 = 0x280;
+    D_menu_overlay_800D0370.unk14 = 0x12C;
+    D_menu_overlay_800D0370.unk18 = 0x140;
+    D_menu_overlay_800D0370.unk4 = 0;
+    D_menu_overlay_800D0370.unk8 = 0;
+    D_menu_overlay_800D0370.unkC = 0;
+    D_menu_overlay_800D0370.unk1C = 0x96;
+    D_menu_overlay_800D0370.unk20 = 45.0f;
+    D_menu_overlay_800D0370.unk24 = 0.1171875f;
+    D_menu_overlay_800D0370.unk28 = 78.125f;
+    selectRenderPresetByIndex(0);
+    setViewStateTripletBytes(0, 0, 0);
+    setMissionLevelInitByte(1);
+    D_menu_overlay_800D0360 = allocateSlotTable(8);
+    D_menu_overlay_800D0364 = allocateSlotTable(8);
+    loadCharTextureSet(D_menu_overlay_800D0360, 3, 1, 0x10);
+    D_menu_overlay_800D03CC = loadDatFile("frontend/starwars");
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", buildModelViewerTextPage);
 
