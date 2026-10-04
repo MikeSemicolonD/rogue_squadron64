@@ -164,7 +164,26 @@ f32 getNpcContextFloatAt34(void **arg0) {
     return (*(f32 *)((u8 *)(*arg0) + 0x34));
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", findModelChildNodeByName);
+u8 *findModelChildNodeByName(void **arg0, u8 *name) {
+    u8 *e = *(u8 **)((u8 *)*arg0 + 0x2C);
+    u32 i;
+
+    if (e == NULL) {
+        return NULL;
+    }
+    while (*(s32 *)e != 0) {
+        for (i = 0; i < 7; i++) {
+            if ((e + i)[4] != name[i]) {
+                break;
+            }
+            if ((e + i)[4] == 0) {
+                return e;
+            }
+        }
+        e += 0xC;
+    }
+    return NULL;
+}
 
 void applyFlagsToMeshTreeOrList(void **arg0, struct meshdef1 *arg1, u32 arg2, u32 arg3) {
     if (arg0 != NULL) {
