@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", resolveCraftAnimationNodeHandles);
 
@@ -16,7 +17,19 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", freePlayerAuxBuffersIfAct
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", resetCraftAnimationStateForSlot);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", setCraftAnimationSlotParams);
+typedef struct {
+    u8 unk0[0x12];
+    u8 unk12;
+    u8 unk13;
+    f32 unk14;
+} CraftAnimSlot;
+
+extern CraftAnimSlot D_mission_overlay_8010CF20[];
+
+void setCraftAnimationSlotParams(u8 slot, u8 flag, f32 value) {
+    D_mission_overlay_8010CF20[slot].unk12 = flag;
+    D_mission_overlay_8010CF20[slot].unk14 = value;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", getCraftAnimationSlotFlag);
 
