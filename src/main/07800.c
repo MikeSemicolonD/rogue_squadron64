@@ -218,6 +218,9 @@ s32 restartServiceWorker(OSId arg0) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/07800", getServiceMessagePayload);
+s32 getServiceMessagePayload(void *arg0) {
+    return *(s32 *)((u8 *)arg0 + 0xC);
+}
+__asm__(".word 0");
 
 INCLUDE_ASM("asm/nonmatchings/main/07800", fake_func_8000737C);
