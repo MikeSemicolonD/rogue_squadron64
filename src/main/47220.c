@@ -22,7 +22,9 @@ void freeLevelDatBuffers(void) {
     rs_free((*(s32 *)((u8 *)(&D_main_bss_801375D8) + 0x1C)));
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/47220", getLevelDatItemByName);
+void *getLevelDatItemByName(char *name) {
+    return getDatItemByName((struct dat_file_header *)D_main_bss_801375D8, name);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/47220", getDatItemByName);
 
