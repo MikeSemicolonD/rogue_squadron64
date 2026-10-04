@@ -240,7 +240,39 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", initCinematicSceneAssets);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", dispatchCinematicFromMainLoop);
+extern u8 D_cinematic_overlay_800B0B1E;
+
+void cinematicLoopBody(s32, s32, u8);
+
+void dispatchCinematicFromMainLoop(u8 *medals, u8 arg1) {
+    u8 allBronze = 1;
+    u8 allSilver = allBronze;
+    u8 allGold = allBronze;
+    u8 i;
+
+    for (i = 0; i < 16; i++) {
+        if (medals[i] < 3) {
+            allGold = 0;
+        }
+        if (medals[i] < 2) {
+            allSilver = 0;
+        }
+        if (medals[i] == 0) {
+            allBronze = 0;
+        }
+    }
+    D_cinematic_overlay_800B0B1E = 0;
+    if (allBronze) {
+        D_cinematic_overlay_800B0B1E = 1;
+    }
+    if (allSilver) {
+        D_cinematic_overlay_800B0B1E = 2;
+    }
+    if (allGold) {
+        D_cinematic_overlay_800B0B1E = 3;
+    }
+    cinematicLoopBody(3, 2, arg1);
+}
 
 u8 shouldShowCutsceneForLevelStage(u8 levelId, u8 arg1) {
     u8 ret;
