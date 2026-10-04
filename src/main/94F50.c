@@ -163,7 +163,13 @@ void playSongIfMusyXActive(s32 arg0, s32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", isSongHandleFree);
+s32 isSongHandleFree(s32 *h) {
+    s32 v = *h;
+    if (v != -1) {
+        return ((u32)v >> 31) ^ 1;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", tickAllActiveSongs);
 
