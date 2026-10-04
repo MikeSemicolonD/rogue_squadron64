@@ -99,7 +99,43 @@ void datItemSetObjectiveBooleanCount(s32 booleanIndex, s32 booleanValue, s32 cou
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/65540", applyDatObjectiveTriggerEffect);
+typedef struct {
+    s32 countIdx;
+    s32 delta;
+    s32 boolIdx;
+    u8 pad0C[3];
+    u8 value;
+} DatTriggerEffect;
+
+void applyDatObjectiveTriggerEffect(u8 *item, u8 which) {
+    DatTriggerEffect *e;
+
+    switch (*(u16 *)item) {
+        case 0x18:
+            e = (DatTriggerEffect *)(item + 0x38);
+            if (*(s32 *)(item + 0x28) != 0 && gObjectiveBooleans[*(s32 *)(item + 0x28) - 1] == 0) {
+                return;
+            }
+            if (*(s32 *)(item + 0x2C) != 0 && gObjectiveCounts[*(s32 *)(item + 0x2C) - 1] < *(s32 *)(item + 0x30)) {
+                return;
+            }
+            break;
+        case 0x19:
+            e = (DatTriggerEffect *)(item + 0x48);
+            break;
+        default:
+            return;
+    }
+    if (which != 1) {
+        e++;
+    }
+    if (e->countIdx != 0) {
+        gObjectiveCounts[e->countIdx - 1] += e->delta;
+    }
+    if (e->boolIdx != 0) {
+        gObjectiveBooleans[e->boolIdx - 1] = e->value;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/65540", fake_func_80065A5C);
 
