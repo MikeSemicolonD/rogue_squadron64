@@ -158,7 +158,26 @@ void endSpeechTimingWindow(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", getSpeechPlaybackElapsedTime);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", isSpeechBusyOrQueued);
+extern s32 D_main_80139B80[];
+s32 isVoiceHandleActive(s32);
+extern u8 subtitleSlotHead;
+extern u8 subtitleSlotTail;
+extern u8 D_main_80139C73;
+static inline u8 speechSlotActiveInline(u8 slot) {
+    if (slot != 0) {
+        s32 h = D_main_80139B80[slot - 1];
+        if (h != -1) {
+            return isVoiceHandleActive(h);
+        }
+    }
+    return 0;
+}
+u8 isSpeechBusyOrQueued(void) {
+    if (subtitleSlotTail == subtitleSlotHead && !speechSlotActiveInline(D_main_80139C73)) {
+        return 1;
+    }
+    return 0;
+}
 
 extern f32 D_main_bss_80139C80;
 extern f32 D_main_bss_80139C88;
