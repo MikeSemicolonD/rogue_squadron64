@@ -9,7 +9,18 @@ extern struct DisplayListBuffer *D_main_bss_801163B0;
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", registerSiCallback);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", findAndZeroTableSlotMatching);
+extern s32 D_main_bss_8011A8A4[];
+
+void findAndZeroTableSlotMatching(s32 arg0) {
+    s32 i;
+
+    for (i = 0; i < 4; i++) {
+        if (D_main_bss_8011A8A4[i] == arg0) {
+            D_main_bss_8011A8A4[i] = 0;
+            return;
+        }
+    }
+}
 
 extern s32 D_main_bss_8011A8B0;
 
