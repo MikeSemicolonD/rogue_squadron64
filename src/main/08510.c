@@ -581,7 +581,48 @@ void bufferArbiterProducerScanWait(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", submitGfxFrame);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", recordDeferredDrawRefA);
+extern Gfx *D_main_bss_801163B8;
+extern u8 D_main_bss_801163BC;
+void recordDeferredDrawRefA(s32 flags, s32 ref) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    u8 *cnt;
+
+    if (flags & 0x40000000) {
+        if (D_main_bss_801163BC >= 0x40) {
+            chunk = D_main_bss_801163B0;
+            if (chunk == NULL) {
+                chunk = findAndUnlinkSmallestEntry();
+                if (chunk != NULL) {
+                    tail = chunk;
+                    while (tail->next != NULL) {
+                        tail = tail->next;
+                    }
+                    tail->next = D_main_bss_801163B0;
+                    if (D_main_bss_801163B0 != NULL) {
+                        D_main_bss_801163B0->prev = tail;
+                    }
+                    D_main_bss_801163B0 = chunk;
+                    chunk->prev = NULL;
+                }
+                chunk = D_main_bss_801163B0;
+            }
+            D_main_bss_801163B0 = D_main_bss_801163B0->next;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = NULL;
+            }
+            if (*D_main_bss_8011A4B8 != NULL) {
+                (*D_main_bss_8011A4B8)->prev = chunk;
+            }
+            chunk->next = *D_main_bss_8011A4B8;
+            *D_main_bss_8011A4B8 = chunk;
+            D_main_bss_801163B8 = chunk->displayList;
+            D_main_bss_801163BC = 0;
+        }
+        cnt = &D_main_bss_801163BC;
+        ((s32 *)D_main_bss_801163B8)[(*cnt)++] = ref;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", recordDeferredDrawRefB);
 
