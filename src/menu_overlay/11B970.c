@@ -778,7 +778,25 @@ void applyMenuCheatCode(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", getCraftStatIfThresholdMet);
+typedef struct {
+    u8 pad0[0x14];
+    u16 stat;
+    u16 threshold;
+    u8 pad18[0xC];
+} CraftStatEntry;
+extern CraftStatEntry D_menu_overlay_800CC89C[];
+extern s8 D_menu_overlay_800CF150;
+s16 getCraftStatIfThresholdMet(s16 arg0) {
+    CraftStatEntry *base = D_menu_overlay_800CC89C;
+    s32 idx = D_menu_overlay_800CF150;
+    CraftStatEntry *e = &base[idx];
+    u16 ret = 0;
+
+    if (arg0 < e->threshold) {
+        ret = e->stat;
+    }
+    return ret;
+}
 
 extern s32 D_menu_overlay_800CEF40;
 
