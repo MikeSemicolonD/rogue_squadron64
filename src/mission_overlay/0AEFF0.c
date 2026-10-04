@@ -55,7 +55,17 @@ void cancelSceneQueueHandle(void *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", playSpeechClipOncePerChange);
+void playSpeechClip(s32, s32, f32, u16);
+extern s32 D_mission_overlay_801096B4;
+extern f32 D_mission_overlay_801096B0;
+
+void playSpeechClipOncePerChange(s32 arg0, s32 arg1) {
+    if (arg0 != D_mission_overlay_801096B4 && arg0 != 0x28C) {
+        playSpeechClip(arg0, 0x73, 0, arg1);
+        D_mission_overlay_801096B4 = arg0;
+        D_mission_overlay_801096B0 = 5.0f;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", playSpeechClipOncePerLevel);
 
