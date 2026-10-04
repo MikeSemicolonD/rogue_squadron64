@@ -89,7 +89,56 @@ s32 selectAndStageNextSong(void) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", stopSongAndRebuildActiveCueList);
+extern SoundDescriptor D_mission_overlay_8010C1A0;
+extern SoundDescriptor gSoundDesc1D0 __asm__("D_mission_overlay_8010C1D0");
+extern SoundDescriptor gSoundDesc110 __asm__("D_mission_overlay_8010C110");
+extern struct { s32 key; s32 unk4; s32 unk8; s32 unkC; } gCueSlots[8] __asm__("D_mission_overlay_8010C270");
+extern u8 D_mission_overlay_8010C269;
+s32 tickSongSequenceLocked(s32);
+
+void stopSongAndRebuildActiveCueList(u8 arg0) {
+    s32 i;
+    s32 j;
+    s32 key;
+    SoundDescriptorStackEntry *e;
+    typeof(&gCueSlots[0]) slot;
+    typeof(&gCueSlots[0]) found;
+
+    i = 0;
+    slot = gCueSlots;
+    key = (D_mission_overlay_8010C1A0.unk4 << 16) | D_mission_overlay_8010C1A0.unk6;
+loop:
+    i++;
+    if (slot->key == key) {
+        found = slot;
+        goto done;
+    }
+    slot++;
+    if (i < 8) goto loop;
+    found = NULL;
+done:
+    if (found != NULL) {
+        tickSongSequenceLocked(found->unk4);
+        found->key = -1;
+    }
+    j = 0;
+    do {
+        e = &D_mission_overlay_8010C320[j];
+        if (e->unk4 = D_mission_overlay_8010C1A0.unk4) {
+            if (e->unk6 = D_mission_overlay_8010C1A0.unk6) {
+                e->unk4 = gSoundDesc1D0.unk4;
+                e->unk6 = gSoundDesc1D0.unk6;
+                e->unk0 = -1;
+            }
+        }
+        j++;
+    } while (j < 8);
+    D_mission_overlay_8010C269 = 0;
+    gSoundDesc110 = gSoundDesc1D0;
+    D_mission_overlay_8010C400 = gSoundDesc1D0;
+    D_mission_overlay_8010C1A0 = gSoundDesc1D0;
+    D_mission_overlay_8010C262 = arg0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", processPendingSoundCueRequest);
 
