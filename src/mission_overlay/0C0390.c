@@ -199,7 +199,32 @@ f32 getPlayerHealthPercentage(s32 arg0) {
     } 
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", probeNumberedAssetFilename);
+u8 *rs_strcpy(u8 *, u8 *);
+s32 get_manifest_entry_type(u32, u8 *);
+extern s32 D_main_bss_80137CFC;
+
+s32 probeNumberedAssetFilename(u8 *buf, u8 *src, s32 n) {
+    u8 *s;
+    u8 saved;
+    s32 i;
+
+    if (src != NULL) {
+        rs_strcpy(buf, src);
+    }
+    s = buf;
+    for (i = 0; buf[i] != 0; i++) {
+        if (buf[i] == '/') {
+            s = &buf[i + 1];
+        }
+    }
+    saved = *s;
+    *s = n + '0';
+    if (get_manifest_entry_type(D_main_bss_80137CFC, buf) != 1) {
+        *s = saved;
+        return 0;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", fake_func_800C41AC);
 
