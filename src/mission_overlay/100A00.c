@@ -38,7 +38,26 @@ void freePlayerAuxBuffersIfActive(u8 index) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", resetCraftAnimationStateForSlot);
+typedef struct {
+    u8 pad[0xF4];
+    f32 unkF4;
+    f32 unkF8;
+} CraftAnimCamera;
+
+extern CraftAnimCamera D_mission_overlay_8010CF38;
+
+void resetCraftAnimationStateForSlot(u8 index) {
+    u8 *obj;
+
+    despawnCraftAnimationSlotNpcs(index);
+    obj = D_mission_overlay_8010CF20[index].unk0;
+    D_mission_overlay_8010CF20[index].unk10 = 0;
+    D_mission_overlay_8010CF20[index].unk11 = 0;
+    D_mission_overlay_8010CF20[index].unk12 = 0;
+    D_mission_overlay_8010CF20[index].unk13 = 0;
+    D_mission_overlay_8010CF38.unkF4 = *(f32 *)(obj + 0xE8);
+    D_mission_overlay_8010CF38.unkF8 = 1.0f;
+}
 
 void setCraftAnimationSlotParams(u8 slot, u8 flag, f32 value) {
     D_mission_overlay_8010CF20[slot].unk12 = flag;
@@ -53,4 +72,6 @@ f32 getCraftAnimationSlotValue(u8 slot) {
     return D_mission_overlay_8010CF20[slot].unk14;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/100A00", D_mission_overlay_800A9548);
+__asm__(".section .rodata
+    .word 0xB8480003
+.section .text");
