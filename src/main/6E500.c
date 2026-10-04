@@ -414,11 +414,29 @@ s32 loadSaveDataIfNotLoaded(void) {
     if (r) {
         r = loadOrSaveEepromRecord(1, 0, 1, &gSaveDataBody, 0xB0);
     }
-    gs->nabooStarfighterCheatHash = *(u32 *)&gSaveDataBody.unkAC;
+    gs->nabooStarfighterCheatHash = gSaveDataBody.unkAC;
     return r == 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", persistSaveDataBody);
+u8 saveLoadDispatcher(s32, s32, s32, void *, void *, s32);
+void triggerSaveMessage(void);
+void persistSaveDataBody(void) {
+    u8 buf[0x10];
+
+    gSaveDataBody.unkA2 = 0x3A;
+    gSaveDataBody.unkA3[6] = gGameSettings.unk23;
+    gSaveDataBody.unkAC = gGameSettings.nabooStarfighterCheatHash;
+    if (D_main_800A0A60 == -1) {
+        if (!saveLoadDispatcher(1, 0, 0, buf, &gSaveDataBody, 0xB0)) {
+            *(u8 *)&gGameSettings.unk2C = 1;
+        }
+        if (!saveLoadDispatcher(1, 0, 1, buf, &gSaveDataBody, 0xB0)) {
+            *(u8 *)&gGameSettings.unk2C = 1;
+        }
+    } else {
+        triggerSaveMessage();
+    }
+}
 
 u8 *rs_malloc(s32, s32);
 s32 sendServiceMessage(s32, s32, u8 *, s32);

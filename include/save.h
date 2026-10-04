@@ -48,7 +48,7 @@ struct D_8013A5C0_type {
     u8  unkA2;                            /* 0xA2 */
     u8  unkA3[8];                         /* 0xA3 */
     u8  languageSelect;                   /* 0xAB */
-    u8  unkAC;                            /* 0xAC */
+    u32 unkAC;                            /* 0xAC */
 }; // size 0xB0
 
 extern struct D_8013A5C0_type gSaveDataBody; // 0x8013A5C0
