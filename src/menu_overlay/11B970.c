@@ -575,7 +575,57 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", loadMenuSceneModelAndMateria
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateMenuSceneTransform);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMenuObjectColorPreset);
+typedef struct {
+    u8 pad0[0x24];
+    f32 unk24;
+    f32 unk28;
+    f32 unk2C;
+    u8 pad30[0x4C];
+    f32 unk7C;
+    f32 unk80;
+    f32 unk84;
+} MenuObjColor;
+extern MenuObjColor D_menu_overlay_800CCC58;
+extern MenuObjColor D_menu_overlay_800CCD10;
+#define PA (&D_menu_overlay_800CCC58)
+#define PB (&D_menu_overlay_800CCD10)
+
+void setMenuObjectColorPreset(s32 arg0, s32 arg1) {
+    switch (arg1 & 0xFF) {
+    case 0:
+        PA->unk24 = 0.20769233f;
+        PA->unk28 = 0.2f;
+        PA->unk2C = 0.1923077f;
+        PA->unk7C = 1.4f;
+        PA->unk80 = 1.344f;
+        PA->unk84 = 1.316f;
+        return;
+    case 1:
+        PB->unk24 = 0.1f;
+        PB->unk28 = 0.078f;
+        PB->unk2C = 0.078f;
+        PB->unk7C = 1.17f;
+        PB->unk80 = 0.7f;
+        PB->unk84 = 0.49f;
+        return;
+    case 2:
+        PB->unk24 = 0.1f;
+        PB->unk28 = 0.1f;
+        PB->unk2C = 0.1f;
+        PB->unk7C = 1.4f;
+        PB->unk80 = 1.4f;
+        PB->unk84 = 1.4f;
+        return;
+    case 3:
+        PB->unk24 = 0;
+        PB->unk28 = 0;
+        PB->unk2C = 0;
+        PB->unk84 = 0;
+        PB->unk7C = 1.7f;
+        PB->unk80 = 1.19f;
+        return;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", createMenuTextLabels);
 
