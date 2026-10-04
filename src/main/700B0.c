@@ -196,7 +196,37 @@ void spawnOrientedEffectIfBudgetOkAlt(f32 *pos, f32 *dir, s32 arg2, f32 arg3, f3
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedNpc);
+void spawnOrientedNpc(s32 arg0, f32 *pos, f32 *dir, s32 arg3, f32 arg4, f32 arg5, f32 arg6, f32 arg7) {
+    OrientedFrame fr;
+    OrientedSpawnArgs args;
+    OrientedFrame *fp;
+
+    *(V3I *)fr.pos = *(V3I *)pos;
+    if (dir != NULL) {
+        *(V3I *)fr.dir = *(V3I *)dir;
+    } else {
+        fr.dir[0] = 0.0f;
+        fr.dir[2] = 0.0f;
+        fr.dir[1] = 1.0f;
+    }
+    fr.inv[0] = 1.0f - fr.dir[0];
+    fr.inv[1] = 1.0f - fr.dir[1];
+    fr.inv[2] = 1.0f - fr.dir[2];
+    fr.one[1] = arg6;
+    fr.one[0] = 1.0f;
+    fr.one[2] = 1.0f;
+    orthonormalizeFrame(&fr);
+    fp = &fr;
+    if ((D_main_bss_80130B63 != 0) || ((findLargestFreeHeapChunk() >= 0x3A98U) && (countDisplayListChunks() >= 0x4E20))) {
+        args.c = arg4;
+        args.d = arg5;
+        args.frame = fp;
+        args.a = arg3;
+        args.b = arg0;
+        args.e = arg7;
+        spawnNpcOfType(orientedNpcHandler, &args, 1U, 0xFU);
+    }
+}
 
 extern u8 D_main_bss_80130B63;
 s32 orientedNpcHandler(struct D_80130BB8_type *self, u16 arg1, void *arg2);
@@ -279,4 +309,4 @@ void walkDatTreeAndScaleLeafByFloat(DatTreeNode *n, s32 arg1, f32 scale) {
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", fake_func_80072CE8);
 
-INCLUDE_RODATA("asm/nonmatchings/main/700B0", D_main_8003CEE0);
+static u32 D_main_8003CEE4[] __attribute__((section(".rodata"))) = { 0x152A00C3, 0x00000000, 0x03688024 };
