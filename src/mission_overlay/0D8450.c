@@ -38,7 +38,36 @@ void npcWingmanResetState(void *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", func_mission_overlay_800D7974);
+extern void initObjectAnimSubstruct(s32, f32, f32, f32, f32, void *, s32, f32, f32, s32);
+extern s32 npcWingmanState0(void *);
+extern s32 npcWingmanState1(void *);
+extern s32 npcWingmanState2(void *);
+extern s32 npcWingmanState3(void *);
+extern s32 npcWingmanState4(void *);
+extern s32 npcWingmanState5(void *);
+extern s32 npcWingmanStateNoop(void);
+extern s32 npcWingmanState6(void *);
+extern f32 D_mission_overlay_8010A910[];
+
+void func_mission_overlay_800D7974(u8 *arg0) {
+    u8 *def = *(u8 **)(arg0 + 0x34);
+    void *fn;
+
+    arg0[0x5E] = 0;
+    arg0[0x5F] = 0;
+    switch (arg0[0x5D]) {
+    case 0: fn = npcWingmanState0; break;
+    case 1: fn = npcWingmanState1; break;
+    case 2: fn = npcWingmanState2; break;
+    case 3: fn = npcWingmanState3; break;
+    case 4: fn = npcWingmanState4; break;
+    case 5: fn = npcWingmanState5; break;
+    case 6: fn = npcWingmanStateNoop; break;
+    case 7: fn = npcWingmanState6; break;
+    default: return;
+    }
+    initObjectAnimSubstruct(*(s32 *)(arg0 + 0x38), *(f32 *)(def + 0xD0), *(f32 *)(def + 0xD4), *(f32 *)(def + 0xD8), *(f32 *)(def + 0xDC), fn, 0, D_mission_overlay_8010A910[arg0[0x5D]], 15.0f, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanStateEffectShared);
 
