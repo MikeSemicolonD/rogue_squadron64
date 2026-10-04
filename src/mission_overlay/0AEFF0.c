@@ -35,7 +35,24 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", tickCinematicObjectStateM
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", updatePlayerCraftPhysics);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", applyCraftCapabilityFlags);
+typedef struct {
+    u16 unk0;
+    u16 unk2;
+    u16 unk4;
+    u8 pad6[0x18];
+    u16 unk1E;
+    u8 pad20[4];
+} CraftCapabilityDef;
+
+extern CraftCapabilityDef D_mission_overlay_8010BE18[];
+extern u16 D_mission_overlay_8010BFA8[];
+
+void applyCraftCapabilityFlags(u8 *arg0) {
+    D_mission_overlay_8010BFA8[*(s32 *)(arg0 + 0xB8)] |= D_mission_overlay_8010BE18[*(s32 *)(arg0 + 0xB8)].unk0;
+    D_mission_overlay_8010BFA8[*(s32 *)(arg0 + 0xB8)] |= D_mission_overlay_8010BE18[*(s32 *)(arg0 + 0xB8)].unk4;
+    D_mission_overlay_8010BFA8[*(s32 *)(arg0 + 0xB8)] |= D_mission_overlay_8010BE18[*(s32 *)(arg0 + 0xB8)].unk2;
+    D_mission_overlay_8010BFA8[*(s32 *)(arg0 + 0xB8)] |= D_mission_overlay_8010BE18[*(s32 *)(arg0 + 0xB8)].unk1E;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", initPlayerCraftMovementMode);
 
