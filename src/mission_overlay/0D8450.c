@@ -146,7 +146,32 @@ s32 npcWingmanState4(void *arg0) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanState5);
+extern char D_mission_overlay_800A784C[];
+
+s32 npcWingmanState5(void *arg0) {
+    u8 tex[0x30];
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+    char *name = NULL;
+    u8 hit;
+
+    switch (npc[0x5E]) {
+    case 0:
+        name = D_mission_overlay_800A7844;
+        break;
+    case 1:
+        name = D_mission_overlay_800A784C;
+        break;
+    }
+    npc[0x5E] ^= 1;
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), name, 0, tex, 0, 0);
+    hit = npcWingmanStateEffectShared(npc, tex, 0.0f, npc[0x53]);
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), name, 1, tex, 0, 0);
+    hit |= npcWingmanStateEffectShared(npc, tex, 0.0f, npc[0x53]);
+    if (hit == 1) {
+        play3DSoundEvent(0, npc, npc + 0x24, 20.0f, 0.2f, 0, 0x2F, 0x6E, 0x3C);
+    }
+    return 0;
+}
 
 s32 npcWingmanStateNoop(void) {
     return 1;
