@@ -49,10 +49,14 @@ def glabel_count(path):
 def measure(root):
     root = pathlib.Path(root)
     stats = {}
+    mk = root / "Makefile"
+    ultralib = mk.exists() and "USE_ULTRALIB ?= 1" in mk.read_text()
     for start, size, typ, name in text_ranges(root / "roguesquadron.yaml"):
         group = name.split("/")[0]
         g = stats.setdefault(group, {"total": 0, "asm_bytes": 0, "asm_funcs": 0})
         g["total"] += size
+        if typ in ("asm", "hasm") and group == "libultra" and ultralib:
+            continue
         if typ in ("asm", "hasm"):
             g["asm_bytes"] += size
             s = root / "asm" / f"{name}.s"

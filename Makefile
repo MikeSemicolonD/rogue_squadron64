@@ -39,11 +39,35 @@ SYMBOL_FILES := undefined_funcs_auto.txt undefined_syms_auto.txt symbol_files/ci
 
 .PHONY: clean check
 
+# libultra comes from the ultralib submodule (SDK 2.0I, IDO libultra_rom), which matches the ROM byte for byte.
+# It is built in a copy under build/ so the submodule stays clean; set USE_ULTRALIB=0 to assemble asm/libultra instead.
+USE_ULTRALIB ?= 1
+ULTRALIB_VERSION := I
+ULTRALIB_WORK := build/ultralib
+ULTRALIB_OBJ_DIR := $(ULTRALIB_WORK)/build/$(ULTRALIB_VERSION)/libultra_rom/src
+ULTRALIB_STAMP := $(ULTRALIB_WORK)/.built
+
+ifneq ($(USE_ULTRALIB),0)
+O_FILES += $(filter-out $(O_FILES),$(sort $(shell grep -o "build/asm/libultra/[A-Za-z0-9_/]*\.o" $(LDSCRIPT))))
+
+$(ULTRALIB_STAMP):
+	rm -rf $(ULTRALIB_WORK)
+	mkdir -p build
+	cp -r ultralib $(ULTRALIB_WORK)
+	$(MAKE) -C $(ULTRALIB_WORK) VERSION=$(ULTRALIB_VERSION) TARGET=libultra_rom MODERN_LD=1 COMPARE=0 setup
+	$(MAKE) -C $(ULTRALIB_WORK) VERSION=$(ULTRALIB_VERSION) TARGET=libultra_rom MODERN_LD=1 COMPARE=0 CROSS=$(CROSS)
+	touch $@
+
+build/asm/libultra/%.o: $(ULTRALIB_STAMP)
+	@mkdir -p $(@D)
+	cp $(ULTRALIB_OBJ_DIR)/$*.o $@
+endif
+
 build/tyler.z64: build/tyler.elf
 	$(OBJCOPY) $< $@ -O binary
 
-build/tyler.elf: $(O_FILES) $(LDSCRIPT)
-	$(LD) -Map=$@.map -EB -T $(LDSCRIPT) -T undefined_funcs_auto.txt -T undefined_syms_auto.txt -G0 -o $@
+build/tyler.elf: $(O_FILES) $(LDSCRIPT) libultra_aliases.ld
+	$(LD) -Map=$@.map -EB -T $(LDSCRIPT) -T undefined_funcs_auto.txt -T undefined_syms_auto.txt -T libultra_aliases.ld -G0 -o $@
 
 $(BUILD_DIRS):
 	mkdir -p $@

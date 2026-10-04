@@ -72,6 +72,8 @@ The linker script is `provisional.ld`. `splat split` regenerates `roguesquadron.
 
 `python3 tools/progress.py` prints how many `.text` bytes are in C, per segment.
 
+libultra is not decompiled by hand. The game uses the stock SDK 2.0I `libultra_rom` (built with IDO), so the build compiles it from the `ultralib` submodule. It builds in a copy under `build/ultralib` so the submodule stays clean, and the first build downloads ultralib's IDO toolchain. `make USE_ULTRALIB=0` assembles `asm/libultra` instead. See `notes/libultra-and-custom-code.md`.
+
 ---
 
 ## zlib
