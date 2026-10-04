@@ -223,7 +223,43 @@ __asm__(".section .rodata\n.word 0x000520C0\n.word 0x00832021\n.section .text");
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", tickMultiPartVoiceLine);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", mallocVoiceLineStruct);
+void *rs_malloc(s32, s32);
+void applySpeechVolumeScalar(f32);
+
+typedef struct {
+    f32 volume;
+    s32 unk4;
+    u16 ids[8];
+    u16 count;
+    u8 unk1A;
+    u8 flag;
+    u8 unk1C;
+    u8 unk1D;
+    u8 unk1E;
+    u8 pad1F;
+    s32 unk20;
+} VoiceLineStruct;
+
+VoiceLineStruct *mallocVoiceLineStruct(u16 *ids, f32 volume, u8 flag) {
+    VoiceLineStruct *v;
+    u16 i;
+
+    v = rs_malloc(sizeof(VoiceLineStruct), 0);
+    v->flag = flag;
+    v->unk4 = 0;
+    v->unk1A = 0;
+    v->unk1C = 0;
+    v->unk1D = 0;
+    v->unk1E = 0;
+    v->unk20 = 0;
+    v->volume = volume;
+    applySpeechVolumeScalar(1.0f);
+    for (i = 0; ids[i] != 0xFFFF; i++) {
+        v->ids[i] = ids[i];
+    }
+    v->count = i;
+    return v;
+}
 
 void setVoiceLineLoopFlag(void *arg0) {
     (*(s8 *)((u8 *)(arg0) + 0x1E)) = 1;
@@ -231,4 +267,4 @@ void setVoiceLineLoopFlag(void *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", fake_func_800CC038);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/intro_crawl_handling", D_menu_overlay_800A7BD4);
+__asm__(".section .rodata\n.word 0x00220821\n.word 0x94223BF8\n.section .text");
