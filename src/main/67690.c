@@ -186,6 +186,15 @@ INCLUDE_ASM("asm/nonmatchings/main/67690", stopAllSpeechSlots);
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", advanceSpeechRingAndStopHead);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", playSpeechClipGated);
+extern s32 D_8010CA20;
+extern u8 subtitleSlotsAvailable;
+void playSpeechClip(s32, u8, f32, s32);
+void playSpeechClipGated(s32 arg0, u8 arg1, f32 arg2, u8 arg3) {
+    if (D_8010CA20 == 0) {
+        if (arg3 == 0 || subtitleSlotsAvailable == 0x10) {
+            playSpeechClip(arg0, arg1, arg2, arg3 ? 8 : 0);
+        }
+    }
+}
 
 const u32 rodata_pad_67690[2] = { 0x25290080, 0x240A00FF };
