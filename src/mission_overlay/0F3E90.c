@@ -4,6 +4,9 @@
 #include "level_objectives.h"
 #include "mission_overlay/0F3E90.h"
 
+typedef struct { s32 unk0; u8 pad[0x20]; } ModelAnimSlot24;
+extern ModelAnimSlot24 D_mission_overlay_8010C4A0[];
+
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", resolveScriptedNameTokenList);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", computeRandomizedOrientationFrame);
@@ -257,11 +260,36 @@ s32 spawnNpcAnchoredEffectSlot(void *arg0, f32 arg1, s32 arg2) {
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", load_model_animation);
+extern s32 rs_strcmp(u8 *, u8 *);
+extern u8 *rs_strcpy(u8 *, u8 *);
+extern void *load_asset(char *);
+extern void model_animation_offset_convert(void *);
+
+void *load_model_animation(char *name) {
+    s32 i;
+    s32 freeSlot;
+
+    i = 0;
+    freeSlot = -1;
+    for (; i < 16; i++) {
+        if (D_mission_overlay_8010C4A0[i].unk0 != 0) {
+            if (rs_strcmp(D_mission_overlay_8010C4A0[i].pad, (u8 *)name) == 0) {
+                return (void *)D_mission_overlay_8010C4A0[i].unk0;
+            }
+        } else {
+            freeSlot = i;
+        }
+    }
+    if (freeSlot == -1) {
+        return NULL;
+    }
+    rs_strcpy(D_mission_overlay_8010C4A0[freeSlot].pad, (u8 *)name);
+    D_mission_overlay_8010C4A0[freeSlot].unk0 = (s32)load_asset(name);
+    model_animation_offset_convert((void *)D_mission_overlay_8010C4A0[freeSlot].unk0);
+    return (void *)D_mission_overlay_8010C4A0[freeSlot].unk0;
+}
 
 extern void resetModelAnimSlotTable(void);
-typedef struct { s32 unk0; u8 pad[0x20]; } ModelAnimSlot24;
-extern ModelAnimSlot24 D_mission_overlay_8010C4A0[];
 
 s32 reset_model_animations(void) {
     s32 i;
