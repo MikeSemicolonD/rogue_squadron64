@@ -576,7 +576,13 @@ s32 selectRenderPresetByIndex(u8 arg0) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", selectSecondaryPresetByIndex);
+extern s32 D_main_80037770[];
+extern s32 D_main_bss_8011A85C;
+
+s32 selectSecondaryPresetByIndex(u8 arg0) {
+    D_main_bss_8011A85C = D_main_80037770[arg0];
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitMaterialTexturedDL);
 
