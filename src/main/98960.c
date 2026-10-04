@@ -3,7 +3,10 @@
 
 typedef struct {
     u8 active;
-    u8 pad[0x17];
+    u8 pad1[7];
+    void *unk8;
+    void *unkC;
+    u8 pad10[8];
 } StreamedVoice;
 
 extern u8 D_main_bss_80141AD0;
@@ -19,7 +22,17 @@ void clearStreamedVoiceFlags(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", serviceStreamedVoices);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", flushStreamedVoiceBuffers);
+void copyFourHalfwordsWriteback(void *, void *);
+
+void flushStreamedVoiceBuffers(void) {
+    s32 i;
+
+    for (i = 0; i < D_main_bss_80141AD0; i++) {
+        if (D_main_bss_80152A20[i].active == 1) {
+            copyFourHalfwordsWriteback(D_main_bss_80152A20[i].unk8, D_main_bss_80152A20[i].unkC);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", startStreamedSampleVoice);
 
