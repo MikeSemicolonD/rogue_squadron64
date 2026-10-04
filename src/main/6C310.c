@@ -33,7 +33,11 @@ void *getCraftRecordByIdx(s32 arg0) {
     return &gPlayers[arg0].inner.posX; // While this matches its obviously wrong, there's another struct inside player.inner (most likely)
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/6C310", getCraftRecordByIdx);
+extern u8 D_main_bss_80137DBC[][0x2A0];
+void *getCraftRecordByIdx(s32 i) {
+    u8 *p = D_main_bss_80137DBC[i];
+    return p + 4;
+}
 #endif
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", getPlayerCraftRecordByIdx);
