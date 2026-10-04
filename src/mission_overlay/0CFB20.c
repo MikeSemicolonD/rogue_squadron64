@@ -1,7 +1,52 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", advanceAtStEffectPhaseSound);
+extern f32 D_mission_overlay_8010A6A4[];
+extern u8 D_mission_overlay_8010A6B8[];
+extern f32 D_mission_overlay_8010A6BC[];
+extern u8 D_mission_overlay_8010A6C4[];
+extern f32 D_mission_overlay_8010A6C8[];
+extern u8 D_mission_overlay_8010A6D8[];
+s32 play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+void advanceAtStEffectPhaseSound(u8 *arg0, f32 arg1, u8 arg2) {
+    f32 *tab;
+    u8 *flags;
+    f32 t;
+    u8 idx;
+    switch (*(s16 *)(arg0 + 0x7E)) {
+    case 0:
+        tab = D_mission_overlay_8010A6A4;
+        flags = D_mission_overlay_8010A6B8;
+        break;
+    case 1:
+        tab = D_mission_overlay_8010A6BC;
+        flags = D_mission_overlay_8010A6C4;
+        break;
+    case 2:
+        tab = D_mission_overlay_8010A6C8;
+        flags = D_mission_overlay_8010A6D8;
+        break;
+    default:
+        return;
+    }
+    t = *(f32 *)(arg0 + 0xAC) + (arg1 / *(f32 *)(arg0 + 0x98));
+    *(f32 *)(arg0 + 0xAC) = t;
+    if (t > 1.0f) {
+        arg0[0xFB] = 0;
+        *(f32 *)(arg0 + 0xAC) = *(f32 *)(arg0 + 0x94);
+        *(f32 *)(arg0 + 0xB0) = tab[0];
+    }
+    if (!arg2 && *(f32 *)(arg0 + 0xAC) >= *(f32 *)(arg0 + 0xB0)) {
+        idx = arg0[0xFB];
+        arg0[0xFB] = idx + 1;
+        if (flags[idx] == 0) {
+            play3DSoundEvent(0, arg0, arg0 + 0x24, 18.0f, 0.6f, 0, 5, 0x78, 0x32);
+        } else {
+            play3DSoundEvent(0, arg0, arg0 + 0x24, 16.0f, 0.5f, 0, 6, 0x78, 0x32);
+        }
+        *(f32 *)(arg0 + 0xB0) = tab[arg0[0xFB]];
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A700C);
 
