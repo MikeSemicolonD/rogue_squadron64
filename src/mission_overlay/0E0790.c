@@ -150,7 +150,41 @@ s32 playAttachmentCueWithSlotIter(u8 *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", playDualTextureAttachmentCue);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", playAttachmentMaterialSoundSimple);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} V3FAtt;
+
+s32 playAttachmentMaterialSoundSimple(u8 *arg0) {
+    AttachMtxA mtx;
+    V3FAtt saved;
+    f32 progress;
+    f32 scale;
+    u8 *npc;
+    u8 *sub;
+    s32 r;
+
+    npc = *(u8 **)(arg0 + 4);
+    sub = *(u8 **)(*(u8 **)(npc + 0x38) + 0x1A8);
+    saved = *(V3FAtt *)(npc + 0xC);
+    *(f32 *)(npc + 0xC) = -*(f32 *)(npc + 0xC);
+    *(f32 *)(npc + 0x10) = -*(f32 *)(npc + 0x10);
+    *(f32 *)(npc + 0x14) = -*(f32 *)(npc + 0x14);
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), D_mission_overlay_800A7FC0, *(s16 *)(npc + 0xB6), &mtx, 0, 0);
+    scale = *(f32 *)(*(u8 **)(npc + 0x34) + D_main_bss_80137CE4 * 4 + 0xF4);
+    if (scale != 0.0f) {
+        resolveNpcAttachmentPos(*(s32 *)(npc + 0x38), &mtx, D_mission_overlay_8010ABA0[npc[0xB2]].f2C, scale);
+    }
+    r = tickProgressChannel(*(s32 *)(npc + 0x38), &mtx, (s32)sub + 0xB4, &progress);
+    *(V3FAtt *)(npc + 0xC) = saved;
+    *(u16 *)(npc + 0xB6) = *(u16 *)(npc + 0xB6) ^ 1;
+    if ((r & 0xFF) == 1) {
+        triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 0xB, &mtx, 0, 0, D_mission_overlay_8010ABA0[npc[0xB2]].f2C, progress);
+        play3DSoundEvent(0, npc, npc + 0x24, 15.0f, 0.3f, 0, 0x30, 0x6E, 0x28);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", transformCraftAnchorsAndApplySubFx);
 
