@@ -281,6 +281,15 @@ void hangarSetSecondaryWeaponDisplay(s32 arg0, s8 arg1) {
     D_menu_overlay_800CDA80 = arg1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarUpdateSecWeaponIfChanged);
+void startPlayerSlotAnimationChannel(s32, char *);
+void advancePlayerAnimationPhase(s32, s32, f32);
+extern s32 D_menu_overlay_800CD6DC;
+void hangarUpdateSecWeaponIfChanged(u8 arg0, u8 arg1, f32 arg2) {
+    if (arg1 != (u8)D_menu_overlay_800CDA80) {
+        startPlayerSlotAnimationChannel(D_menu_overlay_800CDA7C, hangarGenerateSecondaryWeaponString(arg0, arg1));
+        D_menu_overlay_800CDA80 = arg1;
+    }
+    advancePlayerAnimationPhase(D_menu_overlay_800CDA7C, D_menu_overlay_800CD6DC, arg2);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", fake_func_800AEC54);
