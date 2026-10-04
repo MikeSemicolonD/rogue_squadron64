@@ -5,7 +5,41 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C89C0", initNpcActorFromSpawnMess
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C89C0", D_mission_overlay_800A6994);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C89C0", playNpcStateChangeEffect);
+extern char D_mission_overlay_800A6994[];
+extern u8 D_mission_overlay_8010A5AC[];
+void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
+void generatePerpEmitDirectionWithJitter(s32, void *, s32);
+u8 tickProgressChannel(s32, void *, s32, f32 *);
+void triggerCueWithSlotEffect(s32, s32, void *, void *, s32, f32, f32);
+void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+
+s32 playNpcStateChangeEffect(u8 *arg0) {
+    u8 sp28[0x30];
+    u8 sp58[0x30];
+    u8 sp88[0x30];
+    f32 spB8;
+    f32 spBC;
+    s32 temp_s1;
+    s32 temp_v0;
+    u8 *temp_s2;
+
+    temp_s2 = *(u8 **)(arg0 + 4);
+    lookupHmtTextureByName(*(s32 *)(temp_s2 + 0x30), D_mission_overlay_800A6994, 0, sp28, (s32)sp88, 0);
+    lookupHmtTextureByName(*(s32 *)(temp_s2 + 0x30), D_mission_overlay_800A6994, 1, sp58, (s32)sp88, 1);
+    generatePerpEmitDirectionWithJitter(*(s32 *)(temp_s2 + 0x38), sp28, 0);
+    generatePerpEmitDirectionWithJitter(*(s32 *)(temp_s2 + 0x38), sp58, 1);
+    temp_s1 = tickProgressChannel(*(s32 *)(temp_s2 + 0x38), sp28, 0, &spB8) & 0xFF;
+    if (temp_s1 == 1) {
+        temp_v0 = tickProgressChannel(*(s32 *)(temp_s2 + 0x38), sp58, 0, &spBC) & 0xFF;
+        if (temp_v0 == temp_s1) {
+            triggerCueWithSlotEffect(*(s32 *)(temp_s2 + 0x38), 2, sp28, D_mission_overlay_8010A5AC, temp_v0, 10.0f, spB8);
+            triggerCueWithSlotEffect(*(s32 *)(temp_s2 + 0x38), 2, sp58, D_mission_overlay_8010A5AC, 0, 10.0f, spBC);
+            *(s32 *)(temp_s2 + 0x7C) = 0;
+            play3DSoundEvent(0, temp_s2, temp_s2 + 0x24, 18.0f, 0.5f, 0, 0x16, 0x7F, 0x28);
+        }
+    }
+    return 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C89C0", D_mission_overlay_800A69A0);
 

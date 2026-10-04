@@ -106,9 +106,63 @@ INCLUDE_RODATA("asm/nonmatchings/main/700B0", strILtsrcHi);
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", loadSfxAsset);
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", composeRandomRotationMatrix);
+void buildRotationMatrixSlot0(f32 *, f32);
+void composeRotationMatrixSlot0(f32 *, f32);
+void composeRotationMatrixSlot1(f32 *, f32);
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", composeRandomRotationMatrixVariant);
+void composeRandomRotationMatrix(f32 *arg0, f32 *arg1, f32 arg2, s32 arg3, s32 arg4, s32 arg5) {
+    f32 m[12];
+    f32 v;
+    f32 t;
+
+    if (arg3 != 0) {
+        v = (f32)((s16)rand() % arg3);
+    } else {
+        v = 0.0f;
+    }
+    buildRotationMatrixSlot0(m, v);
+    composeRotationMatrixSlot1(m, (f32)(s16)rand());
+    if (arg4 != 0) {
+        composeRotationMatrixSlot0(m, (f32)arg4);
+    }
+    if (arg5 != 0) {
+        composeRotationMatrixSlot1(m, (f32)arg5);
+    }
+    t = -m[1];
+    arg1[0] = t;
+    arg1[1] = -m[4];
+    arg1[2] = -m[7];
+    arg0[0] = arg1[0] * arg2;
+    arg0[1] = arg1[1] * arg2;
+    arg0[2] = arg1[2] * arg2;
+}
+
+void composeRandomRotationMatrixVariant(f32 *arg0, f32 *arg1, f32 arg2, s32 arg3, s32 arg4, s32 arg5, s32 arg6) {
+    f32 m[12];
+    f32 v;
+    f32 t;
+
+    if (arg3 != 0) {
+        v = (f32)(arg4 + (s16)rand() % arg3);
+    } else {
+        v = (f32)arg4;
+    }
+    buildRotationMatrixSlot0(m, v);
+    composeRotationMatrixSlot1(m, (f32)(s16)rand());
+    if (arg5 != 0) {
+        composeRotationMatrixSlot0(m, (f32)arg5);
+    }
+    if (arg6 != 0) {
+        composeRotationMatrixSlot1(m, (f32)arg6);
+    }
+    t = -m[1];
+    arg1[0] = t;
+    arg1[1] = -m[4];
+    arg1[2] = -m[7];
+    arg0[0] = arg1[0] * arg2;
+    arg0[1] = arg1[1] * arg2;
+    arg0[2] = arg1[2] * arg2;
+}
 
 void scaleVec3ByRandomRange(Vec3f arg0, f32 arg1, f32 arg2) {
     f32 temp_fv0;
@@ -137,8 +191,6 @@ void spawnDebris1Npc(s32 arg0, s32 arg1, f32 arg2, f32 arg3, f32 arg4) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedEffectIfBudgetOk);
-
 s32 orientedNpcHandler(struct D_80130BB8_type *self, u16 arg1, void *arg2);
 typedef struct {
     s32 x;
@@ -163,6 +215,9 @@ typedef struct {
 } OrientedSpawnArgs;
 
 void orthonormalizeFrame(OrientedFrame *);
+
+INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedEffectIfBudgetOk);
+
 
 void spawnOrientedEffectIfBudgetOkAlt(f32 *pos, f32 *dir, s32 arg2, f32 arg3, f32 arg4, f32 arg5) {
     OrientedFrame fr;

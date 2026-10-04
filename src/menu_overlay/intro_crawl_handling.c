@@ -285,14 +285,12 @@ void appendNodeToListHead(ListOwner10 *owner, ListNode *node) {
 
 __asm__(".section .rodata\n.word 0x000520C0\n.word 0x00832021\n.section .text");
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", tickMultiPartVoiceLine);
-
 void *rs_malloc(s32, s32);
 void applySpeechVolumeScalar(f32);
 
 typedef struct {
     f32 volume;
-    s32 unk4;
+    f32 unk4;
     u16 ids[8];
     u16 count;
     u8 unk1A;
@@ -301,8 +299,10 @@ typedef struct {
     u8 unk1D;
     u8 unk1E;
     u8 pad1F;
-    s32 unk20;
+    f32 unk20;
 } VoiceLineStruct;
+
+INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", tickMultiPartVoiceLine);
 
 VoiceLineStruct *mallocVoiceLineStruct(u16 *ids, f32 volume, u8 flag) {
     VoiceLineStruct *v;

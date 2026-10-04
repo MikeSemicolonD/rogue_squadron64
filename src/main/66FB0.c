@@ -113,7 +113,43 @@ struct D_main_8009FCD4_type D_main_8009FCD4[] = {
 // DO NOT DELETE ME I AM REQUIRED FOR MATCHING
 u32 data_pad_66FB0 = 0x8FC20040;
 
-INCLUDE_ASM("asm/nonmatchings/main/66FB0", loadSndFiles);
+typedef struct {
+    s32 id;
+    s32 value;
+} AudioChannelEntry;
+extern AudioChannelEntry D_main_bss_80139A00[];
+
+
+extern s32 D_main_bss_80137CFC;
+extern s32 D_main_bss_80138920;
+extern s32 D_main_bss_80139B4C;
+extern s32 D_main_bss_80139B50;
+extern s32 D_main_bss_80139B54;
+extern void *D_main_8009FCD0;
+s32 load_asset_with_malloc_flags(char *, s32);
+void *findAssetAcrossSegments(s32, s32, s32, char *, s32);
+s32 parseSndFiles(s32, s32, void *, s32, s32);
+void playSimpleAudioCmd(s32, s32, s32);
+void applyVolumeSettingsToMixer(void);
+
+void loadSndFiles(void) {
+    s32 i;
+    s32 m1 = -1;
+
+    i = 15;
+    do {
+        D_main_bss_80139A00[i].id = m1;
+        i--;
+    } while (i >= 0);
+    D_main_bss_80139B54 = load_asset_with_malloc_flags("sound/proj_SND", 0);
+    D_main_bss_80139B50 = load_asset_with_malloc_flags("sound/pool_SND", 0);
+    D_main_bss_80139B4C = load_asset_with_malloc_flags("sound/sdir_SND", 0);
+    D_main_8009FCD0 = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, "sound/samp_SND", 0);
+    parseSndFiles(D_main_bss_80139B54, 0x24, D_main_8009FCD0, D_main_bss_80139B4C, D_main_bss_80139B50);
+    playSimpleAudioCmd(0, 0, 0xFE);
+    playSimpleAudioCmd(0, 0, 0xFD);
+    applyVolumeSettingsToMixer();
+}
 
 extern void *D_main_bss_80138D1C;
 extern s32 D_main_bss_80139A80;
@@ -177,13 +213,6 @@ s32 parseLoadedSndSection(s32 arg0) {
     parseSndFiles(D_main_bss_80139B54, arg0 & 0xFFFF, D_main_8009FCD0, D_main_bss_80139B4C, D_main_bss_80139B50);
     return 1;
 }
-
-typedef struct {
-    s32 id;
-    s32 value;
-} AudioChannelEntry;
-
-extern AudioChannelEntry D_main_bss_80139A00[];
 
 s32 rs_free(s32);
 

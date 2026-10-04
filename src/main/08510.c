@@ -446,7 +446,64 @@ void recordDeferredDrawRefVariant(s32 ref, s32 flags, s32 kind) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", commitMeshDrawBatchRefs);
+void commitMeshDrawBatchRefs(struct meshdef1 *mesh) {
+    struct DisplayListBuffer *p;
+    struct DisplayListBuffer *q;
+    struct DisplayListBuffer *t;
+    struct DisplayListBuffer **hp;
+    struct DisplayListBuffer **hq;
+    s32 sel;
+    s32 n;
+    u32 w;
+    u32 addr;
+
+    if ((mesh->unk0C & 0x10) && (mesh->unk0C & 0x60)) {
+        t = *(struct DisplayListBuffer **)((u8 *)mesh + 0x58);
+        mesh->unk0C &= ~0x60;
+        sel = *(u32 *)&mesh->unk2C[0] & 0x80000000;
+        hp = (struct DisplayListBuffer **)((u8 *)mesh + 0x44);
+        if (sel == 0) {
+            hp = (struct DisplayListBuffer **)((u8 *)mesh + 0x48);
+        }
+        p = *hp;
+        hq = (struct DisplayListBuffer **)((u8 *)mesh + 0x4C);
+        if (sel == 0) {
+            hq = (struct DisplayListBuffer **)((u8 *)mesh + 0x50);
+        }
+        q = *hq;
+        while (p->next != NULL) {
+            p = p->next;
+        }
+        while (q->next != NULL) {
+            q = q->next;
+        }
+        while (t->next != NULL) {
+            t = t->next;
+        }
+        n = 0;
+        if (p != NULL || q != NULL) {
+            do {
+                w = ((u32 *)((u8 *)t + 8))[n];
+                n++;
+                addr = (w & 0xFFFFFF) | 0x80000000;
+                switch (w >> 24) {
+                case 0:
+                    *(void **)(addr + 4) = (u8 *)p + 8;
+                    p = p->prev;
+                    break;
+                case 1:
+                    *(void **)(addr + 4) = (u8 *)q + 8;
+                    q = q->prev;
+                    break;
+                }
+                if (n == 0x40) {
+                    t = t->prev;
+                    n = 0;
+                }
+            } while (p != NULL || q != NULL);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitAllocatedDLCommand);
 
@@ -495,6 +552,19 @@ s32 disableScreenColorOverlay(void) {
     return 1;
 }
 
+typedef struct {
+    s32 a[64];
+    s32 b[32];
+} RenderStateRow;
+
+s32 beginFrameDLChunk(void);
+extern RenderStateRow D_main_bss_8011D498[4];
+extern s32 D_main_bss_80128C6C;
+extern s32 D_main_bss_801143A0;
+extern s32 D_main_bss_8011A460;
+extern s32 D_main_bss_8011A4A8;
+extern s32 D_main_bss_80117C00;
+
 INCLUDE_ASM("asm/nonmatchings/main/08510", frameStartReset);
 
 s32 clearStructPair2C30(void *arg0) {
@@ -515,19 +585,6 @@ s32 waitForPrevFrameDone(void) {
 }
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", beginFrameDLChunk);
-
-typedef struct {
-    s32 a[64];
-    s32 b[32];
-} RenderStateRow;
-
-s32 beginFrameDLChunk(void);
-extern RenderStateRow D_main_bss_8011D498[4];
-extern s32 D_main_bss_80128C6C;
-extern s32 D_main_bss_801143A0;
-extern s32 D_main_bss_8011A460;
-extern s32 D_main_bss_8011A4A8;
-extern s32 D_main_bss_80117C00;
 
 s32 initRenderStateArrays(void) {
     s32 i;
@@ -854,7 +911,48 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", heapFreeListDequeue);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitTexturedFaceGeometry);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", transformLightByType);
+f32 cosf(f32);
+f32 vec3Length(f32 *);
+void normalize_vector(f32 *);
+void transformVec3ByMat34(f32 *, f32 *, f32 *);
+void rotateVec3ByMat3x3(f32 *, f32 *, f32 *);
+
+void transformLightByType(u8 *light, f32 *mat) {
+    f32 v[3];
+    f32 out[3];
+    f32 *p;
+    f32 len;
+
+    switch (light[8]) {
+    case 1:
+        rotateVec3ByMat3x3(mat, (f32 *)(light + 0x18), (f32 *)(light + 0x44));
+        normalize_vector((f32 *)(light + 0x44));
+        break;
+    case 2:
+        transformVec3ByMat34(mat, (f32 *)(light + 0xC), (f32 *)(light + 0x38));
+        if (*(f32 *)(light + 0x30) != 0.0f) {
+            v[0] = *(f32 *)(light + 0x30);
+            v[2] = 0.0f;
+            v[1] = 0.0f;
+            rotateVec3ByMat3x3(mat, v, out);
+            *(f32 *)(light + 0x50) = vec3Length(out);
+        }
+        break;
+    case 3:
+        transformVec3ByMat34(mat, (f32 *)(light + 0xC), (f32 *)(light + 0x38));
+        rotateVec3ByMat3x3(mat, (f32 *)(light + 0x18), (f32 *)(light + 0x44));
+        normalize_vector((f32 *)(light + 0x44));
+        if (*(f32 *)(light + 0x30) != 0.0f) {
+            v[0] = *(f32 *)(light + 0x30);
+            v[2] = 0.0f;
+            v[1] = 0.0f;
+            rotateVec3ByMat3x3(mat, v, out);
+            *(f32 *)(light + 0x50) = vec3Length(out);
+        }
+        *(f32 *)(light + 0x54) = cosf(*(f32 *)(light + 0x34) * 0.017453292f / 2.0f);
+        break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", appendRdpStateDl);
 

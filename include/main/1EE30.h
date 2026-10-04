@@ -22,8 +22,7 @@ struct MaterialPoolEntry {
 }; // size 0x18
 
 struct D_main_bss_80128F08 {
-    u8    unk00;            /* 0x00 */
-    u8    unk01;            /* 0x01 */
+    u16   unk00;            /* 0x00 */
     u8    unk02;            /* 0x02 */
     u8    unk03;            /* 0x03 */
     u32   unk04;            /* 0x04 */
