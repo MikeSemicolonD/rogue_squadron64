@@ -224,7 +224,19 @@ void hangarLoadShadows(void) {
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarLoadShadows);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", setByteAcrossEntryList);
+typedef struct {
+    u8 pad[0x27];
+    u8 b;
+} SetByteEntry;
+void setByteAcrossEntryList(u8 *arg0, u8 arg1) {
+    u32 i;
+    SetByteEntry *e = *(SetByteEntry **)(arg0 + 8);
+
+    for (i = 0; i < *(u32 *)(arg0 + 0xC); i++) {
+        e->b = arg1;
+        e++;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", initCraftSelectVectors);
 
