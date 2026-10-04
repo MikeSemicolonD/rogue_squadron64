@@ -314,7 +314,58 @@ void computeAnchorRelativePositionByDistanceRatio(Vec3f arg0, Mat4x3 arg1, f32 a
     arg3[2] = (f32) (arg1[0][2] + (arg1[3][2] * var_ft0));
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initObjectAnimSubstruct);
+typedef struct {
+    f32 unk0;
+    f32 unk4;
+    f32 unk8;
+    s32 unkC;
+    s32 unk10;
+    f32 unk14;
+    s32 unk18;
+    s16 unk1C;
+    s16 unk1E;
+    s32 unk20;
+    s16 unk24;
+    s16 unk26;
+    u8 unk28;
+    u8 unk29;
+    s8 unk2A;
+    u8 unk2B;
+} ObjectAnimSubstruct;
+
+void initObjectAnimSubstruct(u8 *obj, f32 arg1, f32 arg2, f32 arg3, f32 arg4, s32 arg5, s32 useAlt, f32 arg7, f32 arg8, f32 arg9) {
+    ObjectAnimSubstruct *sub;
+    f32 angle;
+
+    if (useAlt == 0) {
+        sub = (ObjectAnimSubstruct *)(obj + 0x138);
+    } else {
+        sub = (ObjectAnimSubstruct *)(obj + 0x164);
+    }
+    angle = arg9;
+    sub->unk0 = arg1;
+    sub->unk4 = arg2;
+    sub->unk1C = arg3;
+    if (sub->unk1C == 0) {
+        sub->unk1C++;
+    }
+    sub->unk8 = arg4;
+    sub->unk18 = arg5;
+    sub->unkC = 0;
+    sub->unk2B = 1;
+    sub->unk1E = 0;
+    sub->unk10 = 0;
+    sub->unk28 = 0;
+    sub->unk14 = 1.0f;
+    sub->unk24 = arg8 * 100.0f;
+    sub->unk26 = arg7 * 100.0f;
+    if (angle > 45.0f) {
+        angle = 45.0f;
+    }
+    sub->unk29 = 0;
+    sub->unk20 = 0;
+    sub->unk2A = angle * 2.8222222f;
+}
 
 typedef struct {
     s32 unk0;
