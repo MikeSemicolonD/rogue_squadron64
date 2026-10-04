@@ -124,6 +124,26 @@ INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D454);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnDebrisBurstFromTemplate);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", initSpawnedNpcHealthAndDetail);
+typedef struct {
+    u8 pad0[0x6C];
+    s32 health[8];
+    u8 pad8C_[0x8C - 0x6C - 0x20];
+} NpcDefHealth;
+
+extern void setNpcHealth(s32, void *, void *);
+extern void setObjectDetailLevel(s32, s32);
+extern s32 D_main_bss_80137CE4;
+
+void initSpawnedNpcHealthAndDetail(void *arg0) {
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+    s32 i;
+
+    *(u8 *)(npc + 0x125) = 0;
+    for (i = 0; i < 8; i++) {
+        ((s32 *)(npc + 0xD4))[i] = D_main_bss_80137CE4[(*(NpcDefHealth **)(npc + 0x68))->health];
+    }
+    setNpcHealth(*(s32 *)(npc + 0x6C), (*(NpcDefHealth **)(npc + 0x68))->health, *(NpcDefHealth **)(npc + 0x68));
+    setObjectDetailLevel(*(s32 *)(npc + 0x6C), *(s32 *)(*(u8 **)(npc + 0x68) + 0x8C));
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", fake_func_80079278);
