@@ -168,7 +168,54 @@ INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcWalkerUpdate);
 
 INCLUDE_RODATA("asm/nonmatchings/main/7CEA0", D_main_8003D7C0);
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", submitOrientedEffectMesh);
+#include "main/1D000.h"
+#include "main/192E0.h"
+#include "main/5A750.h"
+
+typedef struct {
+    s32 x;
+    s32 y;
+    s32 z;
+} V3i;
+
+extern V3i D_main_8003D7C0;
+
+void submitOrientedEffectMesh(u8 *arg0, f32 arg1) {
+    V3i sp10;
+    V3i sp20;
+    f32 ang;
+    f32 lim;
+    f32 v;
+    f32 *s3 = (f32 *)(arg0 + 0x18);
+    f32 *s2;
+    f32 *s0;
+
+    sp20 = D_main_8003D7C0;
+    ang = vec3Dot((f32 *)&sp20, s3);
+    if (ang < 0.9996f) {
+        s2 = (f32 *)(arg0 + 0x90);
+        vec3Cross(s2, s3, (f32 *)&sp20);
+        if (vec3Length(s2) > 0.00001f) {
+            ang = constMinusSinfApprox(ang) * 57.29578f;
+            lim = arg1 * 3.0f;
+            if (lim < ang) {
+                ang = lim;
+            }
+            s0 = (f32 *)(arg0 + 0x70);
+            quatFromAxisAngleSafe(s0, s2, ang);
+            rotateVec3ByQuat(s0, (f32 *)(arg0 + 0xC), (f32 *)&sp10);
+            *(V3i *)(arg0 + 0xC) = sp10;
+            rotateVec3ByQuat(s0, s3, (f32 *)&sp10);
+            *(V3i *)(arg0 + 0x18) = sp10;
+            orthonormalizeFrame((f32 *)arg0);
+            v = *(f32 *)(arg0 + 0x44) - ((*(f32 *)(arg0 + 0x40) - *(f32 *)(arg0 + 0x48)) * arg1 * 0.33f);
+            *(f32 *)(arg0 + 0x44) = v;
+            if (v < *(f32 *)(arg0 + 0x48)) {
+                *(f32 *)(arg0 + 0x44) = *(f32 *)(arg0 + 0x48);
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", twoPointPositionedNpcHandler);
 
