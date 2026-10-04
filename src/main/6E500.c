@@ -226,7 +226,19 @@ void resetSettingsClearSaveAndReload(void) {
     serializeSettingsToSaveAndPersist();
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", initIdleDemoTimersAndSave);
+u32 getUsableRdramSize(void);
+void initIdleDemoTimersAndSave(void) {
+    u8 i;
+
+    for (i = 0; i < 1; i++) {
+        gGameSettings.unlockAndSettingsFlags[i] = 0x19B;
+    }
+    gGameSettings.unk23 = getUsableRdramSize() > 0x400000;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~1;
+    if (gGameSettings.unk23) {
+        gGameSettings.unlockAndSettingsFlags[1] |= 1;
+    }
+}
 
 void resetMixerVolumesAndFlags(void) {
     gGameSettings.musicVolume   = 0x7F;
