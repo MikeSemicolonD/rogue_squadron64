@@ -157,7 +157,25 @@ void initTextTextureTarget(void) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", updateTextOverlayLookupEntry);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", accumulateShipThrottleCharge);
+extern f32 D_menu_overlay_800CE6F4;
+extern u8 D_menu_overlay_800CC860;
+
+s32 accumulateShipThrottleCharge(s32 arg0, s32 arg1, f32 dt) {
+    f32 charge;
+
+    if (D_menu_overlay_800CC85C != 0) {
+        charge = D_menu_overlay_800CE6F4 * dt + (*(u8 **)((u8 *)D_menu_overlay_800CC85C + 0xC))[0x2F];
+        if (charge > 255.0f) {
+            (*(u8 **)((u8 *)D_menu_overlay_800CC85C + 0xC))[0x2F] = 0xFF;
+            if (++D_menu_overlay_800CC860 >= 7) {
+                return 1;
+            }
+        } else {
+            (*(u8 **)((u8 *)D_menu_overlay_800CC85C + 0xC))[0x2F] = charge;
+        }
+    }
+    return 0;
+}
 
 f32 computeThrottleChargeFraction(void) {
     f32 var_ft0;
