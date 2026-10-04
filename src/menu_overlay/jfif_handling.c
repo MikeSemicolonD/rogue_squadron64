@@ -136,7 +136,61 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifSOIMarker);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifSOF0Marker);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifDQTMarker);
+typedef struct {
+    u8 pad0[0x34];
+    u8 *cur;
+    u8 pad1[0x11];
+    u8 mask;
+    u8 pad2[0x2AE];
+    f32 qt[256];
+} JfifDQT;
+
+extern u8 D_menu_overlay_800A76E0[];
+extern f64 D_menu_overlay_800A7730[];
+
+s32 parseJfifDQTMarker(JfifDQT *arg0) {
+    f32 q[64];
+    s32 len;
+    u32 id;
+    u16 i;
+    u16 j;
+    u16 k;
+    f64 cj;
+
+    {
+        u8 *p = arg0->cur;
+        s32 hi = p[0] << 8;
+        len = (p[1] | hi) - 2;
+    }
+    arg0->cur += 2;
+    do {
+        id = *arg0->cur;
+        arg0->cur++;
+        if (id >= 4) {
+            return 9;
+        }
+        i = 0;
+        do {
+            q[D_menu_overlay_800A76E0[i]] = *arg0->cur++;
+            i++;
+        } while (i < 0x40);
+        i = 0;
+        j = 0;
+        arg0->mask |= 1 << (u16)id;
+        do {
+            k = 0;
+            cj = D_menu_overlay_800A7730[j];
+            do {
+                *(f32 *)((u8 *)arg0 + (i * 4 + ((u16)id << 8)) + 0x2F8) = q[i] * cj * D_menu_overlay_800A7730[k];
+                i++;
+                k++;
+            } while (k < 8);
+            j++;
+        } while (j < 8);
+        len -= 0x41;
+    } while ((u16)len != 0);
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifDHTMarker);
 
