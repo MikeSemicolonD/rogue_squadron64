@@ -103,7 +103,50 @@ s32 playAttachmentMaterialSoundVariantB(u8 *arg0, s32 arg1) {
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7FC0);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", playAttachmentCueWithSlotIter);
+extern char D_mission_overlay_800A7FC0[];
+s16 getObjectNpcTypeId(s32);
+s32 slotDispatcherIter(s32, s32, void *);
+s32 triggerCueWithSlotEffectRet(s32, s32, void *, void *, s32, f32, f32) __asm__("triggerCueWithSlotEffect");
+
+s32 playAttachmentCueWithSlotIter(u8 *arg0) {
+    AttachMtxA mtx;
+    struct {
+        s16 a;
+        s16 b;
+        f32 c;
+        f32 d;
+        f32 e;
+        f32 f;
+        u8 g;
+        u8 pad[0xB];
+    } sp58;
+    f32 progress;
+    u8 *npc;
+    u8 *sub;
+    s32 t;
+    s32 r;
+
+    npc = *(u8 **)(arg0 + 4);
+    sub = *(u8 **)(*(u8 **)(npc + 0x38) + 0x1A8);
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), D_mission_overlay_800A7FC0, *(s16 *)(npc + 0xB6), &mtx, 0, 0);
+    *(s16 *)(npc + 0xB6) = (*(s16 *)(npc + 0xB6) + 1) % 5;
+    r = tickProgressChannel(*(s32 *)(npc + 0x38), &mtx, (s32)sub + 0xB4, &progress) & 0xFF;
+    if (r == 1) {
+        sp58.a = 0;
+        sp58.b = getObjectNpcTypeId(*(s32 *)(npc + 0x38));
+        sp58.g = r;
+        sp58.c = 0.033333335f;
+        sp58.d = 5.0f;
+        sp58.e = 6.0f;
+        sp58.f = 10.0f;
+        t = triggerCueWithSlotEffectRet(*(s32 *)(npc + 0x38), 0xB, &mtx, 0, 0, D_mission_overlay_8010ABA0[npc[0xB2]].f2C, progress) & 0xFFFF;
+        if (t != 0xFFFF) {
+            slotDispatcherIter(t, 0xA, &sp58);
+        }
+        play3DSoundEvent(0, npc, npc + 0x24, 15.0f, 0.3f, 0, 0x30, 0x6E, 0x28);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", playDualTextureAttachmentCue);
 
