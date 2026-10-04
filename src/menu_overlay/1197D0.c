@@ -199,7 +199,26 @@ char *buildPrefixedAssetName(char *arg0) {
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", buildPrefixedAssetName);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", spawnHudReticleAtMeshBounds);
+typedef struct {
+    u8 pad[4];
+    u16 w;
+    u16 h;
+} HudMeshBounds;
+
+typedef struct {
+    u8 pad[0xC];
+    s32 unkC;
+    HudMeshBounds *bounds;
+    u8 pad14[0xC];
+    u8 unk20[1];
+} HudMeshRef;
+
+void spawnHudReticleAtMeshBounds(s32 arg0, HudMeshRef *arg1, s32 arg2, u8 arg3) {
+    HudMeshBounds *b = arg1->bounds;
+    s32 c = arg1->unkC;
+
+    createHudSpritePair(arg0, arg1->unk20, c, b->w, b->h, arg2, arg3);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", positionHudSpriteOffset);
 
