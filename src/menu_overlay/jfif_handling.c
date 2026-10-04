@@ -84,7 +84,35 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", allocCellGeometryBuff
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", buildDebrisMeshFromCells);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", cloneCellBufferWithAlloc);
+void *rs_malloc(u32, u16);
+void rs_memset(u8 *, u8, u32);
+void zmemcpy(void *, void *, u32);
+
+void cloneCellBufferWithAlloc(u8 *state) {
+    s32 size = 0x580;
+    u8 *buf;
+    u8 *tbl;
+    s32 i;
+
+    buf = rs_malloc(size, *(u16 *)(state + 0xE));
+    rs_memset(buf, 0, size);
+    tbl = buf + 0x100;
+    *(u8 **)(state + 0x50) = tbl;
+    for (i = 0; i < 0x100; i++) {
+        (*(u8 **)(state + 0x50))[i] = i;
+    }
+    tbl += 0x80;
+    for (i = 0x80; i < 0x200; i++) {
+        tbl[i] = 0xFF;
+    }
+    zmemcpy(tbl + 0x380, *(u8 **)(state + 0x50), 0x80);
+    *(u8 **)(state + 0x54) = rs_malloc(size, *(u16 *)(state + 0xE));
+    zmemcpy(*(u8 **)(state + 0x54), buf, size);
+    for (i = 0; i < size; i++) {
+        (*(u8 **)(state + 0x54))[i] >>= 3;
+    }
+    *(u8 **)(state + 0x54) += 0x100;
+}
 
 typedef struct {
     u8 pad0[0xE];
