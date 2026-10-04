@@ -80,7 +80,68 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", preloadSceneReferencedSon
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", stageSongFromRequestDescriptor);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", resetMusicSubsystemState);
+extern f32 D_mission_overlay_80109FE0;
+extern s32 D_mission_overlay_8010C110;
+extern s32 D_mission_overlay_8010C0E0;
+extern u8 D_mission_overlay_8010C260;
+extern u8 D_mission_overlay_8010C263;
+extern u8 D_mission_overlay_8010C264;
+extern u8 D_mission_overlay_8010C265;
+extern u8 D_mission_overlay_8010C266;
+extern u8 D_mission_overlay_8010C267;
+extern u8 D_mission_overlay_8010C269;
+extern struct { s32 key; s32 unk4; s32 unk8; s32 unkC; } D_mission_overlay_8010C270[8];
+extern u8 D_mission_overlay_8010C2F0;
+extern u8 D_mission_overlay_8010C2F1;
+extern u8 D_mission_overlay_8010C2F2;
+extern u8 D_mission_overlay_8010C2F3;
+extern u8 D_mission_overlay_8010C2F4;
+extern u8 D_mission_overlay_8010C2FC;
+extern u8 D_mission_overlay_8010C2FD;
+extern s32 D_mission_overlay_8010C300;
+extern s32 D_mission_overlay_8010C308;
+extern s32 D_mission_overlay_8010C30C;
+extern u8 D_mission_overlay_8010C460;
+extern u8 D_mission_overlay_8010C461;
+extern u8 D_mission_overlay_8010C462;
+
+s32 resetMusicSubsystemState(s32 arg0) {
+    s32 i;
+
+    D_mission_overlay_8010C461 = 0;
+    D_mission_overlay_8010C460 = 0;
+    D_mission_overlay_8010C462 = 0;
+    D_mission_overlay_80109FE0 = 0.7225f;
+    if (arg0 & 0xFF) {
+        D_mission_overlay_8010C110 = -1;
+        D_mission_overlay_8010C0E0 = -1;
+        D_mission_overlay_8010C260 = 0;
+    }
+    D_mission_overlay_8010C264 = 0;
+    D_mission_overlay_8010C263 = 0;
+    D_mission_overlay_8010C262 = 0;
+    D_mission_overlay_8010C266 = 0;
+    D_mission_overlay_8010C265 = 0;
+    D_mission_overlay_8010C268 = 0;
+    D_mission_overlay_8010C267 = 0;
+    D_mission_overlay_8010C269 = 0;
+    D_mission_overlay_8010C2F0 = 0;
+    D_mission_overlay_8010C2FD = 0;
+    D_mission_overlay_8010C2FC = 0;
+    D_mission_overlay_8010C300 = 0;
+    D_mission_overlay_8010C308 = 0;
+    D_mission_overlay_8010C2F1 = 0;
+    D_mission_overlay_8010C2F4 = 0;
+    D_mission_overlay_8010C2F3 = 0;
+    D_mission_overlay_8010C2F2 = 0;
+    for (i = 0; i < 8; i++) {
+        D_mission_overlay_8010C270[i].key = -1;
+        D_mission_overlay_8010C270[i].unk8 = 0;
+    }
+    D_mission_overlay_8010C310 = 0;
+    D_mission_overlay_8010C30C = -1;
+    return -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", initLevelMusicBank);
 
