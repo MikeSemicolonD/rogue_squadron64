@@ -258,6 +258,24 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A7CF8);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcRadarDishInit);
+extern void setNpcHealth(s32, void *, void *);
+extern void setObjectDetailLevel(s32, s32);
+extern void initActorMotionParams(s32, f32, f32, f32, f32);
+extern void initObjectAnimSubstruct(s32, f32, f32, f32, f32, void *, s32, f32, f32, s32);
+extern void npcTieVariantTickEffects(void);
+extern s32 D_main_bss_80137CE4;
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A7D00);
+void npcRadarDishInit(void *arg0) {
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+    u8 *def = *(u8 **)(npc + 0x34);
+
+    npc[0x87] = 0;
+    npc[0xBA] = 0;
+    *(s16 *)(npc + 0x88) = 0;
+    setNpcHealth(*(s32 *)(npc + 0x38), *(u8 **)(npc + 0x34) + 0x6C, *(u8 **)(npc + 0x34));
+    initActorMotionParams(*(s32 *)(npc + 0x38), ((f32 *)(def + 0xC0))[D_main_bss_80137CE4], ((f32 *)(def + 0xC4))[D_main_bss_80137CE4], ((f32 *)(def + 0xC8))[D_main_bss_80137CE4], ((f32 *)(def + 0xCC))[D_main_bss_80137CE4]);
+    setObjectDetailLevel(*(s32 *)(npc + 0x38), *(s32 *)(*(u8 **)(npc + 0x34) + 0xB4));
+    initObjectAnimSubstruct(*(s32 *)(npc + 0x38), *(f32 *)(def + 0xD0), *(f32 *)(def + 0xD4), *(f32 *)(def + 0xD8), *(f32 *)(def + 0xDC), npcTieVariantTickEffects, 0, 10.0f, 15.0f, 0);
+}
+
+static u32 D_mission_overlay_800A7D04[] __attribute__((section(".rodata"))) = { 0x8FC2001C, 0x3C018005, 0xC420FE44 };
