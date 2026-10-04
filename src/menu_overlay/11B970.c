@@ -718,7 +718,24 @@ void initMenuElementScrollAnimParams(void *arg0, s32 arg1, s32 arg2) {
     (*(f32 *)((u8 *)(arg0) + 0x14F0)) = 86.8997f;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", applyMenuCheatCode);
+u8 applyCheatCodeFromInput(s32, s32, u8 *);
+void bsearchFactor5TableByU16Key(s32, s32, s32);
+void serializeSettingsToSaveAndPersist(void);
+void applyMenuCheatCode(s32 arg0) {
+    u8 changed = 0;
+
+    switch (applyCheatCodeFromInput(arg0, 0, &changed)) {
+        case 0:
+            bsearchFactor5TableByU16Key(0x67, 0x6E, 0x40);
+            break;
+        case 1:
+            bsearchFactor5TableByU16Key(0x18, 0x5F, 0x40);
+            break;
+    }
+    if (changed) {
+        serializeSettingsToSaveAndPersist();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", getCraftStatIfThresholdMet);
 
