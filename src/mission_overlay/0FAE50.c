@@ -70,7 +70,30 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800F
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800FBC4C);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", clearMissionObjectiveFlagsAndEnterPhaseSix);
+typedef struct {
+    u8 pad0[0x1A];
+    u16 mask;
+    u8 pad1C[8];
+} MissionObjectiveDef;
+
+void playSimpleAudioCmd(s32, s32, s32);
+extern MissionObjectiveDef D_mission_overlay_8010BE18[];
+extern u16 D_mission_overlay_8010BFA8[];
+extern f32 D_mission_overlay_8010C9EC;
+
+s32 clearMissionObjectiveFlagsAndEnterPhaseSix(void) {
+    s32 i;
+
+    for (i = 0; i < 1; i++) {
+        D_mission_overlay_8010BFA8[i] &= ~D_mission_overlay_8010BE18[i].mask;
+    }
+    if (D_mission_overlay_8010CA20 != 6) {
+        D_mission_overlay_8010CA20 = 6;
+        playSimpleAudioCmd(0, 0x3E8, 0xFF);
+        D_mission_overlay_8010C9EC = 1.1f;
+    }
+    return 1;
+}
 
 void stopAllMusicWithFade(f32);
 
