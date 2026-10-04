@@ -239,7 +239,30 @@ void freeNpcSlotArray(void) {
     gNpcSlotList = NULL;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/3F160", findActiveNpcInSlotChain);
+typedef struct {
+    u16 idx;
+    u16 next;
+    u16 nextNext;
+} NpcSlotChainPos;
+
+u16 findActiveNpcInSlotChain(u16 idx, NpcSlotChainPos *out) {
+    while (idx != 0xFFFF) {
+        if (gNpcSlotList[idx].unk00 != NULL) {
+            if (out != NULL) {
+                out->idx = idx;
+                out->next = gNpcSlotList[idx].next_idx;
+                if (out->next != 0xFFFF) {
+                    out->nextNext = gNpcSlotList[out->next].next_idx;
+                } else {
+                    out->nextNext = 0xFFFF;
+                }
+            }
+            return gNpcSlotList[idx].unk00->unk16;
+        }
+        idx = gNpcSlotList[idx].next_idx;
+    }
+    return 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/3F160", findFirstActiveNpcChildInChain);
 
