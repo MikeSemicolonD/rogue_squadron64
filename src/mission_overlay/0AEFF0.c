@@ -110,7 +110,28 @@ void playSpeechClipOncePerChange(s32 arg0, s32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", playSpeechClipOncePerLevel);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", resetSpeechOncePerLevelFlag);
+extern s32 D_mission_overlay_8010B740[];
+extern u8 D_mission_overlay_8010B780[];
+
+void resetSpeechOncePerLevelFlag(s32 arg0) {
+    s32 i = 0;
+    s32 *ids;
+    u8 *flags;
+
+    if (arg0 != 0x28C) {
+        ids = D_mission_overlay_8010B740;
+        flags = D_mission_overlay_8010B780;
+    loop:
+        if (ids[i] == arg0) {
+            *(u8 *)(i + (s32)flags) = 0;
+            return;
+        }
+        i++;
+        if (i < 14) {
+            goto loop;
+        }
+    }
+}
 
 typedef struct {
     s32 x;
