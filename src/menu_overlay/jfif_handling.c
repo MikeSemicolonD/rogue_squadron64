@@ -7,7 +7,70 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/jfif_handling", D_menu_overlay_800
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", loadJfifAsset);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", resetJfifDecodeState);
+void zmemcpy(void *, void *, u32);
+void rs_free(void *);
+void cloneCellBufferWithAlloc(u8 *);
+void allocCellGeometryBuffer(u8 *);
+
+s32 resetJfifDecodeState(u8 *arg0, void *arg1) {
+    s32 temp;
+    void *q;
+
+    zmemcpy(arg0, arg1, 0x30);
+    if ((*(u16 *)(arg0 + 4) & 1) && (u16)(*(u16 *)(arg0 + 0x10) + 0x100) > 0x200) {
+        return 0x12;
+    }
+    if ((*(u16 *)(arg0 + 4) & 2) && (u16)(*(u16 *)(arg0 + 0x12) + 0x100) > 0x200) {
+        return 0x12;
+    }
+    if ((*(u16 *)(arg0 + 4) & 4) && (u16)(*(u16 *)(arg0 + 0x14) + 0x100) > 0x200) {
+        return 0x12;
+    }
+    temp = *(s32 *)(arg0 + 0xC);
+    if (temp != 0 && temp != 4) {
+        return 0x12;
+    }
+    q = *(void **)(arg0 + 0x50);
+    if (q != NULL) {
+        *(u8 **)(arg0 + 0x50) = (u8 *)q - 0x100;
+        rs_free((u8 *)q - 0x100);
+    }
+    q = *(void **)(arg0 + 0x54);
+    if (q != NULL) {
+        *(u8 **)(arg0 + 0x54) = (u8 *)q - 0x100;
+        rs_free((u8 *)q - 0x100);
+    }
+    cloneCellBufferWithAlloc(arg0);
+    q = *(void **)(arg0 + 0x7D8);
+    if (q != NULL) {
+        rs_free(q);
+    }
+    q = *(void **)(arg0 + 0x7DC);
+    if (q != NULL) {
+        rs_free(q);
+    }
+    q = *(void **)(arg0 + 0x7E0);
+    if (q != NULL) {
+        rs_free(q);
+    }
+    q = *(void **)(arg0 + 0x7E4);
+    if (q != NULL) {
+        rs_free(q);
+    }
+    allocCellGeometryBuffer(arg0);
+    if (!((u32)(*(s32 *)(arg0 + 8) - 2) < 4)) {
+        return 0x16;
+    }
+    *(u16 *)(arg0 + 0x46) = 0;
+    *(u16 *)(arg0 + 0x7EC) = 0;
+    *(u16 *)(arg0 + 0x7EE) = 0;
+    *(u16 *)(arg0 + 0x7D2) = 0;
+    *(u16 *)(arg0 + 0x7E8) = 0;
+    *(u16 *)(arg0 + 0x7EA) = 0;
+    *(arg0 + 0x4D) = 0;
+    *(s32 *)(arg0 + 0x34) = *(s32 *)(arg0 + 0x38);
+    return 0;
+}
 
 void rs_free(void *);
 
