@@ -28,7 +28,28 @@ INCLUDE_ASM("asm/nonmatchings/main/61FC0", startPlayerSlotAnimationChannelLoopin
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", buildPlayerCraftAssetTemplate);
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", resolvePlayerAnimChannelKeyValue);
+extern u16 D_main_bss_80139970[];
+extern s8 D_main_8009ED88[];
+s16 resolvePlayerAnimChannelKeyValue(u16 font, u16 key) {
+    struct someFontThing *t = D_main_8009FC10[font];
+    u16 i;
+    u16 j;
+
+    for (i = 0; i < t->symbolCount; i++) {
+        if (t->unk024[i] == key || t->unk028[i] == key) {
+            if (*(u8 *)&t->unk014 != 0) {
+                return t->unk002;
+            }
+            return t->unk018[i];
+        }
+    }
+    for (j = 0; j < 6; j++) {
+        if (D_main_bss_80139970[j] == key) {
+            return D_main_8009ED88[j];
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", initAllPlayerSlots);
 
