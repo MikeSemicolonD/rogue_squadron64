@@ -86,7 +86,17 @@ void registerSceneNodeAndInvertRotation(u8 *obj, u8 *node) {
     mat3x3InverseInto(obj + 0x2C, node + 0x28);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", initTransformNodeFromVectors);
+void buildOrientationFromPosAndAngles(void *, void *, void *);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} TransformNodeVec3;
+void initTransformNodeFromVectors(u8 *node, TransformNodeVec3 *a, TransformNodeVec3 *b) {
+    buildOrientationFromPosAndAngles(node + 0x28, a, b);
+    *(TransformNodeVec3 *)(node + 0x10) = *a;
+    *(TransformNodeVec3 *)(node + 0x1C) = *b;
+}
 
 // The argument types for `arg0` and `arg1` are almost certainly wrong, but function isn't called anywhere so who cares
 void computeAimAnglesFromObjectPositions(Mat4x3 arg0, Mat4x3 arg1, Vec3f arg2, f32 arg3) {
