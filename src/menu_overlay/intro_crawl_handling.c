@@ -147,7 +147,30 @@ void runMusyXTaskWrapper(void) {
     runMusyXTaskLocked();
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", appendNodeToListTail);
+typedef struct ListNode {
+    struct ListNode *next;
+    struct ListNode *prev;
+} ListNode;
+
+typedef struct {
+    u8 pad[0x20];
+    ListNode *list;
+} ListOwner20;
+
+void appendNodeToListTail(ListOwner20 *owner, ListNode *node) {
+    ListNode *p;
+
+    if (owner->list == NULL) {
+        owner->list = node;
+        return;
+    }
+    p = owner->list;
+    while (p->next != NULL) {
+        p = p->next;
+    }
+    p->next = node;
+    node->prev = p;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", appendNodeToListHead);
 
