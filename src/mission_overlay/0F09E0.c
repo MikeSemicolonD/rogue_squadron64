@@ -3,6 +3,7 @@
 
 #include "main/1D000.h"
 #include "mission_overlay/0F09E0.h"
+#include "mission_stats.h"
 
 extern s32 D_main_bss_80137CE4;
 
@@ -285,7 +286,18 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initAnimSubstructFromPara
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", applyToObjectSubstructByFlag);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setObjectSubstructF10IfReady);
+void setObjectSubstructF10IfReady(u8 *obj, f32 value, s32 useAlt) {
+    u8 *sub;
+
+    if (useAlt == 0) {
+        sub = obj + 0x138;
+    } else {
+        sub = obj + 0x164;
+    }
+    if (*(s32 *)(sub + 0x18) != 0 && sub[0x2B] != 0) {
+        *(f32 *)(sub + 0x10) = value;
+    }
+}
 
 void setAnimSubstructValueIfActive(void *arg0, f32 arg1) {
     if (((*(s32 *)((u8 *)(arg0) + 0x18)) != 0) && ((*(u8 *)((u8 *)(arg0) + 0x2B)) != 0)) {
