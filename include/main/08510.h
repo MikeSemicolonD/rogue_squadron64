@@ -24,7 +24,7 @@ void heapFreeListInsert(struct DisplayListBuffer*);
 s32  countDisplayListChunks(void);
 struct DisplayListBuffer *reclaimDisplayListChunk(void);
 Gfx *allocateDisplayListBuffer(void);
-void enqueueMeshForDeferredRelease(struct meshdef1*);
+s32 enqueueMeshForDeferredRelease(struct meshdef1*);
 s32  resetMaterialPoolWrapper(void);
 
 #endif

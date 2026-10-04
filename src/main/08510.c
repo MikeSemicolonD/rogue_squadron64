@@ -182,7 +182,41 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", allocDLBlockToListD);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", drainMeshReleaseQueue);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", enqueueMeshForDeferredRelease);
+typedef struct {
+    s32 v[7];
+} MeshReleaseEntry;
+
+extern u16 D_main_bss_80113230;
+extern MeshReleaseEntry D_main_bss_80112B30[];
+
+s32 enqueueMeshForDeferredRelease(struct meshdef1 *arg0) {
+    struct meshdef1 *mesh = arg0;
+    MeshReleaseEntry *e;
+    u16 idx;
+
+    if (!(mesh->unk0C & 0x10)) {
+        return 0;
+    }
+    idx = D_main_bss_80113230;
+    if (idx < 0x40) {
+        D_main_bss_80113230 = idx + 1;
+        e = &D_main_bss_80112B30[idx];
+    } else {
+        e = NULL;
+    }
+    if (e == NULL) {
+        return 0;
+    }
+    e->v[0] = *(s32 *)&mesh->unk2C[4];
+    e->v[1] = *(s32 *)&mesh->unk2C[6];
+    e->v[2] = *(s32 *)&mesh->unk2C[7];
+    e->v[3] = *(s32 *)&mesh->unk2C[8];
+    e->v[4] = *(s32 *)&mesh->unk2C[9];
+    e->v[5] = *(s32 *)&mesh->unk2C[10];
+    e->v[6] = *(s32 *)&mesh->unk2C[11];
+    mesh->unk0C &= ~0x18;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", recordDeferredDrawRefVariant);
 
