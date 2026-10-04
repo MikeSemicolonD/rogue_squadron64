@@ -1003,7 +1003,38 @@ void setCraftMaterialTextureByName(u8 arg0, s32 arg1) {
     setMaterialTextureByName(arg0, arg1, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuBackdropAndPickRandom);
+void initWaterSprayEffectAndSfx(void);
+typedef struct {
+    s32 *name;
+    u8 pad4[0xC];
+} MenuBackdropAsset;
+extern MenuBackdropAsset D_menu_overlay_800CD184[];
+typedef struct {
+    u8 unk0;
+    u8 unk1;
+    u8 pad2[2];
+    s32 unk4;
+    s32 unk8;
+    s32 padC;
+    s32 unk10;
+    u8 pad14[0x3C];
+} MenuBackdropState;
+MenuBackdropState *initMenuBackdropAndPickRandom(void) {
+    MenuBackdropState *s = rs_malloc(0x50, 0);
+    u8 i;
+
+    rs_memset(s, 0, 0x50);
+    for (i = 0; i < 18; i++) {
+        load_hmt_and_hob(D_menu_overlay_800CD184[i].name, 0, 0, 0);
+    }
+    initWaterSprayEffectAndSfx();
+    s->unk0 = 2;
+    s->unk1 = (s16)rand() % 18;
+    s->unk4 = 0;
+    s->unk8 = 0;
+    s->unk10 = 0;
+    return s;
+}
 
 extern s32 D_menu_overlay_800CCE18;
 s32 registerServiceWorker(s32, s32, s32, s32 *);
