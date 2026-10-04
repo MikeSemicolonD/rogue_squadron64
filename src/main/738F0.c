@@ -81,7 +81,11 @@ INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnEffectNpcWithRampedScale);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnEffectNpcWithRampedScaleExt);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", vec3ExtrapolateFirstOrder);
+void vec3ExtrapolateFirstOrder(f32 *arg0, s32 arg1, f32 *arg2, f32 arg3) {
+    arg2[0] = arg0[0] - arg0[3] * arg3;
+    arg2[1] = arg0[1] - arg0[4] * arg3;
+    arg2[2] = arg0[2] - arg0[5] * arg3;
+}
 
 extern void buildNpcAnchoredCameraEffectTransform(u16, void *, s32, f32);
 
