@@ -54,7 +54,60 @@ s32 npcTickEffectChannelA(TaActor *arg0, s32 arg1) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D38A0", npcTickEffectChannelB);
+struct TbObj { u8 pad0[0x24]; u8 pos[0xC]; s32 f30; u8 *f34; s32 f38; u8 pad3C[0x20]; s16 f5C; u8 pad5E[2]; f32 f60; u8 pad64[0x61]; u8 fC5; };
+typedef struct { u8 pad0[4]; struct TbObj *obj; } TbActor;
+extern u8 D_mission_overlay_8010A85C[];
+extern s32 D_main_bss_80137CE4;
+s32 lookupHmtTextureByName(s32, char *, s32, u8 *, s32, s32);
+s32 setObjectSubstructF10IfReady(s32, f32, s32);
+s32 resolveNpcAttachmentPos(s32, u8 *, f32, f32);
+s32 tickProgressChannel(s32, u8 *, s32, f32 *);
+s32 triggerCueWithSlotEffect(s32, s32, u8 *, u8 *, s32, f32, f32);
+s32 play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+
+s32 npcTickEffectChannelB(TbActor *arg0, s32 arg1) {
+    u8 buf[0x30];
+    f32 sp58;
+    struct TbObj *o = arg0->obj;
+    f32 fv;
+    s32 r;
+
+    if (o->f60 < 70.0f) {
+        return 0;
+    }
+    if (o->f5C == 0) {
+        if (arg1 == 0) {
+            lookupHmtTextureByName(o->f30, "a_b", 0, buf, 0, 0);
+            setObjectSubstructF10IfReady(o->f38, 0.16666667f, 0);
+        } else {
+            lookupHmtTextureByName(o->f30, "a_b", 1, buf, 0, 0);
+            o->f5C ^= 1;
+        }
+    } else {
+        if (arg1 == 0) {
+            lookupHmtTextureByName(o->f30, "c_d", 0, buf, 0, 0);
+            setObjectSubstructF10IfReady(o->f38, 0.16666667f, 0);
+        } else {
+            lookupHmtTextureByName(o->f30, "c_d", 1, buf, 0, 0);
+            o->f5C ^= 1;
+        }
+    }
+    if (o->fC5 == 1) {
+        fv = *(f32 *)(o->f34 + D_main_bss_80137CE4 * 4 + 0xE0);
+    } else {
+        fv = *(f32 *)(o->f34 + D_main_bss_80137CE4 * 4 + 0x100);
+    }
+    if (fv != 0.0f) {
+        resolveNpcAttachmentPos(o->f38, buf, 10.0f, fv);
+    }
+    r = tickProgressChannel(o->f38, buf, 0, &sp58) & 0xFF;
+    if (r != 1) {
+        return 0;
+    }
+    triggerCueWithSlotEffect(o->f38, 2, buf, D_mission_overlay_8010A85C, r, 10.0f, sp58);
+    play3DSoundEvent(0, o, o->pos, 18.0f, 0.3f, 0, 0x48, 0x6E, 0x28);
+    return 0;
+}
 
 struct TsObj { u8 pad0[0x24]; u8 pos[0xC]; s32 f30; u8 *f34; s32 f38; u8 pad3C[0x20]; f32 f5C_pad; };
 struct TsObj2 { u8 pad0[0x24]; u8 pos[0xC]; s32 f30; u8 *f34; s32 f38; u8 pad3C[0x20]; s16 f5C; u8 pad5E[2]; f32 f60; };
