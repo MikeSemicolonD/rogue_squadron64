@@ -661,7 +661,40 @@ void preloadMenuMusicSetA(void) {
     playSimpleAudioCmd(0x78, 0x32, 0xFD);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", cueMenuScreenAudioB);
+typedef struct {
+    u16 unk0;
+    u16 unk2;
+    u8 pad4[0xE];
+    u8 unk12;
+    u8 pad13[7];
+    u8 unk1A;
+    u8 unk1B;
+    u8 unk1C;
+    u8 pad1D;
+    u16 unk1E;
+    u16 unk20;
+    u16 unk22;
+    u16 unk24;
+} MenuScreenAudioCue;
+void syncMusyXIfActive();
+extern MenuScreenAudioCue D_menu_overlay_800CF020;
+void cueMenuScreenAudioB(void) {
+    parseLoadedSndSection(0x1D);
+    loadSongAssetByName(D_main_bss_80138920, 0x3B);
+    playSimpleAudioCmd(0x7F, 0x32, 0xFE);
+    playSimpleAudioCmd(0x78, 0x32, 0xFD);
+    D_menu_overlay_800CF020.unk0 = 0xA0;
+    D_menu_overlay_800CF020.unk1A = 1;
+    D_menu_overlay_800CF020.unk2 = 0x9B;
+    D_menu_overlay_800CF020.unk12 = 0x78;
+    D_menu_overlay_800CF020.unk1B = 0x41;
+    D_menu_overlay_800CF020.unk1E = 0x51E;
+    D_menu_overlay_800CF020.unk20 = 0xF5C;
+    D_menu_overlay_800CF020.unk22 = 0x1999;
+    D_menu_overlay_800CF020.unk1C = 1;
+    D_menu_overlay_800CF020.unk24 = 0x800;
+    syncMusyXIfActive(&D_menu_overlay_800CF020);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", cueMenuScreenAudioC);
 
