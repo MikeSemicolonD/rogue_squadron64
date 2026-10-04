@@ -477,7 +477,28 @@ void maybeLoadYwingCutscene(s32 arg0, s32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", buildBobbingObjectMatrix);
+extern f32 D_cinematic_overlay_800B0B2C;
+
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+void composeRotationMatrixSlot2(void *, f32);
+void composeRotationMatrixSlot0(void *, f32);
+void addVec3At0x24(void *, f32, f32, f32);
+void composeQuatToMat3x4(void *, void *);
+f32 sinf(f32);
+
+void buildBobbingObjectMatrix(Vec3f pos, void *out) {
+    u8 *obj;
+
+    if (D_cinematic_overlay_800B0B18 != 0) {
+        obj = (u8 *)D_cinematic_overlay_800B0B18 + 0x28;
+        initVec4TripletFromArgs(obj, 0.1f, 0.1f, 0.1f);
+        composeRotationMatrixSlot2(obj, sinf(D_cinematic_overlay_800B0B2C * 1.2f) * 4.0f);
+        composeRotationMatrixSlot0(obj, sinf(D_cinematic_overlay_800B0B2C + D_cinematic_overlay_800B0B2C) * 1.5f);
+        addVec3At0x24(obj, 0.0f, 0.089999996f, 0.49f);
+        composeQuatToMat3x4(obj, out);
+        addVec3At0x24(obj, pos[0], pos[1], pos[2]);
+    }
+}
 
 void cinematicShutdownAudioAndAssets(void) {
     finalizeCurrentSpeechBuffer();
