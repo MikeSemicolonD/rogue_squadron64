@@ -1,5 +1,6 @@
 #include "common.h"
 
+#include "common_types.h"
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E5080", D_mission_overlay_800A8290);
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E5080", D_mission_overlay_800A8298);
@@ -16,7 +17,44 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", playDualTextureAttachment
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E5080", D_mission_overlay_800A82D4);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", playAttachmentMaterialSoundSimpleB);
+typedef struct {
+    f32 m[12];
+} AttachMtxB;
+
+extern void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
+extern void resolveNpcAttachmentPos(s32, AttachMtxB *, s32, f32);
+extern u8 tickProgressChannel(s32, AttachMtxB *, s32, f32 *);
+extern void triggerCueWithSlotEffect(s32, s32, AttachMtxB *, void *, s32, f32, f32);
+extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+extern char D_mission_overlay_800A82D4[];
+typedef struct {
+    u8 pad0[0x1C];
+    s32 w1C;
+} CueSlotB;
+extern CueSlotB D_mission_overlay_8010AFB0[];
+extern u8 D_mission_overlay_8010AFBC[];
+extern s32 D_main_bss_80137CE4;
+
+s32 playAttachmentMaterialSoundSimpleB(void *arg0) {
+    AttachMtxB mtx;
+    f32 progress;
+    f32 rate;
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+    u8 r;
+
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), D_mission_overlay_800A82D4, 0, &mtx, 0, 0);
+    rate = ((f32 *)(*(u8 **)(npc + 0x34) + 0xDC))[D_main_bss_80137CE4];
+    if (rate != 0.0f) {
+        resolveNpcAttachmentPos(*(s32 *)(npc + 0x38), &mtx, D_mission_overlay_8010AFB0[npc[0x99]].w1C, rate);
+    }
+    r = tickProgressChannel(*(s32 *)(npc + 0x38), &mtx, 1, &progress);
+    if (r == 1) {
+        *(f32 *)(npc + 0xA8) = 0.0f;
+        triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 2, &mtx, D_mission_overlay_8010AFBC + (npc[0x99] << 5), r, *(f32 *)(D_mission_overlay_8010AFBC + (npc[0x99] << 5) + 0x10), progress);
+        play3DSoundEvent(0, npc, npc + 0x24, 14.0f, 0.1f, 0, 0x1D, 0x78, 0x28);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", playDualTextureAttachmentCueC);
 
