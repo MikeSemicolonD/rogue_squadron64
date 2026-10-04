@@ -365,7 +365,31 @@ s32 setEffectIntensity(void *arg0, s32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", triggerCueWithSlotEffect);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", copyPipeDelimitedField);
+s32 copyPipeDelimitedField(u8 *s, s32 field, u8 *out) {
+    s32 count = 0;
+
+    s++;
+    while (*s != 0) {
+        if (*s == '|') {
+            s++;
+            count++;
+        } else if (s[1] == 0) {
+            count++;
+        }
+        if (count == field) {
+            while (*s != 0 && *s != '|') {
+                *out++ = *s++;
+            }
+            *out = 0;
+            if (*s != 0) {
+                return field + 1;
+            }
+            return 0;
+        }
+        s++;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", copyRandomPipeDelimitedField);
 
