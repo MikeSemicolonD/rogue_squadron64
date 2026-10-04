@@ -839,7 +839,18 @@ void resetMenuSelectionGlobalState(void) {
     (*(s32 *)((u8 *)(&D_menu_overlay_800CEF40) + 4)) = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", spawnMenuListItemSprite);
+s32 allocTextRenderTarget(s32, s32);
+u8 *createUiSpriteAt(s32, s32, s32);
+void insertLookupEntry(void *, void *, u8);
+void createHudSpritePair(void *, void *, void *, s32, s32, f32, u8);
+extern u8 *D_menu_overlay_800CFA68;
+void spawnMenuListItemSprite(void *list, u8 idx) {
+    D_menu_overlay_800CFA68 = createUiSpriteAt(allocTextRenderTarget(0x80, 0x10), -0x40, 0x50);
+    insertLookupEntry(list, D_menu_overlay_800CFA68, idx - 1);
+    insertLookupEntry(list, D_menu_overlay_800CFA68 + 0x30, idx);
+    createHudSpritePair(list, D_menu_overlay_800CFA68 + 0x60, D_menu_overlay_800CFA68 + 0x30, 0x80, 0x10, 5.0f, idx);
+    D_menu_overlay_800CFA68[0x74] = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", createUiSpriteAt);
 
