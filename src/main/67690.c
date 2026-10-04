@@ -219,7 +219,22 @@ u8 isSpeechSlotActive(u8 slot) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", stopSpeechSlotIfActive);
+void stopVoiceByHandle(s32);
+void stopSpeechSlotIfActive(s32 slot) {
+    s32 *p;
+    u8 i = slot - 1;
+
+    if (i < 8) {
+        s32 *base = D_main_80139B80;
+        p = base + (u8)(slot - 1);
+        if (*p != -1) {
+            if ((u8)isVoiceHandleActive(*p)) {
+                stopVoiceByHandle(*p);
+            }
+            *p = -1;
+        }
+    }
+}
 
 extern s16 D_main_bss_80139BA8;
 void stopAllSpeechSlots(void) {
