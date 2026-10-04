@@ -849,14 +849,28 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMenuAnimGroupFrame);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", createMenuTextElement);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", allocMenuScreenState);
-
 typedef struct {
     u8 pad0[0x18];
     void *unk18;
     void *unk1C;
     void *unk20[14];
+    s32 unk58;
+    f32 unk5C;
 } MenuScreenState;
+void allocMenuScreenState(MenuScreenState *arg0) {
+    u8 i;
+
+    for (i = 0; i < 16; i++) {
+        if (i >= 2) {
+            arg0->unk20[i - 2] = rs_malloc(0x80, 0);
+        }
+    }
+    arg0->unk18 = rs_malloc(0x1000, 0);
+    arg0->unk1C = rs_malloc(0x1000, 0);
+    arg0->unk58 = 0;
+    arg0->unk5C = 18.5f;
+}
+
 void freeMenuScreenState(MenuScreenState *arg0) {
     u8 i;
 
