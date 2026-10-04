@@ -82,7 +82,35 @@ void findFreeSpeechVoiceSlot(void) {
     } while (i != 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", shutdownMusyXVoices);
+extern void *speechSampleOffsets;
+extern u8 speechSampleOffsetsLoaded;
+extern void *D_main_bss_80154674;
+
+void findAndZeroTableSlotMatching(void (*)(void));
+void serviceVoicePoolFrame(void);
+void rs_free(void *);
+
+void shutdownMusyXVoices(void) {
+    s32 i;
+    s32 j;
+
+    for (i = 0; i < 1; i++) {
+        stopVoiceSlotSynced(i);
+    }
+    do {
+        for (j = 0; j < 1; j++) {
+            if (D_main_bss_80154620[j].active != 0) {
+                break;
+            }
+        }
+    } while (j != 1);
+    speechFileLoaded = 0;
+    findAndZeroTableSlotMatching(serviceVoicePoolFrame);
+    if (speechSampleOffsets != NULL && speechSampleOffsetsLoaded) {
+        rs_free(speechSampleOffsets);
+    }
+    rs_free(D_main_bss_80154674);
+}
 
 s32 accumulateVoiceSampleOffset(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 index) {
     if (speechFileLoaded) {
