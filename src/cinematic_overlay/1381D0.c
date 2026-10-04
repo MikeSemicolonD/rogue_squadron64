@@ -361,7 +361,20 @@ void resetCutsceneActionSlots(void) {
     applyCutsceneSlotMaterialOverrides();
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", scheduleCutsceneActionSlot);
+void scheduleCutsceneActionSlot(s16 id, f32 arg1, f32 arg2, f32 arg3) {
+    u16 i;
+
+    for (i = 0; i < 0x10; i++) {
+        if (D_cinematic_overlay_800B0BC0[i].active == 0) {
+            D_cinematic_overlay_800B0BC0[i].unk10 = id;
+            D_cinematic_overlay_800B0BC0[i].active = 1;
+            D_cinematic_overlay_800B0BC0[i].unk8 = arg2;
+            D_cinematic_overlay_800B0BC0[i].unkC = arg3;
+            D_cinematic_overlay_800B0BC0[i].unk4 = arg1 - 180.0f;
+            return;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", composeInterpolatedNodeMatricesAlt);
 
