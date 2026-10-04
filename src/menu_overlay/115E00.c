@@ -231,7 +231,35 @@ void tickTimedScreenFadeFloat(f32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", playExitSoundAndToggleScreenMeshes);
+extern void queueAudioVoiceCmd(s32, s32, s32, s32);
+extern void playSimpleAudioCmd(s32, s32, s32);
+extern void setVoiceLineLoopFlag(s32);
+extern void applyFlagsToMeshTreeOrList(s32, s32, s32, s32);
+extern void releaseSceneObjectMeshTree(s32);
+extern void beginSceneRenderFrame(s32);
+extern void updateTextOverlayLookupEntry(s32, s32 *, f32);
+extern s32 D_menu_overlay_800CDCE0;
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    u8 pad8[0x18];
+} MenuScreenMeshSlot;
+
+extern MenuScreenMeshSlot D_menu_overlay_800CDCF0[];
+
+void playExitSoundAndToggleScreenMeshes(void) {
+    queueAudioVoiceCmd(0, 400, D_menu_overlay_800CDCE0, 1);
+    playSimpleAudioCmd(0, 400, 0xFE);
+    if (D_menu_overlay_800CDFB0 != 0) {
+        setVoiceLineLoopFlag(D_menu_overlay_800CDFB0);
+    }
+    applyFlagsToMeshTreeOrList(D_menu_overlay_800CDCF0[2].unk4, 0, 0x10000000, 0);
+    applyFlagsToMeshTreeOrList(D_menu_overlay_800CDCF0[3].unk4, 0, 0x10000000, 0);
+    releaseSceneObjectMeshTree(D_menu_overlay_800CDCF0[2].unk4);
+    releaseSceneObjectMeshTree(D_menu_overlay_800CDCF0[3].unk4);
+    beginSceneRenderFrame(1);
+    updateTextOverlayLookupEntry(D_menu_overlay_800CDCDC, &D_menu_overlay_800CDC80, 24.0f);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", fake_func_800B2628);
 
