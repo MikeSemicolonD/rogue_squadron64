@@ -457,7 +457,9 @@ void copyLevelConfigColorTriple(void *arg0) {
     (*(u8 *)((u8 *)(arg0) + 2)) = (u8) D_main_800A05D0[gGameSettings.currentLevel].unk28.b;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6B8B0", copyLevelConfigPackedWord);
+void copyLevelConfigPackedWord(struct rgba *dst) {
+    *dst = D_main_800A05D0[gGameSettings.currentLevel].unk24;
+}
 
 s16 getLevelConfigHalfword(void) {
     return D_main_800A05D0[gGameSettings.currentLevel].unk2C;
