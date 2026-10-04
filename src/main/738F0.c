@@ -1,6 +1,7 @@
 #include "common.h"
 #include "common_types.h"
 extern u16 spawnNpcOfType(void *, void *, u32, u8);
+typedef struct {    s32 unk0;    f32 unk4;    f32 unk8;    f32 unkC;    f32 unk10;    f32 unk14;    f32 unk18;    f32 unk1C;    f32 unk20;    s16 unk24;} HeavyBurstArgs;extern void heavyRandomBurstNpcHandler(void);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", initWaterSprayParticles);
 
@@ -112,7 +113,24 @@ f32 distanceFromCameraToPoint(f32 *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnEffectNpcWithRampedScale);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnEffectNpcWithRampedScaleExt);
+u16 spawnEffectNpcWithRampedScaleExt(s32 arg0, s32 arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5, f32 arg6, f32 arg7, f32 arg8, f32 arg9) {
+    HeavyBurstArgs args;
+
+    args.unk0 = arg0;
+    args.unkC = 1.0f;
+    if (arg9 > 0.0f) {
+        args.unkC = 1.0f / arg9;
+    }
+    args.unk10 = arg4;
+    args.unk24 = arg1;
+    args.unk14 = arg5;
+    args.unk18 = arg6;
+    args.unk1C = arg7;
+    args.unk4 = arg2;
+    args.unk8 = arg3;
+    args.unk20 = arg8;
+    return spawnNpcOfType(heavyRandomBurstNpcHandler, &args, 1, 100);
+}
 
 void vec3ExtrapolateFirstOrder(f32 *arg0, s32 arg1, f32 *arg2, f32 arg3) {
     arg2[0] = arg0[0] - arg0[3] * arg3;
