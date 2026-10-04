@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "main/04030.h"
 #include "main/3F160.h"
@@ -216,7 +217,43 @@ typedef struct {
 
 void orthonormalizeFrame(OrientedFrame *);
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedEffectIfBudgetOk);
+void spawnOrientedEffectIfBudgetOk(f32 *pos, f32 *dir, s32 arg2, f32 arg3, f32 arg4)
+{
+  OrientedFrame fr;
+  OrientedSpawnArgs args;
+  OrientedFrame *fp;
+  float new_var;
+  *((V3I *) fr.pos) = *((V3I *) pos);
+  if (dir != 0)
+  {
+    *((V3I *) fr.dir) = *((V3I *) dir);
+  }
+  else
+  {
+    fr.dir[0] = 0.0f;
+    fr.dir[2] = 0.0f;
+    fr.dir[1] = 1.0f;
+  }
+  fr.inv[0] = 1.0f - fr.dir[0];
+  (&fr)->inv[1] = 1.0f - fr.dir[1];
+  fr.inv[2] = 1.0f - fr.dir[2];
+  fr.one[2] = 1.0f;
+  fr.one[1] = 1.0f;
+  fr.one[0] = 1.0f;
+  orthonormalizeFrame(&fr);
+  fp = &fr;
+  new_var = 0.0001f;
+  if ((D_main_bss_80130B63 != 0) || ((findLargestFreeHeapChunk() >= 0x3A98U) && (countDisplayListChunks() >= 0x4E20)))
+  {
+    args.c = new_var;
+    args.frame = fp;
+    args.a = arg2;
+    args.b = 0;
+    args.d = arg3;
+    args.e = arg4;
+    spawnNpcOfType(orientedNpcHandler, &args, 1U, 0xFU);
+  }
+}
 
 
 void spawnOrientedEffectIfBudgetOkAlt(f32 *pos, f32 *dir, s32 arg2, f32 arg3, f32 arg4, f32 arg5) {
