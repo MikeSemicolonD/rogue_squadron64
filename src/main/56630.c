@@ -48,6 +48,8 @@ void setActiveVoiceLine(s32 arg0, s32 arg1) {
     ((ActiveVoiceLine *)D_main_bss_80139010)->unk2 = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56630", clearActiveVoiceLine);
+void clearActiveVoiceLine(void) {
+    *(u16 *)D_main_bss_80139010 = 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56630", fake_func_80056344);
