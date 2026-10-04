@@ -342,6 +342,37 @@ void applyFlagsToMeshdef1List(struct meshdef0 *arg0, u32 arg1, u32 arg2) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", processMeshTreeExcludingList);
+typedef struct {
+    void *ptr;
+    s32 unk4;
+    s32 unk8;
+} MeshExcludeEntry;
+
+extern void processMeshdef1ForLod(void *, s32, s32);
+
+void processMeshTreeExcludingList(u8 *node, MeshExcludeEntry *list) {
+    void **m;
+    s32 i;
+
+    for (; node != NULL; node = *(u8 **)node) {
+        if (*(void ***)(node + 0x10) != NULL) {
+            m = *(void ***)(node + 0x10);
+            do {
+                for (i = 0; list[i].ptr != NULL; i++) {
+                    if (m == list[i].ptr) {
+                        break;
+                    }
+                }
+                if (list[i].ptr == NULL) {
+                    processMeshdef1ForLod(m, 0, 0);
+                }
+                m = *m;
+            } while (m != NULL);
+        }
+        if (*(void **)(node + 0xC) != NULL) {
+            processMeshTreeExcludingList(*(void **)(node + 0xC), list);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", fake_func_80059B4C);
