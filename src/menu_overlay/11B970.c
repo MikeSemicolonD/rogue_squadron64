@@ -849,7 +849,54 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A737C);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", menuSubtype02Handler);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initInteractiveSceneContext);
+void setMenuOverlayHeaderState(s32, s32, s32);
+void *getPlayerSlotFieldAt34(u16, u16);
+void relocateLookupEntryToNewKey(void *, void *, u8);
+void initNpcBookkeepingTables();
+void initSpeechSubsystem(s32, u8);
+void allocAnimationPhasePool(s32);
+void load_full_header_image(char *);
+void initNpcSlotList();
+void allocNpcContextArrays();
+void allocAllInitialNpcSlots();
+void allocAndInitParticlePool();
+extern u8 D_main_bss_80130B62;
+void initInteractiveSceneContext(void) {
+    D_menu_overlay_800CF090.unk10 = 0x200;
+    D_menu_overlay_800CF090.unk14 = 0x12C;
+    D_menu_overlay_800CF090.unk18 = 0x100;
+    D_menu_overlay_800CF090.unk4 = 0;
+    D_menu_overlay_800CF090.unk8 = 0;
+    D_menu_overlay_800CF090.unkC = 0;
+    D_menu_overlay_800CF090.unk1C = 0x96;
+    D_menu_overlay_800CF090.unk20 = 45.0f;
+    D_menu_overlay_800CF090.unk24 = 0.1171875f;
+    D_menu_overlay_800CF090.unk28 = 93.75f;
+    setRenderStateFlagByteOne(1);
+    setRenderStateFlagByteThree(0);
+    setRenderStateFlagByteTwo(1);
+    selectRenderPresetByIndex(1);
+    selectSecondaryPresetByIndex(3);
+    clearVec4QuadStruct(D_menu_overlay_800CF090.unk2C);
+    D_menu_overlay_800CF078 = allocateSlotTable(0x10);
+    D_menu_overlay_800CF07C = allocateSlotTable(0x10);
+    D_main_bss_8013889C = 0;
+    loadCharTextureSet(D_menu_overlay_800CF078, 5, 0xD, 0x80);
+    setMenuOverlayHeaderState(2, 0x200, 0);
+    resetPlayerSlotAllChannels(5, 0x14);
+    relocateLookupEntryToNewKey(D_menu_overlay_800CF078, getPlayerSlotFieldAt34(5, 8), 0x19);
+    relocateLookupEntryToNewKey(D_menu_overlay_800CF078, getPlayerSlotFieldAt34(5, 0xA), 0x19);
+    relocateLookupEntryToNewKey(D_menu_overlay_800CF078, getPlayerSlotFieldAt34(5, 0xC), 0x19);
+    initNpcBookkeepingTables();
+    initSpeechSubsystem(0, D_main_bss_80130B62);
+    initFormatMessageWorker(5);
+    allocAnimationPhasePool(0x20);
+    load_full_header_image("level/lv_5/ref_TM");
+    initNpcSlotList();
+    allocNpcContextArrays();
+    allocAllInitialNpcSlots();
+    allocAndInitParticlePool();
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setupCraftPreviewModel);
 
@@ -951,7 +998,31 @@ void getControllerSettingsTitle(char *title) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", playMenuElementTransitionAnim);
+void activateAnimationKeyframe(s32, s32, u8);
+extern s8 D_menu_overlay_800CF162;
+void playMenuElementTransitionAnim(f32 arg0, u8 a1, u8 a2, u8 a3, u8 a4) {
+    u8 i;
+    if (a2) {
+        for (i = 2; i < 5; i++) {
+            activateAnimationKeyframe(5, i, (u8)(arg0 * 254.0f));
+        }
+    }
+    if (a1) {
+        i = 0;
+        do {
+            if (i == D_menu_overlay_800CF162) {
+                if (!a3) {
+                    goto next;
+                }
+            } else if (a4) {
+                goto next;
+            }
+            D_menu_overlay_800CF180[i].unk1C = arg0;
+next:
+            i++;
+        } while (i < 3);
+    }
+}
 
 s32 applyFlagsToMeshTreeOrList(s32, s32, s32, s32);
 s32 loadHelmetModel();
