@@ -2,46 +2,35 @@
 
 Tree: `upstream/master` at `c0a6714` ("More matches, mostly concerning demo stuff"), cloned into WSL (Ubuntu 24.04). ROM SHA-1 `ed42eed1ee2db646ff7ef94ba8c5421d164a4f0d` (matches `roguesquadron.yaml`).
 
-Toolchain: `tools/setup_wsl.sh` (no sudo): binutils 2.42 and cpp 12.4.0 from the Ubuntu `mips-linux-gnu` cross packages, wibo 1.2.0, splat in a venv. SN compilers come from the Makefile's own download rules.
-
 ## Result
 
-**The ROM could not be built, so whether the decomp matches is still unknown.** Every C and asm file compiles and assembles. The link fails under every configuration tried. The failures are configuration drift between `roguesquadron.yaml`, the committed `roguesquadron.ld`, and `src/`. They are not compiler problems.
+**The decomp builds a byte-identical ROM.** `build/tyler.z64` has SHA-1 `ed42eed1ee2db646ff7ef94ba8c5421d164a4f0d`, and `tools/first_diff.py` reports `MATCH`.
 
-## Failures, in the order hit
+## Workflow
 
-1. **Makefile: `build/assets/` is never created.** The `build/%.o: %.bin` rule has no directory dependency and `BUILD_DIRS` doesn't cover `assets/`. Fixed on this branch with `@mkdir -p $(@D)` in that rule.
-2. **`asm/` isn't committed, so splat must run first, and the splat version is unpinned.**
-   - splat 0.50.0 refuses the yaml: the overlay segments overlap the global vram range because `main_bss` (vram 0x8010D200) is global and sits above the overlays. Adding `exclusive_ram_id: main_bss` to the `main_bss` segment, as splat suggests, makes it split.
-   - splat 0.36.4, 0.38.1 and 0.39.1 crash in `bss.py` (`get_next_subsegment_for_ram` on `None`). 0.40.1 rejects `main_bss`'s subsegments as out of vram order.
-   - splat 0.41.1 splits as-is. Its generated linker script is identical to 0.50.0's (with the tag).
-3. **The committed `roguesquadron.ld` is stale and hand-edited.** Splat regenerates it on every split. Compared with the regenerated one, the committed script:
-   - links `build/src/main/02490.o`, but `src/main/02490.c` no longer exists (moved in `fb6cd1b`);
-   - names 10 data objects splat no longer emits (`asm/data/main/38160.data.o`, `3BDC0.rodata.o`, `mission_overlay/0B4EC0.bss.o`, ...);
-   - omits `build/src/main/01850.o(.text)` and `02420.o(.text)`;
-   - contains 6 hand-added lines that `src/main/01720.c` needs: `<overlay>_BASEROM_START = <overlay>_ROM_START + 0xB0000000` and `<overlay>_ROM_SIZE = SIZEOF(.<overlay>)` for the mission, menu and cinematic overlays.
+```sh
+sh tools/setup_wsl.sh            # once: binutils 2.42, cpp 12.4.0, wibo 1.2.0, splat 0.41.1 into ~/opt (no sudo)
+. ~/opt/rs64env.sh
+cp /path/to/rogue_squadron.z64 . # the USA 1.0 ROM, not committed
+splat split roguesquadron.yaml   # generates asm/ and assets/ (not committed)
+make -j$(nproc) check            # build/tyler.z64: OK
+```
 
-   **Fix on this branch:** those six lines now live in `extra_syms.ld`, which the Makefile passes to ld, so regenerating `roguesquadron.ld` no longer loses them.
-4. **`main_bss` is emitted twice.** With the regenerated script, splat writes the whole `main_bss` segment as one blob, `asm/data/main_bss.bss.s`, and the main segment also links each C file's `.bss`. That gives 85 duplicate symbols: 04080 33, 033C0 16, 02420 9, 1EE30 7, 3F160 7, zlib/inftrees 5, 562A0 4, 07800 3, 03290 1. Together with items 5 and 6, the link reports 89 `multiple definition` errors and no undefined references. The yaml's `main_bss` subsegment list isn't honoured by either splat version. Neither workaround links:
-   - splicing in the committed script's per-subsegment `.bss` list leaves `D_main_bss_8010FCB0`, `D_main_bss_801126E4` and others undefined;
-   - dropping the per-file `.bss` leaves about 5000 undefined references.
-5. **`mission_overlay/0BF800` data is defined twice.** The latest upstream commit moved `D_mission_overlay_80109AD0`, `demoStep` and `D_mission_overlay_80109AE4` into `src/mission_overlay/0BF800.c`. The yaml still lists `[0x0010A6D0, data, "mission_overlay/0BF800"]` as asm data. That gives 3 duplicate symbols. The likely fix is changing that entry to `.data`, but only if the C defines the whole range.
-6. **`main/6B8B0` data is defined twice.** `D_main_800A05D0` is in both `src/main/6B8B0.c` and the asm data for the yaml entry `[0xA11D0, data, "main/6B8B0"]`. That gives 1 duplicate symbol and the same likely fix as item 5.
-7. **A splat run also rewrites the committed `undefined_syms_auto.txt`.** It adds `gspF3DEXTextStart`, `rspbootTextStart` and `aspMainTextStart`, which is more evidence that the committed generated files trail the yaml.
+- **The linker script is `provisional.ld`, not `roguesquadron.ld`.** The maintainer updates `provisional.ld` in every commit. It carries the overlay load symbols (`*_BASEROM_START`, `*_ROM_SIZE`) and the per-file `main_bss` layout. Splat rewrites `roguesquadron.ld` on every split, and that copy doesn't link: it lists files that no longer exist, emits `main_bss` as one blob, and lacks the overlay symbols. The Makefile now uses `LDSCRIPT := provisional.ld`.
+- **Splat 0.41.1.** It is the newest release that splits the yaml unchanged. 0.50.0 stops on the overlay/global vram overlap check, and versions up to 0.40.1 fail on the `main_bss` segment.
+- **Makefile fix:** the `.bin` rule now creates `build/assets/` itself.
+- After a split, `git status` shows `roguesquadron.ld` modified. That's expected; don't commit it.
 
-## What's needed from upstream
+## Dead ends (for reference)
 
-Ask the maintainer how they build:
-- their splat version;
-- whether they regenerate `roguesquadron.ld` or keep it by hand;
-- how `main_bss` is meant to split;
-- whether `make` currently links for them.
+Building with the regenerated `roguesquadron.ld` fails. Each fix brought it closer, but `provisional.ld` makes all of them unnecessary:
+- `extra_syms.ld` for the overlay symbols;
+- `auto_link_sections: [".data", ".rodata"]` plus `main_bss` as a `code` group with `start: 0x1000000` and `exclusive_ram_id`;
+- `.data` ownership changes for `main/6B8B0` and `mission_overlay/0BF800`.
 
-With that, items 4-6 are probably small yaml fixes. Items 1 and 3 are fixed on `build-check`.
+## Progress (`python3 tools/progress.py`)
 
-## Progress (`python3 tools/progress.py`, after splat 0.41.1)
-
-These are `.text` bytes in C (yaml text subsegments minus `INCLUDE_ASM` functions). They are not proven-matching bytes, because the ROM doesn't link yet.
+These are `.text` bytes in C (yaml text subsegments minus `INCLUDE_ASM` functions). Because the ROM matches, all of it is matching C.
 
 | Group | In C | Total | % | Functions still asm |
 |---|---|---|---|---|
@@ -52,4 +41,4 @@ These are `.text` bytes in C (yaml text subsegments minus `INCLUDE_ASM` function
 | libultra | 0 | 55360 | 0.0 | 190 |
 | zlib | 11740 | 13168 | 89.2 | 8 |
 | entry_point | 0 | 64 | 0.0 | 2 |
-| **total** | **82524** | **1179296** | **7.0** | **2006** |
+| **total** | **82524** | **1179296** | **7.0** | **2006** (121 of them splat `fake_func_*` fragments) |

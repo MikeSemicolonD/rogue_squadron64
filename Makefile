@@ -1,6 +1,7 @@
 PYTHON := python3
 
-LDSCRIPT := roguesquadron.ld
+# provisional.ld is the maintained linker script; splat regenerates roguesquadron.ld on every split.
+LDSCRIPT := provisional.ld
 
 TOOLSDIR := ./tools
 
@@ -41,8 +42,8 @@ SYMBOL_FILES := undefined_funcs_auto.txt undefined_syms_auto.txt symbol_files/ci
 build/tyler.z64: build/tyler.elf
 	$(OBJCOPY) $< $@ -O binary
 
-build/tyler.elf: $(O_FILES) $(LDSCRIPT) extra_syms.ld
-	$(LD) -Map=$@.map -EB -T $(LDSCRIPT) -T undefined_funcs_auto.txt -T undefined_syms_auto.txt -T extra_syms.ld -G0 -o $@
+build/tyler.elf: $(O_FILES) $(LDSCRIPT)
+	$(LD) -Map=$@.map -EB -T $(LDSCRIPT) -T undefined_funcs_auto.txt -T undefined_syms_auto.txt -G0 -o $@
 
 $(BUILD_DIRS):
 	mkdir -p $@
