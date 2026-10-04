@@ -72,8 +72,19 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800F
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", clearMissionObjectiveFlagsAndEnterPhaseSix);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", advanceMissionObjectiveStageWhenModeOne);
+void stopAllMusicWithFade(f32);
+
+s32 advanceMissionObjectiveStageWhenModeOne(void) {
+    if (D_mission_overlay_8010CA20 == 1) {
+        stopAllMusicWithFade(0.75f);
+        D_mission_overlay_8010C9F0 += 1;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", fake_func_800FBE14);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A90A4);
+__asm__(".section .rodata
+.word 0x3C018005
+.word 0xC420FED0
+.section .text");
