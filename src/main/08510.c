@@ -7,7 +7,19 @@
 // Interim BSS externs
 extern struct DisplayListBuffer *D_main_bss_801163B0;
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", registerSiCallback);
+extern s32 D_main_bss_8011A8A4[];
+
+s32 registerSiCallback(void (*cb)(void)) {
+    s32 i;
+
+    for (i = 0; i < 4; i++) {
+        if (D_main_bss_8011A8A4[i] == 0) {
+            D_main_bss_8011A8A4[i] = (s32)cb;
+            return 1;
+        }
+    }
+    return 0;
+}
 
 extern s32 D_main_bss_8011A8A4[];
 
