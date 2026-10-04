@@ -85,7 +85,34 @@ void func_mission_overlay_800FBBA8(f32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800FBC4C);
+u16 getPlayerField2(u8);
+s32 slotDispatcherIter(u16, s32, void *);
+void broadcastSceneShutdownAndCleanup(void);
+void func_mission_overlay_800C72E8(void);
+void commitStagedSongAndPlay(void);
+void dispatchSlotActionTwelveByGlobalId(void);
+void resetSpeechSubsystem(void);
+void clearSpeechActiveFlags(void);
+extern u8 D_mission_overlay_8010CA18;
+
+void func_mission_overlay_800FBC4C(f32 dt) {
+    D_mission_overlay_8010C9EC += dt;
+    if (D_mission_overlay_8010C9F0 == 0 && D_mission_overlay_8010C9EC > 7.0f) {
+        D_mission_overlay_8010C9F0 = 1;
+    } else if (D_mission_overlay_8010C9F0 == 1) {
+        slotDispatcherIter(getPlayerField2(D_mission_overlay_8010CA18), 0xC, NULL);
+        D_mission_overlay_8010C9EC = 0.0f;
+        D_mission_overlay_8010C9F0 = 2;
+    } else if (D_mission_overlay_8010C9F0 == 2 && D_mission_overlay_8010C9EC >= 1.0f) {
+        broadcastSceneShutdownAndCleanup();
+        func_mission_overlay_800C72E8();
+        commitStagedSongAndPlay();
+        dispatchSlotActionTwelveByGlobalId();
+        resetSpeechSubsystem();
+        clearSpeechActiveFlags();
+        D_mission_overlay_8010CA20 = 0;
+    }
+}
 
 typedef struct {
     u8 pad0[0x1A];
