@@ -3,7 +3,29 @@
 
 INCLUDE_ASM("asm/nonmatchings/main/97D20", resetSongSubsystemCounter);
 
-INCLUDE_ASM("asm/nonmatchings/main/97D20", bindMacroIdsToSoundGroup);
+static __inline__ u8 *findSndChunkEntry(u8 *p, u16 id) {
+    while (*(s32 *)p != -1) {
+        if (*(u16 *)(p + 4) == id) {
+            return p;
+        }
+        p += *(s32 *)p;
+    }
+    return NULL;
+}
+
+extern void factor5SecondSortedTableInsertValue(u16, void *);
+
+void bindMacroIdsToSoundGroup(u16 *ids, u8 *base) {
+    u8 *e;
+
+    while (*ids != 0xFFFF) {
+        e = findSndChunkEntry(base + *(s32 *)(base + 4), *ids);
+        if (e != NULL) {
+            factor5SecondSortedTableInsertValue(*ids, e + 8);
+        }
+        ids++;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/97D20", registerSndMacroTable);
 
