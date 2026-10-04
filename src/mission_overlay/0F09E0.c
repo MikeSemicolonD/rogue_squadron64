@@ -33,7 +33,21 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initActorRenderDescriptor
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initActorRenderDescriptorWithNpcVelocity);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setNpcHealth);
+s32 setNpcHealth(u8* npc, s32* health, u8* record) {
+    u8* rec = record;
+
+    if (npc[0x1A7] == 0) {
+        *(s32**)(npc + 0x190) = health;
+        if (*(s32*)(record + 0x54) == (s32)0x80000000) {
+            *(s32*)(record + 0x54) = health[D_main_bss_80137CE4];
+        }
+        *(s32*)(npc + 0x194) = *(s32*)(rec + 0x54);
+    } else {
+        *(s32*)(npc + 0x190) = health[D_main_bss_80137CE4];
+        *(s32*)(npc + 0x194) = health[D_main_bss_80137CE4];
+    }
+    return health[D_main_bss_80137CE4];
+}
 
 s32 getNpcCurrentHealth(u8* npc) {
     if (npc[0x1A7] != 0) {
@@ -42,11 +56,27 @@ s32 getNpcCurrentHealth(u8* npc) {
     return (*(s32**)(npc + 0x190))[D_main_bss_80137CE4];
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", dealDamageToNpc);
+void dealDamageToNpc(u8* npc, s32 damage) {
+    if (npc[0x1A7] == 0) {
+        (*(s32**)(npc + 0x190))[D_main_bss_80137CE4] -= damage;
+    } else {
+        *(s32*)(npc + 0x190) -= damage;
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getNpcMissingHealth);
+s32 getNpcMissingHealth(u8* npc) {
+    if (npc[0x1A7] != 0) {
+        return *(s32*)(npc + 0x194) - *(s32*)(npc + 0x190);
+    }
+    return *(s32*)(npc + 0x194) - (*(s32**)(npc + 0x190))[D_main_bss_80137CE4];
+}
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getNpcHealthPercentage);
+f32 getNpcHealthPercentage(u8* npc) {
+    if (npc[0x1A7] != 0) {
+        return ((f32)*(s32*)(npc + 0x190) / (f32)*(s32*)(npc + 0x194)) * 100.0f;
+    }
+    return ((f32)(*(s32**)(npc + 0x190))[D_main_bss_80137CE4] / (f32)*(s32*)(npc + 0x194)) * 100.0f;
+}
 
 s32 isVectorWithinConeAndRange(Mat4x3 arg0, f32 arg1, f32 arg2, Vec3f arg3) {
     Vec3f sp10;
