@@ -27,7 +27,19 @@ void bindMacroIdsToSoundGroup(u16 *ids, u8 *base) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/97D20", registerSndMacroTable);
+extern void factor5SortedTableInsertValue(u16, void *);
+
+void registerSndMacroTable(u16 *ids, u8 *base) {
+    u8 *e;
+
+    while (*ids != 0xFFFF) {
+        e = findSndChunkEntry(base + *(s32 *)(base + 8), *ids);
+        if (e != NULL) {
+            factor5SortedTableInsertValue(*ids, e + 8);
+        }
+        ids++;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/97D20", registerSndCurveTable);
 
