@@ -40,7 +40,18 @@ s32 streamSampleCountToByteSize(s32 arg0) {
     return (arg0 + 4) * 2;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", setVoiceVolumePanLocked);
+extern u8 gMusyXActiveFlag;
+s32 factor5MutexAcquire();
+s32 factor5MutexRelease();
+void setVoiceModulationParams(s32, s32, s32, s32, s32);
+
+void setVoiceVolumePanLocked(s32 arg0, u8 arg1, u8 arg2, u8 arg3, u8 arg4) {
+    if ((gMusyXActiveFlag != 0) & (~arg0 != 0)) {
+        factor5MutexAcquire();
+        setVoiceModulationParams(arg0, arg1 << 0x10, arg2 << 0x10, arg3 << 0x10, arg4 << 0x10);
+        factor5MutexRelease();
+    }
+}
 
 extern u8 gMusyXActiveFlag;
 s32 factor5MutexAcquire();
