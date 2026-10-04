@@ -161,7 +161,11 @@ INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcShieldGeneratorUpdate);
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcVortexUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", clearObjectPoolStateFlag);
+extern s8 D_main_bss_8013A980;
+
+void clearObjectPoolStateFlag(void) {
+    D_main_bss_8013A980 = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcSpawnInitTimedEffect);
 

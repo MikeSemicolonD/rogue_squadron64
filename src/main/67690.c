@@ -129,7 +129,11 @@ INCLUDE_ASM("asm/nonmatchings/main/67690", clearSpeechActiveFlags);
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", beginSpeechTimingWindow);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", endSpeechTimingWindow);
+extern s8 D_main_bss_80139C8D;
+
+void endSpeechTimingWindow(void) {
+    D_main_bss_80139C8D = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", getSpeechPlaybackElapsedTime);
 

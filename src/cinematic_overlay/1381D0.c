@@ -402,7 +402,9 @@ INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicStageAdvancer)
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicDeactivator);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", getCinematicStateSubObject);
+s32 getCinematicStateSubObject(void *arg0) {
+    return (*(s32 *)((u8 *)(arg0) + 0xC));
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicInterpRatio);
 

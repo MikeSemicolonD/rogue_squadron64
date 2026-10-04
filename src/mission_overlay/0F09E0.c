@@ -200,7 +200,9 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getNpcDetailLevelByIndex)
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setObjectDetailLevel);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getObjectDetailLevel);
+s16 getObjectDetailLevel(void *arg0) {
+    return (*(s16 *)((u8 *)(arg0) + 0x19A));
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initActorMotionParams);
 
@@ -247,7 +249,9 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", generatePerpEmitDirection
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", stepAndTickProgressChannel);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getEffectIntensity);
+f32 getEffectIntensity(void *arg0) {
+    return (*(f32 *)((u8 *)(arg0) + 0x14C));
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setEffectIntensity);
 

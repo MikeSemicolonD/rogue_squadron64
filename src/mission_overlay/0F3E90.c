@@ -29,7 +29,9 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", spawnAndUpdateEffectActor
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", executeActorType4Effect);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", clearObjectField112);
+void clearObjectField112(void *arg0) {
+    (*(s8 *)((u8 *)(arg0) + 0x112)) = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType1);
 
