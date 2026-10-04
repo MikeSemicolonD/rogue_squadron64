@@ -67,7 +67,29 @@ INCLUDE_ASM("asm/nonmatchings/main/94F50", advanceSongRegion);
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", updateSongTempoTickRate);
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", getSongParamByHandle);
+static inline s32 findSongSlotByHandle(u32 handle) {
+    u32 i;
+
+    for (i = 0; i < 8; i++) {
+        if (D_main_bss_80149A00[i].unkEC1 == 0 && D_main_bss_80149A00[i].unk000 == (handle & 0x7FFFFFFF)) {
+            return i | (handle & 0x80000000);
+        }
+    }
+    return -1;
+}
+u16 getSongParamByHandle(u32 handle) {
+    s32 slot;
+
+    if (gMusyXActiveFlag != 0) {
+        slot = findSongSlotByHandle(handle);
+        if (slot != -1) {
+            if (slot >= 0) {
+                return D_main_bss_80149A00[slot].unkEC6;
+            }
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", isSongHandleActive);
 
