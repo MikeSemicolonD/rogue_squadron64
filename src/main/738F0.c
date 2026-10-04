@@ -254,7 +254,32 @@ u16 spawnWaterSprayNpc(s32 arg0, s32 arg1) {
     return 0xFFFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnWaterSprayDebrisAndBurst);
+void spawnOrientedEffectIfBudgetOkAlt(f32 *, f32 *, s32, f32, f32, f32);
+typedef struct { f32 *vec; void *parent; u8 pad8[4]; f32 f24c; f32 f28c; f32 pad2C; f32 f30c; u16 s34; s16 s36; } WsArgs;
+void spawnDistanceScaledDebrisBurst(void *, f32, f32);
+extern f32 D_main_bss_80136FA8;
+void spawnWaterSprayDebrisAndBurst(f32 *arg0, f32 arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5) {
+    WsArgs a;
+    f32 v[3];
+    if (D_main_bss_8013A944 != 0) {
+        a.s34 = 0xFFFF;
+        v[1] = arg3;
+        a.s36 = 2;
+        a.parent = arg0;
+        v[0] = arg1;
+        v[2] = arg1;
+        a.vec = v;
+        a.f30c = arg4;
+        a.f28c = 1.0f / arg5;
+        a.f24c = arg2 - arg1;
+        spawnNpcOfType(npcWaterSprayUpdate, &a, 1, 0xF);
+        spawnDistanceScaledDebrisBurst(arg0, arg2 * 0.75f, arg4 * 0.4f);
+        v[0] = arg0[0];
+        v[1] = (arg0[1] - D_main_bss_80136FA8) - 0.05f;
+        v[2] = arg0[2];
+        spawnOrientedEffectIfBudgetOkAlt(v, 0, 0, arg1 * 0.3f, arg2 * 0.6f, arg5 * 2.2f);
+    }
+}
 
 typedef struct {
     u8 *parent;
