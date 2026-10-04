@@ -1,13 +1,62 @@
 #include "common.h"
 #include "common_types.h"
 
+typedef struct {
+    u8 active;
+    u8 pad1[0x17];
+    u8 unk18;
+    u8 pad19[3];
+    s32 sampleOffset;
+    u8 pad20[4];
+    s32 handle;
+    u8 pad28[0x1228 - 0x28];
+} SpeechVoiceSlot;
+
+typedef struct {
+    u8 data[0x1228];
+} SpeechVoice;
+
+extern SpeechVoice D_main_80153420[];
+extern SpeechVoiceSlot D_main_bss_80154620[];
+extern u8 D_main_bss_80154650[];
+extern u8 speechFileLoaded;
+
+s32 osSendMesg(void *mq, void *msg, s32 flag);
+s32 osRecvMesg(void *mq, void *msg, s32 flag);
+void stopVoice(void *arg0);
+void stopVoiceSlotSynced(s32 index);
+u32 consumeVoiceSamples(void *voice, u32 count);
+
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", findVoiceSlotByAge);
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", allocAndConfigureNewVoice);
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", stopVoiceSlotSynced);
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", stopVoiceByHandle);
+static inline s32 findVoiceSlotByHandle(s32 handle) {
+    u32 i;
+
+    for (i = 0; i < 1; i++) {
+        if (D_main_bss_80154620[i].active != 0 && D_main_bss_80154620[i].handle == handle) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+s32 stopVoiceByHandle(s32 handle) {
+    s32 index;
+
+    if (handle == -1 || !speechFileLoaded) {
+        return 0;
+    }
+    index = findVoiceSlotByHandle(handle);
+    if (index == -1) {
+        return 0;
+    }
+    stopVoiceSlotSynced(index);
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", isVoiceHandleActive);
 
@@ -20,13 +69,6 @@ INCLUDE_ASM("asm/nonmatchings/main/9BB60", getVoicePlaybackProgressByKey);
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", loadSpeechFile);
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", initMusyXVoiceTable);
-
-typedef struct {
-    u8 active;
-    u8 pad[0x1227];
-} SpeechVoiceSlot;
-
-extern SpeechVoiceSlot D_main_bss_80154620[];
 
 void findFreeSpeechVoiceSlot(void) {
     s32 i;
