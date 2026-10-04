@@ -134,6 +134,58 @@ void loadTieBomberSprite(void) {
     D_main_bss_80139738 = loadAndRelocateAsset(&D_main_8003B168, 0, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", findNpcAlongDirectionRay);
+typedef struct {
+    f32 x, y, z;
+} NpcRayDir;
+
+typedef struct {
+    u8 pad0[0xC];
+    f32 hx, hy, hz;
+} NpcRayHit;
+
+extern NpcRayDir D_main_bss_801395A0;
+extern NpcRayHit D_main_bss_801395B0;
+s32 findActiveNpcInSlotChain(u16, void *);
+u8 *getNpcContextByIndex(u16);
+s32 findSegmentObjectSphereHit(s32, void *, void *, void *);
+s32 revalidateNpcSlotIterator(void *);
+
+s32 findNpcAlongDirectionRay(u8 *arg0, s32 arg1, f32 *arg2, u16 arg3) {
+    u8 sp10[8];
+    f32 x;
+    f32 y;
+    f32 z;
+    s32 idx;
+    s32 ctx;
+
+    x = *(f32 *)(arg0 + 0x10) * 0.5f;
+    D_main_bss_801395A0.x = x;
+    y = *(f32 *)(arg0 + 0x14) * 0.5f;
+    D_main_bss_801395A0.y = y;
+    z = *(f32 *)(arg0 + 0x18) * 0.5f;
+    D_main_bss_801395A0.z = z;
+    if (x == 0.0f && y == 0.0f && z == 0.0f) {
+        return 0;
+    }
+    idx = findActiveNpcInSlotChain(arg3, sp10);
+    if ((idx & 0xFFFF) != 0xFFFF) {
+        do {
+            idx &= 0xFFFF;
+            if (*(u16 *)(arg0 + 0xB6) != idx) {
+                ctx = *(s32 *)(getNpcContextByIndex(idx) + 0xC);
+                if (ctx != 0) {
+                    if (findSegmentObjectSphereHit(ctx, arg0 + 4, &D_main_bss_801395A0, &D_main_bss_801395B0) != 0) {
+                        arg2[0] = D_main_bss_801395B0.hx;
+                        arg2[1] = D_main_bss_801395B0.hy;
+                        arg2[2] = D_main_bss_801395B0.hz;
+                        return 1;
+                    }
+                }
+            }
+            idx = revalidateNpcSlotIterator(sp10);
+        } while ((idx & 0xFFFF) != 0xFFFF);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/5D220", fake_func_8005EE64);
