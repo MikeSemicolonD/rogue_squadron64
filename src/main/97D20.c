@@ -59,7 +59,34 @@ void registerSndCurveTable(u16 *ids, u8 *base) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/97D20", registerSndSampleTable);
+extern u8 *relocateSndPointer(u8 *);
+extern void factor5SortedTableInsertWidePair(u16, void *, u32);
+
+static __inline__ u8 *findSample(u8 *p, u16 id, u8 *base, u32 *out) {
+    while (*(u16 *)p != 0xFFFF) {
+        if (*(u16 *)p == id) {
+            *out = (u32)base + *(s32 *)(p + 4);
+            return p + 8;
+        }
+        p += 0x18;
+    }
+    return NULL;
+}
+
+void registerSndSampleTable(u16 *ids, u8 *a1, u8 *a2) {
+    u32 v;
+    u32 *out = &v;
+    u8 *base = relocateSndPointer(a1);
+    u8 *e;
+
+    while (*ids != 0xFFFF) {
+        e = findSample(a2, *ids, base, out);
+        if (e != NULL) {
+            factor5SortedTableInsertWidePair(*ids, e, v);
+        }
+        ids++;
+    }
+}
 
 typedef struct {
     u16 unk0;
