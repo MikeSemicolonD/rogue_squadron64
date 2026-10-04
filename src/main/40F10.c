@@ -41,7 +41,21 @@ INCLUDE_ASM("asm/nonmatchings/main/40F10", attachChildNpcByIndex);
 
 INCLUDE_ASM("asm/nonmatchings/main/40F10", assignNpcTargetAndPosition);
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", setNpcForwardVectorByIndex);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} NpcFwdVec3;
+void setNpcForwardVectorByIndex(u16 idx, NpcFwdVec3 *v) {
+    u8 *ctx = NULL;
+
+    if (idx != 0xFFFF) {
+        slotDispatcherIter(idx, 0x1000, &ctx);
+        if (ctx != NULL) {
+            *(NpcFwdVec3 *)(ctx + 4) = *v;
+        }
+    }
+}
 
 void *resolveNpcContextByIndex(u16 idx) {
     void *ctx = NULL;
