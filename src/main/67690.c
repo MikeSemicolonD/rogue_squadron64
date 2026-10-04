@@ -112,7 +112,37 @@ INCLUDE_ASM("asm/nonmatchings/main/67690", initSpeechSubsystem);
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", enqueueSpeechClip);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", applySpeechVolumeScalar);
+extern s32 D_main_80139B80[];
+s32 isVoiceHandleActive(s32);
+static inline u8 speechSlotActiveInline(u8 slot) {
+    if (slot != 0) {
+        s32 h = D_main_80139B80[slot - 1];
+        if (h != -1) {
+            return isVoiceHandleActive(h);
+        }
+    }
+    return 0;
+}
+extern u8 D_main_80139BA0[];
+extern f32 D_main_bss_80139C80;
+extern f32 D_main_bss_80139C84;
+extern f32 D_main_bss_80139C88;
+void setVoiceMixByKey(s32, s32, s32, s32, s32);
+
+void applySpeechVolumeScalar(f32 arg0) {
+    u8 i;
+
+    D_main_bss_80139C88 = arg0;
+    D_main_bss_80139C84 = D_main_bss_80139C80 * arg0;
+    for (i = 1; i < 9; i++) {
+        if (speechSlotActiveInline(i) == 1) {
+            u8 vol = (u32)(D_main_80139BA0[i - 1] * D_main_bss_80139C84);
+            if (D_main_80139B80[i - 1] != -1) {
+                setVoiceMixByKey(D_main_80139B80[i - 1], vol, 0x40, 0, 0);
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", playSpeechClip);
 
@@ -200,15 +230,6 @@ s32 isVoiceHandleActive(s32);
 extern u8 subtitleSlotHead;
 extern u8 subtitleSlotTail;
 extern u8 D_main_80139C73;
-static inline u8 speechSlotActiveInline(u8 slot) {
-    if (slot != 0) {
-        s32 h = D_main_80139B80[slot - 1];
-        if (h != -1) {
-            return isVoiceHandleActive(h);
-        }
-    }
-    return 0;
-}
 f32 getVoicePlaybackProgressByKey(s32, f32 *);
 extern u16 D_main_bss_80139C74;
 s32 getSpeechPlaybackElapsedTime(f32 *out) {
