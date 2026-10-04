@@ -142,7 +142,25 @@ void relocateLookupEntryToNewKey(struct some_ui_list_root *arg0, struct ui_eleme
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/64EA0", load_asset_with_malloc_flags);
+extern u32 get_asset_size_extra(s32, char *);
+extern s32 findAssetAcrossSegments(s32, s32, s32, char *, s32);
+extern void setupAssetDma(s32, s32, s32, s32, u32, void *);
+extern void teardownAssetDma(s32, s32);
+extern s32 D_main_bss_80137CFC;
+extern s32 D_main_bss_80138920;
+
+void *load_asset_with_malloc_flags(char *name, u16 flags) {
+    u32 size;
+    void *buf;
+    s32 handle;
+
+    size = get_asset_size_extra(D_main_bss_80137CFC, name);
+    buf = rs_malloc(size, flags);
+    handle = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, name, 0);
+    setupAssetDma(D_main_bss_80138920, 0, handle, 0, size, buf);
+    teardownAssetDma(D_main_bss_80138920, handle);
+    return buf;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/64EA0", load_asset);
 
