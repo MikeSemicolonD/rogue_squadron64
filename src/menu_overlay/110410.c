@@ -184,7 +184,25 @@ const u16 bridgeSecondaryWeaponTextIds[] = {
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarGenerateSecondaryWeaponString);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", gracefulMenuShutdown);
+void tickMusyXIfActive(void);
+u8 anyAudioSlotActive(void);
+void bufferArbiterProducerScanWait(void);
+void destroyPlayerShipRecord(s32, void *);
+s32 finalizeCurrentSpeechBuffer();
+extern s32 D_menu_overlay_800CD668;
+extern u8 D_menu_overlay_800CD670[];
+void gracefulMenuShutdown(void) {
+    s32 i;
+
+    tickMusyXIfActive();
+    while (!anyAudioSlotActive()) {
+    }
+    bufferArbiterProducerScanWait();
+    destroyPlayerShipRecord(D_menu_overlay_800CD668, D_menu_overlay_800CD670);
+    for (i = 7; i >= 0; i--) {
+    }
+    finalizeCurrentSpeechBuffer();
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", extractTextBeforeFmtChar);
 
