@@ -61,7 +61,24 @@ f32 setType1ActorField40(void *arg0, f32 arg1) {
     return var_fv0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType2);
+typedef struct { f32 x, y, z; } Vec3Struct_2;
+extern void *getNpcContextField8(u16);
+
+s32 initActorAsType2(void *arg0, s32 arg1, f32 arg2, f32 arg3) {
+    u8 *p = (u8 *)arg0 + 8;
+    void *ctx;
+
+    *(u8 *)((u8 *)arg0 + 0x112) = 2;
+    ctx = getNpcContextField8(*(u16 *)((u8 *)arg0 + 0x198));
+    *(Vec3Struct_2 *)((u8 *)arg0 + 8) = *(Vec3Struct_2 *)((u8 *)ctx + 0xC);
+    *(f32 *)(p + 0x18) = 0.0f;
+    *(f32 *)(p + 0xC) = *(f32 *)(p + 0x10) = arg3;
+    *(f32 *)(p + 0x14) = arg2;
+    *(s32 *)(p + 0x30) = arg1;
+    *(u8 *)(p + 0x34) = *(u8 *)(p + 0x35) = 0;
+    *(f32 *)(p + 0x2C) = *(f32 *)(p + 0x1C) = *(f32 *)(p + 0x20) = *(f32 *)(p + 0x24) = *(f32 *)(p + 0x28) = *(f32 *)(p + 0x18);
+    return 1;
+}
 
 s32 setType2ActorVelocity(void *arg0, f32 arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5) {
     u8 *p;
