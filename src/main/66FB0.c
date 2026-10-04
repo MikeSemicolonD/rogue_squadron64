@@ -160,7 +160,23 @@ s32 parseLoadedSndSection(s32 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/66FB0", freeAudioCacheEntry);
 
-INCLUDE_ASM("asm/nonmatchings/main/66FB0", findAudioChannelById);
+typedef struct {
+    s32 id;
+    s32 value;
+} AudioChannelEntry;
+
+extern AudioChannelEntry D_main_bss_80139A00[];
+
+s32 findAudioChannelById(s32 arg0) {
+    s32 i;
+
+    for (i = 0; i < 16; i++) {
+        if (D_main_bss_80139A00[i].id == arg0) {
+            return D_main_bss_80139A00[i].value;
+        }
+    }
+    return 0;
+}
 
 extern void *D_main_bss_80138D1C;
 extern s32 D_main_bss_80139B10;
