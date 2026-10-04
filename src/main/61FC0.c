@@ -103,7 +103,11 @@ struct ui_element *getPlayerAnimChannelEntryByIds(void *arg0) {
     return D_main_8009FC10[(*(u8 *)((u8 *)(arg0) + 8))]->unk034[(*(u8 *)((u8 *)(arg0) + 0)) + (*(u8 *)((u8 *)(arg0) + 9))];
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", getPlayerAnimChannelEntryReversed);
+struct ui_element *getPlayerAnimChannelEntryReversed(u8 *arg0) {
+    s32 t = arg0[0] - 1;
+    u16 idx = arg0[9] - t;
+    return D_main_8009FC10[arg0[8]]->unk034[idx];
+}
 
 s32 identityReturnArg(s32 arg0) {
     return arg0;
