@@ -528,7 +528,56 @@ void computeFrameDeltaTime(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", timeSnapshotFiller);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", bufferArbiterProducerScanWait);
+s32 osRecvMesg(void *, void *, s32);
+void osYieldThread(void);
+void bufferArbiterMarkSlotReady(void);
+void bufferArbiterProducerMark(void);
+void waitOnVideoQueue(void);
+void awaitFrameSyncMesgBlock(void);
+void signalFrameSyncMesgNonblock(void);
+extern u8 D_main_bss_8011A818[];
+extern u8 D_main_8011A7E8[];
+extern u8 D_main_bss_8011A89E;
+extern u8 D_main_bss_8011A89D;
+extern s8 D_main_bss_8011A89A;
+extern u8 D_main_bss_80128EAA[];
+extern u8 D_main_bss_80128EAD;
+
+void bufferArbiterProducerScanWait(void) {
+    u32 i;
+    volatile u8 *pending = &D_main_bss_8011A89E;
+    s32 stateA;
+    s32 stateB;
+    u8 *count;
+
+    if (*pending != 0) {
+        osRecvMesg(D_main_bss_8011A818, NULL, 1);
+        *pending = 0;
+        osYieldThread();
+    }
+    bufferArbiterMarkSlotReady();
+    if (D_main_bss_8011A89D != 0) {
+        osRecvMesg(D_main_8011A7E8, NULL, 1);
+        D_main_bss_8011A89D = 0;
+        osYieldThread();
+    }
+    D_main_bss_8011A89A = 0;
+    bufferArbiterProducerMark();
+    stateA = 3;
+    count = &D_main_bss_80128EAD;
+    stateB = 4;
+    do {
+        i = 0;
+        waitOnVideoQueue();
+        awaitFrameSyncMesgBlock();
+        for (i = 0; i < *count; i++) {
+            if (D_main_bss_80128EAA[i] == stateA || D_main_bss_80128EAA[i] == stateB) {
+                break;
+            }
+        }
+        signalFrameSyncMesgNonblock();
+    } while (i != D_main_bss_80128EAD);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", submitGfxFrame);
 
