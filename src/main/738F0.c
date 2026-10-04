@@ -140,7 +140,60 @@ INCLUDE_ASM("asm/nonmatchings/main/738F0", triggerDistanceScaledExplosion);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", triggerObjectDestructionEffects);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", transformLimbStrideAnchorsLocal);
+#include "main/192E0.h"
+#include "main/1D000.h"
+#include "main/5A750.h"
+extern void *getNpcContextField8(u16);
+typedef struct {
+    u8 pad0[0x5C];
+    Vec3f a;
+    Vec3f b;
+} LimbAnchors;
+typedef struct {
+    LimbAnchors *anchors;
+    u8 pad4[0x24];
+    Mat4x3 m;
+} LimbObj;
+typedef struct {
+    u8 pad[0xC];
+    LimbObj *obj;
+} LimbCtx;
+extern u8 *getNpcContextByIndex(u16);
+
+void transformLimbStrideAnchorsLocal(u16 idx, f32 *out, f32 *out2) {
+    Mat4x3 inv;
+    Mat4x3 basis;
+    Vec3f pa;
+    Vec3f pb;
+    LimbObj *obj;
+    LimbAnchors *an;
+    f32 *a;
+    f32 *b;
+    f32 s;
+    f32 (*m)[3];
+
+    obj = ((LimbCtx *)getNpcContextByIndex(idx))->obj;
+    an = obj->anchors;
+    m = obj->m;
+    a = an->a;
+    b = an->b;
+    transformVec3ByMat34(m, a, pa);
+    transformVec3ByMat34(m, b, pb);
+    __asm__ volatile("sqrt.s %0, %1" : "=f"(s) : "f"(obj->m[0][0] * obj->m[0][0] + m[1][0] * m[1][0] + m[2][0] * m[2][0]));
+    out[0] = (an->b[0] - an->a[0]) * s;
+    __asm__ volatile("sqrt.s %0, %1" : "=f"(s) : "f"(m[0][1] * m[0][1] + m[1][1] * m[1][1] + m[2][1] * m[2][1]));
+    out[1] = (b[1] - a[1]) * s;
+    __asm__ volatile("sqrt.s %0, %1" : "=f"(s) : "f"(m[0][2] * m[0][2] + m[1][2] * m[1][2] + m[2][2] * m[2][2]));
+    out[2] = (b[2] - a[2]) * s;
+    if (out2 != NULL) {
+        out2[0] = pa[0] + (pb[0] - pa[0]) * 0.5f;
+        out2[1] = pa[1] + (pb[1] - pa[1]) * 0.5f;
+        out2[2] = pa[2] + (pb[2] - pa[2]) * 0.5f;
+        mat34CrossRowsAndCopyPos(basis, getNpcContextField8(idx), 1.0f);
+        mat3x3InverseInto(inv, basis);
+        transformVec3ByMat34(inv, out2, out2);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", randomParticleWithParentNpcHandler);
 
