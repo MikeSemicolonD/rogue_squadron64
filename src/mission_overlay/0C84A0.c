@@ -1,7 +1,28 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", calculateDatItemDistanceToPlayer);
+void *getNpcContextField8(u16);
+s32 getPlayerField2(s32);
+
+f32 calculateDatItemDistanceToPlayer(char *arg0) {
+    f32 d[3];
+    f32 *a;
+    f32 *b;
+    u8 *item;
+    f32 len;
+
+    item = getLevelDatItemByName(arg0);
+    if (item != NULL && *(u16 *)(item + 6) != 0xFFFF) {
+        a = getNpcContextField8(*(u16 *)(item + 6));
+        b = getNpcContextField8(getPlayerField2(0) & 0xFFFF);
+        d[0] = a[0] - b[0];
+        d[1] = a[1] - b[1];
+        d[2] = a[2] - b[2];
+        __asm__("sqrt.s %0, %1" : "=f"(len) : "f"(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]));
+        return len;
+    }
+    return 1e7f;
+}
 
 void *getCraftRecordByIdx(s32);
 
@@ -105,7 +126,39 @@ s32 initAnchoredActorTowardNamedDatItem(char *name, char *targetName) {
     return initActorAsType1WithAnchor(npc, target, pitch, 0.0f, 0.0f, 0.0f, yaw);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", getDatItemHealth);
+extern s32 D_main_bss_80137CE4;
+s32 getNpcCurrentHealth(void *);
+
+typedef struct {
+    u16 a;
+    s16 b;
+    s32 value;
+} DatItemHealthArgs;
+
+s32 getDatItemHealth(char *name) {
+    DatItemHealthArgs args;
+    u8 *item;
+    u8 *npc;
+
+    item = getLevelDatItemByName(name);
+    if (item != NULL) {
+        if (*(u16 *)(item + 6) != 0xFFFF) {
+            npc = *(u8 **)(getNpcContextByIndex(*(u16 *)(item + 6)) + 0x10);
+            if (npc != NULL) {
+                return getNpcCurrentHealth(npc);
+            }
+            args.a = 0xFFFF;
+            args.b = -1;
+            slotDispatcherIter(*(u16 *)(item + 6), 0xB, &args);
+            if (args.b != -1) {
+                return args.value;
+            }
+        } else if (item[2] == 0) {
+            return *(s32 *)(item + D_main_bss_80137CE4 * 4 + 0x6C);
+        }
+    }
+    return 0x7FFFFFFF;
+}
 
 void *getLevelDatItemByName(char *);
 u8 *getNpcContextByIndex(u16);
