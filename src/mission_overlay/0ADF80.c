@@ -77,6 +77,14 @@ void advanceCameraTransitionOnCue(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", isCameraTransitionIdle);
+s32 isCameraTransitionIdle(void) {
+    s32 ret = 0;
+    u8 state = D_mission_overlay_8010B6E8;
+
+    if (state == 0 || state == 4) {
+        ret = 1;
+    }
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", fake_func_800AE3E4);
