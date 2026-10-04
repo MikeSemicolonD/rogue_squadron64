@@ -33,7 +33,48 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", decodeDeltaCellCounts
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", allocDebrisCellTable);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", buildCellSlotTableAndFindFree);
+typedef struct {
+    u8 *bits;
+    u8 pad4[4];
+    s32 *codes;
+    u8 padC[4];
+    u8 *vals;
+    s32 maxcode[18];
+    s32 valptr[18];
+    u32 count;
+} HuffTable;
+
+typedef struct {
+    u8 pad0[0x58];
+    HuffTable tables[4];
+} JfifHuffState;
+
+s32 buildCellSlotTableAndFindFree(JfifHuffState *state, u8 index) {
+    s32 code = 0;
+    s32 k;
+    HuffTable *tbl = &state->tables[index];
+    u32 i;
+
+    for (k = 1; k < 17; k++) {
+        if (tbl->bits[k - 1] != 0) {
+            tbl->valptr[k] = code - tbl->codes[code];
+            code += tbl->bits[k - 1];
+            tbl->maxcode[k] = tbl->codes[code - 1];
+        } else {
+            tbl->maxcode[k] = -1;
+            tbl->valptr[k] = -1;
+        }
+    }
+    tbl->maxcode[17] = 0xFFFFF;
+    if (!(index & 1)) {
+        for (i = 0; i <= tbl->count; i++) {
+            if (tbl->vals[i] >= 16) {
+                return 16;
+            }
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", findFreeCellBitSlot);
 
