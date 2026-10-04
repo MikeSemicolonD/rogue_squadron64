@@ -194,9 +194,11 @@ struct hud_struct {
     u32 unknown_words208[2];                       /* 0x208 */
     u8 unk210;                                     /* 0x210 */
     u8 unk211;                                     /* 0x211 */
-    u8 unk212;                                     /* 0x212 */
-    u8 unk213;                                     /* 0x213 */
-    u32 unknown_words214[0x19];                    /* 0x214 */
+    u16 unk212;                                    /* 0x212 */
+    u32 unknown_words214[7];                       /* 0x214 */
+    u32 listNode[0x11];                            /* 0x230 */
+    u8 unk274;                                     /* 0x274 */
+    u8 pad275[3];
 }; // size 0x278
 
 struct healthIndicatorColors {

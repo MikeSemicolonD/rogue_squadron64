@@ -42,7 +42,25 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", tickHudInstanceTargetingA
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", updatePlayerHudFrame);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", teardownHudInstancesAndUnbindNpcs);
+void destroyNpcSlotChain(u16);
+void factor5RemoveListNode(void *);
+void releaseTextureLutEntry(u16);
+
+void teardownHudInstancesAndUnbindNpcs(void) {
+    u32 i;
+
+    for (i = 0; i < 10; i++) {
+        releaseTextureLutEntry(D_mission_overlay_8010CA30[0].texture_ids[i]);
+    }
+    for (i = 0; i < 2; i++) {
+        if ((D_mission_overlay_8010CA30[i].secondaryWeapon == 3 || D_mission_overlay_8010CA30[i].secondaryWeapon == 8) && D_mission_overlay_8010CA30[i].unk210 != 0) {
+            destroyNpcSlotChain(D_mission_overlay_8010CA30[i].unk212);
+        }
+        if (D_mission_overlay_8010CA30[i].unk274 != 0) {
+            factor5RemoveListNode(D_mission_overlay_8010CA30[i].listNode);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", dispatchHudInstanceWeaponEffect);
 
