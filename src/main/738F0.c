@@ -206,7 +206,43 @@ u16 spawnWaterSprayNpc(s32 arg0, s32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnWaterSprayDebrisAndBurst);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnSpeedGatedTrailEffect);
+typedef struct {
+    u8 *parent;
+    s32 unk4;
+    void *unk8;
+    s32 unkC;
+    f32 unk10;
+    f32 unk14;
+    f32 unk18;
+    f32 unk1C;
+    f32 unk20;
+    f32 unk24;
+    f32 unk28;
+    s16 unk2C;
+} WakeTrailArgs;
+
+extern u8 D_main_800A0D70[];
+extern void npcWakeUpdate(void);
+
+void spawnSpeedGatedTrailEffect(s16 arg0, u8 *arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5, f32 arg6, s32 arg7, f32 arg8) {
+    WakeTrailArgs args;
+
+    if (D_main_bss_8013A944 != 0 && arg5 > 0.0f && vec3Length((f32 *)(arg1 + 0x24)) > 0.0f) {
+        args.parent = arg1;
+        args.unk14 = arg5;
+        args.unk18 = arg3;
+        args.unk2C = arg0;
+        args.unkC = 0;
+        args.unk1C = arg4;
+        args.unk4 = arg7;
+        args.unk24 = arg8;
+        args.unk8 = D_main_800A0D70;
+        args.unk20 = 1.0f / arg6;
+        args.unk28 = 0.3f;
+        args.unk10 = arg2 * 0.5f;
+        spawnNpcOfType(npcWakeUpdate, &args, 2, 15);
+    }
+}
 
 void forwardToNpcGeneratorSpawn(u16 arg0, s32 arg1, f32 arg2) {
     Vec3f out;
