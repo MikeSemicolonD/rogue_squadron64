@@ -10,3 +10,6 @@ output_pngs/**
 __pycache__/**
 tools/compilers*
 venv/**
+tools/wibo-x86_64
+tools/compilers/
+*.z64
