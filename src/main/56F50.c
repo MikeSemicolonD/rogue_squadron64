@@ -144,7 +144,23 @@ void applyFlagsToMeshTreeOrList(void **arg0, struct meshdef1 *arg1, u32 arg2, u3
     walkListAndUpdateFlagsAt0xC(arg1, arg2, arg3);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", setMaterialFlagByIdInMeshTree);
+void setMaterialFlagByIdInMeshTree(void *arg0, u16 arg1, s32 arg2) {
+    u8 *node;
+    u8 *item;
+    s32 n;
+
+    for (node = *(u8 **)((u8 *)arg0 + 0x20); node != NULL; node = *(u8 **)node) {
+        n = *(s32 *)(node + 0xC);
+        item = *(u8 **)(node + 8);
+        while (n > 0) {
+            if (arg1 == 0xFFFF || *(u16 *)(item + 8) == arg1) {
+                *(u32 *)(item + 8) = *(u16 *)(item + 0xA) | (arg2 << 16);
+            }
+            n--;
+            item += (*(u32 *)(item + 4) & 0x3F000000) >> 22;
+        }
+    }
+}
 
 void releaseSceneObjectMeshTree(void **arg0) {
     recursivelyReleaseMeshTree((*(struct meshdef0 **)((u8 *)(*arg0) + 0x10)));
