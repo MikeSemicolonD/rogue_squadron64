@@ -264,7 +264,27 @@ u16 findActiveNpcInSlotChain(u16 idx, NpcSlotChainPos *out) {
     return 0xFFFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/3F160", findFirstActiveNpcChildInChain);
+void *findFirstActiveNpcChildInChain(u16 idx, NpcSlotChainPos *out) {
+    struct D_80130BB8_type *npc;
+
+    while (idx != 0xFFFF) {
+        npc = gNpcSlotList[idx].unk00;
+        if (npc != NULL && npc->unk08 != NULL) {
+            if (out != NULL) {
+                out->idx = idx;
+                out->next = gNpcSlotList[idx].next_idx;
+                if (out->next != 0xFFFF) {
+                    out->nextNext = gNpcSlotList[out->next].next_idx;
+                } else {
+                    out->nextNext = 0xFFFF;
+                }
+            }
+            return npc->unk08;
+        }
+        idx = gNpcSlotList[idx].next_idx;
+    }
+    return NULL;
+}
 
 void allocNpcContextArrays(void) {
     s32 var_a2;
