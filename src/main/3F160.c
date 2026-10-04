@@ -226,7 +226,30 @@ u16 revalidateNpcSlotIterator(NpcSlotChainPos *pos) {
     return 0xFFFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/3F160", relinkNpcSlotToNewParentGroup);
+void *relinkNpcSlotToNewParentGroup(NpcSlotChainPos *pos) {
+    struct D_80130BB8_type *npc;
+    u16 idx;
+
+    idx = pos->next;
+    if (idx != gNpcSlotList[pos->idx].next_idx && (idx == 0xFFFF || pos->nextNext != gNpcSlotList[idx].next_idx || (pos->nextNext != 0xFFFF && idx != gNpcSlotList[pos->nextNext].prev_idx))) {
+        return NULL;
+    }
+    while (idx != 0xFFFF) {
+        npc = gNpcSlotList[idx].unk00;
+        if (npc != NULL && npc->unk08 != NULL) {
+            pos->idx = idx;
+            pos->next = gNpcSlotList[idx].next_idx;
+            if (pos->next != 0xFFFF) {
+                pos->nextNext = gNpcSlotList[pos->next].next_idx;
+            } else {
+                pos->nextNext = 0xFFFF;
+            }
+            return npc->unk08;
+        }
+        idx = gNpcSlotList[idx].next_idx;
+    }
+    return NULL;
+}
 
 void destroyNpcSlotChain(u16 arg0) {
     u16 var_a0;
