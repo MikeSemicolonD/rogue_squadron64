@@ -61,7 +61,8 @@ void dispatchEffectObjectBehavior(s32 idx, s32 kind, s32 arg2) {
 }
 
 typedef struct {
-    u8 pad0[4];
+    u8 unk0;
+    u8 pad1[3];
     void *unk4;
     s32 unk8;
     s32 unkC;
@@ -77,13 +78,17 @@ typedef struct {
 extern s32 D_main_bss_80138260;
 extern SceneNode *D_main_bss_80138894;
 extern SceneNode D_main_bss_80138D18[];
-void registerSceneNodeAndInvertRotation(u8 *obj, u8 *node) {
+static inline void registerSceneNodeInline(u8 *obj, u8 *node) {
     if (D_main_bss_80138260 == 1) {
         D_main_bss_80138894->unk4 = node;
     } else {
         D_main_bss_80138D18[*(s32 *)(node + 0xC)].unk4 = node;
     }
     mat3x3InverseInto(obj + 0x2C, node + 0x28);
+}
+
+void registerSceneNodeAndInvertRotation(u8 *obj, u8 *node) {
+    registerSceneNodeInline(obj, node);
 }
 
 void buildOrientationFromPosAndAngles(void *, void *, void *);
@@ -208,7 +213,19 @@ void clearSceneNodeMotionFields(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", refreshAllSceneNodeInverseTransforms);
+void destroyEffectObjectTypeNpcSlots(void);
+void refreshAllSceneNodeInverseTransforms(void) {
+    s32 i;
+
+    destroyEffectObjectTypeNpcSlots();
+    for (i = 0; i < 1; i++) {
+        SceneNode *n = &D_main_bss_80138D18[i];
+
+        if (n->unk0 != 0) {
+            registerSceneNodeInline((u8 *)n + 8, n->unk4);
+        }
+    }
+}
 
 // The argument types for `arg0` and `arg1` are probably wrong, but this function is unused so who cares
 void computeAimAnglesFromPoints(Vec3f arg0, Vec3f arg1, Vec3f arg2, f32 arg3) {
