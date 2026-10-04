@@ -53,7 +53,12 @@ INCLUDE_ASM("asm/nonmatchings/main/4D900", deactivateEffectObject);
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", refreshEffectObjectCamerasAndState);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", dispatchEffectObjectBehavior);
+#include "player.h"
+extern void *D_main_8009EB98[];
+void updateEffectObjectTransformPieces(void *, s32, s32, f32, s32);
+void dispatchEffectObjectBehavior(s32 idx, s32 kind, s32 arg2) {
+    updateEffectObjectTransformPieces(D_main_8009EB98[kind], idx, arg2, 0.046875f, gPlayers[idx].inner.unk178[0x14]);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", registerSceneNodeAndInvertRotation);
 
