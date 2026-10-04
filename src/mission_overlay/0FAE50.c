@@ -66,7 +66,24 @@ void requestSpeechResponseMode1(void) {
 void func_mission_overlay_800FBBA0(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800FBBA8);
+void rs_memset(void *, s32, s32);
+void broadcastSceneEventWithPayload(void *, f32);
+extern f32 D_mission_overlay_8010C9EC;
+extern s32 D_mission_overlay_8010CA1C;
+
+void func_mission_overlay_800FBBA8(f32 arg0) {
+    u8 payload[4];
+
+    rs_memset(payload, 0, 4);
+    payload[3] = 0xFF;
+    if (D_mission_overlay_8010C9EC > 0.5f && D_mission_overlay_8010C9EC - arg0 <= 0.5f) {
+        broadcastSceneEventWithPayload(payload, 2.0f);
+    }
+    D_mission_overlay_8010C9EC -= arg0;
+    if (D_mission_overlay_8010C9EC < 0.0f) {
+        D_mission_overlay_8010CA1C |= 0x40;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800FBC4C);
 
