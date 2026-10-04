@@ -74,7 +74,52 @@ void resetHudInstancesAndUnbindNpcs(void) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", findNearestTargetableNpcInRange);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", projectForwardTerrainImpactPoint);
+typedef struct TerrainV3 {
+    f32 x;
+    f32 y;
+    f32 z;
+} TerrainV3;
+
+extern u8 D_main_bss_80138058[];
+extern void lookupHmtTextureByName(s32, char *, s32, void *, void *, s32);
+extern s32 sampleTerrainAtNpcPosition(TerrainV3 *, TerrainV3 *, void *, TerrainV3 *);
+
+s32 projectForwardTerrainImpactPoint(TerrainV3 *out, f32 *arg1, s32 arg2) {
+    TerrainV3 hit;
+    u8 pad[0x18];
+    TerrainV3 pos;
+    TerrainV3 next;
+    TerrainV3 dir;
+    TerrainV3 delta;
+    u8 buf[0x30];
+    TerrainV3 base;
+    u8 pad2[0x20];
+    f32 t;
+
+    lookupHmtTextureByName(arg2, "a", 0, &base, buf, 0);
+    pos = base;
+    dir.x = arg1[3] * 4.0f + arg1[9];
+    dir.y = arg1[4] * 4.0f + arg1[10] + 2.0f;
+    t = 0.0f;
+    dir.z = arg1[5] * 4.0f + arg1[11];
+    do {
+        next.x = pos.x + dir.x * 0.1f;
+        next.y = pos.y + dir.y * 0.1f;
+        next.z = pos.z + dir.z * 0.1f;
+        dir.y += 1.2f;
+        delta.x = next.x - pos.x;
+        delta.y = next.y - pos.y;
+        delta.z = next.z - pos.z;
+        if (!sampleTerrainAtNpcPosition(&pos, &delta, &D_main_bss_80138058, &hit)) {
+            t += 0.1f;
+            pos = next;
+        } else {
+            *out = hit;
+            return 1;
+        }
+    } while (t < 5.0f);
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", tickHudInstanceTargetingAndSpawns);
 

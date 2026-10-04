@@ -306,9 +306,9 @@ void spawnHudReticleAtMeshBounds(s32 arg0, HudMeshRef *arg1, s32 arg2, u8 arg3) 
     createHudSpritePair(arg0, arg1->unk20, c, b->w, b->h, arg2, arg3);
 }
 
-void layoutHudSpriteScreenRect(s32 a, s32 b, s32 c);
-void positionHudSpriteOffset(s32 a, s32 b, s32 c) {
-    layoutHudSpriteScreenRect(a, b, c + 0x20);
+void layoutHudSpriteScreenRect(s32 a, s32 b, s32 c, f32 d);
+void positionHudSpriteOffset(s32 a, s32 b, s32 c, f32 d) {
+    layoutHudSpriteScreenRect(a, b, c + 0x20, d);
 }
 
 s32 insertLookupEntry(s32, u8 *, s32);
@@ -344,8 +344,53 @@ void createHudSpritePair(s32 arg0, void *arg1, s32 arg2, s16 arg3, s32 arg4, f32
     insertLookupEntry(arg0, temp_v0_2, temp_s3);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", layoutHudSpriteScreenRect);
+typedef struct HudElemF {
+    u8 pad0[0x18];
+    f32 f18;
+    f32 f1C;
+    u8 pad20[4];
+    f32 f24;
+    f32 f28;
+    u8 pad2C[3];
+    u8 b2F;
+} HudElemF;
+
+typedef struct HudRectDesc {
+    HudElemF *e0;
+    HudElemF *e1;
+    HudElemF *e2;
+    f32 scale;
+    u16 w;
+    u16 h;
+} HudRectDesc;
+
+extern u32 getLookupEntryField5(s32, HudElemF *);
+extern void setLookupEntryField5ByKey(s32, HudElemF *, s32);
+
+void layoutHudSpriteScreenRect(s32 a, s32 b, s32 cc, f32 off) {
+    HudRectDesc *c = (HudRectDesc *)cc;
+    HudElemF *s0 = c->e0;
+    HudElemF *s1 = c->e1;
+    HudElemF *a1 = c->e2;
+    s32 v;
+
+    s0->f24 = ((f32)c->w + c->scale) * 0.015625f;
+    s0->f28 = c->scale * 0.125f * 1.25f;
+    s1->f24 = c->scale * 0.125f;
+    s1->f28 = ((f32)c->h + c->scale * 0.0f * 0.5f) * 0.015625f;
+    s0->f24 = s0->f24 * a1->f24;
+    s1->f24 = s1->f24 * a1->f24;
+    s0->f28 = s0->f28 * a1->f28;
+    s1->f28 = s1->f28 * a1->f28;
+    s0->f18 = a1->f18 + off;
+    s0->f1C = a1->f1C + off + (f32)c->h * a1->f28;
+    s1->f18 = a1->f18 + off + (f32)c->w * a1->f24;
+    s1->f1C = a1->f1C + off;
+    v = (s0->b2F = s1->b2F = a1->b2F) ? getLookupEntryField5(a, a1) : 0;
+    setLookupEntryField5ByKey(b, s0, v & 0xFF);
+    setLookupEntryField5ByKey(b, s1, v & 0xFF);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", fake_func_800B47C4);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5DC0);
+static u32 D_menu_overlay_800A5DC4[] __attribute__((section(".rodata"))) = { 0x4602003E, 0, 0x45000003 };

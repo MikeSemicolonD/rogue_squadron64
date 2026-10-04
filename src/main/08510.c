@@ -1016,11 +1016,109 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", buildOrientedFaceGeometry);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", renderLitMeshFaceGroup);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", processMeshdef1ForLod);
+extern f32 D_main_bss_801163C0;
+extern f32 D_main_bss_8011A7D4;
+extern f32 D_main_bss_8011A8CC;
+extern f32 D_main_bss_8011D088;
+extern void clearVec4QuadStruct(f32 *);
+extern void mat3x3InverseInto(f32 *, void *);
+extern void mat3x4Multiply(f32 *, void *, f32 *);
+extern void submitSceneNodeRender(f32 *, f32 *, void *, void *, s32);
+
+s32 processMeshdef1ForLod(u8 *arg0, u8 *arg1, u8 *arg2) {
+    f32 sp18[12];
+    f32 sp48[12];
+    f32 t;
+    f32 v;
+    u32 flags;
+    u8 *l;
+
+    if (*(u32 *)(arg0 + 0xC) & 0x80000) {
+        t = *(f32 *)(arg0 + 0x1C);
+        if (t <= D_main_bss_8011A8CC) {
+            t = D_main_bss_8011A8CC * 256.0f;
+        } else {
+            t = t * 256.0f;
+        }
+        v = (((D_main_bss_8011A7D4 * t + D_main_bss_801163C0) / t) * 511.0f + 511.0f) * 32.0f;
+        D_main_bss_8011D088 = (f32)(u16)(u32)v;
+    }
+    flags = *(u32 *)(arg0 + 0xC);
+    if (flags & 0xC0000000) {
+        return 0;
+    }
+    *(u32 *)(arg0 + 0xC) = (flags | 8) & ~0x10;
+    if (arg1 == 0) {
+        clearVec4QuadStruct(sp18);
+        submitSceneNodeRender(sp18, 0, arg0, 0, 0);
+    } else {
+        mat3x3InverseInto(sp48, arg1);
+        mat3x3InverseInto(sp18, arg2 + 0x2C);
+        mat3x4Multiply(sp18, arg1, sp18);
+        l = *(u8 **)(arg2 + 4);
+        if (l != 0) {
+            do {
+                transformLightByType(l, sp48);
+                l = *(u8 **)l;
+            } while (l != 0);
+        }
+        submitSceneNodeRender(sp18, sp48, arg0, arg2, 0);
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", processSceneNode);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", traverseSceneGraphRecursive);
+extern f32 D_main_bss_80112AF0[12];
+extern u8 *D_main_bss_80112B20;
+extern u8 *D_main_bss_80112B24;
+extern s32 D_main_bss_8011DC5C;
+extern void mat3x4Multiply(f32 *, void *, f32 *);
+extern void mat3x3InverseInto(f32 *, void *);
+extern void convertMat3x4ToN64Mtx(s32, f32 *);
+extern s32 processSceneNode(f32 *, f32 *, u8 *, u8 *);
+
+s32 traverseSceneGraphRecursive(u8 *arg0, f32 *arg1, f32 *arg2, u8 *arg3) {
+    f32 sp10[12];
+    f32 sp40[12];
+    s32 s1 = 1;
+    u8 *v1;
+    u8 *c0;
+    u8 *s0;
+
+    do {
+        s0 = arg0 + 0x1C;
+        mat3x4Multiply(arg1, s0, sp10);
+        if (arg2 != 0) {
+            mat3x3InverseInto(D_main_bss_80112AF0, s0);
+            mat3x4Multiply(D_main_bss_80112AF0, arg2, sp40);
+        } else {
+            mat3x3InverseInto(sp40, s0);
+        }
+        if (*(u8 **)(arg0 + 0x10) != 0) {
+            convertMat3x4ToN64Mtx(D_main_bss_8011DC5C, sp10);
+            D_main_bss_80112B24 = *(u8 **)(arg3 + 4);
+            if (D_main_bss_80112B24 != 0) {
+                do {
+                    transformLightByType(D_main_bss_80112B24, sp40);
+                    D_main_bss_80112B24 = *(u8 **)D_main_bss_80112B24;
+                } while (D_main_bss_80112B24 != 0);
+            }
+            v1 = *(u8 **)(arg0 + 0x10);
+            while (((D_main_bss_80112B20 = v1) != 0) & ((s1 & 0xFF) != 0)) {
+                s1 = processSceneNode(sp10, sp40, D_main_bss_80112B20, arg3);
+                v1 = *(u8 **)D_main_bss_80112B20;
+            }
+            D_main_bss_8011DC5C += 0x40;
+        }
+        c0 = *(u8 **)(arg0 + 0xC);
+        if ((c0 != 0) & ((s1 & 0xFF) != 0)) {
+            s1 = traverseSceneGraphRecursive(c0, sp10, sp40, arg3);
+        }
+        arg0 = *(u8 **)arg0;
+    } while ((arg0 != 0) & ((s1 & 0xFF) != 0));
+    return s1 & 0xFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", drawTextGlyphRect);
 
