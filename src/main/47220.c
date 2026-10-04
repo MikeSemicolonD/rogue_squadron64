@@ -30,7 +30,29 @@ INCLUDE_ASM("asm/nonmatchings/main/47220", getDatItemByName);
 
 INCLUDE_ASM("asm/nonmatchings/main/47220", findDatItemInTableByName);
 
-INCLUDE_ASM("asm/nonmatchings/main/47220", isNpcWithinActiveReferenceRange);
+extern s32 D_main_bss_801375F8;
+extern s32 D_8010CA1C;
+f32 *getCutsceneRuntimeContext();
+extern u8 D_main_bss_80130B39;
+
+void isNpcWithinActiveReferenceRange(f32 *arg0) {
+    s32 *var_a0;
+    s32 *var_v0;
+
+    if (D_main_bss_80130B39 == 0) {
+        if (!(D_8010CA1C & 8)) {
+            var_a0 = getCraftRecordByIdx(0);
+        } else {
+            var_v0 = &D_main_bss_801375F8;
+            goto block_5;
+        }
+    } else {
+        var_v0 = getCutsceneRuntimeContext();
+block_5:
+        var_a0 = var_v0;
+    }
+    isPointXzWithinRangeOfRef((f32 *) var_a0, arg0);
+}
 
 s32 isPointXzWithinRangeOfRef(Vec3f arg0, Vec3f arg1) {
     f32 xdist;

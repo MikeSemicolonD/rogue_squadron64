@@ -1005,7 +1005,18 @@ void setCraftMaterialTextureByName(u8 arg0, s32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuBackdropAndPickRandom);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initSongAssetLoadWorker);
+extern s32 D_menu_overlay_800CCE18;
+s32 registerServiceWorker(s32, s32, s32, s32 *);
+s32 startServiceWorker(s32);
+void tickSongAssetLoadWorker(s32 *);
+
+void initSongAssetLoadWorker(s32 arg0) {
+    s32 temp_v0;
+
+    temp_v0 = registerServiceWorker(4, 0x800, arg0 & 0xFF, &tickSongAssetLoadWorker);
+    D_menu_overlay_800CCE18 = temp_v0;
+    startServiceWorker(temp_v0);
+}
 
 s32 unregisterServiceWorker(s32);
 extern s32 D_menu_overlay_800CCE18;

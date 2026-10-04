@@ -41,7 +41,15 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", choosePlayerCraftAssets);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", endMissionCleanup);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", requestSpeechResponseMode2);
+extern s8 D_main_bss_80130B14;
+extern u8 D_mission_overlay_8010C9F0;
+void requestSpeechResponseMode2(void) {
+    if ((D_mission_overlay_8010C9F0 == 0) && (isSpeechBusyOrQueued() != 0)) {
+        D_main_bss_80130B14 = 2;
+        D_mission_overlay_8010C9E0 |= 1;
+        D_mission_overlay_8010C9F0 += 1;
+    }
+}
 
 s32 isSpeechBusyOrQueued();
 extern s8 D_main_bss_80130B14;

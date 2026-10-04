@@ -9,7 +9,23 @@ INCLUDE_ASM("asm/nonmatchings/main/06170", submitDmaRequestBatch);
 
 INCLUDE_ASM("asm/nonmatchings/main/06170", initPiDmaWorker);
 
-INCLUDE_ASM("asm/nonmatchings/main/06170", dispatchPendingPiDmaToWorker);
+extern s32 D_main_bss_801126B0;
+extern s32 D_main_bss_801126B4;
+extern s32 D_main_bss_801126B8;
+extern s32 D_main_bss_801126BC;
+extern void sendServiceMessage(s32, s32, void *, s32);
+
+u8 dispatchPendingPiDmaToWorker(s32 arg0) {
+    u8 msg[0x18];
+
+    if (D_main_bss_801126B0 != D_main_bss_801126B4) {
+        if (D_main_bss_801126B8 == 0) {
+            sendServiceMessage(D_main_bss_801126BC, D_main_bss_801126BC, msg, 0);
+        }
+        return 1;
+    }
+    return 0;
+}
 
 void getAssetRamAddress(s32 arg0) {
     resolveAssetRamAddress(arg0);

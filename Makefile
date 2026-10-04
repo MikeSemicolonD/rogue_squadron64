@@ -61,6 +61,7 @@ $(GCC272SN0001):
 
 build/src/main/01850.s: N64CC = $(GCC272SN0001)
 build/src/main/02420.s: N64CC = $(GCC272SN0001)
+build/src/main/031B0.s: N64CC = $(GCC272SN0001)
 build/src/main/03290.s: N64CC = $(GCC272SN0001)
 build/src/main/04030.s: N64CC = $(GCC272SN0001)
 build/src/main/1D000.s: N64CC = $(GCC272SN0001)
@@ -68,13 +69,14 @@ build/src/main/1D000.s: CFLAGS += -ffast-math
 build/src/main/1EE30.s: N64CC = $(GCC272SN0001)
 build/src/main/24570.s: N64CC = $(GCC272SN0001)
 build/src/main/94F50.s: N64CC = $(GCC272SN0001)
+build/src/main/97D20.s: N64CC = $(GCC272SN0001)
+build/src/main/9BB60.s: N64CC = $(GCC272SN0001)
+build/src/main/98960.s: N64CC = $(GCC272SN0001)
 build/src/main/9A850.s: N64CC = $(GCC272SN0001)
 build/src/main/07F80.s: N64CC = $(GCC272SN0001)
 build/src/main/9CED0.s: N64CC = $(GCC272SN0001)
 build/src/zlib/%.s: N64CC = $(GCC272SN0001)
 build/src/main/08510.s: N64CC = $(GCC272SN0001)
-build/src/main/97D20.s: N64CC = $(GCC272SN0001)
-build/src/main/98960.s: N64CC = $(GCC272SN0001)
 build/src/zlib/%.s: CFLAGS = -quiet -O3 -G0 -mips3
 
 build/src/%.i: src/%.c | $(BUILD_DIRS)

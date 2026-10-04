@@ -148,7 +148,13 @@ void clearSpeechActiveFlags(void) {
     D_main_bss_80139C8E = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", beginSpeechTimingWindow);
+extern s8 D_main_bss_80139C8D;
+extern f32 D_main_bss_80139C7C;
+
+void beginSpeechTimingWindow(void) {
+    D_main_bss_80139C8D = 1;
+    D_main_bss_80139C7C = 1.0f;
+}
 
 extern s8 D_main_bss_80139C8D;
 

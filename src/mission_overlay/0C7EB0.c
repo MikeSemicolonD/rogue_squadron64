@@ -257,9 +257,23 @@ f32 getObjectiveGlobalFloat(void) {
     return D_mission_overlay_8010C9E4;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", setHudEnableBit4);
+extern s32 D_mission_overlay_8010C9E0;
+s32 initSpeechPlaybackState();
+extern s32 D_mission_overlay_8010CA20;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", setHudEnableBit8);
+void setHudEnableBit4(void) {
+    if (D_mission_overlay_8010CA20 == 0) {
+        D_mission_overlay_8010C9E0 |= 4;
+        initSpeechPlaybackState();
+    }
+}
+
+void setHudEnableBit8(void) {
+    if (D_mission_overlay_8010CA20 == 0) {
+        D_mission_overlay_8010C9E0 |= 8;
+        initSpeechPlaybackState();
+    }
+}
 
 extern u8 D_main_bss_80137CE0;
 

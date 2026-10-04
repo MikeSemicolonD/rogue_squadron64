@@ -122,11 +122,41 @@ void freeAllHobFiles(void) {
 INCLUDE_ASM("asm/nonmatchings/main/56F50", freeAllHobFiles);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", createMeshInstanceFromSource);
+extern void clearStructPair2C30(void *);
+
+u8 *createMeshInstanceFromSource(u8 *src, u8 *inst) {
+    if (inst == NULL) {
+        inst = rs_malloc(0xB4, 0);
+    }
+    *(u8 **)(inst + 0) = src;
+    *(u16 *)(src + 0x3A) += 1;
+    *(s32 *)(inst + 4) = 0;
+    *(u16 *)(inst + 8) = 1;
+    *(u8 *)(inst + 0xA) = 0;
+    *(u8 *)(inst + 0xB) = 0;
+    *(s32 *)(inst + 0x18) = 0;
+    *(s32 *)(inst + 0x14) = 0;
+    *(s32 *)(inst + 0xC) = 0;
+    *(s32 *)(inst + 0x10) = 0;
+    *(u8 **)(inst + 0x1C) = inst + 0x58;
+    *(s32 *)(inst + 0x20) = 0;
+    *(s32 *)(inst + 0x5C) = 0;
+    *(s32 *)(inst + 0x58) = 0;
+    *(s32 *)(inst + 0x60) = *(s32 *)(*(u8 **)(src + 0x18) + 4);
+    *(s32 *)(inst + 0x64) = 4;
+    clearStructPair2C30(inst + 0x58);
+    return inst;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", setMeshInstanceLodAndRebuildNodes);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", checkAndReturnByteFlagAsU8);
+extern s32 transformVec3ToNpcLocalWithScale(void *, s32, void *, void *, void *);
+
+u8 checkAndReturnByteFlagAsU8(void *arg0, s32 arg1, void *arg2, void *arg3) {
+    s32 out;
+
+    return transformVec3ToNpcLocalWithScale(arg0, 0, arg2, arg3, &out);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", lookupHmtMaterialByName);
 
@@ -144,7 +174,23 @@ void applyFlagsToMeshTreeOrList(void **arg0, struct meshdef1 *arg1, u32 arg2, u3
     walkListAndUpdateFlagsAt0xC(arg1, arg2, arg3);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", setMaterialFlagByIdInMeshTree);
+void setMaterialFlagByIdInMeshTree(void *arg0, u16 arg1, s32 arg2) {
+    u8 *node;
+    u8 *item;
+    s32 n;
+
+    for (node = *(u8 **)((u8 *)arg0 + 0x20); node != NULL; node = *(u8 **)node) {
+        n = *(s32 *)(node + 0xC);
+        item = *(u8 **)(node + 8);
+        while (n > 0) {
+            if (arg1 == 0xFFFF || *(u16 *)(item + 8) == arg1) {
+                *(u32 *)(item + 8) = *(u16 *)(item + 0xA) | (arg2 << 16);
+            }
+            n--;
+            item += (*(u32 *)(item + 4) & 0x3F000000) >> 22;
+        }
+    }
+}
 
 void releaseSceneObjectMeshTree(void **arg0) {
     recursivelyReleaseMeshTree((*(struct meshdef0 **)((u8 *)(*arg0) + 0x10)));
@@ -189,9 +235,46 @@ void walkMeshdef0TreeApplyAnimColors(struct meshdef0 *arg0, u32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", findNameTreeEntryIndexByName);
+u8 findNameTreeEntryIndexByName(void **arg0, u8 *name, s32 *outIndex) {
+    u8 *e = *(u8 **)((u8 *)*arg0 + 0x30);
+    s32 i;
+    s32 n = 0;
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", findNameTreeEntryNodeByName);
+    while (*e != 0) {
+        for (i = 0; i < 6; i++) {
+            if (e[i] != name[i] || e[i] == 0) {
+                break;
+            }
+        }
+        if (e[i] == name[i] && e[i] == 0) {
+            if (outIndex != NULL) {
+                *outIndex = n;
+            }
+            return e[7];
+        }
+        n++;
+        e = e + e[7] * 0x24 + 8;
+    }
+    return 0;
+}
+
+u8 *findNameTreeEntryNodeByName(void **arg0, u8 *name, s32 idx) {
+    u8 *e = *(u8 **)((u8 *)*arg0 + 0x30);
+    s32 i;
+
+    while (*e != 0) {
+        for (i = 0; i < 6; i++) {
+            if (e[i] != name[i] || e[i] == 0) {
+                break;
+            }
+        }
+        if (e[i] == name[i] && e[i] == 0) {
+            return e + idx * 0x24 + 8;
+        }
+        e = e + e[7] * 0x24 + 8;
+    }
+    return NULL;
+}
 
 s32 rs_strcpy(void *, void *);
 
@@ -231,7 +314,15 @@ s32 readFirstNameTreeEntryFromNode(void *arg0) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", enqueueMeshTypeForCleanup);
+extern u16 D_main_bss_8013A490;
+extern u8 D_main_8013A498[];
+
+void enqueueMeshTypeForCleanup(u8 *arg0) {
+    if (arg0[0xB] != 0 && !(*(u16 *)(arg0 + 8) & 0x20)) {
+        D_main_8013A498[++D_main_bss_8013A490] = arg0[0xB];
+        arg0[0xB] = 0;
+    }
+}
 
 void walkListAndUpdateFlagsAt0xC(struct meshdef1 *arg0, u32 arg1, u32 arg2) {
     if (arg0 != NULL) {
@@ -265,6 +356,37 @@ void applyFlagsToMeshdef1List(struct meshdef0 *arg0, u32 arg1, u32 arg2) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", processMeshTreeExcludingList);
+typedef struct {
+    void *ptr;
+    s32 unk4;
+    s32 unk8;
+} MeshExcludeEntry;
+
+extern void processMeshdef1ForLod(void *, s32, s32);
+
+void processMeshTreeExcludingList(u8 *node, MeshExcludeEntry *list) {
+    void **m;
+    s32 i;
+
+    for (; node != NULL; node = *(u8 **)node) {
+        if (*(void ***)(node + 0x10) != NULL) {
+            m = *(void ***)(node + 0x10);
+            do {
+                for (i = 0; list[i].ptr != NULL; i++) {
+                    if (m == list[i].ptr) {
+                        break;
+                    }
+                }
+                if (list[i].ptr == NULL) {
+                    processMeshdef1ForLod(m, 0, 0);
+                }
+                m = *m;
+            } while (m != NULL);
+        }
+        if (*(void **)(node + 0xC) != NULL) {
+            processMeshTreeExcludingList(*(void **)(node + 0xC), list);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", fake_func_80059B4C);

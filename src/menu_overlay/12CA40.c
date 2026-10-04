@@ -241,7 +241,24 @@ s32 hasKasanMoorDefected(u8 levelId) {
     return levelId < LEVEL_JADEMOON ? 4 : 5;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/12CA40", runHangarMenuFromOverlay);
+void hangarInitialize(u8, u8, s32, u8);
+s32 runHangarSelectionFrame(u8);
+void gracefulMenuShutdown(void);
+
+s32 runHangarMenuFromOverlay(u8 *out, s32 arg1, enum Level level) {
+    s32 result;
+
+    hangarInitialize(arg1, dDefaultCraftForLevel[level], getAvailablePlayerCraftFlagsConsiderUnlocks(level), level);
+    do {
+        result = runHangarSelectionFrame(level);
+    } while (result == 0xFFFFFF);
+    gracefulMenuShutdown();
+    if (result != 0xFFFFFE) {
+        out[1] = result;
+        return 1;
+    }
+    return 0;
+}
 
 u8 getLevelIntroCrawlId(u8 levelId) {
     switch (levelId) {

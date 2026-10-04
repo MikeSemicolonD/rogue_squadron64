@@ -338,9 +338,43 @@ void freeCutsceneResources(void) {
     zmemcpy(&gBootConfig, &D_cinematic_overlay_800B0960, 0x50U);
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", resetCutsceneActionSlots);
+typedef struct {
+    s32 unk0;
+    f32 unk4;
+    f32 unk8;
+    f32 unkC;
+    s16 unk10;
+    u8 active;
+} CutsceneActionSlot;
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", scheduleCutsceneActionSlot);
+extern CutsceneActionSlot D_cinematic_overlay_800B0BC0[];
+
+void applyCutsceneSlotMaterialOverrides(void);
+
+void resetCutsceneActionSlots(void) {
+    u16 i;
+
+    for (i = 0; i < 0x10; i++) {
+        D_cinematic_overlay_800B0BC0[i].active = 0;
+        D_cinematic_overlay_800B0BC0[i].unk0 = 0;
+    }
+    applyCutsceneSlotMaterialOverrides();
+}
+
+void scheduleCutsceneActionSlot(s16 id, f32 arg1, f32 arg2, f32 arg3) {
+    u16 i;
+
+    for (i = 0; i < 0x10; i++) {
+        if (D_cinematic_overlay_800B0BC0[i].active == 0) {
+            D_cinematic_overlay_800B0BC0[i].unk10 = id;
+            D_cinematic_overlay_800B0BC0[i].active = 1;
+            D_cinematic_overlay_800B0BC0[i].unk8 = arg2;
+            D_cinematic_overlay_800B0BC0[i].unkC = arg3;
+            D_cinematic_overlay_800B0BC0[i].unk4 = arg1 - 180.0f;
+            return;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", composeInterpolatedNodeMatricesAlt);
 
@@ -380,7 +414,19 @@ u16 lookupCutsceneIdMapping(s32 arg0) {
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", destroyAllNpcsInSlotChain);
+extern u16 D_main_bss_80139560[];
+
+u16 findActiveNpcInSlotChain(u16, void *);
+void destroyNpcSlotByIndex(u16);
+
+void destroyAllNpcsInSlotChain(s32 chain) {
+    u8 iter[8];
+    u16 idx;
+
+    while ((idx = findActiveNpcInSlotChain(D_main_bss_80139560[chain], iter)) != 0xFFFF) {
+        destroyNpcSlotByIndex(idx);
+    }
+}
 
 s32 load_hmt_and_hob(s32 *, s32, s32, s32);
 s32 walkMeshdef0List(s32 *);
@@ -415,7 +461,27 @@ s32 bytesDiffer(u8 *arg0, u8 *arg1, u32 arg2) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", matchKeywordWithPriority);
+s32 matchKeywordWithPriority(u8 **ctx, u8 *word, s32 priority) {
+    u8 *e = *(u8 **)(*ctx + 0x30);
+    s32 i;
+
+    while (*e != 0) {
+        for (i = 0; i < 6; i++) {
+            if (e[i] != word[i]) {
+                goto next;
+            }
+            if (e[i] == 0) {
+                break;
+            }
+        }
+        if (e[i] == word[i] && e[i] == 0) {
+            return priority < e[7];
+        }
+    next:
+        e = e + e[7] * 0x24 + 8;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicComputeDt);
 
@@ -427,9 +493,38 @@ s32 isCinematicActive(void) {
     return D_cinematic_overlay_800B0934 != 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicStageAdvancer);
+extern u8 D_cinematic_overlay_800B0938;
+extern f32 D_cinematic_overlay_800B1EE8;
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicDeactivator);
+s32 cinematicStageAdvancer(s32 arg0, s32 arg1, f32 dt) {
+    f32 value;
+
+    if (D_cinematic_overlay_800B0934 != 0) {
+        value = D_cinematic_overlay_800B1EE8 * dt + (*(u8 **)(D_cinematic_overlay_800B0934 + 0xC))[0x2F];
+        if (value > 255.0f) {
+            (*(u8 **)(D_cinematic_overlay_800B0934 + 0xC))[0x2F] = 0xFF;
+            if (++D_cinematic_overlay_800B0938 >= 7) {
+                return 1;
+            }
+        } else {
+            (*(u8 **)(D_cinematic_overlay_800B0934 + 0xC))[0x2F] = value;
+        }
+    }
+    return 0;
+}
+
+void removeLookupTableEntry(void *, void *);
+void requestViFeatureChange(s32);
+
+void cinematicDeactivator(void *arg0) {
+    if (D_cinematic_overlay_800B0934 != 0) {
+        removeLookupTableEntry(arg0, *(void **)(D_cinematic_overlay_800B0934 + 0xC));
+        D_cinematic_overlay_800B0934 = 0;
+        if (!(*(u32 *)(&gBootConfig + 0x44) & 0x80)) {
+            requestViFeatureChange(8);
+        }
+    }
+}
 
 s32 getCinematicStateSubObject(void *arg0) {
     return (*(s32 *)((u8 *)(arg0) + 0xC));

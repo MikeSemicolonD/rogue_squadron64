@@ -171,22 +171,12 @@ s32 rs_strncmp(u8 *left, u8 *right, s32 count) {
 
 INCLUDE_ASM("asm/nonmatchings/main/08120", rs_strncasecmp);
 
-#if 0
-u8 rs_tolower(u8 arg0) {
-    u8 diff;
-    u32 blah;
-
-    diff = arg0 - 0x41;
-    if (diff < 0x1A) {
-        blah = arg0 + 0x20;
-    } else {
-        blah = arg0;
+u8 rs_tolower(u8 c) {
+    if ((u8)(c - 'A') < 26) {
+        c += 0x20;
     }
-    return blah;
+    return c;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/08120", rs_tolower);
-#endif
 
 void rs_memset(u8 *dest, u8 value, u32 size) {
     u32 var_v1;

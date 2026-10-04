@@ -128,7 +128,25 @@ void teardownAudioListenerNode(void) {
     unlinkMusyXListNode(&D_main_bss_80139A80);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/66FB0", waitForAnyAudioSlot);
+extern s32 D_main_bss_80139B4C;
+extern s32 D_main_bss_80139B50;
+extern s32 D_main_bss_80139B54;
+s32 anyAudioSlotActive();
+s32 rs_free(s32);
+s32 tickMusyXIfActive();
+extern u8 D_main_bss_80130B39;
+
+void waitForAnyAudioSlot(void) {
+    tickMusyXIfActive();
+    do {
+
+    } while (!(anyAudioSlotActive() & 0xFF));
+    if (D_main_bss_80130B39 == 0) {
+        rs_free(D_main_bss_80139B54);
+        rs_free(D_main_bss_80139B50);
+        rs_free(D_main_bss_80139B4C);
+    }
+}
 
 s32 parseSndFiles(s32, s32, void *, s32, s32);
 extern s32 D_main_bss_80139B4C;
