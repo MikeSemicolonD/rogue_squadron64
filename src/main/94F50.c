@@ -93,17 +93,13 @@ void tickSongSequenceLocked(s32 arg0) {
     }
 }
 
-#if 0
 void tickActiveSongs(void) {
-    u32 var_s0;
+    u32 i;
 
-    for (var_s0 = 0; var_s0 < 8; var_s0++) {
-        tickSongSequence(D_main_bss_80149A00[var_s0].unk000);
+    for (i = 0; i < 8; i++) {
+        tickSongSequence(D_main_bss_80149A00[i].unk000);
     }
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/94F50", tickActiveSongs);
-#endif
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongPauseStateByHandle);
 
