@@ -525,7 +525,17 @@ void setAnimSubstructValueIfActive(void *arg0, f32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", generatePerpEmitDirectionWithJitter);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", stepAndTickProgressChannel);
+s32 tickProgressChannel(s32, f32 *, s32, s32);
+
+s32 stepAndTickProgressChannel(s32 arg0, u8 *arg1, f32 arg2, s32 arg3, s32 arg4) {
+    f32 sp[12];
+
+    zmemcpy((s32)sp, (s32)arg1, 0x30);
+    sp[0] += sp[3] * arg2;
+    sp[1] += sp[4] * arg2;
+    sp[2] += sp[5] * arg2;
+    return tickProgressChannel(arg0, sp, arg3, arg4) & 0xFF;
+}
 
 f32 getEffectIntensity(void *arg0) {
     return (*(f32 *)((u8 *)(arg0) + 0x14C));
