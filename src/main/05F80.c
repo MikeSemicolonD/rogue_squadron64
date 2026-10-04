@@ -37,7 +37,12 @@ s32 initRsMallocHeap(RsHeapBlock *base, s32 size) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/05F80", getRsHeapMaxAllocSize);
+s32 getRsHeapMaxAllocSize(void) {
+    if (gRsHeapBase != NULL) {
+        return gRsHeapMaxAlloc - 0x23;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/05F80", allocRsHeapBlock);
 
