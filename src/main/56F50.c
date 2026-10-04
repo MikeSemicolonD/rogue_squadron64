@@ -235,7 +235,28 @@ void walkMeshdef0TreeApplyAnimColors(struct meshdef0 *arg0, u32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", findNameTreeEntryIndexByName);
+u8 findNameTreeEntryIndexByName(void **arg0, u8 *name, s32 *outIndex) {
+    u8 *e = *(u8 **)((u8 *)*arg0 + 0x30);
+    s32 i;
+    s32 n = 0;
+
+    while (*e != 0) {
+        for (i = 0; i < 6; i++) {
+            if (e[i] != name[i] || e[i] == 0) {
+                break;
+            }
+        }
+        if (e[i] == name[i] && e[i] == 0) {
+            if (outIndex != NULL) {
+                *outIndex = n;
+            }
+            return e[7];
+        }
+        n++;
+        e = e + e[7] * 0x24 + 8;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", findNameTreeEntryNodeByName);
 
