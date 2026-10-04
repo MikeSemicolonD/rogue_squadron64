@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/main/7ACF0", sampleRgbBoxFilter2x2AtSubpixel);
 
