@@ -330,7 +330,71 @@ void enqueueSoundInPriorityGroup(void *arg0, f32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", enqueueSpatialSoundInPriorityGroup);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", dispatchPrioritizedSoundQueue);
+typedef struct PendNode {
+    struct PendNode *next;
+    f32 f4;
+    f32 f8;
+    f32 fC;
+    f32 f10;
+    f32 f14;
+    u8 *voice;
+} PendNode;
+extern f32 D_main_8003DED4;
+extern f32 D_main_8003DED8;
+extern s32 musyxNoteEventLockedDispatch(u16, s32, s32);
+extern void applyVoice3DMixParams(void *, f32, f32, f32, f32, f32);
+
+void dispatchPrioritizedSoundQueue(void) {
+    s32 i;
+    PendNode *n;
+    SndNode *h;
+    u8 *v;
+    u8 *tv;
+    f32 diff;
+    s32 r;
+
+    for (i = 0; i < D_main_bss_80152EF0; i++) {
+        n = (PendNode *)D_main_bss_80152D70[i].unk4;
+        if (n != 0) {
+            do {
+                h = D_main_bss_80152D70[i].head;
+                if (h != 0) {
+                    diff = n->f4 - h->pri;
+                    if (diff <= D_main_8003DED4) {
+                        goto next;
+                    }
+                    if (diff <= D_main_8003DED8) {
+                        tv = n->voice;
+                        (*(u16 *)(tv + 0x3E))++;
+                        if (*(u16 *)(tv + 0x3E) < 0x14) {
+                            goto next;
+                        }
+                    } else {
+                        *(u16 *)(n->voice + 0x3E) = 0;
+                    }
+                }
+                v = n->voice;
+                r = musyxNoteEventLockedDispatch(*(u16 *)(v + 0x3C), 0x7F, 0x40);
+                *(s32 *)(v + 0x34) = r;
+                if (r == -1) {
+                    if (!(*(u32 *)(v + 8) & 2)) {
+                        *(u32 *)(v + 8) = (*(u32 *)(v + 8) | 0x40000) & 0xFFFDFFFF;
+                    }
+                } else {
+                    *(s32 *)(v + 0x40) = 0;
+                    *(u32 *)(v + 8) |= 0x100000;
+                    applyVoice3DMixParams(v, n->f4, n->f8, n->fC, n->f10, n->f14);
+                    *(u32 *)(v + 8) &= 0xFFFDFFFF;
+                    if (D_main_bss_80152D70[i].head != 0) {
+                        D_main_bss_80152D70[i].head = D_main_bss_80152D70[i].head->next;
+                    }
+                }
+            next:
+                n = n->next;
+            } while (n != 0);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", update3DAudioFrame);
 
