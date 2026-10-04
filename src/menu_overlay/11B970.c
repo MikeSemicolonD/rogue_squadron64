@@ -901,7 +901,42 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateUiSpriteScrollAndAlpha
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMenuAnimGroupFrame);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", createMenuTextElement);
+void loadCharTextureSet(void *, s32, s32, s32);
+void resetPlayerSlotAllChannels(u16, u8);
+void *getPlayerSlotFieldAt34(u16, u16);
+void setPlayerSlotEntryRGB(u16, u16, void *);
+void rs_memset(void *, u8, u32);
+extern void *D_menu_overlay_800CF078;
+extern s32 D_menu_overlay_800CD510;
+extern u8 mainMenuLightBlueColor[];
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    u8 pad8[0xC];
+    u8 unk14;
+    u8 unk15;
+    u8 pad16[0x4A];
+    u8 unk60;
+    u8 pad61[3];
+} MenuTextElement;
+MenuTextElement *createMenuTextElement(void) {
+    MenuTextElement *e = rs_malloc(0x64, 0);
+    u8 i;
+
+    rs_memset(e, 0, 0x64);
+    loadCharTextureSet(D_menu_overlay_800CF078, 9, 0x12, 0x1000);
+    resetPlayerSlotAllChannels(9, 0x14);
+    for (i = 0; i < 0x12; i++) {
+        getPlayerSlotFieldAt34(9, i);
+        setPlayerSlotEntryRGB(9, i, mainMenuLightBlueColor);
+    }
+    e->unk4 = D_menu_overlay_800CD510;
+    e->unk0 = D_menu_overlay_800CD510;
+    e->unk15 = 0;
+    e->unk14 = 0;
+    e->unk60 = 0;
+    return e;
+}
 
 typedef struct {
     u8 pad0[0x18];
