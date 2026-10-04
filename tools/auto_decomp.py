@@ -79,22 +79,30 @@ def m2c(func, s_path, c_path, extra):
         return None, "cpp failed"
     pathlib.Path("/tmp/auto_ctx.c").write_text(ctx.stdout)
     r = subprocess.run([sys.executable, "-m", "m2c.main", "-t", "mips-gcc-c", "--valid-syntax",
-                        "--context", "/tmp/auto_ctx.c", "--globals=used", *extra, str(s_path)],
+                        "--context", "/tmp/auto_ctx.c", "--globals=used", *[e for e in extra if e != "no-protos"], str(s_path)],
                        capture_output=True, text=True)
     if r.returncode or not r.stdout.strip():
         return None, "m2c failed"
-    code = r.stdout.replace("M2C_UNK", "s32")
+    code = re.sub(r"\bM2C_UNK(8|16|32|64)?\b", lambda m: {"8": "s8", "16": "s16", "64": "s64"}.get(m.group(1), "s32"), r.stdout)
     code = expand_fields(code)
     bad = re.search(r"M2C_[A-Z_]+", code)
     if bad:
         return None, bad.group(0)
     code = re.sub(r"\s*/\* extern \*/", "", code)
+    if "no-protos" in extra:
+        code = "\n".join(l for l in code.splitlines() if not re.match(r"^[A-Za-z_][\w \*]*\b\w+\(.*\);$", l) or l.startswith("extern"))
+    declared = set(re.findall(r"\b(D_\w+|[a-z]\w*)\b(?=\s*(?:\[.*\])?;)", "\n".join(l for l in code.splitlines() if l.startswith("extern"))))
+    context = pathlib.Path("/tmp/auto_ctx.c").read_text()
+    missing = sorted({d for d in re.findall(r"\bD_\w+_[0-9A-F]{8}\b", code) if d not in declared and not re.search(r"\b" + d + r"\b", context)})
+    if missing:
+        code = "".join(f"extern s32 {d};\n" for d in missing) + code
     return code.strip("\n") + "\n", None
 
 def rom_matches():
     b = subprocess.run(["make", "-j16", "build/tyler.z64"], capture_output=True, text=True)
     if b.returncode:
-        err = next((l for l in (b.stdout + b.stderr).splitlines() if re.search(r"error|undefined reference|multiple definition|parse error", l, re.I) and not l.startswith("make")), "")
+        lines = (b.stdout + b.stderr).splitlines()
+        err = next((l for l in lines if re.search(r"\.c:\d+: (?!warning)", l) or re.search(r"undefined reference|multiple definition|Error:", l)), "")
         return False, "build failed: " + err[:160]
     h = hashlib.sha1(pathlib.Path("build/tyler.z64").read_bytes()).hexdigest()
     return h == TARGET_SHA1, "rom differs" if h != TARGET_SHA1 else "match"
@@ -133,7 +141,7 @@ def try_func(func, c_path, s_path, variants):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--skip", default=str(pathlib.Path.home() / "rs64-skip-tmcg2.txt"))
-    ap.add_argument("--log", default="/tmp/auto_decomp.tsv")
+    ap.add_argument("--log", default=str(pathlib.Path.home() / "rs64-auto" / "auto_decomp.tsv"))
     ap.add_argument("--max-insns", type=int, default=10**9)
     ap.add_argument("--limit", type=int, default=10**9)
     ap.add_argument("--commit-every", type=int, default=25)
@@ -145,7 +153,7 @@ def main():
     ok, _ = rom_matches()
     if not ok:
         sys.exit("auto_decomp: baseline ROM does not match; fix that first")
-    variants = [[], ["--no-andor"], ["--no-casts"]]
+    variants = [[], ["--no-andor"], ["--no-casts"], ["no-protos"]]
     matched_since_commit, tried = [], 0
     with open(a.log, "a") as log:
         for n, func, c_path, s_path in candidates(skip):
