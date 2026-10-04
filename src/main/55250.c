@@ -62,4 +62,45 @@ void resetTextureAnimSlots(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/55250", registerTextureAnimSlot);
 
-INCLUDE_ASM("asm/nonmatchings/main/55250", tickTextureAnimSlots);
+typedef struct {
+    u16 chunk;
+    u8 a;
+    u8 b;
+    u16 flags;
+    u16 speed;
+    u16 phase;
+} TlutAnimSlot;
+
+void shiftTlutEntryWithinChunk(u16, u8, u8, s32);
+
+void tickTextureAnimSlots(f32 dt) {
+    s32 i;
+    f32 wrap;
+    f32 v;
+    u32 val;
+    TlutAnimSlot *s;
+
+    i = 0;
+    __asm__("lwc1 %0, D_main_8003AD14" : "=f"(wrap));
+    s = (TlutAnimSlot *)D_main_bss_80137C90;
+    do {
+        if (s->flags != 0) {
+            v = (f32)s->phase + dt * (f32)s->speed;
+            if (!(wrap <= v)) {
+                val = (s32)v;
+                s->phase = val;
+            } else {
+                val = (s32)(v - wrap) | 0x80000000;
+                s->phase = val;
+            }
+            if (val & 0xFF00) {
+                do {
+                    s->phase -= 0x100;
+                    shiftTlutEntryWithinChunk(s->chunk, s->a, s->b, (s->flags & 1) ? 1 : -1);
+                } while (s->phase & 0xFF00);
+            }
+        }
+        i++;
+        s++;
+    } while (i < 8);
+}
