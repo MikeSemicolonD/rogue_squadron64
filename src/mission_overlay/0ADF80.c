@@ -41,7 +41,31 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", submitCameraTrackedObject
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", emitEffectParticlesAlongPath);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", loadEffectModelInstancePool);
+extern u8 D_mission_overlay_800A53E0[];
+extern u8 D_mission_overlay_800A53F8[];
+extern s32 D_main_bss_80130B50;
+extern s32 D_mission_overlay_8010B738;
+void *rs_malloc(u32, u16);
+s32 load_hmt_and_hob(u8 *, s32, s32, s32);
+u8 *getHobObjectByName(u8 *);
+u8 *createMeshInstanceFromSource(u8 *, u8 *);
+void applyFlagsToMeshTreeOrList(u8 *, s32, s32, s32);
+
+void loadEffectModelInstancePool(void) {
+    u8 *obj;
+    u32 i;
+
+    D_mission_overlay_8010B6E0 = rs_malloc(0x3A20, 0);
+    load_hmt_and_hob(D_mission_overlay_800A53E0, 0, 0, 0);
+    obj = getHobObjectByName(D_mission_overlay_800A53F8);
+    for (i = 0; i < 0x3C; i++) {
+        createMeshInstanceFromSource(obj, D_mission_overlay_8010B6E0[i].mesh);
+    }
+    if (!(D_main_bss_80130B50 & 1)) {
+        applyFlagsToMeshTreeOrList(D_mission_overlay_8010B6E0->mesh, 0, 0x30000000, 0);
+    }
+    D_mission_overlay_8010B738 = 0;
+}
 
 extern s8 D_mission_overlay_8010B6E8;
 
