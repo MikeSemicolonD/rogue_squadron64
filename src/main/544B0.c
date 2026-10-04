@@ -24,7 +24,27 @@ s32 allocAndSetupModelInstance(s32 arg0) {
     return temp_v0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/544B0", randomizeListEntrySpacing);
+s16 rand();
+typedef struct {
+    u8 pad0[4];
+    s16 unk4;
+    u8 pad6[2];
+} ListSpacingEntry;
+void randomizeListEntrySpacing(ListSpacingEntry *arg0, ListSpacingEntry *src, u16 range)
+{
+  u16 v = src->unk4;
+  int r = range;
+  ListSpacingEntry *p = src;
+  ListSpacingEntry *dst = arg0;
+  do
+  {
+    p++;
+    dst->unk4 = v - (rand() % r);
+    v = p->unk4;
+    dst++;
+  }
+  while ((p->unk4 - src->unk4) < 16);
+}
 
 s32 rs_free(s32);
 
