@@ -110,7 +110,59 @@ u16 spawnStubMarkerNpc(f32 x, f32 y, s32 a, s32 b, s16 c) {
     return spawnNpcOfType(stubNpcHandler, &args, 1, 10);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", load_naboo_starfighter);
+extern u32 get_asset_size_extra(s32, char *);
+extern s32 findAssetAcrossSegments(s32, s32, s32, char *, s32);
+extern void setupAssetDma(s32, s32, s32, s32, u32, void *);
+extern void teardownAssetDma(s32, s32);
+extern char D_main_8003C9B0[];
+extern s32 D_main_bss_80137CFC;
+extern s32 D_main_bss_80138920;
+
+u32 load_naboo_starfighter(u32 arg0) {
+    u32 buf;
+    u32 size;
+    u32 off;
+    u32 ret;
+    u32 v;
+    s32 idx;
+    u16 count;
+    u16 i;
+    u32 *q;
+
+    size = get_asset_size_extra(D_main_bss_80137CFC, D_main_8003C9B0);
+    buf = (u32)rs_malloc(size, 0);
+    idx = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, D_main_8003C9B0, 0);
+    setupAssetDma(D_main_bss_80138920, 0, idx, 0, size, (void *)buf);
+    teardownAssetDma(D_main_bss_80138920, idx);
+    decrypt_ns_hmt((u8 *)buf, size, arg0);
+    off = *(u32 *)(buf + 4);
+    ret = 0;
+    if (size >= off && (off & 3) == 0) {
+        count = *(u16 *)(buf + off);
+        if (count < 0x29) {
+            i = 0;
+            for (; i < count; i++, off += 0x34) {
+                if (off >= size) {
+                    break;
+                }
+                q = (u32 *)(off + buf) + 1;
+                v = *q;
+                if (v == 0 || (v & 3) != 0 || v > size) {
+                    break;
+                }
+                v = q[9];
+                if (v == 0 || (v & 3) != 0 || v > size) {
+                    break;
+                }
+            }
+            if (i == count) {
+                ret = arg0;
+            }
+        }
+    }
+    rs_free((void *)buf);
+    return ret;
+}
 
 #if 0
 void *getCraftRecordByIdx(s32 arg0) {
