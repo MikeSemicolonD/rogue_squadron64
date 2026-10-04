@@ -48,7 +48,22 @@ void piDmaWorker(void *arg) {
 
 INCLUDE_ASM("asm/nonmatchings/main/06170", submitDmaRequestBatch);
 
-INCLUDE_ASM("asm/nonmatchings/main/06170", initPiDmaWorker);
+extern OSMesg D_main_80111288[];
+extern OSMesgQueue D_main_80111290;
+extern s32 D_main_bss_801126B4;
+extern s32 D_main_bss_801126BC;
+extern s32 registerServiceWorker(s32, s32, s32, void *);
+extern s32 startServiceWorker(s32);
+
+s32 initPiDmaWorker(void) {
+    osCreateMesgQueue(&D_main_80111290, D_main_80111288, 1);
+    D_main_bss_801126B4 = 0;
+    D_main_bss_801126B0 = 0;
+    D_main_bss_801126B8 = 0;
+    D_main_bss_801126BC = registerServiceWorker(4, 0x200, 0x78, piDmaWorker);
+    startServiceWorker(D_main_bss_801126BC);
+    return 1;
+}
 
 extern s32 D_main_bss_801126B0;
 extern s32 D_main_bss_801126B4;
