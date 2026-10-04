@@ -86,7 +86,22 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", raycastTerrainAndNpcs);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initActorRenderDescriptorIfUninit);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initActorRenderDescriptorWithNpcVelocity);
+void *getNpcContextField8(u16);
+void computeBillboardFacingVector(void *, void *);
+
+typedef struct { f32 x, y, z; } Vec3Cp;
+
+void initActorRenderDescriptorWithNpcVelocity(u8 *arg0, u8 *arg1) {
+    Vec3Cp sp10;
+    Vec3Cp *npc;
+
+    if (arg0[0x1A7] == 0) {
+        npc = getNpcContextField8(*(u16 *)(arg0 + 0x198));
+        computeBillboardFacingVector(npc, &sp10);
+        *(Vec3Cp *)(arg1 + 0x10) = *npc;
+        *(Vec3Cp *)(arg1 + 0x1C) = sp10;
+    }
+}
 
 s32 setNpcHealth(u8* npc, s32* health, u8* record) {
     u8* rec = record;
