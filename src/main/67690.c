@@ -110,7 +110,39 @@ u32 data_pad_67690 = 0x10400019;
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", initSpeechSubsystem);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", enqueueSpeechClip);
+extern s32 D_main_80139B80[];
+extern u8 D_main_80139BA0[];
+extern s16 D_main_bss_80139BA8;
+extern f32 D_main_bss_80139C84;
+s32 isVoiceHandleActive(s32);
+void stopVoiceByHandle(s32);
+s32 allocAndConfigureNewVoice(s16, s32, s32, s32, s32, s32, s32);
+
+s32 enqueueSpeechClip(u32 arg0, u8 arg1)
+{
+  s32 *p;
+  u8 idx;
+  s32 v;
+  if (arg0 < 0x2F4U)
+  {
+    D_main_bss_80139BA8 = (D_main_bss_80139BA8 + 1) % 8;
+    idx = ((u8 *) (&D_main_bss_80139BA8))[1];
+    ;
+    if ((*(&D_main_80139B80[idx])) != (-1))
+    {
+ do { if ((u8) isVoiceHandleActive(*(&D_main_80139B80[idx]))) { stopVoiceByHandle(*(&D_main_80139B80[idx])); } } while (0);
+      *(&D_main_80139B80[idx]) = -1;
+    }
+    v = allocAndConfigureNewVoice(voiceIdtoTextIdMap[arg0], 0, 0xFF, (u8) ((u32) (D_main_bss_80139C84 * arg1)), 0x40, 0, 0);
+    if ((double) (v != (-1)))
+    {
+      D_main_80139B80[D_main_bss_80139BA8] = v;
+      D_main_80139BA0[D_main_bss_80139BA8] = arg1;
+      return (((u8 *) (&D_main_bss_80139BA8))[1] + 1) & 0xFF;
+    }
+  }
+  return 0;
+}
 
 extern s32 D_main_80139B80[];
 s32 isVoiceHandleActive(s32);
