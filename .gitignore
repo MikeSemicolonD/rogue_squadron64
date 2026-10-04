@@ -13,3 +13,4 @@ venv/**
 tools/wibo-x86_64
 tools/compilers/
 *.z64
+roguesquadron.d
