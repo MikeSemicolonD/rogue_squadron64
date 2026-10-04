@@ -22,7 +22,23 @@ INCLUDE_ASM("asm/nonmatchings/main/6C310", stubNpcHandler);
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", clearTrackedNpcSlots);
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", spawnSplineWalkerCraft);
+void splineWalkerCraftNpcHandler();
+u16 spawnNpcOfType(void *, void *, u32, u8);
+typedef struct {
+    s32 a;
+    s32 b;
+    s32 c;
+    s16 d;
+} SplineWalkerSpawnArgs;
+void spawnSplineWalkerCraft(s32 arg0, s32 arg1, s32 arg2, s16 arg3) {
+    SplineWalkerSpawnArgs args;
+
+    args.a = arg0;
+    args.b = arg1;
+    args.c = arg2;
+    args.d = arg3;
+    spawnNpcOfType(splineWalkerCraftNpcHandler, &args, 1, 10);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", spawnStubMarkerNpc);
 
