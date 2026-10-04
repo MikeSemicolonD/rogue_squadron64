@@ -9,7 +9,60 @@ extern s32 D_main_bss_80137CE4;
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", func_mission_overlay_800EFDE0);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", isPendingChildNpcActive);
+typedef struct {
+    u8 pad0[0x1A];
+    u16 unk1A;
+    u16 unk1C;
+    u16 unk1E;
+    u8 unk20;
+    u8 unk21;
+} PendingChildNpc;
+
+s32 findActiveNpcInSlotChain(u16, s32);
+void *getNpcContextByIndex(u16);
+s32 unregisterAndFreeNpcSlot(u16, void *);
+
+static inline void clearPendingChildNpcInline(PendingChildNpc *p) {
+    if (p->unk20 == 1 && p->unk1A != 0xFFFF) {
+        if ((findActiveNpcInSlotChain(p->unk1C, 0) & 0xFFFF) != 0xFFFF) {
+            unregisterAndFreeNpcSlot(p->unk1E, getNpcContextByIndex(p->unk1E));
+        }
+        p->unk1A = 0xFFFF;
+        p->unk1E = 0xFFFF;
+        p->unk20 = 0;
+    }
+}
+
+s32 isPendingChildNpcActive(u8 *obj) {
+    PendingChildNpc *p = (PendingChildNpc *)(obj + 0x114);
+    u16 idx;
+
+    if (p->unk21 == 0) {
+        return 0;
+    }
+    if (p->unk20 != 0) {
+        if (p->unk1C == 0xFFFF) {
+            return 0;
+        }
+        if (p->unk1E == 0xFFFF) {
+            return 0;
+        }
+        if (p->unk1A == 0xFFFF) {
+            return 0;
+        }
+        idx = findActiveNpcInSlotChain(p->unk1C, 0) & 0xFFFF;
+        if (idx == 0xFFFF) {
+            clearPendingChildNpcInline(p);
+            return 0;
+        }
+        if (*(u16 *)((u8 *)getNpcContextByIndex(idx) + 0x14) & 0x10) {
+            clearPendingChildNpcInline(p);
+            return 0;
+        }
+        return 1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", validateActorTargetLOS);
 
