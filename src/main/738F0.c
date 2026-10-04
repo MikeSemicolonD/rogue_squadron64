@@ -104,7 +104,30 @@ void buildNpcAnchoredCameraEffectTransformWrapper(u16 arg0, void *arg1, f32 arg2
     buildNpcAnchoredCameraEffectTransform(arg0, arg1, 0, arg2);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnWaterSprayNpc);
+typedef struct {
+    s32 unk0;
+    u8 pad4[0x18];
+    s16 unk1C;
+    s16 unk1E;
+} WaterSprayArgs;
+
+extern u8 *getNpcContextByIndex(u16);
+extern u16 spawnNpcOfType(void *, void *, u32, u8);
+extern u8 D_main_bss_8013A944;
+extern void npcWaterSprayUpdate(void);
+
+u16 spawnWaterSprayNpc(s32 arg0, s32 arg1) {
+    WaterSprayArgs args;
+    u16 id = arg0;
+
+    if (D_main_bss_8013A944 != 0) {
+        args.unk1C = id;
+        args.unk0 = arg1;
+        args.unk1E = 0;
+        return spawnNpcOfType(npcWaterSprayUpdate, &args, 1, getNpcContextByIndex(id)[0x19] + 1);
+    }
+    return 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnWaterSprayDebrisAndBurst);
 
