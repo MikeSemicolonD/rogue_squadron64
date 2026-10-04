@@ -67,7 +67,31 @@ s32 getEffectModelPoolHandle(void) {
     return D_mission_overlay_8010B738;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", beginCameraViewTransition);
+typedef struct {
+    s32 m[12];
+} CameraXform12;
+
+typedef struct {
+    f32 x, y, z;
+} CameraVec3;
+
+void beginCameraViewTransition(CameraXform12 *xf, CameraVec3 *target, u8 *flags) {
+    u8 *s = (u8 *)&D_mission_overlay_8010B6E8;
+
+    if (target != NULL) {
+        *(CameraVec3 *)(s + 0x34) = *target;
+        s[3] = 1;
+    } else {
+        s[3] = 0;
+    }
+    s[0] = 1;
+    *(CameraXform12 *)(s + 4) = *xf;
+    s[1] = 0;
+    s[2] = 0;
+    flags[0] = 0;
+    flags[1] = 0;
+    *(s32 *)(s + 0x50) += 1;
+}
 
 void requestCameraSnapToTrackedAnchor(void) {
     (*(s8 *)((u8 *)(&D_mission_overlay_8010B6E8) + 0)) = 4;
