@@ -185,7 +185,39 @@ void unlockLevelsAndCraftsBasedOnMedalsEarned(u8 *medalsPerLevel) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/12CA40", advanceWrappingPhaseAccumulator);
+typedef struct {
+    u8 pad[0x1C];
+    f32 unk1C;
+    f32 unk20;
+} TimeSnapshot;
+void timeSnapshotFiller(TimeSnapshot *);
+f32 floatModulo(f32, f32);
+extern s32 D_main_bss_8013889C;
+
+f32 advanceWrappingPhaseAccumulator(void) {
+    TimeSnapshot snap;
+    f32 var_fs0;
+    f32 m;
+
+    timeSnapshotFiller(&snap);
+    var_fs0 = snap.unk20;
+    D_main_bss_8013889C += 1;
+    m = floatModulo(var_fs0, snap.unk1C);
+    if (m > 0.0f) {
+        if ((m / snap.unk1C) < 0.5f) {
+            var_fs0 -= m;
+        } else {
+            var_fs0 = (var_fs0 + snap.unk1C) - m;
+        }
+    }
+    if (var_fs0 <= 0.0f) {
+        var_fs0 = 0.016666668f;
+    }
+    if (var_fs0 > 0.16666667f) {
+        var_fs0 = 0.16666667f;
+    }
+    return var_fs0;
+}
 
 s32 getLevelHardwiredDifficulty(u8 levelId) {
     return 0;
