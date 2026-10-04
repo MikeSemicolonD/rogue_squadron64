@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "rs_math.h"
 #include "main/1D000.h"
@@ -124,6 +125,40 @@ void orthonormalizeFrameAndSnapToZero(Mat4x3 arg0) {
 INCLUDE_ASM("asm/nonmatchings/main/5A750", orthonormalizeFrameAndSnapToZero);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/main/5A750", isPointWithinBoundingBox);
+typedef struct {
+    u8 pad0[0x10];
+    f32 min[3];
+    u8 pad1C[0xC];
+    f32 size[3];
+} BoundingBoxF;
+
+s32 isPointWithinBoundingBox(f32 *p, BoundingBoxF *box, s32 ignoreY) {
+    s32 ret;
+
+    if (p[0] < box->min[0]) {
+    fail:
+        return 0;
+    }
+    if (box->min[0] + box->size[0] < p[0]) {
+        goto fail;
+    }
+    if (p[2] < box->min[2]) {
+        goto fail;
+    }
+    if (box->min[2] + box->size[2] < p[2]) {
+        goto fail;
+    }
+    ret = 1;
+    if (ignoreY == 0) {
+        if (p[1] < box->min[1]) {
+            goto fail;
+        }
+        ret = 0;
+        if (!(box->min[1] + box->size[1] < p[1])) {
+            ret = 1;
+        }
+    }
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/5A750", fake_func_8005A11C);
