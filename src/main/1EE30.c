@@ -366,7 +366,68 @@ struct MaterialPoolEntry *popMaterialNodeIntoBucket(u16 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", allocOrEvictMaterialNode);
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", findOrCreateMaterial);
+extern u8 D_main_bss_801143A8;
+extern u32 D_main_bss_801163D4;
+s32 allocOrEvictMaterialNode(u32, s32, s32);
+
+s32 findOrCreateMaterial(u32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+    struct MaterialPoolEntry *entry;
+    struct MaterialPoolEntry *hit;
+    s32 flag;
+    u8 c;
+    u32 *dl;
+
+    if (D_main_bss_801163FC == &D_main_bss_801163C8[D_main_bss_8011A899]) {
+        entry = D_main_bss_80128F00[arg1 & 0xFFFF];
+        hit = NULL;
+        if (entry != NULL) {
+            flag = D_main_bss_8011A908 & 0x80;
+            do {
+                if (entry->unk10 == (arg2 & 7)) {
+                    c = entry->unk0C;
+                    if ((c & 0x7F) == 2) {
+                        if (flag != 0) {
+                            goto found;
+                        }
+                    }
+                    if (c == entry->unk0E) {
+                        if (flag == 0) {
+found:
+                            entry->unk08 = 0;
+                            hit = entry;
+                            goto done;
+                        }
+                    }
+                }
+                entry = entry->next;
+                if (entry == NULL) {
+                    goto none;
+                }
+            } while (1);
+        }
+    } else {
+none:
+        hit = NULL;
+    }
+done:
+    if (hit == NULL) {
+        arg0 = allocOrEvictMaterialNode(arg0, arg1 & 0xFFFF, arg2);
+    } else {
+        dl = (u32 *)arg0;
+        if (arg0 >= D_main_bss_801163D4) {
+            dl[0] = 0xB5000000;
+            dl[1] = 0;
+            arg0 = (u32)allocateDisplayListBuffer();
+            dl = (u32 *)arg0;
+        }
+        dl[0] = 0x06000000;
+        dl[1] = (u32)hit->unk14 - 8;
+        D_main_bss_8011A908 = hit->unk0C;
+        arg0 += 8;
+        D_main_bss_801143A8 = hit->unk0D;
+    }
+    return arg0;
+}
 
 u16 getTextureLUTFieldAt8(u16 arg0) {
     return D_main_bss_80128F08[arg0].width;
