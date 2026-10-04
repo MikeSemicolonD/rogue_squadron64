@@ -36,3 +36,18 @@ Ask the maintainer how they build:
 - whether `make` currently links for them.
 
 With that, items 4 and 5 are probably small yaml fixes. Items 1 and 3 are fixed on `build-check`.
+
+## Progress (`python3 tools/progress.py`, after splat 0.41.1)
+
+These are `.text` bytes in C (yaml text subsegments minus `INCLUDE_ASM` functions). They are not proven-matching bytes, because the ROM doesn't link yet.
+
+| Group | In C | Total | % | Functions still asm |
+|---|---|---|---|---|
+| main | 28364 | 535888 | 5.3 | 1069 |
+| mission_overlay | 38704 | 391872 | 9.9 | 488 |
+| menu_overlay | 3028 | 143728 | 2.1 | 199 |
+| cinematic_overlay | 688 | 39216 | 1.8 | 50 |
+| libultra | 0 | 55360 | 0.0 | 190 |
+| zlib | 11740 | 13168 | 89.2 | 8 |
+| entry_point | 0 | 64 | 0.0 | 2 |
+| **total** | **82524** | **1179296** | **7.0** | **2006** |
