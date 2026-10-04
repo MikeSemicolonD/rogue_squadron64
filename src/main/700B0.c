@@ -106,7 +106,36 @@ INCLUDE_RODATA("asm/nonmatchings/main/700B0", strILtsrcHi);
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", loadSfxAsset);
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", composeRandomRotationMatrix);
+void buildRotationMatrixSlot0(f32 *, f32);
+void composeRotationMatrixSlot0(f32 *, f32);
+void composeRotationMatrixSlot1(f32 *, f32);
+
+void composeRandomRotationMatrix(f32 *arg0, f32 *arg1, f32 arg2, s32 arg3, s32 arg4, s32 arg5) {
+    f32 m[12];
+    f32 v;
+    f32 t;
+
+    if (arg3 != 0) {
+        v = (f32)((s16)rand() % arg3);
+    } else {
+        v = 0.0f;
+    }
+    buildRotationMatrixSlot0(m, v);
+    composeRotationMatrixSlot1(m, (f32)(s16)rand());
+    if (arg4 != 0) {
+        composeRotationMatrixSlot0(m, (f32)arg4);
+    }
+    if (arg5 != 0) {
+        composeRotationMatrixSlot1(m, (f32)arg5);
+    }
+    t = -m[1];
+    arg1[0] = t;
+    arg1[1] = -m[4];
+    arg1[2] = -m[7];
+    arg0[0] = arg1[0] * arg2;
+    arg0[1] = arg1[1] * arg2;
+    arg0[2] = arg1[2] * arg2;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", composeRandomRotationMatrixVariant);
 
