@@ -51,7 +51,38 @@ s16 resolvePlayerAnimChannelKeyValue(u16 font, u16 key) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", initAllPlayerSlots);
+extern s8 D_main_bss_80139960;
+extern s16 D_main_bss_80139962;
+extern s16 D_main_bss_80139964;
+
+void initAllPlayerSlots(void) {
+    u32 i = 0;
+    u32 j;
+    struct someFontThing **pp = D_main_8009FC10;
+    for (; i < 12; i++) {
+        struct someFontThing *t = *pp;
+        u8 *q = (u8 *)t;
+        t->unk020 = NULL;
+        t->unk024 = NULL;
+        t->unk028 = NULL;
+        *(u16 *)&t->unk02C = 0;
+        t->unk030 = 0;
+        for (j = 0; j < 0x14; j++) {
+            *(s32 *)(q + 0x34) = 0;
+            t->unk084[j] = 0;
+            q += 4;
+        }
+        pp++;
+        *(u8 *)&t->unk0F8 = i + 0x41;
+        t->unk0EC = NULL;
+        t->unk0F0 = NULL;
+        t->unk0F4 = NULL;
+        t->unk0FC = NULL;
+    }
+    D_main_bss_80139960 = 1;
+    D_main_bss_80139962 = 0x140;
+    D_main_bss_80139964 = 0x140;
+}
 
 void resetPlayerSlotChannelTransform(s32 arg0) {
     struct someFontThing *temp_v0;
