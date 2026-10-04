@@ -627,13 +627,24 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", allocCraftPreviewEffectObjec
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initCraftPreviewEffectWithRandom);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuElementScrollAnimParams);
+void initMenuElementScrollAnimParams(void *arg0, s32 arg1, s32 arg2) {
+    (*(s32 *)((u8 *)(arg0) + 0x14EC)) = 0;
+    (*(s32 *)((u8 *)(arg0) + 0x14F8)) = arg1;
+    (*(s32 *)((u8 *)(arg0) + 0x14FC)) = arg2;
+    (*(f32 *)((u8 *)(arg0) + 0x14F0)) = 86.8997f;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", applyMenuCheatCode);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", getCraftStatIfThresholdMet);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", resetMenuSelectionGlobalState);
+extern s32 D_menu_overlay_800CEF40;
+
+void resetMenuSelectionGlobalState(void) {
+    (*(s8 *)((u8 *)(&D_menu_overlay_800CEF40) + 0)) = 0;
+    (*(s8 *)((u8 *)(&D_menu_overlay_800CEF40) + 1)) = 0;
+    (*(s32 *)((u8 *)(&D_menu_overlay_800CEF40) + 4)) = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", spawnMenuListItemSprite);
 

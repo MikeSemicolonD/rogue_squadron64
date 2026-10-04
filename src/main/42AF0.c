@@ -39,6 +39,12 @@ void setGridLayerScrollX(f32 arg0) {
     D_main_bss_80130C50 = arg0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", setGridLayerScrollBounds);
+extern f32 D_main_bss_80130C54;
+extern f32 D_main_bss_80130C58;
+
+void setGridLayerScrollBounds(f32 arg0, f32 arg1) {
+    D_main_bss_80130C54 = arg0;
+    D_main_bss_80130C58 = arg1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", fake_func_800457CC);

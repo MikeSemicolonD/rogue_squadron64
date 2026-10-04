@@ -118,7 +118,11 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", releaseModelVi
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", setModelViewerObjectTransform);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", runMusyXTaskWrapper);
+s32 runMusyXTaskLocked();
+
+void runMusyXTaskWrapper(void) {
+    runMusyXTaskLocked();
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", appendNodeToListTail);
 

@@ -44,7 +44,15 @@ INCLUDE_ASM("asm/nonmatchings/main/61FC0", resetPlayerSlotAllChannels);
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", setPlayerSlotAnimationFlag);
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", setMenuOverlayHeaderState);
+extern s8 D_main_bss_80139960;
+extern s16 D_main_bss_80139962;
+extern s16 D_main_bss_80139964;
+
+void setMenuOverlayHeaderState(s8 arg0, s16 arg1, s16 arg2) {
+    D_main_bss_80139960 = arg0;
+    D_main_bss_80139962 = arg1;
+    D_main_bss_80139964 = arg2;
+}
 
 extern s32 D_main_bss_80139968;
 
@@ -89,7 +97,9 @@ s32 getPlayerSlotAnimChannelCount(void *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", markStructInitializedOnce);
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", isStructUninitialized);
+s32 isStructUninitialized(void *arg0) {
+    return ((*(s32 *)((u8 *)(arg0) + 0x454)) & 0xFF00FF00) == 0;
+}
 
 u16 findCharEntryValueByKey(u16 arg0, u8 arg1) {
     s32 var_a2;

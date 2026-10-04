@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "main/67690.h"
 
@@ -125,7 +126,13 @@ INCLUDE_ASM("asm/nonmatchings/main/67690", finalizeCurrentSpeechBuffer);
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", initSpeechPlaybackState);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", clearSpeechActiveFlags);
+extern s8 D_main_bss_80139C8C;
+extern s8 D_main_bss_80139C8E;
+
+void clearSpeechActiveFlags(void) {
+    D_main_bss_80139C8C = 0;
+    D_main_bss_80139C8E = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", beginSpeechTimingWindow);
 

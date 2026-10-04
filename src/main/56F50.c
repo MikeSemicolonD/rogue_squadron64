@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "main/02420.h"
 #include "main/08510.h"
@@ -129,7 +130,9 @@ INCLUDE_ASM("asm/nonmatchings/main/56F50", checkAndReturnByteFlagAsU8);
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", lookupHmtMaterialByName);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", getNpcContextFloatAt34);
+f32 getNpcContextFloatAt34(void **arg0) {
+    return (*(f32 *)((u8 *)(*arg0) + 0x34));
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", findModelChildNodeByName);
 

@@ -43,7 +43,13 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", hangarVehicleDisplayNpcHa
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", applyNpcPositionDrift);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", getConfigFloatPair);
+extern f32 D_mission_overlay_8010A1F8;
+extern f32 D_mission_overlay_8010A1FC;
+
+void getConfigFloatPair(f32 *arg0, f32 *arg1) {
+    *arg0 = D_mission_overlay_8010A1F8;
+    *arg1 = D_mission_overlay_8010A1FC;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", accumulateVectorInObjectFrame);
 

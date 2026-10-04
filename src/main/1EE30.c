@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "compiler/gcc/memory.h"
 
@@ -454,7 +455,12 @@ s32 shiftTlutEntryWithinChunk(u16 arg0, u8 arg1, u8 arg2, s8 arg3) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", getLoadedTextureCount);
+extern s32 D_main_bss_8011A7D0;
+extern s32 D_main_bss_8011A7D8;
+
+s32 getLoadedTextureCount(void) {
+    return D_main_bss_8011A7D0 - D_main_bss_8011A7D8;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", fake_func_80023968);
 

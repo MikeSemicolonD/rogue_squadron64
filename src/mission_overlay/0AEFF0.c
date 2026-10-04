@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "mission_overlay/0AEFF0.h"
 
@@ -56,7 +57,11 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", destroySceneNpcsAndUnlink
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", decayWeaponCooldownTimer);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", getWeaponChargeLevel);
+extern f32 D_mission_overlay_8010B7A0;
+
+f32 getWeaponChargeLevel(void) {
+    return D_mission_overlay_8010B7A0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", advancePitchTowardTarget);
 

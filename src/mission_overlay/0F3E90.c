@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "level_objectives.h"
 #include "mission_overlay/0F3E90.h"
@@ -53,7 +54,9 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", dispatchEffectByActorType
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", setType1ActorParams);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", updateObjectFlags110);
+void updateObjectFlags110(void *arg0, s32 arg1, s32 arg2) {
+    (*(u16 *)((u8 *)(arg0) + 0x110)) = (u16) (((*(u16 *)((u8 *)(arg0) + 0x110)) | arg1) & ~arg2);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", resetType1FxFields);
 

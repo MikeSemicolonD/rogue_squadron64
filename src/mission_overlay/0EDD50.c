@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", claimSongSlotForCurrentHandle);
 
@@ -46,7 +47,11 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", stageSoundCueRequestByIdA
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", initSoundCueRequest);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", getSoundCueSubsystemFlag);
+extern u8 D_mission_overlay_8010C0E8;
+
+u8 getSoundCueSubsystemFlag(void) {
+    return D_mission_overlay_8010C0E8;
+}
 
 void func_mission_overlay_800EFD64(void) {
 }

@@ -213,7 +213,9 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getObjectNpcTypeId);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", clearPendingChildNpc);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setObjectFlagBit4);
+void setObjectFlagBit4(void *arg0) {
+    (*(u16 *)((u8 *)(arg0) + 0x14)) = (u16) ((*(u16 *)((u8 *)(arg0) + 0x14)) | 0x10);
+}
 
 void clearObjectFlagBit4(void *arg0) {
     (*(u16 *)((u8 *)(arg0) + 0x14)) = (u16) ((*(u16 *)((u8 *)(arg0) + 0x14)) & 0xFFEF);

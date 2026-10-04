@@ -27,13 +27,29 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", playObjectiveVoiceLine1);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", playObjectiveVoiceLine2);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", dispatchHudEffectUpdate);
+s32 initSpeechPlaybackState();
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", delegateToLevelStageTick);
+void dispatchHudEffectUpdate(void) {
+    initSpeechPlaybackState();
+}
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", triggerNamedAssetCue);
+s32 triggerStageMusicForNamedDatItem();
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", triggerSoundCueByType);
+void delegateToLevelStageTick(void) {
+    triggerStageMusicForNamedDatItem();
+}
+
+s32 triggerStageAmbientForNamedDatItem();
+
+void triggerNamedAssetCue(void) {
+    triggerStageAmbientForNamedDatItem();
+}
+
+s32 initSoundCueRequest();
+
+void triggerSoundCueByType(void) {
+    initSoundCueRequest();
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", fake_func_800C7DB4);
 

@@ -35,7 +35,11 @@ INCLUDE_ASM("asm/nonmatchings/main/9BB60", serviceStreamingVoice);
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", consumeVoiceSamples);
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", advanceVoiceStateToPlaying);
+void advanceVoiceStateToPlaying(void *arg0) {
+    if ((*(u8 *)((u8 *)(arg0) + 0x11DD)) == 2) {
+        (*(u8 *)((u8 *)(arg0) + 0x11DD)) = 3U;
+    }
+}
 
 void stopVoice(void *arg0) {
     (*(s8 *)((u8 *)(arg0) + 0x11DD)) = 4;

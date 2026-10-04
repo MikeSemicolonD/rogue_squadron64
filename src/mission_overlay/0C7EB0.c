@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "level_objectives.h"
 #include "mission_state.h"
@@ -139,7 +140,11 @@ enum Level getCurrentLevel(void) {
     return gCurrentLevel;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", getSceneStatePtr);
+extern s32 D_main_bss_80137CE4;
+
+s32 getSceneStatePtr(void) {
+    return D_main_bss_80137CE4;
+}
 
 enum PlayerCraft getLocalPlayerVehicleId(void) {
     return getPlayerVehicleId(0);
@@ -240,15 +245,27 @@ f32 setObjectiveTimer(s32 timerIndex, f32 timerValue) {
     return blah;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", getGlobalFloatGameState);
+extern f32 D_main_bss_80130BA4;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", getObjectiveGlobalFloat);
+f32 getGlobalFloatGameState(void) {
+    return D_main_bss_80130BA4;
+}
+
+extern f32 D_mission_overlay_8010C9E4;
+
+f32 getObjectiveGlobalFloat(void) {
+    return D_mission_overlay_8010C9E4;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", setHudEnableBit4);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", setHudEnableBit8);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", isLevelStateByteZero);
+extern u8 D_main_bss_80137CE0;
+
+s32 isLevelStateByteZero(void) {
+    return D_main_bss_80137CE0 == 0;
+}
 
 void setFriendliesSaved(s32 arg0) {
     if (arg0 < 0) {
@@ -273,4 +290,10 @@ u8 addTimerHandleWrapper(void (*handle)(), f32 timerValue) {
     return addTimerHandle(handle, timerValue);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", setHudFlagBit40AndStoreArg);
+extern u8 *D_main_8009EC10;
+extern s32 D_mission_overlay_8010C9E0;
+
+void setHudFlagBit40AndStoreArg(u8 *arg0) {
+    D_main_8009EC10 = arg0;
+    D_mission_overlay_8010C9E0 |= 0x40;
+}

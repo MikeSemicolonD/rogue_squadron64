@@ -396,7 +396,11 @@ INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicComputeDt);
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicInitializer);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", isCinematicActive);
+extern s32 D_cinematic_overlay_800B0934;
+
+s32 isCinematicActive(void) {
+    return D_cinematic_overlay_800B0934 != 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicStageAdvancer);
 
