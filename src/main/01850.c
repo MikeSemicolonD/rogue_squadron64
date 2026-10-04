@@ -53,7 +53,20 @@ INCLUDE_ASM("asm/nonmatchings/main/01850", thread3_video_handle);
 
 INCLUDE_ASM("asm/nonmatchings/main/01850", runVideoFrameTick);
 
-INCLUDE_ASM("asm/nonmatchings/main/01850", main);
+extern void func_entry_8000040C(void *, void *);
+extern u8 D_main_bss_8010D200[];
+extern u8 D_main_bss_8010D200b[] __asm__("D_main_bss_8010D200");
+extern u8 D_main_bss_8010FED8[];
+extern u8 D_238C2[];
+extern u8 D_47490[];
+void realMain(void) __asm__("main");
+void realMain(void) {
+    func_entry_8000040C(D_main_bss_8010D200, D_238C2);
+    func_entry_8000040C(D_main_bss_8010D200b, D_47490);
+    osInitialize();
+    osCreateThread(&gIdleThread, 0, idle_thread_handle, NULL, D_main_bss_8010FED8, 0xA);
+    osStartThread(&gIdleThread);
+}
 
 extern OSMesgQueue D_main_8010DFD8;
 extern OSMesg D_main_8010D598;

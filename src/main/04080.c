@@ -370,7 +370,35 @@ s32 freeManifestSegmentAssets(s32 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/04080", findAssetAcrossSegments);
 
-INCLUDE_ASM("asm/nonmatchings/main/04080", teardownAssetDma);
+extern s32 sendServiceMessage(s32, s32, void *, s32);
+
+s32 teardownAssetDma(u32 arg0, void *arg1) {
+    u16 sp10[12];
+    union D_80111100_type *msg;
+    u16 *reply;
+    s32 idx;
+    s32 next;
+
+    idx = D_main_bss_80111248;
+    next = idx + 1;
+    D_main_bss_80111248 = next % 8;
+    *(u16 *)&gServiceWorkerMesgBuf[idx] = 0x8001;
+    msg = &gServiceWorkerMesgBuf[idx];
+    msg->flag_8000.next = (union D_80111100_type *)sp10;
+    msg->flag_8001.unk14 = arg0;
+    msg->flag_8000.source = arg1;
+    sp10[0] = 0x80FF;
+    D_main_bss_80111250 -= 1;
+    sendServiceMessage(arg0, D_main_bss_80110D54, msg, 1);
+    do {
+        reply = (u16 *)recvServiceMessage(arg0);
+        if (*reply == 0x80FF) {
+            break;
+        }
+        postMessageToServiceWorker(arg0, reply);
+    } while (*reply != 0x80FF);
+    return 1;
+}
 
 static __inline__ struct manifest_entry *findManifestEntryInAnySegment(u32 *seg, u8 *name, u32 flag) {
     u32 i;

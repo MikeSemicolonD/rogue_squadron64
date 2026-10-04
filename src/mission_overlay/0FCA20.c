@@ -32,7 +32,45 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FCA20", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", configurePlayerSecondaryWeaponHud);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", resetHudInstancesAndUnbindNpcs);
+void destroyNpcSlotChain(u16);
+void factor5RemoveListNode(void *);
+
+void resetHudInstancesAndUnbindNpcs(void) {
+    s32 i;
+    struct hud_struct *h;
+
+    i = 0;
+    do {
+        if ((D_mission_overlay_8010CA30[i & 0xFF].secondaryWeapon == 3 || D_mission_overlay_8010CA30[i & 0xFF].secondaryWeapon == 8) && D_mission_overlay_8010CA30[i & 0xFF].unk210 != 0) {
+            destroyNpcSlotChain(D_mission_overlay_8010CA30[i & 0xFF].unk212);
+        }
+        h = &D_mission_overlay_8010CA30[i & 0xFF];
+        if (h->unk274 != 0) {
+            factor5RemoveListNode(D_mission_overlay_8010CA30[i & 0xFF].listNode);
+            h->unk274 = 0;
+        }
+        switch (h->secondaryWeapon) {
+        case 3:
+        case 8:
+            h->secondaryWeaponState = 0;
+            h->unk210 = 0;
+            h->unk211 = 0;
+            break;
+        case 1:
+        case 2:
+        case 4:
+        case 5:
+            h->secondaryWeaponState = 0;
+            break;
+        }
+        if (getPlayerVehicleId(0) == 0 && !isWeaponSlotReady(0)) {
+            h->alpha_scaling = 0.0f;
+        } else {
+            h->alpha_scaling = 1.0f;
+        }
+        i++;
+    } while ((u32)(i & 0xFF) < 2);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", findNearestTargetableNpcInRange);
 
@@ -42,7 +80,25 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", tickHudInstanceTargetingA
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", updatePlayerHudFrame);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", teardownHudInstancesAndUnbindNpcs);
+void destroyNpcSlotChain(u16);
+void factor5RemoveListNode(void *);
+void releaseTextureLutEntry(u16);
+
+void teardownHudInstancesAndUnbindNpcs(void) {
+    u32 i;
+
+    for (i = 0; i < 10; i++) {
+        releaseTextureLutEntry(D_mission_overlay_8010CA30[0].texture_ids[i]);
+    }
+    for (i = 0; i < 2; i++) {
+        if ((D_mission_overlay_8010CA30[i].secondaryWeapon == 3 || D_mission_overlay_8010CA30[i].secondaryWeapon == 8) && D_mission_overlay_8010CA30[i].unk210 != 0) {
+            destroyNpcSlotChain(D_mission_overlay_8010CA30[i].unk212);
+        }
+        if (D_mission_overlay_8010CA30[i].unk274 != 0) {
+            factor5RemoveListNode(D_mission_overlay_8010CA30[i].listNode);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", dispatchHudInstanceWeaponEffect);
 

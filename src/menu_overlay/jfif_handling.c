@@ -7,9 +7,130 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/jfif_handling", D_menu_overlay_800
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", loadJfifAsset);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", resetJfifDecodeState);
+void zmemcpy(void *, void *, u32);
+void rs_free(void *);
+void cloneCellBufferWithAlloc(u8 *);
+void allocCellGeometryBuffer(u8 *);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", freeJfifDecodeState);
+s32 resetJfifDecodeState(u8 *arg0, void *arg1) {
+    s32 temp;
+    void *q;
+
+    zmemcpy(arg0, arg1, 0x30);
+    if ((*(u16 *)(arg0 + 4) & 1) && (u16)(*(u16 *)(arg0 + 0x10) + 0x100) > 0x200) {
+        return 0x12;
+    }
+    if ((*(u16 *)(arg0 + 4) & 2) && (u16)(*(u16 *)(arg0 + 0x12) + 0x100) > 0x200) {
+        return 0x12;
+    }
+    if ((*(u16 *)(arg0 + 4) & 4) && (u16)(*(u16 *)(arg0 + 0x14) + 0x100) > 0x200) {
+        return 0x12;
+    }
+    temp = *(s32 *)(arg0 + 0xC);
+    if (temp != 0 && temp != 4) {
+        return 0x12;
+    }
+    q = *(void **)(arg0 + 0x50);
+    if (q != NULL) {
+        *(u8 **)(arg0 + 0x50) = (u8 *)q - 0x100;
+        rs_free((u8 *)q - 0x100);
+    }
+    q = *(void **)(arg0 + 0x54);
+    if (q != NULL) {
+        *(u8 **)(arg0 + 0x54) = (u8 *)q - 0x100;
+        rs_free((u8 *)q - 0x100);
+    }
+    cloneCellBufferWithAlloc(arg0);
+    q = *(void **)(arg0 + 0x7D8);
+    if (q != NULL) {
+        rs_free(q);
+    }
+    q = *(void **)(arg0 + 0x7DC);
+    if (q != NULL) {
+        rs_free(q);
+    }
+    q = *(void **)(arg0 + 0x7E0);
+    if (q != NULL) {
+        rs_free(q);
+    }
+    q = *(void **)(arg0 + 0x7E4);
+    if (q != NULL) {
+        rs_free(q);
+    }
+    allocCellGeometryBuffer(arg0);
+    if (!((u32)(*(s32 *)(arg0 + 8) - 2) < 4)) {
+        return 0x16;
+    }
+    *(u16 *)(arg0 + 0x46) = 0;
+    *(u16 *)(arg0 + 0x7EC) = 0;
+    *(u16 *)(arg0 + 0x7EE) = 0;
+    *(u16 *)(arg0 + 0x7D2) = 0;
+    *(u16 *)(arg0 + 0x7E8) = 0;
+    *(u16 *)(arg0 + 0x7EA) = 0;
+    *(arg0 + 0x4D) = 0;
+    *(s32 *)(arg0 + 0x34) = *(s32 *)(arg0 + 0x38);
+    return 0;
+}
+
+void rs_free(void *);
+
+void freeJfifDecodeState(u8 *arg0) {
+    u8 i;
+    u8 *p;
+    u8 *p2;
+    void *q;
+
+    if (arg0 != NULL) {
+        i = 0;
+        do {
+            if ((arg0[0x48] >> i) & 1) {
+                p = arg0 + i * 0xA8;
+                rs_free(*(void **)(p + 0x5C));
+                rs_free(*(void **)(p + 0x60));
+            }
+            i++;
+        } while (i < 4);
+        i = 0;
+        do {
+            p2 = arg0 + i * 0x2C;
+            q = *(void **)(p2 + 0x708);
+            i++;
+            if (q != NULL) {
+                rs_free(q);
+            }
+        } while (i < 3);
+        q = *(void **)(arg0 + 0x77C);
+        if (q != NULL) {
+            rs_free(q);
+        }
+        q = *(void **)(arg0 + 0x50);
+        if (q != NULL) {
+            *(void **)(arg0 + 0x50) = (u8 *)q - 0x100;
+            rs_free((u8 *)q - 0x100);
+        }
+        q = *(void **)(arg0 + 0x7D8);
+        if (q != NULL) {
+            rs_free(q);
+        }
+        q = *(void **)(arg0 + 0x7DC);
+        if (q != NULL) {
+            rs_free(q);
+        }
+        q = *(void **)(arg0 + 0x7E0);
+        if (q != NULL) {
+            rs_free(q);
+        }
+        q = *(void **)(arg0 + 0x7E4);
+        if (q != NULL) {
+            rs_free(q);
+        }
+        q = *(void **)(arg0 + 0x30);
+        if (q != NULL) {
+            rs_free(q);
+        }
+    }
+    rs_free(arg0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifSOIMarker);
 
@@ -76,7 +197,64 @@ s32 buildCellSlotTableAndFindFree(JfifHuffState *state, u8 index) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", findFreeCellBitSlot);
+typedef struct {
+    u8 pad0[0x34];
+    u8 *cur;
+    u8 pad38[0xC];
+    u16 bitbuf;
+    u16 bitcnt;
+    u8 pad48[5];
+    u8 eof;
+} JfifBitReader;
+
+s32 findFreeCellBitSlot(JfifBitReader *arg0, u8 arg1) {
+    u8 var_t0 = 0;
+    u8 temp_a1 = arg1;
+    s32 var_a3;
+    s32 temp_a3;
+    u16 temp_v0;
+    u16 temp_v0_4;
+    u16 temp_v1;
+    u8 *temp_v0_2;
+    u8 var_v1;
+    u8 t;
+
+    var_a3 = 0;
+    if (temp_a1 != 0) {
+        do {
+            temp_v0 = arg0->bitcnt;
+            temp_a3 = var_a3 * 2;
+            if (temp_v0 == 0) {
+                arg0->bitcnt = 8;
+                if (arg0->eof == 0) {
+                    temp_v0_2 = arg0->cur;
+                    var_v1 = *temp_v0_2;
+                    arg0->cur = temp_v0_2 + 1;
+                } else {
+                    var_v1 = 0;
+                }
+                arg0->bitbuf = var_v1;
+                if (var_v1 == 0xFF) {
+                    t = *arg0->cur++;
+                    if (t == 0xD9) {
+                        arg0->eof = 1;
+                    }
+                }
+                temp_v0_4 = arg0->bitbuf;
+                var_a3 = temp_a3 + ((temp_v0_4 >> 7) & 1);
+                arg0->bitcnt = arg0->bitcnt - 1;
+                arg0->bitbuf = temp_v0_4 * 2;
+            } else {
+                arg0->bitcnt = temp_v0 - 1;
+                temp_v1 = arg0->bitbuf * 2;
+                var_a3 = temp_a3 + ((temp_v1 >> 8) & 1);
+                arg0->bitbuf = temp_v1;
+            }
+            var_t0++;
+        } while (var_t0 < temp_a1);
+    }
+    return var_a3;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", allocCellBitGroup);
 
