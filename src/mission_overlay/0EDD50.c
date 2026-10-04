@@ -57,7 +57,14 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", processPendingSoundCueReq
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", tickSongFadeTimer);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", pushActiveSoundDescriptor);
+void pushActiveSoundDescriptor(void) {
+    D_mission_overlay_8010C320[D_mission_overlay_8010C310].unk0 = D_mission_overlay_8010C400.unk0;
+    D_mission_overlay_8010C320[D_mission_overlay_8010C310].unk4 = D_mission_overlay_8010C400.unk4;
+    D_mission_overlay_8010C320[D_mission_overlay_8010C310].unk6 = D_mission_overlay_8010C400.unk6;
+    D_mission_overlay_8010C320[D_mission_overlay_8010C310].unkA = D_mission_overlay_8010C400.unk8;
+    D_mission_overlay_8010C320[D_mission_overlay_8010C310].unk8 = D_mission_overlay_8010C400.unkA;
+    D_mission_overlay_8010C310++;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", popActiveSoundDescriptor);
 
