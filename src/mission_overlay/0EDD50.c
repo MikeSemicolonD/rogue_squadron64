@@ -50,7 +50,44 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", tickActiveSongSlots);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", shouldSwitchToPendingSong);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", selectAndStageNextSong);
+extern SoundDescriptor gSoundDesc0E0 __asm__("D_mission_overlay_8010C0E0");
+extern u16 D_mission_overlay_8010C252;
+extern u16 D_mission_overlay_8010C452;
+extern u8 D_mission_overlay_8010C2F2;
+extern u8 D_mission_overlay_8010C2F3;
+extern struct { u16 a; u16 b; u8 c; u8 pad; } D_mission_overlay_8010B1C0[];
+s32 shouldSwitchToPendingSong();
+
+s32 selectAndStageNextSong(void) {
+    s32 sw;
+    s32 v;
+    u8 c;
+
+    sw = shouldSwitchToPendingSong() & 0xFF;
+    if (sw == 1) {
+        v = D_mission_overlay_8010C252;
+        D_mission_overlay_8010C2F2 = sw;
+        D_mission_overlay_8010C2F3 = sw;
+        if (v < 2) {
+            v = D_mission_overlay_8010C452;
+        }
+        if (v == sw) {
+            D_mission_overlay_8010C170 = gSoundDesc0E0;
+            return 1;
+        }
+        D_mission_overlay_8010C170.unkA = v;
+        D_mission_overlay_8010C170.unk4 = D_mission_overlay_8010B1C0[v - 2].a;
+        D_mission_overlay_8010C170.unk6 = D_mission_overlay_8010B1C0[v - 2].b;
+        c = D_mission_overlay_8010B1C0[v - 2].c;
+        D_mission_overlay_8010C170.padC[2] = 0;
+        D_mission_overlay_8010C170.padC[0] = 0;
+        D_mission_overlay_8010C170.padC[1] = 0;
+        D_mission_overlay_8010C170.padC[3] = 0;
+        D_mission_overlay_8010C170.unk8 = c;
+        return 1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", stopSongAndRebuildActiveCueList);
 
