@@ -95,7 +95,11 @@ INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnWaterSprayDebrisAndBurst);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnSpeedGatedTrailEffect);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", forwardToNpcGeneratorSpawn);
+void forwardToNpcGeneratorSpawn(u16 arg0, s32 arg1, f32 arg2) {
+    Vec3f out;
+
+    buildNpcAnchoredCameraEffectTransform(arg0, out, arg1, arg2);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", func_main_80077AF0);
 
