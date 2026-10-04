@@ -3,12 +3,66 @@
 
 #include "main/1D000.h"
 #include "mission_overlay/0F09E0.h"
+#include "mission_stats.h"
 
 extern s32 D_main_bss_80137CE4;
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", func_mission_overlay_800EFDE0);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", isPendingChildNpcActive);
+typedef struct {
+    u8 pad0[0x1A];
+    u16 unk1A;
+    u16 unk1C;
+    u16 unk1E;
+    u8 unk20;
+    u8 unk21;
+} PendingChildNpc;
+
+s32 findActiveNpcInSlotChain(u16, s32);
+void *getNpcContextByIndex(u16);
+s32 unregisterAndFreeNpcSlot(u16, void *);
+
+static inline void clearPendingChildNpcInline(PendingChildNpc *p) {
+    if (p->unk20 == 1 && p->unk1A != 0xFFFF) {
+        if ((findActiveNpcInSlotChain(p->unk1C, 0) & 0xFFFF) != 0xFFFF) {
+            unregisterAndFreeNpcSlot(p->unk1E, getNpcContextByIndex(p->unk1E));
+        }
+        p->unk1A = 0xFFFF;
+        p->unk1E = 0xFFFF;
+        p->unk20 = 0;
+    }
+}
+
+s32 isPendingChildNpcActive(u8 *obj) {
+    PendingChildNpc *p = (PendingChildNpc *)(obj + 0x114);
+    u16 idx;
+
+    if (p->unk21 == 0) {
+        return 0;
+    }
+    if (p->unk20 != 0) {
+        if (p->unk1C == 0xFFFF) {
+            return 0;
+        }
+        if (p->unk1E == 0xFFFF) {
+            return 0;
+        }
+        if (p->unk1A == 0xFFFF) {
+            return 0;
+        }
+        idx = findActiveNpcInSlotChain(p->unk1C, 0) & 0xFFFF;
+        if (idx == 0xFFFF) {
+            clearPendingChildNpcInline(p);
+            return 0;
+        }
+        if (*(u16 *)((u8 *)getNpcContextByIndex(idx) + 0x14) & 0x10) {
+            clearPendingChildNpcInline(p);
+            return 0;
+        }
+        return 1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", validateActorTargetLOS);
 
@@ -195,9 +249,43 @@ f32 computeTurnVectorAndDistanceToTarget(Mat4x3 arg0, Vec3f arg1, struct Struct3
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", computeTurnVectorAndDistanceToTarget);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", isPointInsideTriggerVolume);
+typedef struct {
+    u8 active;
+    u8 pad1[7];
+    Mat4x3 matrix;
+    u8 pad38[0x144 - 0x38];
+} TriggerVolume;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getNpcDetailLevelByIndex);
+extern TriggerVolume D_main_bss_80138D18[];
+
+u8 transformVec3ToNpcLocalWithScale(Mat4x3, s32, f32 *, f32, f32 *);
+
+s32 isPointInsideTriggerVolume(f32 *point, f32 scale) {
+    s32 i;
+    f32 local[2];
+
+    TriggerVolume *tv;
+
+    for (i = 0; i < 1; i++) {
+        tv = &D_main_bss_80138D18[i];
+        if (tv->active != 0 && transformVec3ToNpcLocalWithScale(tv->matrix, 0, point, scale, local)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void *getNpcContextByIndex(u16);
+
+s16 getNpcDetailLevelByIndex(u16 index) {
+    u8 *ctx = getNpcContextByIndex(index);
+    u8 *npc = *(u8 **)(ctx + 0x10);
+
+    if (npc != NULL) {
+        return *(s16 *)(npc + 0x19A);
+    }
+    return 3 - (ctx[0x15] >> 6);
+}
 
 void *getNpcContextByIndex(u16);
 
@@ -279,13 +367,128 @@ void computeAnchorRelativePositionByDistanceRatio(Vec3f arg0, Mat4x3 arg1, f32 a
     arg3[2] = (f32) (arg1[0][2] + (arg1[3][2] * var_ft0));
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initObjectAnimSubstruct);
+typedef struct {
+    f32 unk0;
+    f32 unk4;
+    f32 unk8;
+    s32 unkC;
+    s32 unk10;
+    f32 unk14;
+    s32 unk18;
+    s16 unk1C;
+    s16 unk1E;
+    s32 unk20;
+    s16 unk24;
+    s16 unk26;
+    u8 unk28;
+    u8 unk29;
+    s8 unk2A;
+    u8 unk2B;
+} ObjectAnimSubstruct;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initAnimSubstructFromParams);
+void initObjectAnimSubstruct(u8 *obj, f32 arg1, f32 arg2, f32 arg3, f32 arg4, s32 arg5, s32 useAlt, f32 arg7, f32 arg8, f32 arg9) {
+    ObjectAnimSubstruct *sub;
+    f32 angle;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", applyToObjectSubstructByFlag);
+    if (useAlt == 0) {
+        sub = (ObjectAnimSubstruct *)(obj + 0x138);
+    } else {
+        sub = (ObjectAnimSubstruct *)(obj + 0x164);
+    }
+    angle = arg9;
+    sub->unk0 = arg1;
+    sub->unk4 = arg2;
+    sub->unk1C = arg3;
+    if (sub->unk1C == 0) {
+        sub->unk1C++;
+    }
+    sub->unk8 = arg4;
+    sub->unk18 = arg5;
+    sub->unkC = 0;
+    sub->unk2B = 1;
+    sub->unk1E = 0;
+    sub->unk10 = 0;
+    sub->unk28 = 0;
+    sub->unk14 = 1.0f;
+    sub->unk24 = arg8 * 100.0f;
+    sub->unk26 = arg7 * 100.0f;
+    if (angle > 45.0f) {
+        angle = 45.0f;
+    }
+    sub->unk29 = 0;
+    sub->unk20 = 0;
+    sub->unk2A = angle * 2.8222222f;
+}
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setObjectSubstructF10IfReady);
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    f32 unk8;
+    s32 unkC;
+    s32 unk10;
+    f32 unk14;
+    s32 unk18;
+    s16 unk1C;
+    s16 unk1E;
+    s32 unk20;
+    s16 unk24;
+    s16 unk26;
+    u8 unk28;
+    u8 unk29;
+    s8 unk2A;
+    u8 unk2B;
+} AnimSubstruct;
+
+void initAnimSubstructFromParams(AnimSubstruct *sub, s32 arg1, s32 arg2, f32 arg3, f32 arg4, s32 arg5, f32 arg6, f32 arg7, f32 arg8) {
+    sub->unk0 = arg1;
+    sub->unk4 = arg2;
+    sub->unk1C = arg3;
+    if (sub->unk1C == 0) {
+        sub->unk1C++;
+    }
+    sub->unk8 = arg4;
+    sub->unk18 = arg5;
+    sub->unkC = 0;
+    sub->unk2B = 1;
+    sub->unk1E = 0;
+    sub->unk10 = 0;
+    sub->unk28 = 0;
+    sub->unk14 = 1.0f;
+    sub->unk24 = arg7 * 100.0f;
+    sub->unk26 = arg6 * 100.0f;
+    if (arg8 > 45.0f) {
+        arg8 = 45.0f;
+    }
+    sub->unk29 = 0;
+    sub->unk20 = 0;
+    sub->unk2A = arg8 * 2.8222222f;
+}
+
+void tickObjectAnimSubstruct(u8 *obj, u8 *sub, f32 arg2, f32 arg3);
+
+void applyToObjectSubstructByFlag(u8 *obj, f32 arg1, f32 arg2, s32 useAlt) {
+    u8 *sub;
+
+    if (useAlt == 0) {
+        sub = obj + 0x138;
+    } else {
+        sub = obj + 0x164;
+    }
+    tickObjectAnimSubstruct(obj, sub, arg1, arg2);
+}
+
+void setObjectSubstructF10IfReady(u8 *obj, f32 value, s32 useAlt) {
+    u8 *sub;
+
+    if (useAlt == 0) {
+        sub = obj + 0x138;
+    } else {
+        sub = obj + 0x164;
+    }
+    if (*(s32 *)(sub + 0x18) != 0 && sub[0x2B] != 0) {
+        *(f32 *)(sub + 0x10) = value;
+    }
+}
 
 void setAnimSubstructValueIfActive(void *arg0, f32 arg1) {
     if (((*(s32 *)((u8 *)(arg0) + 0x18)) != 0) && ((*(u8 *)((u8 *)(arg0) + 0x2B)) != 0)) {
@@ -306,9 +509,60 @@ s32 setEffectIntensity(void *arg0, s32 arg1) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", triggerCueWithSlotEffect);
+typedef struct {
+    s16 type;
+    u8 pad2[0x16];
+    f32 value;
+    u8 mode;
+} CueSlotMessage;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", copyPipeDelimitedField);
+f32 getEffectIntensity(void *);
+s32 dispatchCueByCategory(s32, u16, s32, s32, u8, f32, f32);
+s32 slotDispatcherIter(u16, s32, void *);
+
+u16 triggerCueWithSlotEffect(u8 *npc, s32 arg1, s32 arg2, s32 arg3, u8 arg4, f32 arg5, f32 arg6) {
+    CueSlotMessage msg;
+    s32 id;
+
+    id = dispatchCueByCategory(arg1, *(u16 *)(npc + 0x198), arg2, arg3, arg4, arg5, getEffectIntensity(npc));
+    if (arg6 >= 0.0f) {
+        msg.value = arg6;
+        if (arg6 == 0.0f) {
+            msg.mode = 2;
+        } else {
+            msg.mode = 1;
+        }
+        msg.type = 2;
+        slotDispatcherIter(id, 10, &msg);
+    }
+    return id;
+}
+
+s32 copyPipeDelimitedField(u8 *s, s32 field, u8 *out) {
+    s32 count = 0;
+
+    s++;
+    while (*s != 0) {
+        if (*s == '|') {
+            s++;
+            count++;
+        } else if (s[1] == 0) {
+            count++;
+        }
+        if (count == field) {
+            while (*s != 0 && *s != '|') {
+                *out++ = *s++;
+            }
+            *out = 0;
+            if (*s != 0) {
+                return field + 1;
+            }
+            return 0;
+        }
+        s++;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", copyRandomPipeDelimitedField);
 
@@ -316,4 +570,8 @@ s32 returnZero_800F3258(void) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", tallyMidDetailObject);
+void tallyMidDetailObject(u8 *obj) {
+    if ((obj[0x15] >> 6) == 2) {
+        missionStats.enemies_destroyed++;
+    }
+}

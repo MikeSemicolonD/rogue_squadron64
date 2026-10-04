@@ -34,7 +34,21 @@ INCLUDE_ASM("asm/nonmatchings/main/55250", setPoolEntryPhase);
 
 INCLUDE_ASM("asm/nonmatchings/main/55250", getPoolEntryFrameIndex);
 
-INCLUDE_ASM("asm/nonmatchings/main/55250", resetTextureAnimSlots);
+typedef struct {
+    u8 unk0[4];
+    u16 unk4;
+    u8 unk6[4];
+} TextureAnimSlot;
+
+extern TextureAnimSlot D_main_bss_80137C90[];
+
+void resetTextureAnimSlots(void) {
+    s32 i;
+
+    for (i = 7; i >= 0; i--) {
+        D_main_bss_80137C90[i].unk4 = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/55250", registerTextureAnimSlot);
 

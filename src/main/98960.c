@@ -1,7 +1,21 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", clearStreamedVoiceFlags);
+typedef struct {
+    u8 active;
+    u8 pad[0x17];
+} StreamedVoice;
+
+extern u8 D_main_bss_80141AD0;
+extern StreamedVoice D_main_bss_80152A20[];
+
+void clearStreamedVoiceFlags(void) {
+    s32 i;
+
+    for (i = 0; i < D_main_bss_80141AD0; i++) {
+        D_main_bss_80152A20[i].active = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", serviceStreamedVoices);
 
@@ -23,7 +37,18 @@ INCLUDE_ASM("asm/nonmatchings/main/98960", applyVoice3DMixParams);
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", updateActive3DAudioSource);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", isAudioVoiceActive);
+extern u8 gMusyXActiveFlag;
+
+s32 isAudioVoiceActive(u8 *voice) {
+    s32 r;
+
+    if (gMusyXActiveFlag == 0) {
+        r = 0;
+    } else {
+        r = *(u16 *)(voice + 8) & 1;
+    }
+    return r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", play3DSoundEvent);
 

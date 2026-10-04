@@ -252,7 +252,42 @@ void tickTextureMaterialExpiry(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", resetMaterialExpiryById);
+extern void *D_main_bss_801163C8[];
+extern void **D_main_bss_801163FC;
+extern u8 D_main_bss_8011A899;
+extern u8 D_main_bss_8011A908;
+
+struct MaterialPoolEntry *resetMaterialExpiryById(u16 id, u32 kind) {
+    struct MaterialPoolEntry *entry;
+    s32 flag;
+    u8 c;
+
+    if (D_main_bss_801163FC == &D_main_bss_801163C8[D_main_bss_8011A899]) {
+        entry = D_main_bss_80128F00[id];
+        if (entry != NULL) {
+            flag = D_main_bss_8011A908 & 0x80;
+            do {
+                if (entry->unk10 == (kind & 7)) {
+                    c = entry->unk0C;
+                    if ((c & 0x7F) == 2) {
+                        if (flag != 0) {
+                            goto hit;
+                        }
+                    }
+                    if (c == entry->unk0E) {
+                        if (flag == 0) {
+                        hit:
+                            entry->unk08 = 0;
+                            return entry;
+                        }
+                    }
+                }
+                entry = entry->next;
+            } while (entry != NULL);
+        }
+    }
+    return NULL;
+}
 
 struct DisplayListBuffer *findAndUnlinkSmallestEntry(void) {
     u32 var_a3;
@@ -339,7 +374,22 @@ s32 getTextureDimsBySlot(u16 arg0, u16 *arg1, u16 *arg2) {
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", parseHmtMaterials);
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", registerHmtTextureInTable);
+extern u16 D_main_bss_8011A8B4;
+
+u16 parseHmtMaterials(s32, struct material_entry *, struct texture_entry *, u8, s32);
+
+s32 registerHmtTextureInTable(struct material_entry *materials, struct texture_entry *textures, u8 flag) {
+    s32 i;
+    struct D_main_bss_8011A444 *entry;
+
+    for (i = 0; i < D_main_bss_8011A8B4; i++) {
+        entry = &D_main_bss_8011A444[i];
+        if (entry->material_type == 0) {
+            break;
+        }
+    }
+    return parseHmtMaterials(i, materials, textures, flag, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", findMatchingTextureRecursive);
 

@@ -91,7 +91,37 @@ OSMesg recvServiceMessage(OSId arg0) {
     return var_s0->mesg2[0];
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/07800", sendServiceMessage);
+struct ServiceMessage {
+    u16 unk0;
+    u16 id;
+    u8 flags;
+    OSMesgQueue *replyQueue;
+};
+
+s32 sendServiceMessage(OSId from, OSId to, struct ServiceMessage *msg, s32 block) {
+    struct D_801128D0_type *dst;
+    struct D_801128D0_type *src;
+
+    dst = D_main_801128D0;
+    while (dst != NULL) {
+        if (dst->theadId == to) break;
+        dst = dst->next;
+    }
+    src = D_main_801128D0;
+    while (src != NULL) {
+        if (src->theadId == from) break;
+        src = src->next;
+    }
+    msg->flags = 0;
+    msg->replyQueue = &src->mq;
+    msg->id = D_main_801128D8++;
+    while (osSendMesg(&dst->mq, msg, 0) == -1) {
+        if (!(block & 1)) {
+            return 0;
+        }
+    }
+    return 1;
+}
 
 struct blah {
     u32 unk0;
