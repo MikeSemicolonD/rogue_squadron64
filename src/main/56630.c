@@ -27,7 +27,26 @@ void freeSubtitleOverlay(void) {
     rs_free(D_main_bss_80139010);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56630", setActiveVoiceLine);
+s32 getVoiceText(u16);
+
+typedef struct {
+    s16 id;
+    u8 unk2;
+    u8 unk3;
+    s32 unk4;
+    s32 unk8;
+} ActiveVoiceLine;
+
+void setActiveVoiceLine(s32 arg0, s32 arg1) {
+    ActiveVoiceLine *p;
+
+    ((ActiveVoiceLine *)D_main_bss_80139010)->id = arg0;
+    getVoiceText(arg0);
+    p = (ActiveVoiceLine *)D_main_bss_80139010;
+    ((u8 *)p)[3] = 0;
+    p->unk8 = arg1;
+    ((ActiveVoiceLine *)D_main_bss_80139010)->unk2 = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56630", clearActiveVoiceLine);
 
