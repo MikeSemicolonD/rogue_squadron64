@@ -552,6 +552,19 @@ s32 disableScreenColorOverlay(void) {
     return 1;
 }
 
+typedef struct {
+    s32 a[64];
+    s32 b[32];
+} RenderStateRow;
+
+s32 beginFrameDLChunk(void);
+extern RenderStateRow D_main_bss_8011D498[4];
+extern s32 D_main_bss_80128C6C;
+extern s32 D_main_bss_801143A0;
+extern s32 D_main_bss_8011A460;
+extern s32 D_main_bss_8011A4A8;
+extern s32 D_main_bss_80117C00;
+
 INCLUDE_ASM("asm/nonmatchings/main/08510", frameStartReset);
 
 s32 clearStructPair2C30(void *arg0) {
@@ -572,19 +585,6 @@ s32 waitForPrevFrameDone(void) {
 }
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", beginFrameDLChunk);
-
-typedef struct {
-    s32 a[64];
-    s32 b[32];
-} RenderStateRow;
-
-s32 beginFrameDLChunk(void);
-extern RenderStateRow D_main_bss_8011D498[4];
-extern s32 D_main_bss_80128C6C;
-extern s32 D_main_bss_801143A0;
-extern s32 D_main_bss_8011A460;
-extern s32 D_main_bss_8011A4A8;
-extern s32 D_main_bss_80117C00;
 
 s32 initRenderStateArrays(void) {
     s32 i;
