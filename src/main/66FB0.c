@@ -175,7 +175,54 @@ void initAudioListenerFromCamera(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/66FB0", loadSongAssetByName);
 
-INCLUDE_ASM("asm/nonmatchings/main/66FB0", updateAudioListenerVelocity);
+typedef struct AudioListenerVec3 {
+    f32 v[3];
+} AudioListenerVec3;
+
+extern f32 D_main_bss_80139B10[3];
+extern f32 D_main_bss_80139B20[3];
+extern f32 vec3Length(Vec3f);
+extern s32 setMusyX3DProperties(void *, void *, void *, void *, void *, s32);
+
+void updateAudioListenerVelocity(f32 dt) {
+    f32 *cam = D_main_bss_80138D1C;
+    f32 x = cam[0x4C / 4];
+    f32 y;
+    f32 z;
+    f32 len;
+
+    D_main_bss_80139B58[0] = x;
+    y = cam[0x50 / 4];
+    D_main_bss_80139B58[1] = y;
+    z = cam[0x54 / 4];
+    D_main_bss_80139B58[2] = z;
+    if (dt > 0.0f) {
+        D_main_bss_80139B20[0] = (x - D_main_bss_80139B10[0]) / dt;
+        D_main_bss_80139B20[1] = (y - D_main_bss_80139B10[1]) / dt;
+        D_main_bss_80139B20[2] = (z - D_main_bss_80139B10[2]) / dt;
+    } else {
+        D_main_bss_80139B20[2] = 0.0f;
+        D_main_bss_80139B20[1] = 0.0f;
+        D_main_bss_80139B20[0] = 0.0f;
+    }
+    len = vec3Length(D_main_bss_80139B20);
+    if (len > 37.5f) {
+        f32 s;
+        len = len / 0.75f;
+        s = 50.0f / len;
+        D_main_bss_80139B20[0] = D_main_bss_80139B20[0] * s;
+        D_main_bss_80139B20[1] = D_main_bss_80139B20[1] * s;
+        D_main_bss_80139B20[2] = D_main_bss_80139B20[2] * s;
+    }
+    *(AudioListenerVec3 *)D_main_bss_80139B10 = *(AudioListenerVec3 *)D_main_bss_80139B58;
+    D_main_bss_80139B30[0] = cam[0x30 / 4];
+    D_main_bss_80139B30[1] = cam[0x3C / 4];
+    D_main_bss_80139B30[2] = cam[0x48 / 4];
+    D_main_bss_80139B40[0] = -cam[0x2C / 4];
+    D_main_bss_80139B40[1] = -cam[0x38 / 4];
+    D_main_bss_80139B40[2] = -cam[0x44 / 4];
+    setMusyX3DProperties(&D_main_bss_80139A80, D_main_bss_80139B58, D_main_bss_80139B20, D_main_bss_80139B30, D_main_bss_80139B40, 0x7F);
+}
 
 s32 unlinkMusyXListNode(s32 *);
 extern s32 D_main_bss_80139A80;
@@ -248,7 +295,6 @@ s32 findAudioChannelById(s32 arg0) {
 }
 
 extern void *D_main_bss_80138D1C;
-extern s32 D_main_bss_80139B10;
 
 void updateAudioListenerPosFromPlayer(void) {
     f32 temp_fv0;
