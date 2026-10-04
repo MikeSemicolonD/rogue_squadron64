@@ -156,7 +156,20 @@ s32 reset_model_animations(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", reset_and_free_model_animations);
+extern void rs_free(void *);
+
+s32 reset_and_free_model_animations(void) {
+    s32 i;
+
+    for (i = 0; i < 16; i++) {
+        if (*(void **)&D_mission_overlay_8010C4A0[i].unk0 != NULL) {
+            rs_free(*(void **)&D_mission_overlay_8010C4A0[i].unk0);
+        }
+        D_mission_overlay_8010C4A0[i].unk0 = 0;
+    }
+    resetModelAnimSlotTable();
+    return 1;
+}
 
 #if 0
 // The major mismatch with this is that the original code accesses a bunch of information
