@@ -39,7 +39,52 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", choosePlayerCraftAssets);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", endMissionCleanup);
+void stopAllMusicWithFade(f32);
+void resetSpeechSubsystem(void);
+void finalizeCurrentSpeechBuffer(void);
+void freeSubtitleOverlay(void);
+void freeEffectAssetBuffers(void);
+void missionCleanupNoopHook(void);
+void freeTxtFile(void);
+void destroyNpcContextArrays(void);
+void freeNpcBurstSpawnerTables(void);
+void teardownAudioListenerNode(void);
+void waitForAnyAudioSlot(void);
+void freeAnimationPhasePool(void);
+void freeAllHobFiles(void);
+void freeNpcSlotArray(void);
+void freeLevelDatBuffers(void);
+void teardownAnimatedMapGridLayer(void);
+void stopMusicAndResetAudio(void);
+void reset_and_free_model_animations(void);
+void calculateFriendliesSaved(void);
+void freeAllObjectContextPoolNodes(void);
+extern f32 D_main_bss_80130BA4;
+extern u32 missionStats;
+
+void endMissionCleanup(void) {
+    missionStats = D_main_bss_80130BA4;
+    stopAllMusicWithFade(0.8f);
+    resetSpeechSubsystem();
+    finalizeCurrentSpeechBuffer();
+    freeSubtitleOverlay();
+    freeEffectAssetBuffers();
+    missionCleanupNoopHook();
+    freeTxtFile();
+    destroyNpcContextArrays();
+    freeNpcBurstSpawnerTables();
+    teardownAudioListenerNode();
+    waitForAnyAudioSlot();
+    freeAnimationPhasePool();
+    freeAllHobFiles();
+    freeNpcSlotArray();
+    freeLevelDatBuffers();
+    teardownAnimatedMapGridLayer();
+    stopMusicAndResetAudio();
+    reset_and_free_model_animations();
+    calculateFriendliesSaved();
+    freeAllObjectContextPoolNodes();
+}
 
 extern s8 D_main_bss_80130B14;
 extern u8 D_mission_overlay_8010C9F0;
