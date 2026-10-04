@@ -7,6 +7,6 @@ cat > "$ROOT/permuter_settings.toml" <<TOML
 compiler_type = "gcc"
 compiler_command = "$ROOT/tools/permuter_compile.sh $CC1 -I$ROOT/include -I$ROOT/ultralib/include -DINCLUDE_ASM_USE_MACRO_INC -D_LANGUAGE_C"
 assembler_command = "mips-linux-gnu-as -EB -mabi=32 -mfp32 -mgp32 -march=vr4300 -mips3 -G0 -I $ROOT/include"
-asm_prelude_file = "include/macro.inc"
+asm_prelude_file = "tools/permuter_prelude.inc"
 TOML
 echo "wrote $ROOT/permuter_settings.toml"

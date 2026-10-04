@@ -43,6 +43,10 @@ print("build state:", "match" if ok else reason[:160])
 if ok:
     print("ALREADY MATCHES")
 elif not reason.startswith("build failed"):
+    # The permuter must compile with the same compiler the Makefile uses for this file.
+    gcc272 = f"build/{str(c_path)[:-2]}.s: N64CC = $(GCC272SN0001)" in a.read("Makefile")
+    subprocess.run(["sh", "tools/permuter_setup.sh"] + (["272"] if gcc272 else []), check=True, capture_output=True)
+    print("compiler:", "GCC 2.7.2" if gcc272 else "GCC 2.8.1")
     r = subprocess.run([sys.executable, "import.py", f"../../{c_path}", f"../../{s_path}"], cwd="tools/decomp-permuter", capture_output=True, text=True)
     print(r.stdout[-600:], r.stderr[-400:])
 a.write(c_path, original)
