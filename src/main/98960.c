@@ -31,7 +31,23 @@ INCLUDE_ASM("asm/nonmatchings/main/98960", play3DSoundEventVariant);
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", factor5RemoveListNode);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", mostlyMusyxFlagGatedHelper);
+s32 factor5MutexAcquire();
+s32 factor5MutexRelease();
+extern u8 gMusyXActiveFlag;
+
+s32 mostlyMusyxFlagGatedHelper(void *arg0) {
+    s32 var_s1;
+
+    var_s1 = -1;
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        if ((*(s32 *)((u8 *)(arg0) + 8)) & 0x10000) {
+            var_s1 = (*(s32 *)((u8 *)(arg0) + 0x34));
+        }
+        factor5MutexRelease();
+    }
+    return var_s1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", tickAndReap3DAudioVoices);
 
@@ -49,7 +65,13 @@ INCLUDE_ASM("asm/nonmatchings/main/98960", dispatchPrioritizedSoundQueue);
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", update3DAudioFrame);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", reset3DAudioLists);
+extern s32 D_main_bss_80153414;
+extern s32 D_main_bss_80153418;
+
+void reset3DAudioLists(void) {
+    D_main_bss_80153414 = 0;
+    D_main_bss_80153418 = 0;
+}
 
 void noopHandler_80099C44(void) {
 }

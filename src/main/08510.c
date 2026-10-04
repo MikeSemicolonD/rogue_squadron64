@@ -34,7 +34,24 @@ void heapFreeListInsert(struct DisplayListBuffer *arg0) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/08510", heapFreeListInsert);
+void heapFreeListInsert(struct DisplayListBuffer *arg0) {
+    struct DisplayListBuffer *var_v1;
+
+    if (arg0 != NULL) {
+        var_v1 = arg0;
+        if (arg0->next != NULL) {
+            do {
+                var_v1 = var_v1->next;
+            } while (var_v1->next != NULL);
+        }
+        var_v1->next = D_main_bss_801163B0;
+        if (D_main_bss_801163B0 != NULL) {
+            D_main_bss_801163B0->prev = var_v1;
+        }
+        D_main_bss_801163B0 = arg0;
+        arg0->prev = NULL;
+    }
+}
 #endif
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", heapWalker);
@@ -53,7 +70,20 @@ s32 countDisplayListChunks(void) {
     return blah;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/08510", countDisplayListChunks);
+s32 countDisplayListChunks(void) {
+    s32 var_v0;
+    struct DisplayListBuffer *var_v1;
+
+    var_v1 = D_main_bss_801163B0;
+    var_v0 = 0;
+    if (var_v1 != NULL) {
+        do {
+            var_v1 = var_v1->next;
+            var_v0 += 0x108;
+        } while (var_v1 != NULL);
+    }
+    return var_v0;
+}
 #endif
 
 #if 0
@@ -116,13 +146,23 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", emitFaceDLCommands);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitFrameRdpInitDl);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", setActiveRenderListPtr);
+extern s32 D_main_bss_801142C4;
+
+s32 setActiveRenderListPtr(s32 arg0) {
+    D_main_bss_801142C4 = arg0;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitColorFillRect);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", setScreenColorOverlay);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", disableScreenColorOverlay);
+extern s8 D_main_bss_8011A88C;
+
+s32 disableScreenColorOverlay(void) {
+    D_main_bss_8011A88C = 0;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", frameStartReset);
 
@@ -132,7 +172,16 @@ s32 clearStructPair2C30(void *arg0) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", waitForPrevFrameDone);
+s32 clearFrameReadyFlag();
+s32 waitForPostSwapAck();
+extern s8 D_main_bss_8011A89A;
+
+s32 waitForPrevFrameDone(void) {
+    waitForPostSwapAck();
+    D_main_bss_8011A89A = 1;
+    clearFrameReadyFlag();
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", beginFrameDLChunk);
 
@@ -142,7 +191,18 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", drawFrameProfilerBars);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitCombinerStateAndPatch);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", computeFrameDeltaTime);
+extern s32 D_main_bss_8011A900;
+extern s32 D_main_bss_8011A904;
+extern s32 D_main_bss_80128ED8;
+
+void computeFrameDeltaTime(void) {
+    if (D_main_bss_8011A900 == -1) {
+        D_main_bss_8011A904 = 0;
+    } else {
+        D_main_bss_8011A904 = D_main_bss_80128ED8 - D_main_bss_8011A900;
+    }
+    D_main_bss_8011A900 = D_main_bss_80128ED8;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", timeSnapshotFiller);
 
@@ -238,26 +298,68 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", drawSubtitleText);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", setupCameraMatrices);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", setFrameLevelStateBytes);
+extern s8 D_main_bss_8011A86C;
+extern s8 D_main_bss_8011A86D;
+extern s8 D_main_bss_8011A86E;
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", setRenderStateFlagByteOne);
+s32 setFrameLevelStateBytes(s8 arg0, s8 arg1, s8 arg2) {
+    D_main_bss_8011A86C = arg0;
+    D_main_bss_8011A86D = arg1;
+    D_main_bss_8011A86E = arg2;
+    return 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", setRenderStateFlagByteTwo);
+extern s8 D_main_bss_8011A870;
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", setRenderStateFlagByteThree);
+s32 setRenderStateFlagByteOne(s8 arg0) {
+    D_main_bss_8011A870 = arg0;
+    return 1;
+}
+
+extern s8 D_main_bss_8011A871;
+
+s32 setRenderStateFlagByteTwo(s8 arg0) {
+    D_main_bss_8011A871 = arg0;
+    return 1;
+}
+
+extern s8 D_main_bss_8011A872;
+
+s32 setRenderStateFlagByteThree(s8 arg0) {
+    D_main_bss_8011A872 = arg0;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", setViewStateBytesAndFadeScale);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", setViewStateTripletBytes);
+extern s8 D_main_bss_8011A873;
+extern s8 D_main_bss_8011A874;
+extern s8 D_main_bss_8011A875;
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", setMissionLevelInitByte);
+s32 setViewStateTripletBytes(s8 arg0, s8 arg1, s8 arg2) {
+    D_main_bss_8011A873 = arg0;
+    D_main_bss_8011A874 = arg1;
+    D_main_bss_8011A875 = arg2;
+    return 1;
+}
+
+extern s8 D_main_bss_8011A898;
+
+s32 setMissionLevelInitByte(s8 arg0) {
+    D_main_bss_8011A898 = arg0;
+    return 1;
+}
 
 s32 resetMaterialPoolWrapper(void) {
     resetMaterialPool();
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", setRenderViewScaleFloat);
+extern f32 D_main_bss_8011A840;
+
+void setRenderViewScaleFloat(f32 arg0) {
+    D_main_bss_8011A840 = arg0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", buildAndRegisterDefaultMaterial);
 
@@ -265,7 +367,28 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", advanceVideoFrame);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", initVideoBootWrapper);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", freeRenderSubsystemResources);
+s32 destroyTextureLUTs();
+s32 rs_free(struct D_main_bss_8011A444 *);
+s32 selectAndApplyViMode();
+extern struct D_main_bss_8011A444 *D_main_bss_8010E8A8;
+extern struct D_main_bss_8011A444 *D_main_bss_8010E8AC;
+extern struct D_main_bss_8011A444 *D_main_bss_801143AC;
+extern struct D_main_bss_8011A444 *D_main_bss_801163B4;
+
+s32 freeRenderSubsystemResources(void) {
+    destroyTextureLUTs();
+    rs_free(D_main_bss_8011A444);
+    if (D_main_bss_801163B4 != NULL) {
+        rs_free(D_main_bss_801163B4);
+    }
+    if (D_main_bss_801143AC != NULL) {
+        rs_free(D_main_bss_801143AC);
+    }
+    rs_free(D_main_bss_8010E8A8);
+    rs_free(D_main_bss_8010E8AC);
+    selectAndApplyViMode();
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", fake_func_800186D8);
 
