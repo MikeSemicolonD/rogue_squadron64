@@ -153,7 +153,29 @@ void freeModelViewerMeshChain(u8 *arg0) {
     rs_free(D_menu_overlay_800D0110);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", releaseModelViewerModelAssets);
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    u8 pad8[0x28];
+} ModelViewerSlot;
+
+void releaseMeshAsset(s32);
+extern u8 gPostIntroCrawlNumCraft[];
+extern ModelViewerSlot D_menu_overlay_800D00B0[];
+extern u8 D_menu_overlay_800D0120[][0x90];
+
+void releaseModelViewerModelAssets(u8 craft) {
+    u8 i;
+
+    for (i = 0; i < 2; i++) {
+        if (D_menu_overlay_800D00B0[i].unk4 != 0) {
+            releaseMeshAsset(D_menu_overlay_800D00B0[i].unk4);
+        }
+    }
+    for (i = 0; i < gPostIntroCrawlNumCraft[craft]; i++) {
+        releaseMeshAsset(*(s32 *)D_menu_overlay_800D0120[i]);
+    }
+}
 
 void initVec4TripletFromArgs(void *, f32, f32, f32);
 void addVec3At0x24(void *, f32, f32, f32);
