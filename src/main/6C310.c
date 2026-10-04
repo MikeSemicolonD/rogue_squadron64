@@ -20,7 +20,14 @@ INCLUDE_ASM("asm/nonmatchings/main/6C310", splineWalkerCraftNpcHandler);
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", stubNpcHandler);
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", clearTrackedNpcSlots);
+void clearTrackedNpcSlots(void) {
+    s32 i;
+    u16 v = 0xFFFF;
+
+    for (i = 13; i >= 0; i--) {
+        D_main_bss_8013A528[i] = v;
+    }
+}
 
 void splineWalkerCraftNpcHandler();
 u16 spawnNpcOfType(void *, void *, u32, u8);
