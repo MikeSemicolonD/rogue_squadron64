@@ -8,6 +8,7 @@ typedef struct {
     u8 unk8;
     u8 pad9;
     u16 unkA;
+    u8 padC[0x18];
 } SoundDescriptor;
 
 typedef struct {
@@ -117,7 +118,20 @@ s32 preloadSceneSongsWrapper(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", commitStagedSongAndPlay);
+extern void tickActiveSongSlots(void);
+extern SoundDescriptor D_mission_overlay_8010C1A0;
+extern u8 D_mission_overlay_8010C424;
+
+s32 commitStagedSongAndPlay(void) {
+    if (D_mission_overlay_8010C424 == 0) {
+        return 0;
+    }
+    *(SoundDescriptor *)&D_mission_overlay_8010C140 = D_mission_overlay_8010C1A0;
+    D_mission_overlay_8010C400 = D_mission_overlay_8010C1A0;
+    tickActiveSongSlots();
+    D_mission_overlay_8010C1A0.unk0 = D_mission_overlay_8010C0E0;
+    return 1;
+}
 
 static __inline__ void setSoundCueRequest(s16 arg0, s16 arg1) {
     D_mission_overlay_8010C200.unkA = 1;
