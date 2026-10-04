@@ -263,39 +263,39 @@ u8 shouldShowCutsceneForLevelStage(u8 levelId, u8 arg1) {
     return ret;
 }
 
-#if 0
-// Due to the strings, this likely isn't match-able until the whole file is matched
+extern char D_cinematic_overlay_800A54CC[];
+extern char D_cinematic_overlay_800A54F4[];
+extern char D_cinematic_overlay_800A550C[];
+extern char D_cinematic_overlay_800A5524[];
+
 char *getAssetNameForNpcType(u8 datSubType) {
     switch (datSubType) {
-    case DAT_UNKNOWN_00:
-    case DAT_TYPE_0_GENERIC_BUILDING:
-    case DAT_TYPE_0_21:
-    case DAT_TYPE_0_IMPERIAL_TRAIN_PILLAR:
-    case DAT_TYPE_0_IMPERIAL_PLATFORM:
-    case DAT_TYPE_0_POWER_GENERATOR:
-    case DAT_TYPE_0_4B:
-        return NULL;
-    case DAT_TYPE_0_TALORAAN_TURRET:
-        return "b_ttu_hi";
-    case DAT_TYPE_0_RADAR_DISH:
-        return "b_lrsp";
-    case DAT_TYPE_0_REBEL_TRANSPORT:
-        return "reb_transport";
-    case DAT_TYPE_0_REBEL_COMBAT:
-        return "r_combat";
-    case DAT_TYPE_0_MEGA_TURRENT:
-        return "megaturret";
-    case DAT_TYPE_0_REBEL_TURRET:
-        return "r_tur_hi";
-    case DAT_TYPE_0_GUN_TURRET:
-        return "i_gtu_hi";
-    default:
-        return NULL;
+        case DAT_UNKNOWN_00:
+        case DAT_TYPE_0_GENERIC_BUILDING:
+        case DAT_TYPE_0_21:
+        case DAT_TYPE_0_IMPERIAL_TRAIN_PILLAR:
+        case DAT_TYPE_0_IMPERIAL_PLATFORM:
+        case DAT_TYPE_0_POWER_GENERATOR:
+        case DAT_TYPE_0_4B:
+            return NULL;
+        case DAT_TYPE_0_TALORAAN_TURRET:
+            return D_cinematic_overlay_800A5524;
+        case DAT_TYPE_0_RADAR_DISH:
+            return "b_lrsp";
+        case DAT_TYPE_0_REBEL_TRANSPORT:
+            return "reb_transport";
+        case DAT_TYPE_0_REBEL_COMBAT:
+            return "r_combat";
+        case DAT_TYPE_0_MEGA_TURRENT:
+            return D_cinematic_overlay_800A54F4;
+        case DAT_TYPE_0_REBEL_TURRET:
+            return D_cinematic_overlay_800A550C;
+        case DAT_TYPE_0_GUN_TURRET:
+            return D_cinematic_overlay_800A54CC;
+        default:
+            return NULL;
     }
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", getAssetNameForNpcType);
-#endif
 
 Vec3f *func_cinematic_overlay_800AEA18(void) {
     return D_cinematic_overlay_800B1A08;
