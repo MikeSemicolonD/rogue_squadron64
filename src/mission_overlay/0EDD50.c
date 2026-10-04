@@ -145,7 +145,28 @@ s32 resetMusicSubsystemState(s32 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", initLevelMusicBank);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", stopAllMusicWithFade);
+typedef struct { s32 key; s32 unk4; s32 unk8; s32 unkC; } SongSlotB;
+extern SongSlotB gSongSlotsB[8] __asm__("D_mission_overlay_8010C270");
+extern s32 D_mission_overlay_8010C140;
+void queueAudioVoiceCmd(s32, u16, s32, s32);
+
+void stopAllMusicWithFade(f32 arg0) {
+    s32 i;
+
+    for (i = 0; i < 8; i++) {
+        if (gSongSlotsB[i].key != -1) {
+            gSongSlotsB[i].key = -1;
+            tickSongSequenceLocked(gSongSlotsB[i].unk4);
+        }
+    }
+    if (D_mission_overlay_8010C260 != 0) {
+        tickSongSequenceLocked(D_mission_overlay_8010C0E0);
+        queueAudioVoiceCmd(0, (u32)(arg0 * 1000.0f), D_mission_overlay_8010C140, 1);
+    } else {
+        queueAudioVoiceCmd(0, (u32)(arg0 * 1000.0f), D_mission_overlay_8010C0E0, 1);
+    }
+    resetMusicSubsystemState(1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", startLevelBackgroundMusic);
 
