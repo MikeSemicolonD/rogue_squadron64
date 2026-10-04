@@ -284,7 +284,18 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initObjectAnimSubstruct);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", initAnimSubstructFromParams);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", applyToObjectSubstructByFlag);
+void tickObjectAnimSubstruct(u8 *obj, u8 *sub, f32 arg2, f32 arg3);
+
+void applyToObjectSubstructByFlag(u8 *obj, f32 arg1, f32 arg2, s32 useAlt) {
+    u8 *sub;
+
+    if (useAlt == 0) {
+        sub = obj + 0x138;
+    } else {
+        sub = obj + 0x164;
+    }
+    tickObjectAnimSubstruct(obj, sub, arg1, arg2);
+}
 
 void setObjectSubstructF10IfReady(u8 *obj, f32 value, s32 useAlt) {
     u8 *sub;
