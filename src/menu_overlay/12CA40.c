@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 #include "common_variables.h"
 
 #include "crafts.h"
@@ -12,7 +13,47 @@
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/12CA40", menuOverlayInit);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/12CA40", drawRadarIcon);
+extern u8 D_main_bss_80130B2F;
+void initCraftSelectScreen(s32, s32, s32, s32);
+s32 tickCraftSelectScreen(void);
+void drainAudioAndFinalizeSpeechBuffer(void);
+s32 drawRadarIcon(u8 *arg0, s32 arg1) {
+    u32 a;
+    u32 b;
+    s32 r;
+    a = D_main_bss_80130B2F;
+    if (a >= 0x10) {
+        a = 0xF;
+    }
+    if (gGameSettings.cheatCodeFlags[0] & 1) {
+        a = 0xF;
+    }
+    if ((gGameSettings.unlockAndSettingsFlags[0] & 0x100000) || (gGameSettings.cheatCodeFlags[0] & 0x4000000)) {
+        a = 0x10;
+    }
+    if ((gGameSettings.unlockAndSettingsFlags[0] & 0x200000) || (gGameSettings.cheatCodeFlags[0] & 0x8000000)) {
+        a = 0x11;
+    }
+    if ((gGameSettings.unlockAndSettingsFlags[0] & 0x400000) || (gGameSettings.cheatCodeFlags[0] & 0x10000000)) {
+        a = 0x12;
+    }
+    if (a < arg0[0]) {
+        b = a;
+    } else {
+        b = arg0[0];
+    }
+    initCraftSelectScreen(arg1, 1 << b, (1 << (a + 1)) - 1, b);
+    do {
+        r = tickCraftSelectScreen();
+    } while (r == 0xFFFFFF);
+    drainAudioAndFinalizeSpeechBuffer();
+    if (r != 0xFFFFFE) {
+        arg0[0] = r;
+        arg0[2] = 0;
+        return 1;
+    }
+    return 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/12CA40", strMenuALPHA);
 
