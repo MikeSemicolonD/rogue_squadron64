@@ -5,13 +5,33 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ECD10", allocObjectPoolNode);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ECD10", unlinkAndFreeChildNpcNode);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ECD10", resetObjectContextPool);
+s32 clearObjectPoolStateFlag();
+s32 resetCraftSubsystemGlobal();
+s32 resetObjectPoolListHead();
+extern s32 D_mission_overlay_8010C0D0;
+extern s32 D_mission_overlay_8010C0D4;
+
+void resetObjectContextPool(void) {
+    D_mission_overlay_8010C0D0 = 0;
+    D_mission_overlay_8010C0D4 = 0;
+    D_mission_overlay_8010C0D0 = 0;
+    resetCraftSubsystemGlobal();
+    resetObjectPoolListHead();
+    clearObjectPoolStateFlag();
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ECD10", freeAllObjectContextPoolNodes);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ECD10", createAndInitObject);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ECD10", clearPendingAndDestroyChildNpc);
+s32 clearPendingChildNpc(s32);
+s32 unlinkAndFreeChildNpcNode(s32);
+
+s32 clearPendingAndDestroyChildNpc(s32 *arg0) {
+    clearPendingChildNpc(*arg0);
+    unlinkAndFreeChildNpcNode(*arg0);
+    return 1;
+}
 
 s32 destroyNpcSlotByIndex(u16);
 

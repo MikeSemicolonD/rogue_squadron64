@@ -43,7 +43,17 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", tryPlaySpatialSoundWithGa
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", scheduleSceneFormatMessageTimed);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", cancelSceneQueueHandle);
+s32 stopRumbleEffect(s32);
+
+void cancelSceneQueueHandle(void *arg0) {
+    s32 temp_a0;
+
+    temp_a0 = (*(s32 *)((u8 *)(arg0) + 0x1C0));
+    if (temp_a0 != -1) {
+        stopRumbleEffect(temp_a0);
+        (*(s32 *)((u8 *)(arg0) + 0x1C0)) = -1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", playSpeechClipOncePerChange);
 

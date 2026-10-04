@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "PR/gu.h"
 
@@ -179,7 +180,12 @@ void spawnHudNpc(void) {
     D_mission_overlay_8010BFD0 = spawnNpcOfType(handleHUD, NULL, 4U, 0x64U);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", broadcastSceneShutdownAndCleanup);
+s32 getAvailableShipsForLevel();
+
+void broadcastSceneShutdownAndCleanup(void) {
+    slotDispatcherIter(D_mission_overlay_8010BFD0, 0xC, NULL);
+    getAvailableShipsForLevel();
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", broadcastSceneEventWithPayload);
 

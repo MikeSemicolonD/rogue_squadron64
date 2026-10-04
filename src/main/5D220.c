@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "main/5D220.h"
 
@@ -73,13 +74,26 @@ INCLUDE_ASM("asm/nonmatchings/main/5D220", findNpcInScaledBoxRegion);
 
 INCLUDE_ASM("asm/nonmatchings/main/5D220", findNpcInScaledBoxRegionExcludingPair);
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", freeEffectAssetBuffers);
+s32 rs_free(s32);
+extern s32 D_main_bss_8013961C;
+extern s32 D_main_bss_80139740;
+
+void freeEffectAssetBuffers(void) {
+    rs_free(D_main_bss_8013961C);
+    rs_free(D_main_bss_80139740);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/5D220", spawnByteAnimDebrisDefault);
 
 INCLUDE_ASM("asm/nonmatchings/main/5D220", spawnByteAnimDebrisWithParam);
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", loadTieBomberSprite);
+s16 loadAndRelocateAsset(s32 *, s32, s32);
+extern s32 D_main_8003B168;
+extern s16 D_main_bss_80139738;
+
+void loadTieBomberSprite(void) {
+    D_main_bss_80139738 = loadAndRelocateAsset(&D_main_8003B168, 0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/5D220", findNpcAlongDirectionRay);
 

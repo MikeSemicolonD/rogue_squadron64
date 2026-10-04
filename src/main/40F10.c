@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "main/3F160.h"
 #include "main/40F10.h"
@@ -17,7 +18,11 @@ INCLUDE_ASM("asm/nonmatchings/main/40F10", freeNpcBurstSpawnerTables);
 
 INCLUDE_ASM("asm/nonmatchings/main/40F10", initNpcContextFromTransform);
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", spawnRandomBurstNpcVariantWrapper);
+s32 randomBurstNpcHandlerVariant(struct D_80130BB8_type *self, u16 arg1, void *arg2);
+
+s32 spawnRandomBurstNpcVariantWrapper(void *arg0) {
+    return spawnNpcOfType(randomBurstNpcHandlerVariant, arg0, 4U, 0xFU) & 0xFFFF;
+}
 
 void destroyNpcSlotByIndexU16(s32 arg0) {
     destroyNpcSlotByIndex(arg0);

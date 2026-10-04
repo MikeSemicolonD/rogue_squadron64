@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "player.h"
 
@@ -43,7 +44,9 @@ enum PlayerCraft getPlayerVehicleId(s32 playerId) {
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", getPlayerRecordTargetBuffer);
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", getPlayerField2);
+u16 getPlayerField2(s32 arg0) {
+    return gPlayers[arg0].unk002;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", attachDebrisModelVariant);
 

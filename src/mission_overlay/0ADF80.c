@@ -31,9 +31,19 @@ s32 getEffectModelPoolHandle(void) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", beginCameraViewTransition);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", requestCameraSnapToTrackedAnchor);
+void requestCameraSnapToTrackedAnchor(void) {
+    (*(s8 *)((u8 *)(&D_mission_overlay_8010B6E8) + 0)) = 4;
+    computeTrackedObjectWorldAnchor(&D_mission_overlay_8010B6E8);
+    (*(s32 *)((u8 *)(&D_mission_overlay_8010B6E8) + 0x4C)) = 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", beginCameraTrackedTransition);
+s32 computeTrackedObjectWorldAnchor(s8 *);
+
+void beginCameraTrackedTransition(void) {
+    (*(s8 *)((u8 *)(&D_mission_overlay_8010B6E8) + 0)) = 3;
+    computeTrackedObjectWorldAnchor(&D_mission_overlay_8010B6E8);
+    (*(s32 *)((u8 *)(&D_mission_overlay_8010B6E8) + 0x4C)) = 0;
+}
 
 void advanceCameraTransitionOnCue(s32 arg0) {
     if (((u8) (*(s8 *)((u8 *)(&D_mission_overlay_8010B6E8) + 0)) == 3) && ((*(s32 *)((u8 *)(&D_mission_overlay_8010B6E8) + 0x50)) == arg0)) {

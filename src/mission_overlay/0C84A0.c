@@ -3,7 +3,11 @@
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", calculateDatItemDistanceToPlayer);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", getScaledPlayerCraftSpeed);
+void *getCraftRecordByIdx(s32);
+
+f32 getScaledPlayerCraftSpeed(void) {
+    return (*(f32 *)((u8 *)(getCraftRecordByIdx(0)) + 4)) * 4.0f;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C84A0", spawnEffectOnNamedDatItem);
 

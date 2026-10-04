@@ -32,7 +32,15 @@ INCLUDE_ASM("asm/nonmatchings/main/61FC0", resolvePlayerAnimChannelKeyValue);
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", initAllPlayerSlots);
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", resetPlayerSlotChannelTransform);
+void resetPlayerSlotChannelTransform(s32 arg0) {
+    struct someFontThing *temp_v0;
+
+    temp_v0 = D_main_8009FC10[arg0 & 0xFFFF];
+    temp_v0->unk028 = NULL;
+    temp_v0->unk024 = NULL;
+    temp_v0->unk020 = NULL;
+    temp_v0->unk030 = 0;
+}
 
 void *getPlayerSlotLookupBase(s32 arg0) {
     return D_main_8009FC10[arg0 & 0xFF]->unk020;
@@ -91,7 +99,9 @@ s32 isAnimInstanceActive(void *arg0) {
     return (*(s8 *)((u8 *)(arg0) + 1)) != 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", getPlayerAnimChannelEntryByIds);
+struct ui_element *getPlayerAnimChannelEntryByIds(void *arg0) {
+    return D_main_8009FC10[(*(u8 *)((u8 *)(arg0) + 8))]->unk034[(*(u8 *)((u8 *)(arg0) + 0)) + (*(u8 *)((u8 *)(arg0) + 9))];
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", getPlayerAnimChannelEntryReversed);
 

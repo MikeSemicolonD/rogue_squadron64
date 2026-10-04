@@ -136,7 +136,13 @@ f32 getNpcContextFloatAt34(void **arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", findModelChildNodeByName);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", applyFlagsToMeshTreeOrList);
+void applyFlagsToMeshTreeOrList(void **arg0, struct meshdef1 *arg1, u32 arg2, u32 arg3) {
+    if (arg0 != NULL) {
+        applyFlagsToMeshdef1List((*(struct meshdef0 **)((u8 *)(*arg0) + 0x10)), arg2, arg3);
+        return;
+    }
+    walkListAndUpdateFlagsAt0xC(arg1, arg2, arg3);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", setMaterialFlagByIdInMeshTree);
 

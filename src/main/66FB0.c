@@ -136,4 +136,22 @@ INCLUDE_ASM("asm/nonmatchings/main/66FB0", freeAudioCacheEntry);
 
 INCLUDE_ASM("asm/nonmatchings/main/66FB0", findAudioChannelById);
 
-INCLUDE_ASM("asm/nonmatchings/main/66FB0", updateAudioListenerPosFromPlayer);
+extern void *D_main_bss_80138D1C;
+extern s32 D_main_bss_80139B10;
+extern s32 D_main_bss_80139B58;
+
+void updateAudioListenerPosFromPlayer(void) {
+    f32 temp_fv0;
+    f32 temp_fv0_2;
+    f32 temp_fv0_3;
+
+    temp_fv0 = (*(f32 *)((u8 *)(D_main_bss_80138D1C) + 0x4C));
+    (*(f32 *)((u8 *)(&D_main_bss_80139B10) + 0)) = temp_fv0;
+    (*(f32 *)((u8 *)(&D_main_bss_80139B58) + 0)) = temp_fv0;
+    temp_fv0_2 = (*(f32 *)((u8 *)(D_main_bss_80138D1C) + 0x50));
+    (*(f32 *)((u8 *)(&D_main_bss_80139B10) + 4)) = temp_fv0_2;
+    (*(f32 *)((u8 *)(&D_main_bss_80139B58) + 4)) = temp_fv0_2;
+    temp_fv0_3 = (*(f32 *)((u8 *)(D_main_bss_80138D1C) + 0x54));
+    (*(f32 *)((u8 *)(&D_main_bss_80139B10) + 8)) = temp_fv0_3;
+    (*(f32 *)((u8 *)(&D_main_bss_80139B58) + 8)) = temp_fv0_3;
+}

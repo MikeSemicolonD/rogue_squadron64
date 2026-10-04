@@ -271,7 +271,14 @@ void clearAccountRecordAndMarkInactive(u8 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", registerSaveService);
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", stopSaveServiceWorker);
+s32 unregisterServiceWorker(s32);
+
+void stopSaveServiceWorker(void) {
+    if (D_main_800A0A60 != -1) {
+        unregisterServiceWorker(D_main_800A0A60);
+    }
+    D_main_800A0A60 = -1;
+}
 
 s32 getViModeType();
 

@@ -592,7 +592,15 @@ char *getPlayerRankString(s32 arg0) {
     return getGameOrFrontText(arg0 + 0x92);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", shutdownMenuMessagingAndSpeech);
+s32 finalizeCurrentSpeechBuffer();
+s32 shutdownFormatMessageWorker();
+
+void shutdownMenuMessagingAndSpeech(s32 arg0) {
+    shutdownFormatMessageWorker();
+    if (arg0 & 0xFF) {
+        finalizeCurrentSpeechBuffer();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", cueMenuScreenAudioA);
 
@@ -623,7 +631,16 @@ void resetMenuElementInputState(void *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateCraftSelectFlags);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", allocCraftPreviewEffectObject);
+void *rs_malloc(s32, s32);
+s32 spawnTieInterceptorParticles();
+
+void *allocCraftPreviewEffectObject(void) {
+    void *temp_s0;
+
+    temp_s0 = rs_malloc(0x18, 0);
+    (*(s32 *)((u8 *)(temp_s0) + 0x14)) = spawnTieInterceptorParticles();
+    return temp_s0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initCraftPreviewEffectWithRandom);
 
@@ -676,7 +693,14 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuBackdropAndPickRando
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initSongAssetLoadWorker);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", shutdownSongAssetLoadWorker);
+s32 unregisterServiceWorker(s32);
+extern s32 D_menu_overlay_800CCE18;
+
+void shutdownSongAssetLoadWorker(void) {
+    if (D_menu_overlay_800CCE18 != -1) {
+        unregisterServiceWorker(D_menu_overlay_800CCE18);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", tickSongAssetLoadWorker);
 

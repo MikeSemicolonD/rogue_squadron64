@@ -110,7 +110,19 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", selectPostCraw
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", shutdownModelViewer);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", releaseMeshLinkedList);
+s32 enqueueMeshForDeferredRelease(s32 *);
+
+void releaseMeshLinkedList(void *arg0) {
+    s32 *var_s0;
+
+    var_s0 = (*(s32 **)((u8 *)(arg0) + 0x10));
+    if (var_s0 != NULL) {
+        do {
+            enqueueMeshForDeferredRelease(var_s0);
+            var_s0 = *var_s0;
+        } while (var_s0 != NULL);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", freeModelViewerMeshChain);
 

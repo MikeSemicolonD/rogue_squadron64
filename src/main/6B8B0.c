@@ -439,7 +439,9 @@ s32 getLevelConfigWordA(void) {
     return D_main_800A05D0[gGameSettings.currentLevel].unk14;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6B8B0", getLevelConfigWordB);
+s32 getLevelConfigWordB(void) {
+    return D_main_800A05D0[gGameSettings.currentLevel].unk18;
+}
 
 f32 getLevelConfigFloatA(void) {
     return D_main_800A05D0[gGameSettings.currentLevel].unk1C;

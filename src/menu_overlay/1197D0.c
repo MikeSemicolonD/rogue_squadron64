@@ -78,7 +78,10 @@ void decrementTextTextureRefcount(void) {
     D_menu_overlay_800CC850--;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", setChildPosFromI16Pair);
+void setChildPosFromI16Pair(void *arg0, s16 arg1, s16 arg2) {
+    (*(f32 *)((u8 *)((*(void **)((u8 *)(arg0) + 0xC))) + 0x18)) = (f32) arg1;
+    (*(f32 *)((u8 *)((*(void **)((u8 *)(arg0) + 0xC))) + 0x1C)) = (f32) arg2;
+}
 
 s32 getStructField0xC(void *arg0) {
     return (*(s32 *)((u8 *)(arg0) + 0xC));
@@ -112,7 +115,15 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", updateTextOverlayLookupEntry
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", accumulateShipThrottleCharge);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", computeThrottleChargeFraction);
+f32 computeThrottleChargeFraction(void) {
+    f32 var_ft0;
+
+    var_ft0 = 1.0f;
+    if (D_menu_overlay_800CC85C != 0) {
+        var_ft0 = 1.0f - ((f32) (*(u8 *)((u8 *)((*(void **)((u8 *)(D_menu_overlay_800CC85C) + 0xC))) + 0x2F)) / 255.0f);
+    }
+    return var_ft0;
+}
 
 s32 isPlayerShipActive(void) {
     return D_menu_overlay_800CC85C != 0;

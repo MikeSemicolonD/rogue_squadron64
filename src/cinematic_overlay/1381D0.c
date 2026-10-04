@@ -410,6 +410,14 @@ s32 getCinematicStateSubObject(void *arg0) {
     return (*(s32 *)((u8 *)(arg0) + 0xC));
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicInterpRatio);
+f32 cinematicInterpRatio(void) {
+    f32 var_ft0;
+
+    var_ft0 = 1.0f;
+    if (D_cinematic_overlay_800B0934 != 0) {
+        var_ft0 = 1.0f - ((f32) (*(u8 *)((u8 *)((*(void **)((u8 *)(D_cinematic_overlay_800B0934) + 0xC))) + 0x2F)) / 255.0f);
+    }
+    return var_ft0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", fake_func_800AF6A8);
