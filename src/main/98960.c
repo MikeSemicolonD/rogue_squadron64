@@ -189,7 +189,64 @@ void tickAndReap3DAudioVoices(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", setMusyX3DProperties);
+typedef struct {
+    s32 x;
+    s32 y;
+    s32 z;
+} IVec3;
+
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} FVec3;
+
+typedef struct {
+    u8 pad0[0xC];
+    IVec3 pos;
+    IVec3 vel;
+    IVec3 up;
+    FVec3 cross;
+    FVec3 fwd;
+    f32 inv[15];
+    f32 volume;
+} MusyX3D;
+
+extern f32 D_main_8003DECC;
+extern void crossProductVec3(void *, void *, void *);
+extern void invertOrientationMatrix(void *, void *);
+
+s32 setMusyX3DProperties(MusyX3D *arg0, IVec3 *arg1, IVec3 *arg2, IVec3 *arg3, FVec3 *arg4, u8 arg5) {
+    f32 sp10[12];
+
+    if (gMusyXActiveFlag != 0) {
+    factor5MutexAcquire();
+    arg0->pos = *arg1;
+    arg0->vel = *arg2;
+    arg0->up = *arg3;
+    arg0->fwd.x = -arg4->x;
+    arg0->fwd.y = -arg4->y;
+    arg0->fwd.z = -arg4->z;
+    crossProductVec3(&arg0->cross, &arg0->fwd, &arg0->up);
+    sp10[0] = arg0->cross.x;
+    sp10[3] = arg0->cross.y;
+    sp10[6] = arg0->cross.z;
+    sp10[1] = arg0->fwd.x;
+    sp10[4] = arg0->fwd.y;
+    sp10[7] = arg0->fwd.z;
+    sp10[2] = *(f32 *)&arg0->up.x;
+    sp10[5] = *(f32 *)&arg0->up.y;
+    sp10[8] = *(f32 *)&arg0->up.z;
+    sp10[9] = *(f32 *)&arg0->pos.x;
+    sp10[10] = *(f32 *)&arg0->pos.y;
+    sp10[11] = *(f32 *)&arg0->pos.z;
+    invertOrientationMatrix(&arg0->inv, sp10);
+    arg0->volume = (f32)arg5 / D_main_8003DECC;
+    factor5MutexRelease();
+    return 1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", register3DAudioListenerNode);
 
