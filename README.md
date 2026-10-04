@@ -3,7 +3,7 @@
 This is the beginning of a very, very rough attempt at decompiling Star Wars Rogue Squadron for the N64 (USA version 1.0).
 In its current state it can't even really be properly called a decomp.
 You can only barely rip the ROM apart into its constituent parts, and even then its not really working right.
-You also can't recompile the parts back together into a matching ROM.
+The parts do rebuild into a byte-identical ROM, though; see [Building a matching ROM](#building-a-matching-rom).
 Even with those short falls I still thinks its best for me to release what I have to the public.
 That at least will open the doors for people with newer, fresher eyes than mine to make progress.
 
@@ -46,6 +46,31 @@ Jump tables and jump labels don't always get identified properly, requiring manu
 The names I chose for the overlays are pretty bad, and I can't even say with certainty that I identified them correctly.
 
 But, as previously mentioned, all that should be assumed to be user error.
+
+---
+
+## Building a matching ROM
+
+The build runs on Linux (or WSL on Windows). From the project root:
+
+```sh
+sh tools/setup_wsl.sh            # once: installs the toolchain into ~/opt, no sudo needed
+. ~/opt/rs64env.sh               # in every new shell
+splat split roguesquadron.yaml   # needs rogue_squadron.z64 in the project root (see above)
+make -j$(nproc) check
+```
+
+`make check` prints `build/tyler.z64: OK` when the built ROM's SHA-1 matches `ed42eed1ee2db646ff7ef94ba8c5421d164a4f0d`. If it doesn't match, it runs `tools/first_diff.py`, which reports the first differing ROM offset and the function that contains it.
+
+`tools/setup_wsl.sh` sets up:
+
+- MIPS binutils 2.42 and cpp 12.4.0, extracted from the Ubuntu `mips-linux-gnu` cross packages. If `apt-get download` can't find them, run `sudo apt-get update` once.
+- `wibo` 1.2.0, which runs the Windows-only SN compilers. The compilers themselves are downloaded by the Makefile on the first build.
+- splat **0.41.1** in a Python venv. Newer and older splat versions don't accept `roguesquadron.yaml` as it is.
+
+The linker script is `provisional.ld`. `splat split` regenerates `roguesquadron.ld` every time it runs, but that file doesn't link (it lacks the overlay `*_BASEROM_START`/`*_ROM_SIZE` symbols and the `main_bss` layout). Don't commit the regenerated copy.
+
+`python3 tools/progress.py` prints how many `.text` bytes are in C, per segment.
 
 ---
 
