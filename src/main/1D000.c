@@ -225,43 +225,16 @@ void buildRotationMatrixSlot2(Mat4x3 arg0, f32 arg1) {
     arg0[2][2] = 1.0f;
 }
 
-#if 0
-f32 vec3Length(Vec3f arg0) {
-    return sqrtf((arg0[0] * arg0[0]) + (arg0[1] * arg0[1]) + (arg0[2] * arg0[2]));
-}
-#else
-INCLUDE_ASM("asm/nonmatchings/main/1D000", vec3Length);
-#endif
+f32 vec3Length(Vec3f v) {
+    f32 len;
 
-#if 0
-void normalize_vector(Vec3f arg0) {
-    f32 x2, y2, z2;
-    f32 temp_fv0_2;
-
-    x2 = arg0[0] * arg0[0];
-    y2 = arg0[1] * arg0[1];
-    z2 = arg0[2] * arg0[2];
-    arg0[0] = arg0[0] / sqrtf(x2 + y2 + z2);
-    arg0[2] = arg0[2] / sqrtf(x2 + y2 + z2);
-    arg0[1] = arg0[1] / sqrtf(x2 + y2 + z2);
+    SQRTF_ASM(len, v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    return len;
 }
-#else
+
 INCLUDE_ASM("asm/nonmatchings/main/1D000", normalize_vector);
-#endif
 
-#if 0
-void vec3NormalizeInto(Vec3f arg0, Vec3f arg1) {
-    f32 temp_fv0;
-    f32 why;
-
-    temp_fv0 = sqrtf((arg1[0] * arg1[0]) + (arg1[1] * arg1[1]) + (arg1[2] * arg1[2]));
-    arg0[0] = (arg1[0] / temp_fv0);
-    arg0[1] = (arg1[1] / temp_fv0);
-    arg0[2] = (arg1[2] / temp_fv0);
-}
-#else
 INCLUDE_ASM("asm/nonmatchings/main/1D000", vec3NormalizeInto);
-#endif
 
 f32 vec3Dot(Vec3f arg0, Vec3f arg1) {
     return (arg0[0] * arg1[0]) + (arg0[1] * arg1[1]) + (arg0[2] * arg1[2]);
