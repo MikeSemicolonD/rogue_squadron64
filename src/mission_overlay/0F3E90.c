@@ -106,7 +106,19 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", spawnNpcAnchoredEffectSlo
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", load_model_animation);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", reset_model_animations);
+extern void resetModelAnimSlotTable(void);
+typedef struct { s32 unk0; u8 pad[0x20]; } ModelAnimSlot24;
+extern ModelAnimSlot24 D_mission_overlay_8010C4A0[];
+
+s32 reset_model_animations(void) {
+    s32 i;
+
+    resetModelAnimSlotTable();
+    for (i = 15; i >= 0; i--) {
+        D_mission_overlay_8010C4A0[i].unk0 = 0;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", reset_and_free_model_animations);
 
