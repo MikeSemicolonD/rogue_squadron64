@@ -139,7 +139,62 @@ void spawnDebris1Npc(s32 arg0, s32 arg1, f32 arg2, f32 arg3, f32 arg4) {
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedEffectIfBudgetOk);
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedEffectIfBudgetOkAlt);
+s32 orientedNpcHandler(struct D_80130BB8_type *self, u16 arg1, void *arg2);
+typedef struct {
+    s32 x;
+    s32 y;
+    s32 z;
+} V3I;
+
+typedef struct {
+    f32 pos[3];
+    f32 inv[3];
+    f32 dir[3];
+    f32 one[3];
+} OrientedFrame;
+
+typedef struct {
+    OrientedFrame *frame;
+    s32 a;
+    s32 b;
+    f32 c;
+    f32 d;
+    f32 e;
+} OrientedSpawnArgs;
+
+void orthonormalizeFrame(OrientedFrame *);
+
+void spawnOrientedEffectIfBudgetOkAlt(f32 *pos, f32 *dir, s32 arg2, f32 arg3, f32 arg4, f32 arg5) {
+    OrientedFrame fr;
+    OrientedSpawnArgs args;
+    OrientedFrame *fp;
+
+    *(V3I *)fr.pos = *(V3I *)pos;
+    if (dir != NULL) {
+        *(V3I *)fr.dir = *(V3I *)dir;
+    } else {
+        fr.dir[0] = 0.0f;
+        fr.dir[2] = 0.0f;
+        fr.dir[1] = 1.0f;
+    }
+    fr.inv[0] = 1.0f - fr.dir[0];
+    fr.inv[1] = 1.0f - fr.dir[1];
+    fr.inv[2] = 1.0f - fr.dir[2];
+    fr.one[2] = 1.0f;
+    fr.one[1] = 1.0f;
+    fr.one[0] = 1.0f;
+    orthonormalizeFrame(&fr);
+    fp = &fr;
+    if ((D_main_bss_80130B63 != 0) || ((findLargestFreeHeapChunk() >= 0x3A98U) && (countDisplayListChunks() >= 0x4E20))) {
+        args.d = arg4;
+        args.frame = fp;
+        args.a = arg2;
+        args.b = 0;
+        args.c = arg3;
+        args.e = arg5;
+        spawnNpcOfType(orientedNpcHandler, &args, 1U, 0xFU);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnOrientedNpc);
 
