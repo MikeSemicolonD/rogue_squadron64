@@ -248,7 +248,52 @@ s32 setMusyX3DProperties(MusyX3D *arg0, IVec3 *arg1, IVec3 *arg2, IVec3 *arg3, F
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", register3DAudioListenerNode);
+extern s32 D_main_bss_80153418;
+extern f32 D_main_8003DED0;
+
+s32 register3DAudioListenerNode(MusyX3D *arg0, IVec3 *arg1, IVec3 *arg2, IVec3 *arg3, FVec3 *arg4, f32 arg5, f32 arg6, f32 arg7, s32 arg8, u8 arg9) {
+    f32 sp10[12];
+    MusyX3D *head;
+
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        head = (MusyX3D *)D_main_bss_80153418;
+        *(MusyX3D **)((u8 *)arg0 + 0) = head;
+        if (head != 0) {
+            *(MusyX3D **)((u8 *)head + 4) = arg0;
+        }
+        *(s32 *)((u8 *)arg0 + 4) = 0;
+        D_main_bss_80153418 = (s32)arg0;
+        arg0->pos = *arg1;
+        arg0->vel = *arg2;
+        arg0->up = *arg3;
+        arg0->fwd.x = -arg4->x;
+        arg0->fwd.y = -arg4->y;
+        arg0->fwd.z = -arg4->z;
+        arg0->inv[12] = arg5;
+        arg0->inv[13] = arg6;
+        arg0->inv[14] = arg7;
+        crossProductVec3(&arg0->cross, &arg0->fwd, &arg0->up);
+        sp10[0] = arg0->cross.x;
+        sp10[3] = arg0->cross.y;
+        sp10[6] = arg0->cross.z;
+        sp10[1] = arg0->fwd.x;
+        sp10[4] = arg0->fwd.y;
+        sp10[7] = arg0->fwd.z;
+        sp10[2] = *(f32 *)&arg0->up.x;
+        sp10[5] = *(f32 *)&arg0->up.y;
+        sp10[8] = *(f32 *)&arg0->up.z;
+        sp10[9] = *(f32 *)&arg0->pos.x;
+        sp10[10] = *(f32 *)&arg0->pos.y;
+        sp10[11] = *(f32 *)&arg0->pos.z;
+        invertOrientationMatrix(&arg0->inv, sp10);
+        arg0->volume = (f32)arg9 / D_main_8003DED0;
+        *(s32 *)((u8 *)arg0 + 8) = arg8;
+        factor5MutexRelease();
+        return 1;
+    }
+    return 0;
+}
 
 extern s32 D_main_bss_80153418;
 s32 unlinkMusyXListNode(void *arg0) {
