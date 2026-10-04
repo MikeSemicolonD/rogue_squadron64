@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+extern u16 spawnNpcOfType(void *, void *, u32, u8);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", initWaterSprayParticles);
 
@@ -73,7 +74,28 @@ INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D2D4);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnGatedDistanceEffectPair);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnRandomParticleWithParent);
+typedef struct {
+    f32 unk0;
+    f32 unk4;
+    s16 unk8;
+} RandomParticleArgs;
+
+extern void spawnRandomScaleColoredEffectFromCaller(void *, f32, f32, s32);
+extern void randomParticleWithParentNpcHandler(void);
+
+void spawnRandomParticleWithParent(void *arg0, s32 arg1, f32 arg2, u8 arg3) {
+    RandomParticleArgs args;
+
+    if (arg0 != NULL) {
+        spawnRandomScaleColoredEffectFromCaller(arg0, arg2, arg2 + arg2, 0);
+    }
+    if (arg3) {
+        args.unk8 = arg1;
+        args.unk4 = arg2;
+        args.unk0 = 0.6f;
+        spawnNpcOfType(randomParticleWithParentNpcHandler, &args, 4, 10);
+    }
+}
 
 extern f32 vec3Length(Vec3f);
 extern u8 *D_main_bss_80138D1C;
@@ -112,7 +134,6 @@ typedef struct {
 } WaterSprayArgs;
 
 extern u8 *getNpcContextByIndex(u16);
-extern u16 spawnNpcOfType(void *, void *, u32, u8);
 extern u8 D_main_bss_8013A944;
 extern void npcWaterSprayUpdate(void);
 
