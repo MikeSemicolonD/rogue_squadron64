@@ -41,7 +41,33 @@ void resetCraftSelectionCounter(void) {
     D_mission_overlay_8010C080 = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", registerObjectAndResolveDatItem);
+extern void *D_mission_overlay_8010C000[];
+extern s32 getLevelDatItemByName(u8 *);
+
+void registerObjectAndResolveDatItem(u8 *obj) {
+    s32 r;
+    u8 *p;
+    u8 *off;
+
+    if (D_mission_overlay_8010C080 < 32) {
+        D_mission_overlay_8010C000[D_mission_overlay_8010C080] = obj;
+        off = *(u8 **)(obj + 0x2C);
+        D_mission_overlay_8010C080++;
+        if (off != NULL) {
+            p = off + (s32)obj;
+            if (*p == '-') {
+                *(s32 *)(obj + 0x2C) = 0;
+            } else {
+                r = getLevelDatItemByName(p);
+                if (r != 0) {
+                    *(s32 *)(obj + 0x2C) = r;
+                } else {
+                    *(s32 *)(obj + 0x2C) = 0;
+                }
+            }
+        }
+    }
+}
 
 s32 findMatchingTextureRecursive(u16, void *, void *, s32);
 void *getCraftRecordByIdx(s32);
