@@ -83,9 +83,48 @@ void freeEffectAssetBuffers(void) {
     rs_free(D_main_bss_80139740);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", spawnByteAnimDebrisDefault);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 unk1C;
+    s16 unk20;
+    s32 unk24;
+    u8 unk28;
+    u8 unk29;
+    f32 unk2C;
+} ByteAnimDebrisArgs;
+void byteAnimatedDebrisNpcHandler();
+u16 spawnNpcOfType(void *, void *, u32, u8);
+void spawnByteAnimDebrisDefault(f32 *pos) {
+    ByteAnimDebrisArgs args;
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", spawnByteAnimDebrisWithParam);
+    args.x = pos[0];
+    args.y = pos[1] - 1.0f;
+    args.z = pos[2];
+    args.unk28 = 0;
+    args.unk24 = D_main_bss_80139740;
+    args.unk29 = 0x10;
+    args.unk1C = 6.0f;
+    args.unk20 = 0x300;
+    args.unk2C = 20.0f;
+    spawnNpcOfType(byteAnimatedDebrisNpcHandler, &args, 2, 15);
+}
+
+void spawnByteAnimDebrisWithParam(f32 *pos, u8 arg1) {
+    ByteAnimDebrisArgs args;
+
+    args.x = pos[0];
+    args.y = pos[1] - 1.0f;
+    args.z = pos[2];
+    args.unk28 = arg1;
+    args.unk24 = D_main_bss_80139740;
+    args.unk29 = arg1 + 0x10;
+    args.unk1C = 6.0f;
+    args.unk20 = 0x300;
+    args.unk2C = 20.0f;
+    spawnNpcOfType(byteAnimatedDebrisNpcHandler, &args, 2, 15);
+}
 
 s16 loadAndRelocateAsset(s32 *, s32, s32);
 extern s32 D_main_8003B168;

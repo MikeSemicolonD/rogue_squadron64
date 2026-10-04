@@ -184,21 +184,31 @@ const u16 bridgeSecondaryWeaponTextIds[] = {
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarGenerateSecondaryWeaponString);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", gracefulMenuShutdown);
+void tickMusyXIfActive(void);
+u8 anyAudioSlotActive(void);
+void bufferArbiterProducerScanWait(void);
+void destroyPlayerShipRecord(s32, void *);
+s32 finalizeCurrentSpeechBuffer();
+extern s32 D_menu_overlay_800CD668;
+extern u8 D_menu_overlay_800CD670[];
+void gracefulMenuShutdown(void) {
+    s32 i;
+
+    tickMusyXIfActive();
+    while (!anyAudioSlotActive()) {
+    }
+    bufferArbiterProducerScanWait();
+    destroyPlayerShipRecord(D_menu_overlay_800CD668, D_menu_overlay_800CD670);
+    for (i = 7; i >= 0; i--) {
+    }
+    finalizeCurrentSpeechBuffer();
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", extractTextBeforeFmtChar);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", composeInterpolatedNodeMatrices);
 
-#if 0
-/*
-`D_menu_overlay_800A5804` is "pl_crafts/shadows_TM", but its placement in the file is a little odd.
-I suspect this is tied to the oddities surrounding `hangarGenerateSecondaryWeaponString`.
-
-I'm beginning to suspect that this file isn't match-able until the rodata weirdness is resolved
-
-As currently written, the .text section of this function is 100% matching
-*/
+extern char D_menu_overlay_800A5804[];
 void hangarLoadShadows(void) {
     struct material_entry sp10;
     struct full_image_header *temp_s4;
@@ -206,12 +216,11 @@ void hangarLoadShadows(void) {
     s32 var_s2;
     s32 var_v1;
 
-    temp_s4 = load_asset("pl_crafts/shadows_TM");
+    temp_s4 = load_asset(D_menu_overlay_800A5804);
     for (var_s2 = 0; var_s2 < 14; var_s2++) {
         var_s1 = temp_s4;
-        // I really, really do not like this loop. Its the wrong way to solve the problem
         for (var_v1 = 0; var_v1 < var_s2; var_v1++) {
-            var_s1 = (struct full_image_header*)(((u32)var_s1 + var_s1->image_size + 7) & ~3);
+            var_s1 = (struct full_image_header *)(((u32)var_s1 + var_s1->image_size + 7) & ~3);
         }
         full_header_image_offset_convert(&var_s1->ent, (u32)&var_s1->ent);
         var_s1->ent.flags_type |= 0x2000;
@@ -220,13 +229,32 @@ void hangarLoadShadows(void) {
     }
     rs_free(temp_s4);
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarLoadShadows);
-#endif
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", setByteAcrossEntryList);
+typedef struct {
+    u8 pad[0x27];
+    u8 b;
+} SetByteEntry;
+void setByteAcrossEntryList(u8 *arg0, u8 arg1) {
+    u32 i;
+    SetByteEntry *e = *(SetByteEntry **)(arg0 + 8);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", initCraftSelectVectors);
+    for (i = 0; i < *(u32 *)(arg0 + 0xC); i++) {
+        e->b = arg1;
+        e++;
+    }
+}
+
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} CraftSelectVec3;
+void initCraftSelectVectors(CraftSelectVec3 *arg0, CraftSelectVec3 *arg1) {
+    D_menu_overlay_800CD704 = 0.0f;
+    D_menu_overlay_800CD708 = 0.0f;
+    *(CraftSelectVec3 *)&D_menu_overlay_800CDA60 = *arg0;
+    *(CraftSelectVec3 *)&D_menu_overlay_800CDA70 = *arg1;
+}
 
 s32 setPlayerSlotEntryRGB(s32, s32, s32 *);
 s32 startPlayerSlotAnimationChannelExt(s32, s8 *, s32, s32, s32, s32);
@@ -241,6 +269,15 @@ void hangarSetSecondaryWeaponDisplay(s32 arg0, s8 arg1) {
     D_menu_overlay_800CDA80 = arg1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarUpdateSecWeaponIfChanged);
+void startPlayerSlotAnimationChannel(s32, char *);
+void advancePlayerAnimationPhase(s32, s32, f32);
+extern s32 D_menu_overlay_800CD6DC;
+void hangarUpdateSecWeaponIfChanged(u8 arg0, u8 arg1, f32 arg2) {
+    if (arg1 != (u8)D_menu_overlay_800CDA80) {
+        startPlayerSlotAnimationChannel(D_menu_overlay_800CDA7C, hangarGenerateSecondaryWeaponString(arg0, arg1));
+        D_menu_overlay_800CDA80 = arg1;
+    }
+    advancePlayerAnimationPhase(D_menu_overlay_800CDA7C, D_menu_overlay_800CD6DC, arg2);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", fake_func_800AEC54);

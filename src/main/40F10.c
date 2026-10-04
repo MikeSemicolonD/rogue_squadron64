@@ -37,12 +37,76 @@ void destroyNpcSlotByIndexU16(s32 arg0) {
     destroyNpcSlotByIndex(arg0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", attachChildNpcByIndex);
+typedef struct {
+    u8 pad0[0x134];
+    s32 children[3];
+} AttachNpcCtx;
+void attachChildNpcByIndex(u16 idx, s32 child) {
+    AttachNpcCtx *ctx = NULL;
+    s32 i;
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", assignNpcTargetAndPosition);
+    if (idx != 0xFFFF) {
+        slotDispatcherIter(idx, 0x1000, &ctx);
+        if (ctx != NULL) {
+            for (i = 0; i < 2; i++) {
+                if (ctx->children[i] == 0) {
+                    ctx->children[i] = child;
+                    ctx->children[i + 1] = 0;
+                    break;
+                }
+            }
+        }
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", setNpcForwardVectorByIndex);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} NpcTargetVec3;
+void assignNpcTargetAndPosition(u16 idx, u16 key, NpcTargetVec3 *pos, f32 arg3) {
+    u8 *ctx = NULL;
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", resolveNpcContextByIndex);
+    if (idx != 0xFFFF && key != 0xFFFF) {
+        slotDispatcherIter(idx, 0x1000, &ctx);
+        if (ctx != NULL) {
+            if (*(u16 *)(ctx + 0x140) == 0xFFFF) {
+                *(u16 *)(ctx + 0x140) = findFreeNpcSlotByKey((struct D_80130BB8_type *)(u32)idx, key);
+            }
+            if (pos != NULL) {
+                *(NpcTargetVec3 *)(ctx + 0x144) = *pos;
+            }
+            *(f32 *)(ctx + 0x15C) = arg3;
+        }
+    }
+}
+
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} NpcFwdVec3;
+void setNpcForwardVectorByIndex(u16 idx, NpcFwdVec3 *v) {
+    u8 *ctx = NULL;
+
+    if (idx != 0xFFFF) {
+        slotDispatcherIter(idx, 0x1000, &ctx);
+        if (ctx != NULL) {
+            *(NpcFwdVec3 *)(ctx + 4) = *v;
+        }
+    }
+}
+
+void *resolveNpcContextByIndex(u16 idx) {
+    void *ctx = NULL;
+
+    if (idx != 0xFFFF) {
+        slotDispatcherIter(idx, 0x1000, &ctx);
+        if (ctx != NULL) {
+            return ctx;
+        }
+    }
+    return NULL;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/40F10", fake_func_80041EEC);

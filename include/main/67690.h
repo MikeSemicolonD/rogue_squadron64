@@ -3,6 +3,6 @@
 
 #include "PR/ultratypes.h"
 
-void finalizeCurrentSpeechBuffer();
+s32 finalizeCurrentSpeechBuffer();
 
 #endif

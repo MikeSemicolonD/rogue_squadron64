@@ -122,7 +122,21 @@ INCLUDE_ASM("asm/nonmatchings/main/67690", tickSpeechSubsystem);
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", resetSpeechSubsystem);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", finalizeCurrentSpeechBuffer);
+void shutdownMusyXVoices(void);
+s32 rs_free(s32);
+s32 teardownAssetDma(s32, s32);
+extern s32 D_main_bss_80138920;
+extern s32 D_main_bss_80139B70;
+extern s32 D_main_bss_80139B74;
+s32 finalizeCurrentSpeechBuffer(void) {
+    shutdownMusyXVoices();
+    if (D_main_bss_80139B74 != 0) {
+        rs_free(D_main_bss_80139B74);
+    } else {
+        teardownAssetDma(D_main_bss_80138920, D_main_bss_80139B70);
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", initSpeechPlaybackState);
 
@@ -148,20 +162,109 @@ void endSpeechTimingWindow(void) {
     D_main_bss_80139C8D = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", getSpeechPlaybackElapsedTime);
+extern s32 D_main_80139B80[];
+s32 isVoiceHandleActive(s32);
+extern u8 subtitleSlotHead;
+extern u8 subtitleSlotTail;
+extern u8 D_main_80139C73;
+static inline u8 speechSlotActiveInline(u8 slot) {
+    if (slot != 0) {
+        s32 h = D_main_80139B80[slot - 1];
+        if (h != -1) {
+            return isVoiceHandleActive(h);
+        }
+    }
+    return 0;
+}
+f32 getVoicePlaybackProgressByKey(s32, f32 *);
+extern u16 D_main_bss_80139C74;
+s32 getSpeechPlaybackElapsedTime(f32 *out) {
+    f32 total;
+    f32 progress;
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", isSpeechBusyOrQueued);
+    if (!speechSlotActiveInline(D_main_80139C73)) {
+        return -1;
+    }
+    if (out != NULL) {
+        progress = getVoicePlaybackProgressByKey(D_main_80139B80[D_main_80139C73 - 1], &total);
+        *out = total - progress;
+    }
+    return D_main_bss_80139C74;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", setSpeechVolume);
+u8 isSpeechBusyOrQueued(void) {
+    if (subtitleSlotTail == subtitleSlotHead && !speechSlotActiveInline(D_main_80139C73)) {
+        return 1;
+    }
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", isSpeechSlotActive);
+extern f32 D_main_bss_80139C80;
+extern f32 D_main_bss_80139C88;
+void applySpeechVolumeScalar(f32);
+void setSpeechVolume(u8 vol) {
+    D_main_bss_80139C80 = vol / 127.0f;
+    applySpeechVolumeScalar(D_main_bss_80139C88);
+}
+
+extern s32 D_main_80139B80[];
+s32 isVoiceHandleActive(s32);
+u8 isSpeechSlotActive(u8 slot) {
+    if (slot != 0) {
+        s32 h = D_main_80139B80[slot - 1];
+        if (h != -1) {
+            return isVoiceHandleActive(h);
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", stopSpeechSlotIfActive);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", stopAllSpeechSlots);
+extern s16 D_main_bss_80139BA8;
+void stopAllSpeechSlots(void) {
+    u8 i;
+    s32 *p;
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", advanceSpeechRingAndStopHead);
+    for (i = 0; i < 8; i++) {
+        p = &D_main_80139B80[i];
+        if (*p != -1) {
+            if ((u8)isVoiceHandleActive(*p)) {
+                stopVoiceByHandle(*p);
+            }
+            *p = -1;
+        }
+    }
+    D_main_bss_80139BA8 = 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", playSpeechClipGated);
+extern u8 D_main_bss_80139BA9;
+extern s16 D_main_bss_80139BA8;
+void advanceSpeechRingAndStopHead(void) {
+    u8 idx = D_main_bss_80139BA9;
+    s32 *base = D_main_80139B80;
+    s32 *p = &base[idx];
 
-INCLUDE_RODATA("asm/nonmatchings/main/67690", D_main_8003C7C4);
+    if (*p != -1) {
+        if ((u8)isVoiceHandleActive(*p)) {
+            stopVoiceByHandle(*p);
+        }
+        *p = -1;
+    }
+    if (--D_main_bss_80139BA8 < 0) {
+        D_main_bss_80139BA8 += 8;
+    }
+}
+
+extern s32 D_8010CA20;
+extern u8 subtitleSlotsAvailable;
+void playSpeechClip(s32, u8, f32, s32);
+void playSpeechClipGated(s32 arg0, u8 arg1, f32 arg2, u8 arg3) {
+    if (D_8010CA20 == 0) {
+        if (arg3 == 0 || subtitleSlotsAvailable == 0x10) {
+            playSpeechClip(arg0, arg1, arg2, arg3 ? 8 : 0);
+        }
+    }
+}
+
+const u32 rodata_pad_67690[2] = { 0x25290080, 0x240A00FF };
