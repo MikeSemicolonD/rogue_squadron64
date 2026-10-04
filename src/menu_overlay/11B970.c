@@ -477,7 +477,53 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateTieInterceptorAnimFlag
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", integrateTieInterceptorPhysics);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", spawnTieInterceptorParticles);
+typedef struct {
+    u8 r, g, b, a;
+} TieRgba;
+
+typedef struct {
+    s32 w0, w4, w8;
+    s16 hC, hE, h10, h12, h14, h16, h18, h1A, h1C, h1E, h20, h22;
+    TieRgba c24, c28, c2C, c30;
+} TieParticle;
+
+extern TieRgba mainMenuWhiteColor;
+void *rs_malloc(s32, s32);
+void rs_memset(void *, u8, u32);
+void clearVec4QuadStruct(void *);
+
+s32 spawnTieInterceptorParticles(void) {
+    u8 *obj;
+    TieParticle *p;
+    u32 i;
+
+    obj = rs_malloc(0x137C, 0);
+    rs_memset(obj, 0, 0x137C);
+    clearVec4QuadStruct(obj + 0x20);
+    *(u8 **)(obj + 0x14) = obj + 0x50;
+    *(u8 **)(obj + 0x70) = obj + 0xAC;
+    *(u8 **)(obj + 0x74) = obj + 0xA7C;
+    *(s32 *)(obj + 0x64) = 0xC0;
+    *(u8 **)(obj + 0xB4) = obj + 0xBC;
+    *(s32 *)(obj + 0x5C) = 0x08260001;
+    *(s32 *)(obj + 0xB8) = 0x30;
+    for (i = 0; i < 0x30; i++) {
+        p = (TieParticle *)(obj + 0xBC) + i;
+        p->hE = i * 4 + 1;
+        p->h10 = i * 4 + 3;
+        p->h12 = i * 4 + 2;
+        p->w0 = 0x9E;
+        p->w4 = 0x0D0C9005;
+        p->w8 = 0xFFFF0000;
+        p->hC = i * 4;
+        p->h16 = 0;
+        p->h1A = 0;
+        p->h1E = 0x1000;
+        p->h22 = 0x1000;
+        p->c24 = p->c28 = p->c2C = p->c30 = mainMenuWhiteColor;
+    }
+    return (s32)obj;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", playerTieInterceptorMainUpdate);
 
