@@ -338,7 +338,28 @@ void freeCutsceneResources(void) {
     zmemcpy(&gBootConfig, &D_cinematic_overlay_800B0960, 0x50U);
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", resetCutsceneActionSlots);
+typedef struct {
+    s32 unk0;
+    f32 unk4;
+    f32 unk8;
+    f32 unkC;
+    s16 unk10;
+    u8 active;
+} CutsceneActionSlot;
+
+extern CutsceneActionSlot D_cinematic_overlay_800B0BC0[];
+
+void applyCutsceneSlotMaterialOverrides(void);
+
+void resetCutsceneActionSlots(void) {
+    u16 i;
+
+    for (i = 0; i < 0x10; i++) {
+        D_cinematic_overlay_800B0BC0[i].active = 0;
+        D_cinematic_overlay_800B0BC0[i].unk0 = 0;
+    }
+    applyCutsceneSlotMaterialOverrides();
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", scheduleCutsceneActionSlot);
 
