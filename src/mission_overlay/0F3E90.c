@@ -61,7 +61,17 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", setType3ActorParams);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", dispatchEffectByActorType);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", setType1ActorParams);
+s32 setType1ActorParams(void *arg0, f32 arg1, s8 arg2, s8 arg3, s8 arg4, s32 arg5) {
+    if ((*(u8 *)((u8 *)(arg0) + 0x112)) == 1) {
+        (*(f32 *)((u8 *)(arg0) + 0x10C)) = arg1;
+        (*(s8 *)((u8 *)(arg0) + 0x104)) = arg2;
+        (*(s8 *)((u8 *)(arg0) + 0x105)) = arg3;
+        (*(s8 *)((u8 *)(arg0) + 0x106)) = arg4;
+        (*(s32 *)((u8 *)(arg0) + 0x108)) = arg5;
+        return 1;
+    }
+    return 0;
+}
 
 void updateObjectFlags110(void *arg0, s32 arg1, s32 arg2) {
     (*(u16 *)((u8 *)(arg0) + 0x110)) = (u16) (((*(u16 *)((u8 *)(arg0) + 0x110)) | arg1) & ~arg2);
