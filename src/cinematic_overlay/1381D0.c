@@ -475,7 +475,18 @@ s32 isCinematicActive(void) {
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicStageAdvancer);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicDeactivator);
+void removeLookupTableEntry(void *, void *);
+void requestViFeatureChange(s32);
+
+void cinematicDeactivator(void *arg0) {
+    if (D_cinematic_overlay_800B0934 != 0) {
+        removeLookupTableEntry(arg0, *(void **)(D_cinematic_overlay_800B0934 + 0xC));
+        D_cinematic_overlay_800B0934 = 0;
+        if (!(*(u32 *)(&gBootConfig + 0x44) & 0x80)) {
+            requestViFeatureChange(8);
+        }
+    }
+}
 
 s32 getCinematicStateSubObject(void *arg0) {
     return (*(s32 *)((u8 *)(arg0) + 0xC));
