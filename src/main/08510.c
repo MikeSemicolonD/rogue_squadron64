@@ -568,7 +568,13 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", transformLightByType);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", appendRdpStateDl);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", selectRenderPresetByIndex);
+extern s32 D_main_80037760[];
+extern s32 D_main_bss_8011A858;
+
+s32 selectRenderPresetByIndex(u8 arg0) {
+    D_main_bss_8011A858 = D_main_80037760[arg0];
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", selectSecondaryPresetByIndex);
 
