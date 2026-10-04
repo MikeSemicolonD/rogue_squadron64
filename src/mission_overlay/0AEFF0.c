@@ -61,7 +61,17 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", playSpeechClipOncePerLeve
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", resetSpeechOncePerLevelFlag);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", setPlayerSlotPositionVec3);
+typedef struct {
+    s32 x;
+    s32 y;
+    s32 z;
+} PlayerSlotVec3;
+
+void setPlayerSlotPositionVec3(u8 idx, PlayerSlotVec3 *v) {
+    struct player_struct *p = gPlayers;
+
+    *(PlayerSlotVec3 *)&p[idx].inner.unk178[8] = *v;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", destroySceneNpcsAndUnlink);
 
