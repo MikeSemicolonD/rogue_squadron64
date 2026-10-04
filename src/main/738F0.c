@@ -75,7 +75,18 @@ INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnGatedDistanceEffectPair);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnRandomParticleWithParent);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", distanceFromCameraToPoint);
+extern f32 vec3Length(Vec3f);
+extern u8 *D_main_bss_80138D1C;
+
+f32 distanceFromCameraToPoint(f32 *arg0) {
+    Vec3f d;
+    u8 *cam = D_main_bss_80138D1C + 0x28;
+
+    d[0] = arg0[0] - *(f32 *)(cam + 0x24);
+    d[1] = arg0[1] - *(f32 *)(cam + 0x28);
+    d[2] = arg0[2] - *(f32 *)(cam + 0x2C);
+    return vec3Length(d);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnEffectNpcWithRampedScale);
 
