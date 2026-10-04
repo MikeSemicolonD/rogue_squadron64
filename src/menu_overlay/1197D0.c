@@ -208,7 +208,23 @@ void destroyPlayerShipRecord(s32 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", spawnProjectileObject);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", copyMorphTargetVertices);
+typedef struct {
+    u8 pad0[8];
+    u32 count;
+    u8 *morph;
+    u8 pad10[4];
+    u16 *verts;
+} MorphMesh;
+
+void copyMorphTargetVertices(MorphMesh *arg0, MorphMesh *arg1, u16 base) {
+    u32 i;
+
+
+
+    for (i = 0; i < arg0->count; i++) {
+        (*(u16 **)(arg0->morph + 0xC))[i] = arg0->verts[i] = arg1->verts[i + base];
+    }
+}
 
 #if 0
 // Text matching, have not check if rodata works yet
