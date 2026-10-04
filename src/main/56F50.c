@@ -122,7 +122,31 @@ void freeAllHobFiles(void) {
 INCLUDE_ASM("asm/nonmatchings/main/56F50", freeAllHobFiles);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", createMeshInstanceFromSource);
+extern void clearStructPair2C30(void *);
+
+u8 *createMeshInstanceFromSource(u8 *src, u8 *inst) {
+    if (inst == NULL) {
+        inst = rs_malloc(0xB4, 0);
+    }
+    *(u8 **)(inst + 0) = src;
+    *(u16 *)(src + 0x3A) += 1;
+    *(s32 *)(inst + 4) = 0;
+    *(u16 *)(inst + 8) = 1;
+    *(u8 *)(inst + 0xA) = 0;
+    *(u8 *)(inst + 0xB) = 0;
+    *(s32 *)(inst + 0x18) = 0;
+    *(s32 *)(inst + 0x14) = 0;
+    *(s32 *)(inst + 0xC) = 0;
+    *(s32 *)(inst + 0x10) = 0;
+    *(u8 **)(inst + 0x1C) = inst + 0x58;
+    *(s32 *)(inst + 0x20) = 0;
+    *(s32 *)(inst + 0x5C) = 0;
+    *(s32 *)(inst + 0x58) = 0;
+    *(s32 *)(inst + 0x60) = *(s32 *)(*(u8 **)(src + 0x18) + 4);
+    *(s32 *)(inst + 0x64) = 4;
+    clearStructPair2C30(inst + 0x58);
+    return inst;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", setMeshInstanceLodAndRebuildNodes);
 
