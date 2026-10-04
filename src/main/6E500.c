@@ -138,7 +138,40 @@ void applyAccountUnlocksToSettings(void) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/6E500", applyAccountUnlocksToSettings);
+void applyAccountUnlocksToSettings(void) {
+    u32 i;
+
+    gGameSettings.unlockAndSettingsFlags[1] = gSaveDataBody.unk00;
+    for (i = 0; (u8)i < 1; i++) {
+        gGameSettings.unlockAndSettingsFlags[(u8)i] = (gGameSettings.unlockAndSettingsFlags[(u8)i] & ~0x8B) | (gSaveDataBody.unk04 & 0x8B);
+    }
+    gGameSettings.cheatCodeFlags[0] = 0;
+    gGameSettings.cheatCodeFlags[1] = 0;
+    gGameSettings.musicVolume = gSaveDataBody.musicVolume;
+    gGameSettings.soundFxVolume = gSaveDataBody.soundFxVolume;
+    gGameSettings.speechVolume = gSaveDataBody.speechVolume;
+    gGameSettings.controllerSetting = gSaveDataBody.controllerSetting;
+    gGameSettings.languageSelect = gSaveDataBody.unkA3[5];
+    i = 0;
+    do {
+        u8 idx = i;
+        if ((gSaveDataBody.cheatCodeFlags[idx >> 5] & (1 << (i & 0x1F))) && isCheatCodeIndexAllowed(idx)) {
+            gGameSettings.cheatCodeFlags[idx >> 5] = gGameSettings.cheatCodeFlags[idx >> 5] | (1 << (i & 0x1F));
+        }
+        i++;
+    } while ((u8)i < 0x1D);
+    if (gGameSettings.unk23 == 0) {
+        gGameSettings.unlockAndSettingsFlags[1] &= ~1;
+        if (gSaveDataBody.unkA3[6] == 1) {
+            serializeSettingsToSaveAndPersist();
+        }
+    } else {
+        if (gSaveDataBody.unkA3[6] == 0) {
+            gGameSettings.unlockAndSettingsFlags[1] |= 1;
+            serializeSettingsToSaveAndPersist();
+        }
+    }
+}
 #endif
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", serializeSettingsToSaveAndPersist);
