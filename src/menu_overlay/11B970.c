@@ -425,7 +425,34 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMaterialTextureByName);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", easeAnimationKeyframe);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", cycleAccountLabelText);
+extern s8 D_menu_overlay_800CF161;
+extern u8 D_menu_overlay_800CF190[];
+s32 parseAccountDataBytes(s32, void *);
+void setupCraftAnimationFlagSet(void *);
+
+s32 cycleAccountLabelText(void *arg0) {
+    u8 sp10[0x18];
+    s8 k;
+    u8 *e;
+    s32 a0;
+    u8 *p;
+
+    k = (3 - D_menu_overlay_800CF161) % 3;
+    *(u8 **)((u8 *)arg0 + 8) = D_menu_overlay_800CF190 + k * 0x48;
+    e = D_menu_overlay_800CF190 + k * 0x48 - 0x10;
+    *(char **)((u8 *)arg0 + 0xC) = getGameOrFrontText(e[0x14] + 0x92);
+    *(u8 **)((u8 *)arg0 + 0x10) = D_menu_overlay_800CF190 + ((k + 1) % 3) * 0x48;
+    *(u8 **)((u8 *)arg0 + 0x14) = D_menu_overlay_800CF190 + ((k + 2) % 3) * 0x48;
+    a0 = *(s32 *)(e + 0xC);
+    if (a0 != 0) {
+        parseAccountDataBytes(a0, sp10);
+        p = sp10;
+    } else {
+        p = NULL;
+    }
+    setupCraftAnimationFlagSet(p);
+    return k & 0xFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateBannerOscillation);
 
