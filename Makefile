@@ -67,7 +67,7 @@ build/tyler.z64: build/tyler.elf
 	$(OBJCOPY) $< $@ -O binary
 
 build/tyler.elf: $(O_FILES) $(LDSCRIPT) libultra_aliases.ld
-	$(LD) -Map=$@.map -EB -T $(LDSCRIPT) -T undefined_funcs_auto.txt -T undefined_syms_auto.txt -T libultra_aliases.ld -G0 -o $@
+	$(LD) -Map=$@.map -EB -T $(LDSCRIPT) -T undefined_funcs_auto.txt -T undefined_syms_auto.txt -T libultra_aliases.ld -G0 --defsym D_238C2=0x238C2 --defsym D_47490=0x47490 -o $@
 
 $(BUILD_DIRS):
 	mkdir -p $@
