@@ -1,7 +1,45 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D38A0", npcInitWithMotionParams);
+struct TcObj { u8 pad0[0x30]; s32 f30; u8 *f34; s32 f38; u8 pad3C[0x20]; s16 f5C; s16 f5E; u8 pad60[0x65]; u8 fC5; };
+typedef struct { u8 pad0[4]; struct TcObj *obj; } TcActor;
+extern s32 D_main_bss_80137CE4;
+s32 npcTickEffectChannelA();
+s32 npcTickEffectChannelB();
+s32 npcTickEffectChannelWithSlotDispatch();
+void setNpcHealth(s32, u8 *, u8 *);
+void setObjectDetailLevel(s32, s32);
+void initActorMotionParams(s32, f32, f32, f32, f32);
+void initObjectAnimSubstruct(s32, f32, f32, f32, f32, s32 (*)(), s32, f32, f32, s32);
+
+void npcInitWithMotionParams(TcActor *arg0) {
+    struct TcObj *o = arg0->obj;
+    u8 *e = o->f34;
+    u8 *t;
+
+    o->f5E = 0;
+    o->f5C = 0;
+    setNpcHealth(o->f38, e + 0x6C, e);
+    setObjectDetailLevel(o->f38, *(s32 *)(o->f34 + 0xBC));
+    switch (o->fC5) {
+    case 0:
+        t = (u8 *)(D_main_bss_80137CE4 * 4) + (s32)e;
+        initActorMotionParams(o->f38, *(f32 *)(t + 0xC8), *(f32 *)(t + 0xCC), *(f32 *)(t + 0xC8), *(f32 *)(t + 0xCC));
+        initObjectAnimSubstruct(o->f38, *(f32 *)(e + 0xD0), *(f32 *)(e + 0xD4), *(f32 *)(e + 0xD8), *(f32 *)(e + 0xDC), npcTickEffectChannelA, 0, 10.0f, 15.0f, 0);
+        break;
+    case 1:
+        t = (u8 *)(D_main_bss_80137CE4 * 4) + (s32)e;
+        initActorMotionParams(o->f38, *(f32 *)(t + 0xC8), *(f32 *)(t + 0xCC), *(f32 *)(t + 0xC8), *(f32 *)(t + 0xCC));
+        initObjectAnimSubstruct(o->f38, *(f32 *)(e + 0xD0), *(f32 *)(e + 0xD4), *(f32 *)(e + 0xD8), *(f32 *)(e + 0xDC), npcTickEffectChannelB, 0, 10.0f, 15.0f, 0);
+        break;
+    case 2:
+        t = (u8 *)(D_main_bss_80137CE4 * 4) + (s32)e;
+        initActorMotionParams(o->f38, *(f32 *)(t + 0xCC), *(f32 *)(t + 0xD0), *(f32 *)(t + 0xCC), *(f32 *)(t + 0xD0));
+        initObjectAnimSubstruct(o->f38, *(f32 *)(e + 0xD4), *(f32 *)(e + 0xD8), *(f32 *)(e + 0xDC), *(f32 *)(e + 0xE0), npcTickEffectChannelB, 0, 10.0f, 15.0f, 0);
+        initObjectAnimSubstruct(o->f38, *(f32 *)(e + 0xF0), *(f32 *)(e + 0xF4), *(f32 *)(e + 0xF8), *(f32 *)(e + 0xFC), npcTickEffectChannelWithSlotDispatch, 1, 5.0f, 50.0f, 0);
+        break;
+    }
+}
 
 struct TaObj { u8 pad0[0x24]; u8 pos[0xC]; s32 f30; u8 *f34; s32 f38; u8 pad3C[0x20]; s16 f5C; u8 pad5E[2]; f32 f60; };
 typedef struct { u8 pad0[4]; struct TaObj *obj; } TaActor;
