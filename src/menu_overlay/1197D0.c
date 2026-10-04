@@ -191,7 +191,20 @@ s32 isPlayerShipActive(void) {
     return D_menu_overlay_800CC85C != 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", destroyPlayerShipRecord);
+void removeLookupTableEntry(s32, s32);
+void requestViFeatureChange(s32);
+extern u8 gBootConfig[];
+
+void destroyPlayerShipRecord(s32 arg0) {
+    if (D_menu_overlay_800CC85C != 0) {
+        removeLookupTableEntry(arg0, *(s32 *)((u8 *)D_menu_overlay_800CC85C + 0xC));
+        D_menu_overlay_800CC85C = 0;
+        D_menu_overlay_800CC850--;
+        if (!(*(s32 *)(gBootConfig + 0x44) & 0x80)) {
+            requestViFeatureChange(8);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", spawnProjectileObject);
 
