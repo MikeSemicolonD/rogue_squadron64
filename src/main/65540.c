@@ -11,7 +11,55 @@ INCLUDE_ASM("asm/nonmatchings/main/65540", load_dat_file_assets);
 
 INCLUDE_ASM("asm/nonmatchings/main/65540", setupNpcUpdateFunctions);
 
-INCLUDE_ASM("asm/nonmatchings/main/65540", spawnDatStructureNpcByType);
+s32 slotDispatcherIter(u16, s32, void *);
+s16 spawnNpcWithSubtype(void *, void *, s32, s32);
+void npcTieVariantUpdate();
+void npcShuttleUpdate();
+void npcDebrisFieldUpdate();
+void npcAtStUpdate();
+void npcGroundTroopUpdate();
+
+u16 spawnDatStructureNpcByType(u8 *item) {
+    u16 slot;
+    u16 id;
+    f32 dt;
+
+    slot = 0xFFFF;
+    switch (**(u16 **)(item + 0xC)) {
+        case 0xC:
+        case 0x12:
+        case 0x13:
+        case 0x29:
+        case 0x43:
+            slot = spawnNpcWithSubtype(npcTieVariantUpdate, item, 0x22, 0x55);
+            break;
+        case 0x24:
+        case 0x2C:
+        case 0x48:
+        case 0x4D:
+            slot = spawnNpcWithSubtype(npcShuttleUpdate, item, 0x22, 0x55);
+            break;
+        case 0x21:
+            slot = spawnNpcWithSubtype(npcDebrisFieldUpdate, item, 0x22, 0x55);
+            break;
+        case 0x1F:
+            slot = spawnNpcWithSubtype(npcAtStUpdate, item, 0x22, 0x55);
+            break;
+        case 0x3B:
+        case 0x3C:
+        case 0x3D:
+        case 0x50:
+            slot = spawnNpcWithSubtype(npcGroundTroopUpdate, item, 0x22, 0x55);
+            break;
+    }
+    id = slot;
+    dt = 1.0f / 30.0f;
+    if (id != 0xFFFF) {
+        (*(s16 **)(item + 0xC))[3] = slot;
+        slotDispatcherIter(id, 3, &dt);
+    }
+    return id;
+}
 
 extern u8 D_main_bss_80130B63;
 
