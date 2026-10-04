@@ -1,7 +1,11 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/97D20", resetSongSubsystemCounter);
+extern s16 D_main_bss_80152A10;
+
+void resetSongSubsystemCounter(void) {
+    D_main_bss_80152A10 = 0;
+}
 
 static __inline__ u8 *findSndChunkEntry(u8 *p, u16 id) {
     while (*(s32 *)p != -1) {

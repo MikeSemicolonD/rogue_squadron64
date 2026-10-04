@@ -71,6 +71,9 @@ build/src/main/94F50.s: N64CC = $(GCC272SN0001)
 build/src/main/97D20.s: N64CC = $(GCC272SN0001)
 build/src/main/9A850.s: N64CC = $(GCC272SN0001)
 build/src/zlib/%.s: N64CC = $(GCC272SN0001)
+build/src/main/08510.s: N64CC = $(GCC272SN0001)
+build/src/main/97D20.s: N64CC = $(GCC272SN0001)
+build/src/main/98960.s: N64CC = $(GCC272SN0001)
 build/src/zlib/%.s: CFLAGS = -quiet -O3 -G0 -mips3
 
 build/src/%.i: src/%.c | $(BUILD_DIRS)

@@ -298,7 +298,21 @@ s32 readFirstNameTreeEntry(void **arg0, void *arg1) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", readFirstNameTreeEntryFromNode);
+s32 readFirstNameTreeEntryFromNode(void *arg0) {
+    void *temp_s0;
+
+    temp_s0 = (*(void **)((u8 *)(arg0) + 8));
+    if ((temp_s0 != NULL) && ((*(u8 *)((u8 *)(temp_s0) + 0)) != 0)) {
+        rs_strcpy(arg0, temp_s0);
+        (*(s16 *)((u8 *)(arg0) + 6)) = (s16) (*(u8 *)((u8 *)(temp_s0) + 7));
+        (*(void **)((u8 *)(arg0) + 8)) = (void *) (temp_s0 + ((*(u8 *)((u8 *)(temp_s0) + 7)) * 0x24) + 8);
+        return 1;
+    }
+    (*(void **)((u8 *)(arg0) + 8)) = NULL;
+    (*(s8 *)((u8 *)(arg0) + 0)) = 0;
+    (*(s16 *)((u8 *)(arg0) + 6)) = 0;
+    return 0;
+}
 
 extern u16 D_main_bss_8013A490;
 extern u8 D_main_8013A498[];
