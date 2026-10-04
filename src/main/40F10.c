@@ -25,7 +25,88 @@ void freeNpcBurstSpawnerTables(void) {
     rs_free(D_main_bss_80130C04);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", initNpcContextFromTransform);
+void vec3Cross(void *, void *, void *);
+
+typedef struct {
+    s32 a, b, c;
+} NpcV3w;
+
+typedef struct {
+    f32 f0;
+    NpcV3w v4;
+    f32 f10, f14, f18, f1C;
+    s32 w20, w24;
+    f32 f28, f2C;
+    s32 w30, w34;
+    f32 f38;
+    s16 h3C, h3E;
+    f32 f40, f44, f48, f4C, f50, f54, f58, f5C;
+    s32 w60;
+    s32 w64;
+    s32 w68;
+    u8 b6C, b6D;
+    u8 pad6E[2];
+    s16 h70, h72, h74, h76;
+    s32 w78;
+    s16 h7C;
+} NpcCtxInit;
+
+void initNpcContextFromTransform(NpcCtxInit *self, u8 *tf) {
+    f32 one;
+    f32 c10;
+    f32 c2;
+    f32 c1;
+    f32 c07;
+    f32 c5;
+    f32 zero;
+    s32 g;
+
+    if (tf != NULL) {
+        self->v4 = *(NpcV3w *)tf;
+        *(NpcV3w *)&self->w20 = *(NpcV3w *)(tf + 0xC);
+        vec3Cross(&self->f2C, tf + 0xC, tf + 0x18);
+    } else {
+        __asm__ volatile("lwc1 %0, D_main_8003A4B0" : "=f"(one));
+        self->w20 = 0;
+        self->w24 = 0;
+        self->w30 = 0;
+        self->w34 = 0;
+        self->f28 = one;
+        self->f2C = one;
+    }
+    g = D_main_bss_80130C08;
+    __asm__ volatile("mtc1 $zero, %0" : "=f"(zero));
+    __asm__ volatile("lwc1 %0, D_main_8003A4B4" : "=f"(c10));
+    __asm__ volatile("lwc1 %0, D_main_8003A4B8" : "=f"(c2));
+    __asm__ volatile("lwc1 %0, D_main_8003A4BC" : "=f"(c1));
+    __asm__ volatile("lwc1 %0, D_main_8003A4C0" : "=f"(c07));
+    __asm__ volatile("lwc1 %0, D_main_8003A4C4" : "=f"(c5));
+    self->h70 = 0xC;
+    self->h3E = 0;
+    self->h3C = 0;
+    self->w68 = 0;
+    self->b6C = 0;
+    self->b6D = 0;
+    self->h72 = 0;
+    self->h74 = 0;
+    self->h7C = 1;
+    self->w78 = 0;
+    self->f18 = zero;
+    self->f14 = zero;
+    self->f10 = zero;
+    self->f1C = zero;
+    self->f38 = zero;
+    self->f40 = c10;
+    self->f44 = zero;
+    self->f48 = zero;
+    self->f4C = c2;
+    self->f50 = zero;
+    self->f54 = zero;
+    self->f58 = c1;
+    self->f5C = c07;
+    *(volatile s32 *)&self->w64 = g;
+    *(volatile f32 *)&self->f0 = c5;
+}
 
 s32 randomBurstNpcHandlerVariant(struct D_80130BB8_type *self, u16 arg1, void *arg2);
 

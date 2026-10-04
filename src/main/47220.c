@@ -3,7 +3,73 @@
 
 #include "main/47220.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/47220", parseDatItemCommon);
+typedef struct {
+    s32 pad0;
+    f32 originX;
+    f32 originZ;
+    u8 padC[8];
+    s32 width;
+    s32 depth;
+    u16 *cells;
+} DatGridInfo;
+
+typedef struct {
+    u16 prev;
+    u16 next;
+    u16 type;
+    s16 cell;
+    s32 item;
+} DatNode;
+
+extern s32 D_main_bss_801375D8;
+extern s32 gDoublyLinkedNodePool12;
+extern u16 D_main_bss_80136FC0;
+
+void parseDatItemCommon(s32 arg0, u8 *arg1) {
+    s32 x;
+    s32 z;
+    u16 head;
+    s32 idx;
+    s32 cell;
+    s32 off;
+    DatNode *node;
+    u16 v;
+
+    x = (s32)((*(f32 *)arg1 - ((DatGridInfo *)&D_main_bss_801375D8)->originX) * 0.25f);
+    if (x < 0) {
+        x = 0;
+    } else if (x >= ((DatGridInfo *)&D_main_bss_801375D8)->width) {
+        x = ((DatGridInfo *)&D_main_bss_801375D8)->width - 1;
+    }
+    z = (s32)((*(f32 *)(arg1 + 8) - ((DatGridInfo *)&D_main_bss_801375D8)->originZ) * 0.25f);
+    if (z < 0) {
+        z = 0;
+    } else if (z >= ((DatGridInfo *)&D_main_bss_801375D8)->depth) {
+        z = ((DatGridInfo *)&D_main_bss_801375D8)->depth - 1;
+    }
+    head = D_main_bss_80136FC0;
+    idx = head & 0xFFFF;
+    cell = x + z * ((DatGridInfo *)&D_main_bss_801375D8)->width;
+    if (idx != 0xFFFF) {
+        node = (DatNode *)(gDoublyLinkedNodePool12 + idx * 12);
+        v = node->next;
+        D_main_bss_80136FC0 = v;
+        if (v != 0xFFFF) {
+            *(u16 *)(D_main_bss_80136FC0 * 12 + gDoublyLinkedNodePool12) = 0xFFFF;
+        }
+        off = cell * 2;
+        v = *(u16 *)(off + (s32)((DatGridInfo *)&D_main_bss_801375D8)->cells);
+        node->next = v;
+        if (v != 0xFFFF) {
+            *(u16 *)(node->next * 12 + gDoublyLinkedNodePool12) = head;
+        }
+        node->prev = 0xFFFF;
+        node->cell = cell;
+        node->type = 3;
+        node->item = arg0;
+        *(u16 *)(off + (s32)((DatGridInfo *)&D_main_bss_801375D8)->cells) = head;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/47220", loadDatFile);
 

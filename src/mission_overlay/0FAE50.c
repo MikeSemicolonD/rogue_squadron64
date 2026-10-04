@@ -7,13 +7,50 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800F
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800FA6A4);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", flashMissionAlertObjectsAndPrint);
-
 typedef struct {
     u8 pad0[0x1A];
     u16 mask;
     u8 pad1C[8];
 } MissionObjectiveDef;
+
+extern u8 D_main_bss_80137CF4;
+extern u8 D_main_bss_80138838;
+extern u8 D_main_bss_80138925;
+extern u16 D_main_bss_80130B88[][3];
+extern MissionObjectiveDef D_mission_overlay_8010BE18[];
+extern u16 D_mission_overlay_8010BFA8[];
+extern u32 D_main_bss_80130B4C;
+extern char D_main_bss_80138840[];
+typedef struct {
+    u8 active;
+    u8 pad1[0x277];
+    f32 unk278;
+    f32 unk27C;
+    f32 unk280;
+    u8 pad284[0x14];
+    s32 unk298;
+    s32 unk29C;
+} EndMissionPlayer;
+
+extern EndMissionPlayer gPlayers[];
+
+void flashMissionAlertObjectsAndPrint(void) {
+    s32 i;
+
+    for (i = 0; i < 1; i++) {
+        if (gPlayers[i].active != 0 && (D_main_bss_80130B88[i][0] & *(u16 *)D_mission_overlay_8010BE18[i].pad0) && D_main_bss_80137CF4 == 0 && D_main_bss_80138838 == 0) {
+            gPlayers[i].unk298 = 0;
+            D_mission_overlay_8010C9E0 |= 0x10;
+            D_main_bss_80138925 = 1;
+            gPlayers[i].unk29C = 0x1D;
+            D_mission_overlay_8010BFA8[i] |= D_mission_overlay_8010BE18[i].mask;
+        }
+    }
+    if (D_main_bss_80130B4C & 0x4000000) {
+        sprintf(D_main_bss_80138840, "\nX %.3f Y %.3f Z %.3f\n", (f64)gPlayers[0].unk278, (f64)gPlayers[0].unk27C, (f64)gPlayers[0].unk280);
+    }
+}
+
 
 s32 countDisplayListChunks(void);
 void serviceRumblePakMotors(void);
@@ -29,14 +66,7 @@ extern u8 D_main_bss_80139C8F;
 extern u16 D_main_bss_80130B88[][3];
 extern MissionObjectiveDef D_mission_overlay_8010BE18[];
 extern u16 D_mission_overlay_8010BFA8[];
-typedef struct {
-    u8 active;
-    u8 pad1[0x297];
-    s32 unk298;
-    s32 unk29C;
-} EndMissionPlayer;
 
-extern EndMissionPlayer gPlayers[];
 
 s32 beginMissionEndTransition(void) {
     s32 i;

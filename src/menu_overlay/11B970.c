@@ -425,7 +425,34 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMaterialTextureByName);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", easeAnimationKeyframe);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", cycleAccountLabelText);
+extern s8 D_menu_overlay_800CF161;
+extern u8 D_menu_overlay_800CF190[];
+s32 parseAccountDataBytes(s32, void *);
+void setupCraftAnimationFlagSet(void *);
+
+s32 cycleAccountLabelText(void *arg0) {
+    u8 sp10[0x18];
+    s8 k;
+    u8 *e;
+    s32 a0;
+    u8 *p;
+
+    k = (3 - D_menu_overlay_800CF161) % 3;
+    *(u8 **)((u8 *)arg0 + 8) = D_menu_overlay_800CF190 + k * 0x48;
+    e = D_menu_overlay_800CF190 + k * 0x48 - 0x10;
+    *(char **)((u8 *)arg0 + 0xC) = getGameOrFrontText(e[0x14] + 0x92);
+    *(u8 **)((u8 *)arg0 + 0x10) = D_menu_overlay_800CF190 + ((k + 1) % 3) * 0x48;
+    *(u8 **)((u8 *)arg0 + 0x14) = D_menu_overlay_800CF190 + ((k + 2) % 3) * 0x48;
+    a0 = *(s32 *)(e + 0xC);
+    if (a0 != 0) {
+        parseAccountDataBytes(a0, sp10);
+        p = sp10;
+    } else {
+        p = NULL;
+    }
+    setupCraftAnimationFlagSet(p);
+    return k & 0xFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateBannerOscillation);
 
@@ -477,7 +504,53 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateTieInterceptorAnimFlag
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", integrateTieInterceptorPhysics);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", spawnTieInterceptorParticles);
+typedef struct {
+    u8 r, g, b, a;
+} TieRgba;
+
+typedef struct {
+    s32 w0, w4, w8;
+    s16 hC, hE, h10, h12, h14, h16, h18, h1A, h1C, h1E, h20, h22;
+    TieRgba c24, c28, c2C, c30;
+} TieParticle;
+
+extern TieRgba mainMenuWhiteColor;
+void *rs_malloc(s32, s32);
+void rs_memset(void *, u8, u32);
+void clearVec4QuadStruct(void *);
+
+s32 spawnTieInterceptorParticles(void) {
+    u8 *obj;
+    TieParticle *p;
+    u32 i;
+
+    obj = rs_malloc(0x137C, 0);
+    rs_memset(obj, 0, 0x137C);
+    clearVec4QuadStruct(obj + 0x20);
+    *(u8 **)(obj + 0x14) = obj + 0x50;
+    *(u8 **)(obj + 0x70) = obj + 0xAC;
+    *(u8 **)(obj + 0x74) = obj + 0xA7C;
+    *(s32 *)(obj + 0x64) = 0xC0;
+    *(u8 **)(obj + 0xB4) = obj + 0xBC;
+    *(s32 *)(obj + 0x5C) = 0x08260001;
+    *(s32 *)(obj + 0xB8) = 0x30;
+    for (i = 0; i < 0x30; i++) {
+        p = (TieParticle *)(obj + 0xBC) + i;
+        p->hE = i * 4 + 1;
+        p->h10 = i * 4 + 3;
+        p->h12 = i * 4 + 2;
+        p->w0 = 0x9E;
+        p->w4 = 0x0D0C9005;
+        p->w8 = 0xFFFF0000;
+        p->hC = i * 4;
+        p->h16 = 0;
+        p->h1A = 0;
+        p->h1E = 0x1000;
+        p->h22 = 0x1000;
+        p->c24 = p->c28 = p->c2C = p->c30 = mainMenuWhiteColor;
+    }
+    return (s32)obj;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", playerTieInterceptorMainUpdate);
 
@@ -571,7 +644,36 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6EB8);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuRandomBackdropScreen);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", loadMenuSceneModelAndMaterials);
+extern char D_menu_overlay_800A6A1C[];
+extern s32 D_menu_overlay_800CF0FC;
+extern s32 *D_menu_overlay_800CFE20[];
+extern u16 D_menu_overlay_800CFA6C;
+s32 applyFlagsToMeshTreeOrList(s32, s32, s32, s32);
+s32 loadVwingMeshAssets(s32, s32);
+s32 load_hmt_and_hob(s32 *, s32, s32, s32);
+s32 walkMeshdef0List(s32 *);
+void *lookupHmtMaterialByName(s32, s32 *, s32);
+void setMaterialFlagByIdInMeshTree(s32 *, s32, u16);
+
+void loadMenuSceneModelAndMaterials(void) {
+    char buf[12];
+    u8 i;
+    s32 idx;
+    s32 *mat;
+
+    load_hmt_and_hob((s32 *)"frontend/medal/medal", 0, 0, 0);
+    D_menu_overlay_800CF0FC = walkMeshdef0List((s32 *)"medal");
+    applyFlagsToMeshTreeOrList(D_menu_overlay_800CF0FC, 0, 0x01060000, 0);
+    for (i = 0; i < 3; i++) {
+        idx = i & 0xFF;
+        sprintf(buf, D_menu_overlay_800A6A1C, idx);
+        mat = (s32 *)((s32 *)((s32 *)lookupHmtMaterialByName(D_menu_overlay_800CF0FC, (s32 *)buf, 0))[4])[2];
+        D_menu_overlay_800CFE20[idx] = mat;
+        mat[3] &= ~8;
+        setMaterialFlagByIdInMeshTree(D_menu_overlay_800CFE20[idx], 0xFFFF, D_menu_overlay_800CFA6C);
+    }
+    loadVwingMeshAssets(0, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateMenuSceneTransform);
 
@@ -1039,7 +1141,52 @@ u8 *createUiSpriteAt(s32 tex, s32 x, s32 y) {
     return (u8 *)s;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateUiSpriteScrollAndAlpha);
+void setLookupEntryField5ByKey(s32, u8 *, s32);
+void layoutHudSpriteScreenRect(s32, s32, u8 *, f32);
+
+typedef struct {
+    u8 pad0[0x1C];
+    f32 unk1C;
+    u8 pad20[4];
+    f32 unk24;
+    u8 pad28[7];
+    u8 unk2F;
+} UiSpriteObj;
+
+void updateUiSpriteScrollAndAlpha(s32 arg0, f32 arg1, f32 arg2, s32 arg3) {
+    UiSpriteObj *obj;
+    UiSpriteObj *s0;
+    s32 a3;
+    f32 t;
+    s32 v;
+    s32 flag;
+
+    obj = (UiSpriteObj *)D_menu_overlay_800CFA68;
+    a3 = arg3 & 0xFF;
+    t = arg1 * 255.0f;
+    s0 = obj + 1;
+    obj->unk24 = (f32)a3 / 127.0f;
+    if (!(t >= 2147483648.0f)) {
+        v = (s32)t;
+    } else {
+        v = (s32)(t - 2147483648.0f) | 0x80000000;
+    }
+    flag = 0;
+    s0->unk2F = v;
+    obj->unk2F = v;
+    s0->unk1C = arg2;
+    obj->unk1C = arg2;
+    if (arg1 != 0.0f && obj->unk24 != 0.0f) {
+        flag = 1;
+    }
+    setLookupEntryField5ByKey(arg0, (u8 *)obj, flag);
+    flag = 1;
+    if (arg1 == 0.0f) {
+        flag = 0;
+    }
+    setLookupEntryField5ByKey(arg0, (u8 *)s0, flag);
+    layoutHudSpriteScreenRect(arg0, arg0, D_menu_overlay_800CFA68 + 0x60, 0.0f);
+}
 
 void activateAnimationKeyframe(s32, s32, u8);
 void setMenuAnimGroupFrame(f32 t) {
