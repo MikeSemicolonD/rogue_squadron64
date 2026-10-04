@@ -60,7 +60,75 @@ INCLUDE_ASM("asm/nonmatchings/main/5D220", checkTrackedNpcProximityForCue);
 
 INCLUDE_ASM("asm/nonmatchings/main/5D220", audioCueDispatcherNpcHandler);
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", collectNearbyNpcsForEffect);
+extern u16 D_main_bss_8013957C;
+s32 findActiveNpcInSlotChain(u16, void *);
+u8 *getNpcContextByIndex(u16);
+s32 revalidateNpcSlotIterator(void *);
+void slotDispatcherIter(u16, s32, void *);
+void transformMeshPartIntoWorld(s32, f32 *);
+
+void collectNearbyNpcsForEffect(u8 *arg0, u16 arg1) {
+    u8 sp10[8];
+    struct {
+        u16 a;
+        u16 b;
+        s16 c;
+        s16 d;
+        s32 e;
+    } ev;
+    f32 v[3];
+    s32 idx;
+    s32 mesh;
+    u32 cur;
+    f32 dist2;
+    f32 r;
+    f32 t;
+    f32 sq;
+    f32 sq2;
+    f32 val;
+    f32 two31;
+    u32 sign;
+    s32 w;
+
+    ev.a = 0xFFFF;
+    ev.b = 0xFFFF;
+    ev.c = 9;
+    ev.e = 0;
+    idx = findActiveNpcInSlotChain(D_main_bss_8013957C, sp10);
+    if ((idx & 0xFFFF) != 0xFFFF) {
+        sign = 0x80000000;
+        two31 = 2147483648.0f;
+        do {
+            cur = idx & 0xFFFF;
+            if (cur != (arg1 & 0xFFFF)) {
+                mesh = *(s32 *)(getNpcContextByIndex(cur) + 0xC);
+                if (mesh != 0) {
+                    transformMeshPartIntoWorld(mesh, v);
+                    v[0] = v[0] - *(f32 *)(arg0 + 0x90);
+                    v[1] = v[1] - *(f32 *)(arg0 + 0x94);
+                    v[2] = v[2] - *(f32 *)(arg0 + 0x98);
+                    r = *(f32 *)(arg0 + 0xD0);
+                    dist2 = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+                    if (dist2 <= r * r) {
+                        __asm__("sqrt.s %0, %1" : "=f"(sq) : "f"(dist2));
+                        t = (r - sq) / r;
+                        __asm__ volatile("sqrt.s %0, %1" : "=f"(sq2) : "f"(t));
+                        val = (f32)*(u16 *)(arg0 + 0xD6) * sq2;
+                        if (!(two31 <= val)) {
+                            ev.d = (s32)val;
+                        } else {
+                            w = (s32)(val - two31);
+                            __asm__("or %0, %1, %2" : "=r"(w) : "r"(w), "r"(sign));
+                            ev.d = w;
+                        }
+                        slotDispatcherIter(idx & 0xFFFF, 5, &ev);
+                    }
+                }
+            }
+            idx = revalidateNpcSlotIterator(sp10);
+        } while ((idx & 0xFFFF) != 0xFFFF);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/5D220", sprayEffectEmitterNpcHandler);
 
