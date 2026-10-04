@@ -43,6 +43,16 @@ INCLUDE_ASM("asm/nonmatchings/main/40F10", assignNpcTargetAndPosition);
 
 INCLUDE_ASM("asm/nonmatchings/main/40F10", setNpcForwardVectorByIndex);
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", resolveNpcContextByIndex);
+void *resolveNpcContextByIndex(u16 idx) {
+    void *ctx = NULL;
+
+    if (idx != 0xFFFF) {
+        slotDispatcherIter(idx, 0x1000, &ctx);
+        if (ctx != NULL) {
+            return ctx;
+        }
+    }
+    return NULL;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/40F10", fake_func_80041EEC);
