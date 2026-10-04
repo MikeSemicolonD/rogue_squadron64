@@ -172,7 +172,42 @@ s32 unregisterServiceWorker(OSId arg0) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/07800", sendServiceMessageAwaitReply);
+s32 sendServiceMessageAwaitReply(OSId from, OSId to, struct ServiceMessage *msg, s32 block) {
+    struct D_801128D0_type *dst;
+    struct D_801128D0_type *src;
+    OSMesgQueue *q;
+    OSMesg *buf;
+
+    dst = D_main_801128D0;
+    while (dst != NULL) {
+        if (dst->theadId == to) break;
+        dst = dst->next;
+    }
+    src = D_main_801128D0;
+    while (src != NULL) {
+        if (src->theadId == from) break;
+        src = src->next;
+    }
+    msg->flags = 0x80;
+    msg->replyQueue = &src->mq;
+    msg->id = D_main_801128D8++;
+loop_7:
+    if (osSendMesg(&dst->mq, msg, 0) == -1) {
+        if (block & 1) {
+            goto loop_7;
+        }
+        return 0;
+    }
+    q = &src->mq;
+    buf = src->mesg2;
+loop_13:
+    osRecvMesg(q, buf, 1);
+    if (((struct ServiceMessage *)src->mesg2[0])->id != msg->id) {
+        osSendMesg(q, buf, 1);
+        goto loop_13;
+    }
+    return 1;
+}
 
 s32 setServiceWorkerPriority(OSId arg0, u8 arg1) {
     struct D_801128D0_type *var_a0;
