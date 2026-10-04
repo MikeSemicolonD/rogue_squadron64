@@ -77,7 +77,32 @@ void npcWingmanUpdateEngineAudio(void *arg0, f32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanState2);
+extern char D_mission_overlay_800A781C[];
+extern char D_mission_overlay_800A7820[];
+extern void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
+extern u8 npcWingmanStateEffectShared(void *, void *, s32, u8);
+extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+
+s32 npcWingmanState2(void *arg0) {
+    u8 tex[0x30];
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+    char *name = NULL;
+
+    switch (npc[0x5E]) {
+    case 0:
+        name = D_mission_overlay_800A781C;
+        break;
+    case 1:
+        name = D_mission_overlay_800A7820;
+        break;
+    }
+    npc[0x5E] ^= 1;
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), name, 0, tex, 0, 0);
+    if (npcWingmanStateEffectShared(npc, tex, 0, npc[0x53]) == 1) {
+        play3DSoundEvent(0, npc, npc + 0x24, 20.0f, 0.2f, 0, 2, 90, 40);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanState3);
 
