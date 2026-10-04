@@ -188,7 +188,21 @@ void initializeNumLives(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", loadAccountDataIntoStruct);
+extern struct account_data D_main_bss_8013A550;
+void packAccountProgressBits(struct account_data *, u8 *, s32);
+struct account_data *loadAccountDataIntoStruct(u8 arg0) {
+    s32 lvl;
+
+    rs_strcpy((u8 *)D_main_bss_8013A550.name, (u8 *)gGameSettings.name);
+    D_main_bss_8013A550.unk04 = gMissionState.playerRank;
+    lvl = gMissionState.maxUnlockedLevel;
+    D_main_bss_8013A550.unk05 = lvl;
+    D_main_bss_8013A550.unk0C = gGameSettings.unlockAndSettingsFlags[0] & 0x7FFE00;
+    D_main_bss_8013A550.accountNumber = gMissionState.accountNumber;
+    packAccountProgressBits(&D_main_bss_8013A550, gMissionState.medalPerLevel, lvl);
+    copyAccountRecordAndMarkActive(&D_main_bss_8013A550, arg0);
+    return &D_main_bss_8013A550;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", parseAccountDataBytes);
 
