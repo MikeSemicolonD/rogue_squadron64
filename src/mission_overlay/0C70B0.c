@@ -73,7 +73,25 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", tickHangarDisplayItemAnim
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", hangarVehicleDisplayNpcHandler);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", applyNpcPositionDrift);
+#include "player.h"
+
+extern u8 *getNpcContextByIndex(u16);
+extern f32 vec3Dot(f32 *, f32 *);
+
+void applyNpcPositionDrift(u8 *obj, f32 *dir) {
+    u8 *npc = *(u8 **)(getNpcContextByIndex(gPlayers[*(s32 *)(obj + 0xB8)].inner.unk28A) + 4);
+
+    if (vec3Dot(dir, (f32 *)(obj + 0x10)) > 0.0f) {
+        *(f32 *)(npc + 8) -= 0.005f;
+    } else {
+        *(f32 *)(npc + 8) += 0.005f;
+    }
+    if ((dir[1] > 0.0f && *(f32 *)(obj + 0x20) > 0.0f) || (dir[1] < 0.0f && *(f32 *)(obj + 0x20) < 0.0f)) {
+        *(f32 *)(npc + 0xC) += 0.005f;
+    } else {
+        *(f32 *)(npc + 0xC) -= 0.005f;
+    }
+}
 
 extern f32 D_mission_overlay_8010A1F8;
 extern f32 D_mission_overlay_8010A1FC;
@@ -106,4 +124,4 @@ void copyCurrentObjectMatrix(ObjMatrix3x4 *out) {
     *out = *(ObjMatrix3x4 *)(*D_mission_overlay_8010C090 + 0x28);
 }
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A6958);
+static u32 D_mission_overlay_800A695C[] __attribute__((section(".rodata"))) = { 0x8FC30014 };
