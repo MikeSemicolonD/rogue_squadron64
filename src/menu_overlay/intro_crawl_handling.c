@@ -302,7 +302,54 @@ typedef struct {
     f32 unk20;
 } VoiceLineStruct;
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", tickMultiPartVoiceLine);
+u8 enqueueSpeechClip(u16, u8);
+u8 isSpeechSlotActive(u8);
+void stopSpeechSlotIfActive(u8);
+s32 tickMultiPartVoiceLine(VoiceLineStruct *v, f32 dt) {
+    if (v == NULL) {
+        return 1;
+    }
+    if (v->unk1E == 1) {
+        if (v->unk1C == 0) {
+            goto done;
+        }
+        v->unk20 += dt;
+        if (v->unk20 > 1.0f) {
+            v->unk20 = 1.0f;
+        }
+        applySpeechVolumeScalar(1.0f - v->unk20);
+        if (v->unk20 == 1.0f) {
+            stopSpeechSlotIfActive(v->unk1C);
+            return 1;
+        }
+        return 0;
+    }
+    if (v->unk1D != 0) {
+        if (v->unk1C != 0) {
+            if (isSpeechSlotActive(v->unk1C)) {
+                return 0;
+            }
+            v->unk1C = 0;
+        } else {
+            v->unk4 += dt;
+            if (v->volume < v->unk4) {
+                v->unk4 = 0;
+                v->unk1D = 0;
+            }
+        }
+        goto ret0;
+    }
+    if (v->unk1A == v->count) {
+done:
+        rs_free(v);
+        return 1;
+    }
+    v->unk1C = enqueueSpeechClip(v->ids[v->unk1A], v->flag);
+    v->unk1D = 1;
+    v->unk1A++;
+ret0:
+    return 0;
+}
 
 VoiceLineStruct *mallocVoiceLineStruct(u16 *ids, f32 volume, u8 flag) {
     VoiceLineStruct *v;
