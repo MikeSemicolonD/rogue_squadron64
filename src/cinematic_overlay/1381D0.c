@@ -326,7 +326,17 @@ void cuts_0058_bubble_sort(struct cuts_file_constant *cutscene) {
 void noopHandler_800AEB30(void) {
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", freeCutsceneResources);
+s32 freeManifestSegmentAssets(s32);
+s32 freeTxtFile();
+extern u8 D_cinematic_overlay_800B0960;
+extern s32 D_main_bss_80137CFC;
+extern u8 gBootConfig;
+
+void freeCutsceneResources(void) {
+    freeTxtFile();
+    freeManifestSegmentAssets(D_main_bss_80137CFC);
+    zmemcpy(&gBootConfig, &D_cinematic_overlay_800B0960, 0x50U);
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", resetCutsceneActionSlots);
 

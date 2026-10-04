@@ -202,9 +202,34 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", setupPlayerCraftDisplayAnim)
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", applyPlayerSlotAnimChannelKeyframe);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", drainAudioAndFinalizeSpeechBuffer);
+s32 anyAudioSlotActive();
+s32 bufferArbiterProducerScanWait();
+s32 destroyPlayerShipRecord(s32, s32 *);
+s32 finalizeCurrentSpeechBuffer();
+s32 shutdownFormatMessageWorker();
+s32 tickMusyXIfActive();
+extern s32 D_menu_overlay_800CDC80;
+extern s32 D_menu_overlay_800CDCDC;
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", tickTimedScreenFadeFloat);
+void drainAudioAndFinalizeSpeechBuffer(void) {
+    tickMusyXIfActive();
+    do {
+
+    } while (!(anyAudioSlotActive() & 0xFF));
+    bufferArbiterProducerScanWait();
+    destroyPlayerShipRecord(D_menu_overlay_800CDCDC, &D_menu_overlay_800CDC80);
+    shutdownFormatMessageWorker();
+    finalizeCurrentSpeechBuffer();
+}
+
+s32 tickMultiPartVoiceLine(s32, f32);
+extern s32 D_menu_overlay_800CDFB0;
+
+void tickTimedScreenFadeFloat(f32 arg0) {
+    if ((D_menu_overlay_800CDFB0 != 0) && ((tickMultiPartVoiceLine(D_menu_overlay_800CDFB0, arg0) & 0xFF) == 1)) {
+        D_menu_overlay_800CDFB0 = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", playExitSoundAndToggleScreenMeshes);
 

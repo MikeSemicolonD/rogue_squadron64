@@ -130,7 +130,15 @@ void teardownAudioListenerNode(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/66FB0", waitForAnyAudioSlot);
 
-INCLUDE_ASM("asm/nonmatchings/main/66FB0", parseLoadedSndSection);
+s32 parseSndFiles(s32, s32, void *, s32, s32);
+extern s32 D_main_bss_80139B4C;
+extern s32 D_main_bss_80139B50;
+extern s32 D_main_bss_80139B54;
+
+s32 parseLoadedSndSection(s32 arg0) {
+    parseSndFiles(D_main_bss_80139B54, arg0 & 0xFFFF, D_main_8009FCD0, D_main_bss_80139B4C, D_main_bss_80139B50);
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/66FB0", freeAudioCacheEntry);
 

@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "main/832A0.h"
 #include "main/94F50.h"
@@ -72,11 +73,25 @@ INCLUDE_ASM("asm/nonmatchings/main/94F50", isSongHandleActive);
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", stopSongByHandle);
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", stopSongByHandleLocked);
+s32 stopSongByHandle(s32);
+
+void stopSongByHandleLocked(s32 arg0) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        stopSongByHandle(arg0);
+        factor5MutexRelease();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", tickSongSequence);
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", tickSongSequenceLocked);
+void tickSongSequenceLocked(s32 arg0) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        tickSongSequence(arg0);
+        factor5MutexRelease();
+    }
+}
 
 #if 0
 void tickActiveSongs(void) {
@@ -94,11 +109,27 @@ INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongPauseStateByHandle);
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", applySongU16ParamCmd);
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", applySongU16ParamCmdLocked);
+s32 applySongU16ParamCmd(s32, s32);
+
+void applySongU16ParamCmdLocked(s32 arg0, s32 arg1) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        applySongU16ParamCmd(arg0, arg1 & 0xFFFF);
+        factor5MutexRelease();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", quiesceSongSlotCmd);
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", quiesceSongSlotCmdLocked);
+s32 quiesceSongSlotCmd(s32);
+
+void quiesceSongSlotCmdLocked(s32 arg0) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        quiesceSongSlotCmd(arg0);
+        factor5MutexRelease();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongParamPairCmd);
 
@@ -114,7 +145,15 @@ INCLUDE_ASM("asm/nonmatchings/main/94F50", setSongChannelParamByHandle);
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", processSongByHandle);
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", playSongIfMusyXActive);
+s32 processSongByHandle(s32, s32, s32);
+
+void playSongIfMusyXActive(s32 arg0, s32 arg1) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        processSongByHandle(arg0, arg1, 0);
+        factor5MutexRelease();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", isSongHandleFree);
 

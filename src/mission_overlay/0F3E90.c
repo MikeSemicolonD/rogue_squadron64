@@ -76,7 +76,19 @@ void resetType1FxFields(void *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", updateType1AnimRamp);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", getActorCurrentValueByType);
+f32 getActorCurrentValueByType(void *arg0) {
+    u8 temp_v1;
+
+    temp_v1 = (*(u8 *)((u8 *)(arg0) + 0x112));
+    switch (temp_v1) {                              /* irregular */
+    case 1:
+        return (*(f32 *)((u8 *)(arg0) + 0x50));
+    case 4:
+        return (*(f32 *)((u8 *)(arg0) + 0x28));
+    default:
+        return 0.0f;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", syncType1ActorFrameToAnchorIfZeroGate);
 

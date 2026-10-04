@@ -14,7 +14,16 @@ INCLUDE_ASM("asm/nonmatchings/main/40F10", computeNpcGroupCentroidAndCull);
 
 INCLUDE_ASM("asm/nonmatchings/main/40F10", spawnRandomBurstNpc);
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", freeNpcBurstSpawnerTables);
+s32 rs_free(s32);
+extern s32 D_main_bss_80130BD0;
+extern s32 D_main_bss_80130C04;
+extern s32 D_main_bss_80130C08;
+
+void freeNpcBurstSpawnerTables(void) {
+    rs_free(D_main_bss_80130BD0);
+    rs_free(D_main_bss_80130C08);
+    rs_free(D_main_bss_80130C04);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/40F10", initNpcContextFromTransform);
 

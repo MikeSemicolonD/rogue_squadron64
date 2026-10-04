@@ -37,7 +37,22 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", triggerStageMusicForNamed
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", triggerStageAmbientForNamedDatItem);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", stopMusicAndResetAudio);
+s32 freeAudioCacheEntry(s32);
+s32 resetMusicSubsystemState(s32);
+s32 tickSongSequenceLocked(s32);
+extern s32 D_mission_overlay_8010C0E0;
+extern s32 D_mission_overlay_8010C140;
+extern u8 D_mission_overlay_8010C260;
+
+s32 stopMusicAndResetAudio(void) {
+    if (D_mission_overlay_8010C260 != 0) {
+        tickSongSequenceLocked(D_mission_overlay_8010C140);
+    }
+    tickSongSequenceLocked(D_mission_overlay_8010C0E0);
+    freeAudioCacheEntry(-1);
+    resetMusicSubsystemState(1);
+    return 1;
+}
 
 s32 preloadSceneReferencedSongs();
 

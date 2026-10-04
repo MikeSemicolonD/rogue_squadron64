@@ -108,7 +108,18 @@ void selectPostCrawlCraft(u8 arg0) {
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", selectPostCrawlCraft);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", shutdownModelViewer);
+s32 resetPlayerSlotChannelTransform(s32);
+s32 rs_free(s32);
+extern s32 D_menu_overlay_800D0360;
+extern s32 D_menu_overlay_800D0364;
+extern s32 D_menu_overlay_800D03CC;
+
+void shutdownModelViewer(void) {
+    rs_free(D_menu_overlay_800D03CC);
+    resetPlayerSlotChannelTransform(3);
+    rs_free(D_menu_overlay_800D0364);
+    rs_free(D_menu_overlay_800D0360);
+}
 
 s32 enqueueMeshForDeferredRelease(s32 *);
 

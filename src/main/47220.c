@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "main/47220.h"
 
@@ -10,7 +11,16 @@ INCLUDE_ASM("asm/nonmatchings/main/47220", updateActiveGridCellState);
 
 INCLUDE_ASM("asm/nonmatchings/main/47220", parseDatItemSubtypes1To5);
 
-INCLUDE_ASM("asm/nonmatchings/main/47220", freeLevelDatBuffers);
+s32 rs_free(s32);
+extern s32 D_main_bss_801375D0;
+extern s32 D_main_bss_801375D8;
+
+void freeLevelDatBuffers(void) {
+    rs_free(D_main_bss_801375D0);
+    D_main_bss_801375D0 = 0;
+    rs_free((*(s32 *)((u8 *)(&D_main_bss_801375D8) + 0)));
+    rs_free((*(s32 *)((u8 *)(&D_main_bss_801375D8) + 0x1C)));
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/47220", getLevelDatItemByName);
 
@@ -35,4 +45,18 @@ s32 isPointXzWithinRangeOfRef(Vec3f arg0, Vec3f arg1) {
 
 static const u32 rodata_padding = 0x8FA605E8;
 
-INCLUDE_ASM("asm/nonmatchings/main/47220", lookupActivePlayerCraftGridCell);
+s32 *getCraftRecordByIdx(s32);
+s32 updateActiveGridCellState(s32 *);
+extern s32 D_8010CA1C;
+extern s32 D_main_bss_801375F8;
+
+void lookupActivePlayerCraftGridCell(void) {
+    s32 *var_v0;
+
+    if (!(D_8010CA1C & 8)) {
+        var_v0 = getCraftRecordByIdx(0);
+    } else {
+        var_v0 = &D_main_bss_801375F8;
+    }
+    updateActiveGridCellState(var_v0);
+}

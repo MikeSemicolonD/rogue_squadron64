@@ -199,7 +199,15 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", isPointInsideTriggerVolum
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getNpcDetailLevelByIndex);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", setObjectDetailLevel);
+void *getNpcContextByIndex(u16);
+
+void setObjectDetailLevel(void *arg0, s16 arg1) {
+    void *temp_v0;
+
+    (*(s16 *)((u8 *)(arg0) + 0x19A)) = arg1;
+    temp_v0 = getNpcContextByIndex((*(u16 *)((u8 *)(arg0) + 0x198)));
+    (*(u16 *)((u8 *)(temp_v0) + 0x14)) = (u16) (((*(u16 *)((u8 *)(temp_v0) + 0x14)) & 0xFF3F) | ((3 - arg1) << 6));
+}
 
 s16 getObjectDetailLevel(void *arg0) {
     return (*(s16 *)((u8 *)(arg0) + 0x19A));

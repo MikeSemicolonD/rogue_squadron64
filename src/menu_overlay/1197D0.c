@@ -89,7 +89,17 @@ s32 getStructField0xC(void *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", rasterizeFormatMessageGlyphs);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", disposeFormatMsgQueueMember);
+s32 freeJfifDecodeState(s32);
+s32 rs_free(s32);
+
+void disposeFormatMsgQueueMember(void *arg0, void *arg1) {
+    if ((*(s32 *)((u8 *)(arg0) + 0x1C)) & 6) {
+        rs_free((*(s32 *)((u8 *)(arg1) + 0x3C)));
+        freeJfifDecodeState((*(s32 *)((u8 *)(arg1) + 0x70)));
+    }
+    rs_free((*(s32 *)((u8 *)(arg1) + 0x38)));
+    freeJfifDecodeState((*(s32 *)((u8 *)(arg1) + 0x6C)));
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", initFormatMessageWorker);
 
@@ -102,7 +112,18 @@ void shutdownFormatMessageWorker(void) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", enqueueFormatMessage);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", pollServiceMessageByte);
+void *tryRecvServiceMessage(s32);
+extern s32 D_main_bss_80138920;
+
+s32 pollServiceMessageByte(u8 *arg0) {
+    void *temp_v0;
+
+    temp_v0 = tryRecvServiceMessage(D_main_bss_80138920);
+    if (temp_v0 != NULL) {
+        *arg0 = (*(u8 *)((u8 *)(temp_v0) + 0x17));
+    }
+    return temp_v0 != NULL;
+}
 
 s32 allocTextRenderTarget(s32, s32);
 extern s32 D_menu_overlay_800CC864;

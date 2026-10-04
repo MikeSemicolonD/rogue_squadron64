@@ -199,7 +199,15 @@ u8 findUnusedAccountId(void) {
     return var_a0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", resetSettingsClearSaveAndReload);
+s32 resetGameSettingsAndMissionStats();
+
+void resetSettingsClearSaveAndReload(void) {
+    resetGameSettingsAndMissionStats();
+    rs_memset((u8 *) &gSaveDataBody, 0U, 0xB0U);
+    loadDefaultHighScores();
+    persistSaveDataBody();
+    serializeSettingsToSaveAndPersist();
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", initIdleDemoTimersAndSave);
 
@@ -269,7 +277,19 @@ void clearAccountRecordAndMarkInactive(u8 arg0) {
     persistSaveDataBody();
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", registerSaveService);
+s32 registerServiceWorker(s32, s32, s32, s32 *);
+s32 startServiceWorker(s32);
+extern s8 D_main_bss_8013A5B1;
+extern s32 saveServiceWorker;
+
+void registerSaveService(s32 arg0) {
+    s32 temp_v0;
+
+    temp_v0 = registerServiceWorker(4, 0x800, arg0 & 0xFF, &saveServiceWorker);
+    D_main_800A0A60 = temp_v0;
+    startServiceWorker(temp_v0);
+    D_main_bss_8013A5B1 = 0;
+}
 
 s32 unregisterServiceWorker(s32);
 
@@ -316,7 +336,17 @@ INCLUDE_ASM("asm/nonmatchings/main/6E500", loadSaveDataIfNotLoaded);
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", persistSaveDataBody);
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", triggerSaveMessage);
+u8 *rs_malloc(s32, s32);
+s32 sendServiceMessage(s32, s32, u8 *, s32);
+extern s32 D_main_bss_80138920;
+
+void triggerSaveMessage(void) {
+    u8 *temp_v0;
+
+    temp_v0 = rs_malloc(0x14, 0);
+    rs_memset(temp_v0, 0U, 0x14U);
+    sendServiceMessage(D_main_bss_80138920, D_main_800A0A60, temp_v0, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", saveServiceWorker);
 
