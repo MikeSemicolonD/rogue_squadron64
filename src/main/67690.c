@@ -203,7 +203,23 @@ INCLUDE_ASM("asm/nonmatchings/main/67690", stopSpeechSlotIfActive);
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", stopAllSpeechSlots);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", advanceSpeechRingAndStopHead);
+extern u8 D_main_bss_80139BA9;
+extern s16 D_main_bss_80139BA8;
+void advanceSpeechRingAndStopHead(void) {
+    u8 idx = D_main_bss_80139BA9;
+    s32 *base = D_main_80139B80;
+    s32 *p = &base[idx];
+
+    if (*p != -1) {
+        if ((u8)isVoiceHandleActive(*p)) {
+            stopVoiceByHandle(*p);
+        }
+        *p = -1;
+    }
+    if (--D_main_bss_80139BA8 < 0) {
+        D_main_bss_80139BA8 += 8;
+    }
+}
 
 extern s32 D_8010CA20;
 extern u8 subtitleSlotsAvailable;
