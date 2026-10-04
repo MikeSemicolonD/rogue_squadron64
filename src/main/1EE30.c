@@ -439,7 +439,47 @@ u16 getTextureLUTFieldAtA(u16 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", releaseTextureLutEntry);
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", initTextureMaterialPools);
+extern s32 D_main_bss_8011A850;
+extern s32 D_main_bss_8011A854;
+extern s32 D_main_bss_8011A7D0;
+extern s32 D_main_bss_8011A7D8;
+extern u16 D_main_bss_8011A8B4;
+
+s32 initTextureMaterialPools(void) {
+    s32 i;
+    u16 a;
+    u16 b;
+    struct D_main_bss_8011A444 *p;
+    u16 *pc;
+
+    a = D_main_bss_80128EF0;
+    b = D_main_bss_80128F04;
+    D_main_bss_80128EF0 = a;
+    D_main_bss_80128F04 = b;
+    D_main_bss_80128F08 = rs_malloc(a * 0x24, 0);
+    D_main_bss_80128EFC = rs_malloc(D_main_bss_80128F04 << 2, 0);
+    D_main_bss_80128F00 = rs_malloc(D_main_bss_80128EF0 << 2, 0);
+    for (i = 0; i < D_main_bss_80128EF0; i++) {
+        D_main_bss_80128F08[i].unk00 = 0;
+    }
+    for (i = 0; i < D_main_bss_80128F04; i++) {
+        D_main_bss_80128EFC[i] = 0;
+    }
+    D_main_bss_8011A7D8 = D_main_bss_8011A850;
+    D_main_bss_8011A7D0 = D_main_bss_8011A854;
+    buildMaterialFreeList();
+    pc = &D_main_bss_8011A8B4;
+    i = 1;
+    if (i < *pc) {
+        p = D_main_bss_8011A444 + 1;
+        do {
+            *(u16 *)p = 0;
+            i++;
+            p++;
+        } while (i < *pc);
+    }
+    return 1;
+}
 
 s32 getTextureDimsBySlot(u16 arg0, u16 *arg1, u16 *arg2) {
     u32 temp_a0_2;
