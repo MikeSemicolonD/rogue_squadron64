@@ -456,11 +456,53 @@ s32 cycleAccountLabelText(void *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateBannerOscillation);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setupCraftAnimationFlagSet);
+void sprintf(char *, const char *, ...);
+void setPlayerSlotAnimationFlag(s32, void *, s32, s32, s32);
+void samplePlayerAnimChannel(s32, u16, f32);
+void *getPlayerSlotFieldAt34(u16, u16);
+void setPlayerSlotEntryRGB(u16, u16, void *);
+void relocateLookupEntryToNewKey(void *, void *, u8);
+void applyCraftSlotAnimations(f32);
+extern void *D_menu_overlay_800CF078;
+extern u8 mainMenuGreyColor[];
+extern u8 mainMenuBlackColor[];
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6964);
+void setupCraftAnimationFlagSet(void *a0) {
+    u8 *arg0 = a0;
+    char sp18[0x40];
+    u8 cnt[4];
+    f32 temp_fs0;
+    s32 i;
+    u8 *p;
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6970);
+    cnt[3] = 0;
+    cnt[2] = 0;
+    cnt[1] = 0;
+    cnt[0] = 0;
+    if (arg0 != NULL) {
+        i = 0;
+        do {
+            p = &cnt[arg0[i & 0xFF]];
+            i += 1;
+            *p += 1;
+        } while ((u32)(i & 0xFF) < 0x13U);
+    }
+    sprintf(sp18, "~%d\n\n~~~~~~~~~%d\n\n~~~~~~~~%d", cnt[3], cnt[2], cnt[1]);
+    setPlayerSlotAnimationFlag(8, "\x04\n\n\n\x03\n\n\n\x02", 1, -0x74, -0x7F);
+    setPlayerSlotAnimationFlag(8, sp18, 2, -0x7C, -0x7F);
+    setPlayerSlotAnimationFlag(8, sp18, 3, -0x7B, -0x7D);
+    relocateLookupEntryToNewKey(D_menu_overlay_800CF078, getPlayerSlotFieldAt34(8, 1), 0xF);
+    relocateLookupEntryToNewKey(D_menu_overlay_800CF078, getPlayerSlotFieldAt34(8, 2), 0xA);
+    relocateLookupEntryToNewKey(D_menu_overlay_800CF078, getPlayerSlotFieldAt34(8, 3), 0xC);
+    setPlayerSlotEntryRGB(8, 1, mainMenuGreyColor);
+    setPlayerSlotEntryRGB(8, 2, mainMenuGreyColor);
+    setPlayerSlotEntryRGB(8, 3, mainMenuBlackColor);
+    samplePlayerAnimChannel(8, 1, 1.0f);
+    temp_fs0 = 1.2f;
+    samplePlayerAnimChannel(8, 2, temp_fs0);
+    samplePlayerAnimChannel(8, 3, temp_fs0);
+    applyCraftSlotAnimations(0.0f);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initVwingHudAndSlotState);
 
