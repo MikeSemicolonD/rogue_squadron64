@@ -1068,7 +1068,52 @@ u8 *createUiSpriteAt(s32 tex, s32 x, s32 y) {
     return (u8 *)s;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateUiSpriteScrollAndAlpha);
+void setLookupEntryField5ByKey(s32, u8 *, s32);
+void layoutHudSpriteScreenRect(s32, s32, u8 *, f32);
+
+typedef struct {
+    u8 pad0[0x1C];
+    f32 unk1C;
+    u8 pad20[4];
+    f32 unk24;
+    u8 pad28[7];
+    u8 unk2F;
+} UiSpriteObj;
+
+void updateUiSpriteScrollAndAlpha(s32 arg0, f32 arg1, f32 arg2, s32 arg3) {
+    UiSpriteObj *obj;
+    UiSpriteObj *s0;
+    s32 a3;
+    f32 t;
+    s32 v;
+    s32 flag;
+
+    obj = (UiSpriteObj *)D_menu_overlay_800CFA68;
+    a3 = arg3 & 0xFF;
+    t = arg1 * 255.0f;
+    s0 = obj + 1;
+    obj->unk24 = (f32)a3 / 127.0f;
+    if (!(t >= 2147483648.0f)) {
+        v = (s32)t;
+    } else {
+        v = (s32)(t - 2147483648.0f) | 0x80000000;
+    }
+    flag = 0;
+    s0->unk2F = v;
+    obj->unk2F = v;
+    s0->unk1C = arg2;
+    obj->unk1C = arg2;
+    if (arg1 != 0.0f && obj->unk24 != 0.0f) {
+        flag = 1;
+    }
+    setLookupEntryField5ByKey(arg0, (u8 *)obj, flag);
+    flag = 1;
+    if (arg1 == 0.0f) {
+        flag = 0;
+    }
+    setLookupEntryField5ByKey(arg0, (u8 *)s0, flag);
+    layoutHudSpriteScreenRect(arg0, arg0, D_menu_overlay_800CFA68 + 0x60, 0.0f);
+}
 
 void activateAnimationKeyframe(s32, s32, u8);
 void setMenuAnimGroupFrame(f32 t) {
