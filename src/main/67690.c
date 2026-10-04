@@ -146,7 +146,13 @@ INCLUDE_ASM("asm/nonmatchings/main/67690", getSpeechPlaybackElapsedTime);
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", isSpeechBusyOrQueued);
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", setSpeechVolume);
+extern f32 D_main_bss_80139C80;
+extern f32 D_main_bss_80139C88;
+void applySpeechVolumeScalar(f32);
+void setSpeechVolume(u8 vol) {
+    D_main_bss_80139C80 = vol / 127.0f;
+    applySpeechVolumeScalar(D_main_bss_80139C88);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", isSpeechSlotActive);
 
@@ -158,4 +164,4 @@ INCLUDE_ASM("asm/nonmatchings/main/67690", advanceSpeechRingAndStopHead);
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", playSpeechClipGated);
 
-INCLUDE_RODATA("asm/nonmatchings/main/67690", D_main_8003C7C4);
+const u32 rodata_pad_67690[2] = { 0x25290080, 0x240A00FF };
