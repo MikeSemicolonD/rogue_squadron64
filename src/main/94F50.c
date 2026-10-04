@@ -145,7 +145,14 @@ void setSongParamPairCmdLocked(s32 arg0, s32 arg1, s32 arg2) {
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", queueAudioVoiceCmdLocked);
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", queueAudioVoiceCmd);
+void queueAudioVoiceCmdLocked(u8, u16, s32, u8);
+void queueAudioVoiceCmd(u8 arg0, u16 arg1, s32 arg2, u8 arg3) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        queueAudioVoiceCmdLocked(arg0, arg1, arg2, arg3);
+        factor5MutexRelease();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", getSongStateByteByHandle);
 
