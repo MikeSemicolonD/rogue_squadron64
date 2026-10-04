@@ -924,7 +924,49 @@ void spawnMenuListItemSprite(void *list, u8 idx) {
     D_menu_overlay_800CFA68[0x74] = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", createUiSpriteAt);
+typedef struct {
+    u8 pad0[8];
+    u16 unk8;
+    u16 unkA;
+    s32 unkC;
+    u8 pad10[4];
+    s32 flags;
+    f32 x;
+    f32 y;
+    u8 pad20[4];
+    f32 unk24;
+    f32 unk28;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 pad2F;
+} UiSprite;
+void *getStructField0xC(s32);
+u8 *createUiSpriteAt(s32 tex, s32 x, s32 y) {
+    UiSprite *s = rs_malloc(0x78, 0);
+    UiSprite *b;
+    s32 *src;
+
+    rs_memset(s, 0, 0x78);
+    src = getStructField0xC(tex);
+    b = &s[1];
+    s->x = b->x = (s16)x;
+    s->y = b->y = (s16)y;
+    s->unk28 = b->unk28 = 1.0f;
+    s->unk24 = b->unk24 = 1.0f;
+    s->flags |= 3;
+    b->flags |= 3;
+    s->unkC = b->unkC = src[3];
+    s->unk8 = b->unk8 = 2;
+    s->unkA = b->unkA = 1;
+    s->r = 0xFF;
+    s->g = 0x8F;
+    s->b = 0x20;
+    b->r = 0x18;
+    b->g = 0x28;
+    b->b = 0x48;
+    return (u8 *)s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateUiSpriteScrollAndAlpha);
 
