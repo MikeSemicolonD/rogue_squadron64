@@ -11,7 +11,7 @@ if [ ! -x "$OPT/rs64venv/bin/pip" ]; then
     python3 -m venv --without-pip "$OPT/rs64venv"
     curl -sSL https://bootstrap.pypa.io/get-pip.py | "$OPT/rs64venv/bin/python" - -q
 fi
-"$OPT/rs64venv/bin/pip" install -q "splat64[mips]"
+"$OPT/rs64venv/bin/pip" install -q "splat64[mips]==0.41.1"
 cat > "$OPT/rs64env.sh" <<ENV
 export PATH=\$HOME/opt/mips/root/usr/bin:\$HOME/opt/rs64venv/bin:\$PATH
 export LD_LIBRARY_PATH=\$HOME/opt/mips/root/usr/lib/x86_64-linux-gnu\${LD_LIBRARY_PATH:+:\$LD_LIBRARY_PATH}
