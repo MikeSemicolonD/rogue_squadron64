@@ -567,7 +567,37 @@ void setAnimSubstructValueIfActive(void *arg0, f32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", generatePerpEmitDirectionWithJitter);
+void vec3Cross(f32 *, f32 *, f32 *);
+s32 rand();
+extern f32 D_mission_overlay_8010C470;
+extern f32 D_mission_overlay_8010C474;
+
+void generatePerpEmitDirectionWithJitter(s8 *arg0, f32 *arg1, s32 arg2) {
+    u8 flag = arg2;
+    f32 sp10[4];
+    f32 sp20[4];
+    f32 sp30[4];
+    f32 sp40[4];
+    f32 *a;
+    f32 *b;
+    f32 f0;
+
+    if (arg0[0x162] != 0) {
+        a = arg1 + 6;
+        b = arg1 + 3;
+        vec3Cross(sp10, a, b);
+        if (!flag) {
+            f0 = (f32)arg0[0x162] * 0.35433072f;
+            D_mission_overlay_8010C470 = ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / f0);
+            D_mission_overlay_8010C474 = ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / f0);
+        }
+        quatFromAxisAngle(sp30, sp10, D_mission_overlay_8010C470);
+        quatFromAxisAngle(sp40, a, D_mission_overlay_8010C474);
+        quatMultiply(sp40, sp30, sp20);
+        rotateVec3ByQuat(sp20, b, b);
+        rotateVec3ByQuat(sp20, a, a);
+    }
+}
 
 s32 tickProgressChannel(s32, f32 *, s32, s32);
 
