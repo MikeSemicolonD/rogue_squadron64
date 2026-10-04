@@ -571,7 +571,36 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6EB8);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuRandomBackdropScreen);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", loadMenuSceneModelAndMaterials);
+extern char D_menu_overlay_800A6A1C[];
+extern s32 D_menu_overlay_800CF0FC;
+extern s32 *D_menu_overlay_800CFE20[];
+extern u16 D_menu_overlay_800CFA6C;
+s32 applyFlagsToMeshTreeOrList(s32, s32, s32, s32);
+s32 loadVwingMeshAssets(s32, s32);
+s32 load_hmt_and_hob(s32 *, s32, s32, s32);
+s32 walkMeshdef0List(s32 *);
+void *lookupHmtMaterialByName(s32, s32 *, s32);
+void setMaterialFlagByIdInMeshTree(s32 *, s32, u16);
+
+void loadMenuSceneModelAndMaterials(void) {
+    char buf[12];
+    u8 i;
+    s32 idx;
+    s32 *mat;
+
+    load_hmt_and_hob((s32 *)"frontend/medal/medal", 0, 0, 0);
+    D_menu_overlay_800CF0FC = walkMeshdef0List((s32 *)"medal");
+    applyFlagsToMeshTreeOrList(D_menu_overlay_800CF0FC, 0, 0x01060000, 0);
+    for (i = 0; i < 3; i++) {
+        idx = i & 0xFF;
+        sprintf(buf, D_menu_overlay_800A6A1C, idx);
+        mat = (s32 *)((s32 *)((s32 *)lookupHmtMaterialByName(D_menu_overlay_800CF0FC, (s32 *)buf, 0))[4])[2];
+        D_menu_overlay_800CFE20[idx] = mat;
+        mat[3] &= ~8;
+        setMaterialFlagByIdInMeshTree(D_menu_overlay_800CFE20[idx], 0xFFFF, D_menu_overlay_800CFA6C);
+    }
+    loadVwingMeshAssets(0, 1);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateMenuSceneTransform);
 
