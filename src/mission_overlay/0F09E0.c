@@ -198,7 +198,17 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", computeTurnVectorAndDista
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", isPointInsideTriggerVolume);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", getNpcDetailLevelByIndex);
+void *getNpcContextByIndex(u16);
+
+s16 getNpcDetailLevelByIndex(u16 index) {
+    u8 *ctx = getNpcContextByIndex(index);
+    u8 *npc = *(u8 **)(ctx + 0x10);
+
+    if (npc != NULL) {
+        return *(s16 *)(npc + 0x19A);
+    }
+    return 3 - (ctx[0x15] >> 6);
+}
 
 void *getNpcContextByIndex(u16);
 
