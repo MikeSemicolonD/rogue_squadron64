@@ -113,6 +113,13 @@ struct D_main_8009FCD4_type D_main_8009FCD4[] = {
 // DO NOT DELETE ME I AM REQUIRED FOR MATCHING
 u32 data_pad_66FB0 = 0x8FC20040;
 
+typedef struct {
+    s32 id;
+    s32 value;
+} AudioChannelEntry;
+extern AudioChannelEntry D_main_bss_80139A00[];
+
+
 INCLUDE_ASM("asm/nonmatchings/main/66FB0", loadSndFiles);
 
 extern void *D_main_bss_80138D1C;
@@ -177,13 +184,6 @@ s32 parseLoadedSndSection(s32 arg0) {
     parseSndFiles(D_main_bss_80139B54, arg0 & 0xFFFF, D_main_8009FCD0, D_main_bss_80139B4C, D_main_bss_80139B50);
     return 1;
 }
-
-typedef struct {
-    s32 id;
-    s32 value;
-} AudioChannelEntry;
-
-extern AudioChannelEntry D_main_bss_80139A00[];
 
 s32 rs_free(s32);
 
