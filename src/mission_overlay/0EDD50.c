@@ -105,7 +105,7 @@ s32 preloadSceneSongsWrapper(void) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", commitStagedSongAndPlay);
 
-void stageSoundCueRequestByIdAndParam(s16 arg0, s16 arg1) {
+static __inline__ void setSoundCueRequest(s16 arg0, s16 arg1) {
     D_mission_overlay_8010C200.unkA = 1;
     D_mission_overlay_8010C200.unk8 = 0x7F;
     D_mission_overlay_8010C200.unk4 = arg0;
@@ -120,7 +120,21 @@ void stageSoundCueRequestByIdAndParam(s16 arg0, s16 arg1) {
     D_mission_overlay_8010C262 = 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", initSoundCueRequest);
+void stageSoundCueRequestByIdAndParam(s16 arg0, s16 arg1) {
+    setSoundCueRequest(arg0, arg1);
+}
+
+void initSoundCueRequest(u32 arg0) {
+    s16 id;
+
+    if (arg0 < 8) {
+        id = 0x1D;
+        if (arg0 == 3) {
+            id = 0x1E;
+        }
+        setSoundCueRequest(id, D_mission_overlay_8010B304[arg0]);
+    }
+}
 
 extern u8 D_mission_overlay_8010C0E8;
 
