@@ -5,7 +5,7 @@ typedef struct RsHeapBlock {
     struct RsHeapBlock *next;
     struct RsHeapBlock *prev;
     s32 size;
-    s32 used;
+    s32 *owner;
 } RsHeapBlock;
 
 extern RsHeapBlock *gRsHeapBase;
@@ -26,11 +26,11 @@ s32 initRsMallocHeap(RsHeapBlock *base, s32 size) {
         base->next = tail;
         base->prev = NULL;
         base->size = avail;
-        base->used = 0;
+        base->owner = NULL;
         tail->next = NULL;
         tail->prev = base;
         tail->size = 0;
-        tail->used = 0;
+        tail->owner = NULL;
         return 1;
     }
     gRsHeapBase = NULL;
@@ -46,7 +46,27 @@ s32 getRsHeapMaxAllocSize(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/05F80", allocRsHeapBlock);
 
-INCLUDE_ASM("asm/nonmatchings/main/05F80", freeRsHeapBlock);
+void freeRsHeapBlock(void *ptr) {
+    RsHeapBlock *b = (RsHeapBlock *)((u8 *)ptr - 0x10);
+
+    if (ptr != NULL) {
+        gRsHeapMaxAlloc += b->size;
+        *b->owner = 0;
+        b->owner = NULL;
+        if (b->next->owner == NULL) {
+            b->size += b->next->size;
+            if (b->next->next != NULL) {
+                b->next = b->next->next;
+            } else {
+                b->next->prev = b;
+            }
+        }
+        if (b->prev != NULL && b->prev->owner == NULL) {
+            b->prev->size += b->size;
+            b->prev->next = b->next;
+        }
+    }
+}
 
 void noopHandler_80005560(void) {
 }
