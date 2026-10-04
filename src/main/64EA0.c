@@ -162,6 +162,17 @@ void *load_asset_with_malloc_flags(char *name, u16 flags) {
     return buf;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/64EA0", load_asset);
+void *load_asset(char *name) {
+    u32 size;
+    void *buf;
+    s32 handle;
+
+    size = get_asset_size_extra(D_main_bss_80137CFC, name);
+    buf = rs_malloc(size, 0);
+    handle = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, name, 0);
+    setupAssetDma(D_main_bss_80138920, 0, handle, 0, size, buf);
+    teardownAssetDma(D_main_bss_80138920, handle);
+    return buf;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/64EA0", fake_func_80064934);
