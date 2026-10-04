@@ -302,7 +302,27 @@ void allocNpcContextArrays(void) {
     D_main_bss_80130BC0 = NULL;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/3F160", destroyNpcContextArrays);
+void destroyTransientNpcSlots(void);
+
+void destroyNpcContextArrays(void) {
+    void *p;
+
+    while (gNpcNextOpenSlot < 0xBF) {
+        destroyTransientNpcSlots();
+    }
+    while ((p = D_main_bss_80130BC0) != NULL) {
+        D_main_bss_80130BC0 = *(void **)((u8 *)p + 0x48);
+        rs_free(p);
+    }
+    while ((p = D_main_bss_80130BC4) != NULL) {
+        D_main_bss_80130BC4 = *(void **)((u8 *)p + 0x48);
+        rs_free(p);
+    }
+    rs_free(gNpcContextArrayPtrs);
+    rs_free(gNpcContextArray);
+    gNpcContextArrayPtrs = NULL;
+    gNpcContextArray = NULL;
+}
 
 u16 spawnNpcWithSubtype(npc_update arg0, void *arg1, u32 arg2, u8 arg3) {
     u16 var_a1;
