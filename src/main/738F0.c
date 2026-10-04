@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", initWaterSprayParticles);
 
@@ -82,7 +83,11 @@ INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnEffectNpcWithRampedScaleExt);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", vec3ExtrapolateFirstOrder);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", buildNpcAnchoredCameraEffectTransformWrapper);
+extern void buildNpcAnchoredCameraEffectTransform(u16, void *, s32, f32);
+
+void buildNpcAnchoredCameraEffectTransformWrapper(u16 arg0, void *arg1, f32 arg2) {
+    buildNpcAnchoredCameraEffectTransform(arg0, arg1, 0, arg2);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnWaterSprayNpc);
 
