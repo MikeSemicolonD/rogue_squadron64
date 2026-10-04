@@ -1016,7 +1016,56 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", buildOrientedFaceGeometry);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", renderLitMeshFaceGroup);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", processMeshdef1ForLod);
+extern f32 D_main_bss_801163C0;
+extern f32 D_main_bss_8011A7D4;
+extern f32 D_main_bss_8011A8CC;
+extern f32 D_main_bss_8011D088;
+extern void clearVec4QuadStruct(f32 *);
+extern void mat3x3InverseInto(f32 *, void *);
+extern void mat3x4Multiply(f32 *, void *, f32 *);
+extern void submitSceneNodeRender(f32 *, f32 *, void *, void *, s32);
+
+s32 processMeshdef1ForLod(u8 *arg0, u8 *arg1, u8 *arg2) {
+    f32 sp18[12];
+    f32 sp48[12];
+    f32 t;
+    f32 v;
+    u32 flags;
+    u8 *l;
+
+    if (*(u32 *)(arg0 + 0xC) & 0x80000) {
+        t = *(f32 *)(arg0 + 0x1C);
+        if (t <= D_main_bss_8011A8CC) {
+            t = D_main_bss_8011A8CC * 256.0f;
+        } else {
+            t = t * 256.0f;
+        }
+        v = (((D_main_bss_8011A7D4 * t + D_main_bss_801163C0) / t) * 511.0f + 511.0f) * 32.0f;
+        D_main_bss_8011D088 = (f32)(u16)(u32)v;
+    }
+    flags = *(u32 *)(arg0 + 0xC);
+    if (flags & 0xC0000000) {
+        return 0;
+    }
+    *(u32 *)(arg0 + 0xC) = (flags | 8) & ~0x10;
+    if (arg1 == 0) {
+        clearVec4QuadStruct(sp18);
+        submitSceneNodeRender(sp18, 0, arg0, 0, 0);
+    } else {
+        mat3x3InverseInto(sp48, arg1);
+        mat3x3InverseInto(sp18, arg2 + 0x2C);
+        mat3x4Multiply(sp18, arg1, sp18);
+        l = *(u8 **)(arg2 + 4);
+        if (l != 0) {
+            do {
+                transformLightByType(l, sp48);
+                l = *(u8 **)l;
+            } while (l != 0);
+        }
+        submitSceneNodeRender(sp18, sp48, arg0, arg2, 0);
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", processSceneNode);
 
