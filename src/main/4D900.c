@@ -2,6 +2,28 @@
 
 #include "main/1D000.h"
 #include "main/4D900.h"
+#include "player.h"
+
+extern void *D_main_8009EB98[];
+void updateEffectObjectTransformPieces(void *, s32, s32, f32, s32);
+typedef struct {
+    u8 unk0;
+    u8 pad1[3];
+    void *unk4;
+    s32 unk8;
+    s32 unkC;
+    s32 unk10;
+    s32 unk14;
+    u8 pad18[0x4C];
+    s32 unk64;
+    s32 unk68;
+    s32 unk6C;
+    s32 unk70;
+    u8 pad74[0xD0];
+} SceneNode;
+extern s32 D_main_bss_80138260;
+extern SceneNode *D_main_bss_80138894;
+extern SceneNode D_main_bss_80138D18[];
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", applyPlayerVehicleStateUpdate);
 
@@ -49,35 +71,25 @@ INCLUDE_ASM("asm/nonmatchings/main/4D900", initEffectObjectFromLevelData);
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", destroyEffectObjectAndAssets);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", deactivateEffectObject);
+void destroyNpcSlotChain(u16);
+void deactivateEffectObject(s32 idx) {
+    u8 *obj;
+
+    *(u16 *)D_main_bss_80138D18[idx].unk4 &= ~1;
+    obj = D_main_bss_80138D18[idx].unk4;
+    if (*(u16 *)(obj + 0xF4) != 0xFFFF) {
+        destroyNpcSlotChain(*(u16 *)(obj + 0xF4));
+        *(u16 *)(obj + 0xF4) = 0xFFFF;
+    }
+    updateEffectObjectTransformPieces(D_main_8009EB98[gPlayers[idx].inner.unk0B4], idx, (s32)((u8 *)&gPlayers[0].inner.posX + idx * sizeof(struct player_struct)), 0.046875f, gPlayers[idx].inner.unk178[0x14]);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", refreshEffectObjectCamerasAndState);
 
-#include "player.h"
-extern void *D_main_8009EB98[];
-void updateEffectObjectTransformPieces(void *, s32, s32, f32, s32);
 void dispatchEffectObjectBehavior(s32 idx, s32 kind, s32 arg2) {
     updateEffectObjectTransformPieces(D_main_8009EB98[kind], idx, arg2, 0.046875f, gPlayers[idx].inner.unk178[0x14]);
 }
 
-typedef struct {
-    u8 unk0;
-    u8 pad1[3];
-    void *unk4;
-    s32 unk8;
-    s32 unkC;
-    s32 unk10;
-    s32 unk14;
-    u8 pad18[0x4C];
-    s32 unk64;
-    s32 unk68;
-    s32 unk6C;
-    s32 unk70;
-    u8 pad74[0xD0];
-} SceneNode;
-extern s32 D_main_bss_80138260;
-extern SceneNode *D_main_bss_80138894;
-extern SceneNode D_main_bss_80138D18[];
 static inline void registerSceneNodeInline(u8 *obj, u8 *node) {
     if (D_main_bss_80138260 == 1) {
         D_main_bss_80138894->unk4 = node;
