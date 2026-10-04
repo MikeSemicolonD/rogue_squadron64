@@ -84,7 +84,13 @@ void findFreeSpeechVoiceSlot(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", shutdownMusyXVoices);
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", accumulateVoiceSampleOffset);
+s32 accumulateVoiceSampleOffset(s32 arg0, s32 arg1, s32 arg2, s32 arg3, s32 index) {
+    if (speechFileLoaded) {
+        consumeVoiceSamples(D_main_80153420[index].data, arg1 + arg3);
+        D_main_bss_80154620[index].sampleOffset += arg1 + arg3;
+    }
+    return 0;
+}
 
 void synchronousDmaTransfer(s32 arg0, s32 arg1, s32 arg2);
 s32 osSendMesg(void *mq, void *msg, s32 flag);
