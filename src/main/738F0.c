@@ -209,7 +209,32 @@ INCLUDE_ASM("asm/nonmatchings/main/738F0", heavyRandomBurstNpcHandler);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", buildNpcAnchoredCameraEffectTransform);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", computeWalkerLimbStrideTargets);
+void computeWalkerLimbStrideTargets(u16 id, f32 *base, f32 *outA, f32 *outB, f32 k) {
+    f32 a[4];
+    f32 b[4];
+    f32 c[4];
+    f32 m[12];
+    mat34CrossRowsAndCopyPos((void *)m, getNpcContextField8(id), 1.0f);
+    transformLimbStrideAnchorsLocal(id, a, b);
+    c[0] = b[0] - a[0] * 0.5f * k;
+    c[1] = b[1] + a[1] * 0.5f * k;
+    c[2] = b[2] - a[2] * 0.5f * k;
+    transformVec3ByMat34(m, c, base);
+    c[0] = b[0] + a[0] * 0.5f * k;
+    c[1] = b[1] + a[1] * 0.5f * k;
+    c[2] = b[2] - a[2] * 0.5f * k;
+    transformVec3ByMat34(m, c, c);
+    outA[0] = c[0] - base[0];
+    outA[1] = c[1] - base[1];
+    outA[2] = c[2] - base[2];
+    c[0] = b[0] - a[0] * 0.5f * k;
+    c[1] = b[1] + a[1] * 0.5f * k;
+    c[2] = b[2] + a[2] * 0.5f * k;
+    transformVec3ByMat34(m, c, c);
+    outB[0] = c[0] - base[0];
+    outB[1] = c[1] - base[1];
+    outB[2] = c[2] - base[2];
+}
 
 typedef struct {
     f32 x, y, z;
