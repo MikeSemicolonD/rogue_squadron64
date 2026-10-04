@@ -70,8 +70,10 @@ INCLUDE_ASM("asm/nonmatchings/main/98960", play3DSoundEventVariant);
 extern s32 D_main_bss_80153414;
 extern u8 gMusyXActiveFlag;
 s32 flagVoiceChainForStop(s32);
+s32 factor5MutexAcquire();
+s32 factor5MutexRelease();
 
-s32 factor5RemoveListNode(void *arg0) {
+inline s32 factor5RemoveListNode(void *arg0) {
     s32 temp_a0;
     void **temp_v1_2;
     void *temp_v1;
@@ -117,7 +119,16 @@ s32 mostlyMusyxFlagGatedHelper(void *arg0) {
     return var_s1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", tickAndReap3DAudioVoices);
+void tickAndReap3DAudioVoices(void) {
+    void *node = (void *)D_main_bss_80153414;
+    void *next;
+
+    while (node != NULL) {
+        next = *(void **)node;
+        factor5RemoveListNode(node);
+        node = next;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", setMusyX3DProperties);
 
