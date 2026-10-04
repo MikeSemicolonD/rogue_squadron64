@@ -238,7 +238,17 @@ void setByteAcrossEntryList(u8 *arg0, u8 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", initCraftSelectVectors);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} CraftSelectVec3;
+void initCraftSelectVectors(CraftSelectVec3 *arg0, CraftSelectVec3 *arg1) {
+    D_menu_overlay_800CD704 = 0.0f;
+    D_menu_overlay_800CD708 = 0.0f;
+    *(CraftSelectVec3 *)&D_menu_overlay_800CDA60 = *arg0;
+    *(CraftSelectVec3 *)&D_menu_overlay_800CDA70 = *arg1;
+}
 
 s32 setPlayerSlotEntryRGB(s32, s32, s32 *);
 s32 startPlayerSlotAnimationChannelExt(s32, s8 *, s32, s32, s32, s32);
