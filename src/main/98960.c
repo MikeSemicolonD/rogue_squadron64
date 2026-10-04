@@ -23,7 +23,18 @@ INCLUDE_ASM("asm/nonmatchings/main/98960", applyVoice3DMixParams);
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", updateActive3DAudioSource);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", isAudioVoiceActive);
+extern u8 gMusyXActiveFlag;
+
+s32 isAudioVoiceActive(u8 *voice) {
+    s32 r;
+
+    if (gMusyXActiveFlag == 0) {
+        r = 0;
+    } else {
+        r = *(u16 *)(voice + 8) & 1;
+    }
+    return r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", play3DSoundEvent);
 

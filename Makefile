@@ -68,6 +68,7 @@ build/src/main/1D000.s: CFLAGS += -ffast-math
 build/src/main/1EE30.s: N64CC = $(GCC272SN0001)
 build/src/main/24570.s: N64CC = $(GCC272SN0001)
 build/src/main/94F50.s: N64CC = $(GCC272SN0001)
+build/src/main/98960.s: N64CC = $(GCC272SN0001)
 build/src/main/9A850.s: N64CC = $(GCC272SN0001)
 build/src/zlib/%.s: N64CC = $(GCC272SN0001)
 build/src/zlib/%.s: CFLAGS = -quiet -O3 -G0 -mips3
