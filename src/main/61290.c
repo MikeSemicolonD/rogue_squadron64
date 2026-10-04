@@ -9,7 +9,26 @@ INCLUDE_ASM("asm/nonmatchings/main/61290", minimalRandomNpcHandler);
 
 INCLUDE_ASM("asm/nonmatchings/main/61290", loadExplosionTextures);
 
-INCLUDE_ASM("asm/nonmatchings/main/61290", spawnRandomScaleEffectDefault);
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    f32 unk8;
+    f32 unkC;
+    u8 unk10;
+} RandomScaleEffectParams;
+
+u16 spawnNpcOfType(void *handler, void *params, u32 arg2, u8 arg3);
+void randomlyScaledEffectNpcHandler(void);
+void randomlyScaledColoredEffectNpcHandler(void);
+void minimalRandomNpcHandler(void);
+
+void spawnRandomScaleEffectDefault(s32 arg0) {
+    RandomScaleEffectParams params;
+
+    params.unk0 = arg0;
+    params.unk8 = 1.0f;
+    spawnNpcOfType(randomlyScaledEffectNpcHandler, &params, 1, 0xA);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61290", spawnNpcType0xAFromTemplate);
 
