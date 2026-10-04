@@ -83,8 +83,6 @@ void freeEffectAssetBuffers(void) {
     rs_free(D_main_bss_80139740);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", spawnByteAnimDebrisDefault);
-
 typedef struct {
     f32 x;
     f32 y;
@@ -98,6 +96,21 @@ typedef struct {
 } ByteAnimDebrisArgs;
 void byteAnimatedDebrisNpcHandler();
 u16 spawnNpcOfType(void *, void *, u32, u8);
+void spawnByteAnimDebrisDefault(f32 *pos) {
+    ByteAnimDebrisArgs args;
+
+    args.x = pos[0];
+    args.y = pos[1] - 1.0f;
+    args.z = pos[2];
+    args.unk28 = 0;
+    args.unk24 = D_main_bss_80139740;
+    args.unk29 = 0x10;
+    args.unk1C = 6.0f;
+    args.unk20 = 0x300;
+    args.unk2C = 20.0f;
+    spawnNpcOfType(byteAnimatedDebrisNpcHandler, &args, 2, 15);
+}
+
 void spawnByteAnimDebrisWithParam(f32 *pos, u8 arg1) {
     ByteAnimDebrisArgs args;
 
