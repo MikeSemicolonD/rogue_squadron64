@@ -2,7 +2,7 @@
 
 Tree: `upstream/master` at `c0a6714` ("More matches, mostly concerning demo stuff"), cloned into WSL (Ubuntu 24.04). ROM SHA-1 `ed42eed1ee2db646ff7ef94ba8c5421d164a4f0d` (matches `roguesquadron.yaml`).
 
-Toolchain: `tools/setup_wsl.sh` (no sudo): binutils/cpp 2.42 from the Ubuntu `mips-linux-gnu` cross packages, wibo 1.2.0, splat in a venv. SN compilers come from the Makefile's own download rules.
+Toolchain: `tools/setup_wsl.sh` (no sudo): binutils 2.42 and cpp 12.4.0 from the Ubuntu `mips-linux-gnu` cross packages, wibo 1.2.0, splat in a venv. SN compilers come from the Makefile's own download rules.
 
 ## Result
 
@@ -22,10 +22,12 @@ Toolchain: `tools/setup_wsl.sh` (no sudo): binutils/cpp 2.42 from the Ubuntu `mi
    - contains 6 hand-added lines that `src/main/01720.c` needs: `<overlay>_BASEROM_START = <overlay>_ROM_START + 0xB0000000` and `<overlay>_ROM_SIZE = SIZEOF(.<overlay>)` for the mission, menu and cinematic overlays.
 
    **Fix on this branch:** those six lines now live in `extra_syms.ld`, which the Makefile passes to ld, so regenerating `roguesquadron.ld` no longer loses them.
-4. **`main_bss` is emitted twice.** With the regenerated script, splat writes the whole `main_bss` segment as one blob, `asm/data/main_bss.bss.s`, and the main segment also links each C file's `.bss`. The result is 89 duplicate symbols (in `04080`, `033C0`, `02420`, `1EE30`, `3F160`, `562A0` and others). The yaml's `main_bss` subsegment list isn't honoured by either splat version. Neither workaround links:
+4. **`main_bss` is emitted twice.** With the regenerated script, splat writes the whole `main_bss` segment as one blob, `asm/data/main_bss.bss.s`, and the main segment also links each C file's `.bss`. That gives 85 duplicate symbols: 04080 33, 033C0 16, 02420 9, 1EE30 7, 3F160 7, zlib/inftrees 5, 562A0 4, 07800 3, 03290 1. Together with items 5 and 6, the link reports 89 `multiple definition` errors and no undefined references. The yaml's `main_bss` subsegment list isn't honoured by either splat version. Neither workaround links:
    - splicing in the committed script's per-subsegment `.bss` list leaves `D_main_bss_8010FCB0`, `D_main_bss_801126E4` and others undefined;
    - dropping the per-file `.bss` leaves about 5000 undefined references.
 5. **`mission_overlay/0BF800` data is defined twice.** The latest upstream commit moved `D_mission_overlay_80109AD0`, `demoStep` and `D_mission_overlay_80109AE4` into `src/mission_overlay/0BF800.c`. The yaml still lists `[0x0010A6D0, data, "mission_overlay/0BF800"]` as asm data. That gives 3 duplicate symbols. The likely fix is changing that entry to `.data`, but only if the C defines the whole range.
+6. **`main/6B8B0` data is defined twice.** `D_main_800A05D0` is in both `src/main/6B8B0.c` and the asm data for the yaml entry `[0xA11D0, data, "main/6B8B0"]`. That gives 1 duplicate symbol and the same likely fix as item 5.
+7. **A splat run also rewrites the committed `undefined_syms_auto.txt`.** It adds `gspF3DEXTextStart`, `rspbootTextStart` and `aspMainTextStart`, which is more evidence that the committed generated files trail the yaml.
 
 ## What's needed from upstream
 
@@ -35,7 +37,7 @@ Ask the maintainer how they build:
 - how `main_bss` is meant to split;
 - whether `make` currently links for them.
 
-With that, items 4 and 5 are probably small yaml fixes. Items 1 and 3 are fixed on `build-check`.
+With that, items 4-6 are probably small yaml fixes. Items 1 and 3 are fixed on `build-check`.
 
 ## Progress (`python3 tools/progress.py`, after splat 0.41.1)
 

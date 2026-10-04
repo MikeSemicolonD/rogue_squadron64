@@ -17,12 +17,25 @@ def segment_of(off):
             return name, (vram + off - start) if vram is not None else None
     return "data/assets", None
 
-def load_map(path):
-    syms = []
+# The overlays share vram 0x800A5130, so symbols are only looked up in the segment's own output sections.
+SEGMENT_SECTIONS = {
+    "main": {".entry", ".main"},
+    "mission_overlay": {".mission_overlay"},
+    "menu_overlay": {".menu_overlay"},
+    "cinematic_overlay": {".cinematic_overlay"},
+}
+
+def load_map(path, segment):
+    allowed = SEGMENT_SECTIONS.get(segment, set())
+    syms, section = [], None
     with open(path, encoding="utf-8", errors="replace") as f:
         for line in f:
+            s = re.match(r"(\.[A-Za-z0-9_]+)\b", line)
+            if s:
+                section = s.group(1)
+                continue
             m = re.match(r"\s+0x([0-9a-fA-F]{8,16})\s+([A-Za-z_][A-Za-z0-9_.]*)\s*$", line)
-            if m:
+            if m and section in allowed:
                 syms.append((int(m.group(1), 16) & 0xFFFFFFFF, m.group(2)))
     syms.sort()
     return syms
@@ -62,7 +75,7 @@ def main():
     if vram is not None:
         print(f"vram 0x{vram:08X}")
         if a.map:
-            hit = symbol_at(load_map(a.map), vram)
+            hit = symbol_at(load_map(a.map, seg), vram)
             if hit:
                 print(f"in {hit[1]} +0x{vram - hit[0]:X}")
     return 1

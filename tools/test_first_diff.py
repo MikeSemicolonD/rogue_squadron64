@@ -8,7 +8,8 @@ def run(a, b, mapfile=None):
     return subprocess.run(cmd, capture_output=True, text=True)
 
 MAP = """
- .text          0x0000000080000400       0x40 build/asm/header.o
+.main           0x0000000080000400    0xa4d30 load address 0x0000000000001000
+ .text         0x0000000080000400       0x40 build/asm/header.o
                 0x0000000080000400                header_sym
  .text          0x0000000080000440      0x100 build/src/main/02490.o
                 0x0000000080000440                funcA
@@ -61,6 +62,29 @@ class T(unittest.TestCase):
         r = run(bad, big)
         self.assertIn("menu_overlay", r.stdout)
         self.assertIn("vram 0x800A5150", r.stdout)
+
+    def test_overlay_symbol_from_own_section(self):
+        ovl_map = """
+.mission_overlay
+                0x00000000800a5130    0x665a0 load address 0x00000000000a5d30
+ .text          0x00000000800a5130      0x100 build/src/mission_overlay/0AA780.o
+                0x00000000800a5130                missionFunc
+.menu_overlay   0x00000000800a5130    0x283f0 load address 0x000000000010c2d0
+ .text          0x00000000800a5130      0x100 build/src/menu_overlay/110410.o
+                0x00000000800a5140                menuFunc
+.menu_overlay_bss
+                0x00000000800cd520     0x2ec0
+                0x00000000800a5148                menuBssSym
+"""
+        (self.d / "ovl.map").write_text(ovl_map)
+        big = self.d / "big.z64"
+        big.write_bytes(bytes(0x110000))
+        bad = self.d / "bigbad.z64"
+        data = bytearray(big.read_bytes()); data[0x0A5D30 + 0x20] = 1
+        bad.write_bytes(bytes(data))
+        r = run(bad, big, self.d / "ovl.map")
+        self.assertIn("mission_overlay", r.stdout)
+        self.assertIn("in missionFunc +0x20", r.stdout)
 
 if __name__ == "__main__":
     unittest.main()
