@@ -493,7 +493,25 @@ s32 isCinematicActive(void) {
     return D_cinematic_overlay_800B0934 != 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicStageAdvancer);
+extern u8 D_cinematic_overlay_800B0938;
+extern f32 D_cinematic_overlay_800B1EE8;
+
+s32 cinematicStageAdvancer(s32 arg0, s32 arg1, f32 dt) {
+    f32 value;
+
+    if (D_cinematic_overlay_800B0934 != 0) {
+        value = D_cinematic_overlay_800B1EE8 * dt + (*(u8 **)(D_cinematic_overlay_800B0934 + 0xC))[0x2F];
+        if (value > 255.0f) {
+            (*(u8 **)(D_cinematic_overlay_800B0934 + 0xC))[0x2F] = 0xFF;
+            if (++D_cinematic_overlay_800B0938 >= 7) {
+                return 1;
+            }
+        } else {
+            (*(u8 **)(D_cinematic_overlay_800B0934 + 0xC))[0x2F] = value;
+        }
+    }
+    return 0;
+}
 
 void removeLookupTableEntry(void *, void *);
 void requestViFeatureChange(s32);
