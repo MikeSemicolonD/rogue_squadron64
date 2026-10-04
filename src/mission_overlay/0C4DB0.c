@@ -19,15 +19,13 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", renderRadarMinimap);
 
 extern u8 D_mission_overlay_80109FE4[];
 extern u16 D_mission_overlay_8010BFF0[];
-
 u16 lookupCraftValueByLevelKey(s32 key) {
-    s32 i = 0;
+    s32 i;
 
-    while (D_mission_overlay_80109FE4[i] != 0xFF) {
+    for (i = 0; D_mission_overlay_80109FE4[i] != 0xFF; i += 2) {
         if (D_mission_overlay_80109FE4[i] == key) {
             break;
         }
-        i += 2;
     }
     if (D_mission_overlay_80109FE4[i] != 0xFF) {
         return D_mission_overlay_8010BFF0[i >> 1];
@@ -41,28 +39,24 @@ void resetCraftSelectionCounter(void) {
     D_mission_overlay_8010C080 = 0;
 }
 
+s32 getLevelDatItemByName(char *);
 extern void *D_mission_overlay_8010C000[];
-extern s32 getLevelDatItemByName(u8 *);
+typedef struct { u8 pad[0x2C]; s32 nameOffset; } RegisteredObject;
+void registerObjectAndResolveDatItem(RegisteredObject *obj) {
+    s32 item;
 
-void registerObjectAndResolveDatItem(u8 *obj) {
-    s32 r;
-    u8 *p;
-    u8 *off;
-
-    if (D_mission_overlay_8010C080 < 32) {
-        D_mission_overlay_8010C000[D_mission_overlay_8010C080] = obj;
-        off = *(u8 **)(obj + 0x2C);
-        D_mission_overlay_8010C080++;
-        if (off != NULL) {
-            p = off + (s32)obj;
-            if (*p == '-') {
-                *(s32 *)(obj + 0x2C) = 0;
+    if (D_mission_overlay_8010C080 < 0x20) {
+        D_mission_overlay_8010C000[D_mission_overlay_8010C080++] = obj;
+        if (obj->nameOffset != 0) {
+            char *name = (char *)(obj->nameOffset + (s32)obj);
+            if (*name == 0x2D) {
+                obj->nameOffset = 0;
             } else {
-                r = getLevelDatItemByName(p);
-                if (r != 0) {
-                    *(s32 *)(obj + 0x2C) = r;
+                item = getLevelDatItemByName(name);
+                if (item != 0) {
+                    obj->nameOffset = item;
                 } else {
-                    *(s32 *)(obj + 0x2C) = 0;
+                    obj->nameOffset = 0;
                 }
             }
         }
@@ -94,9 +88,9 @@ void getAvailableShipsForLevel(void) {
     (*(s32 *)((u8 *)(temp_s1) + 0xDCC)) = 0;
 }
 
-void accumulateClampedFloatField(void *arg0, f32 arg1) {
-    if (*(f32 *)((u8 *)arg0 + 0xDCC) < 1.0f) {
-        *(f32 *)((u8 *)arg0 + 0xDCC) += arg1;
+void accumulateClampedFloatField(u8 *arg0, f32 arg1) {
+    if (*(f32 *)(arg0 + 0xDCC) < 1.0f) {
+        *(f32 *)(arg0 + 0xDCC) += arg1;
     }
 }
 
@@ -106,4 +100,4 @@ u8 getDisplayItemStateByte(void *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", fake_func_800C64A4);
 
-static u32 D_mission_overlay_800A6874[] __attribute__((section(".rodata"))) = { 0x93C30004, 0x3C01801D, 0x00220821 };
+const u32 rodata_pad_0C4DB0[3] = { 0x93C30004, 0x3C01801D, 0x00220821 };

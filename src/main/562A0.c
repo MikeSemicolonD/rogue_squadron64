@@ -65,7 +65,33 @@ void loadVoiceTxtFile(u8 *arg0) {
     loadTxtFile(arg0, 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/562A0", getVoiceText);
+void setupAssetDma(s32, s32, s32, u32, s32, void *);
+
+void getVoiceText(s32 id) {
+    u8 *p;
+    s32 key;
+    s32 c;
+    u8 out;
+    s32 size;
+
+    size = languageStringOffsets[id + 1] - languageStringOffsets[id];
+    setupAssetDma(D_main_bss_80138920, 0, D_main_8009ECA4, voiceTxtLanguageOffset + languageStringOffsets[id], size, voiceTxtString);
+    p = voiceTxtString;
+    key = 0xF5;
+    for (;;) {
+        c = *p ^ key;
+        out = c;
+        key ^= c;
+        if ((u8)(c - 'a') < 26) {
+            out = c - 0x20;
+        }
+        *p = out;
+        if (out == 0) {
+            break;
+        }
+        p++;
+    }
+}
 
 char *getVoiceTxtStringPtr(void) {
     return voiceTxtString;

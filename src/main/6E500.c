@@ -145,7 +145,34 @@ INCLUDE_ASM("asm/nonmatchings/main/6E500", serializeSettingsToSaveAndPersist);
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", setUnlockBitAndPersist);
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", applyVolumeSettingsToMixer);
+void applyMusicOrSfxVolume(u8, s32, s32, s32);
+void setMusyXVoiceTickGate(s32);
+void setSpeechVolume(u8);
+void applyVolumeSettingsToMixer(void) {
+    u8 music;
+    u8 sfx;
+    u8 speech;
+
+    music = gGameSettings.musicVolume;
+    sfx = gGameSettings.soundFxVolume;
+    speech = gGameSettings.speechVolume;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~2;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~4;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~8;
+    if (music == 0) {
+        gGameSettings.unlockAndSettingsFlags[1] |= 2;
+    }
+    if (sfx == 0) {
+        gGameSettings.unlockAndSettingsFlags[1] |= 4;
+    }
+    if (speech == 0) {
+        gGameSettings.unlockAndSettingsFlags[1] |= 8;
+    }
+    applyMusicOrSfxVolume(music, 0, 1, 0);
+    applyMusicOrSfxVolume(sfx, 0, 0, 1);
+    setSpeechVolume(speech);
+    setMusyXVoiceTickGate(((u8 *)&gGameSettings.unlockAndSettingsFlags[1])[3] & 0x80);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", resetGameSettingsAndMissionStats);
 
@@ -188,9 +215,29 @@ void initializeNumLives(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", loadAccountDataIntoStruct);
+extern struct account_data D_main_bss_8013A550;
+void packAccountProgressBits(struct account_data *, u8 *, s32);
+struct account_data *loadAccountDataIntoStruct(u8 arg0) {
+    s32 lvl;
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", parseAccountDataBytes);
+    rs_strcpy((u8 *)D_main_bss_8013A550.name, (u8 *)gGameSettings.name);
+    D_main_bss_8013A550.unk04 = gMissionState.playerRank;
+    lvl = gMissionState.maxUnlockedLevel;
+    D_main_bss_8013A550.unk05 = lvl;
+    D_main_bss_8013A550.unk0C = gGameSettings.unlockAndSettingsFlags[0] & 0x7FFE00;
+    D_main_bss_8013A550.accountNumber = gMissionState.accountNumber;
+    packAccountProgressBits(&D_main_bss_8013A550, gMissionState.medalPerLevel, lvl);
+    copyAccountRecordAndMarkActive(&D_main_bss_8013A550, arg0);
+    return &D_main_bss_8013A550;
+}
+
+void parseAccountDataBytes(u8 *src, u8 *dst) {
+    u8 i;
+
+    for (i = 0; i < 19; i++) {
+        dst[i] = (*((i >> 2) + src + 6) >> ((i & 3) * 2)) & 3;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", packAccountProgressBits);
 
@@ -226,7 +273,19 @@ void resetSettingsClearSaveAndReload(void) {
     serializeSettingsToSaveAndPersist();
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", initIdleDemoTimersAndSave);
+u32 getUsableRdramSize(void);
+void initIdleDemoTimersAndSave(void) {
+    u8 i;
+
+    for (i = 0; i < 1; i++) {
+        gGameSettings.unlockAndSettingsFlags[i] = 0x19B;
+    }
+    gGameSettings.unk23 = getUsableRdramSize() > 0x400000;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~1;
+    if (gGameSettings.unk23) {
+        gGameSettings.unlockAndSettingsFlags[1] |= 1;
+    }
+}
 
 void resetMixerVolumesAndFlags(void) {
     gGameSettings.musicVolume   = 0x7F;
@@ -349,9 +408,41 @@ s32 classifySaveStateFromInput(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", loadSaveDataIfNotLoaded);
+u8 loadOrSaveEepromRecord(s32, s32, s32, void *, s32);
+s32 loadSaveDataIfNotLoaded(void) {
+    struct GameSettings *gs = &gGameSettings;
+    u8 r;
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", persistSaveDataBody);
+    if (*(u8 *)&gs->unk2C != 0) {
+        return 0;
+    }
+    r = loadOrSaveEepromRecord(1, 0, 0, &gSaveDataBody, 0xB0);
+    if (r) {
+        r = loadOrSaveEepromRecord(1, 0, 1, &gSaveDataBody, 0xB0);
+    }
+    gs->nabooStarfighterCheatHash = gSaveDataBody.unkAC;
+    return r == 0;
+}
+
+u8 saveLoadDispatcher(s32, s32, s32, void *, void *, s32);
+void triggerSaveMessage(void);
+void persistSaveDataBody(void) {
+    u8 buf[0x10];
+
+    gSaveDataBody.unkA2 = 0x3A;
+    gSaveDataBody.unkA3[6] = gGameSettings.unk23;
+    gSaveDataBody.unkAC = gGameSettings.nabooStarfighterCheatHash;
+    if (D_main_800A0A60 == -1) {
+        if (!saveLoadDispatcher(1, 0, 0, buf, &gSaveDataBody, 0xB0)) {
+            *(u8 *)&gGameSettings.unk2C = 1;
+        }
+        if (!saveLoadDispatcher(1, 0, 1, buf, &gSaveDataBody, 0xB0)) {
+            *(u8 *)&gGameSettings.unk2C = 1;
+        }
+    } else {
+        triggerSaveMessage();
+    }
+}
 
 u8 *rs_malloc(s32, s32);
 s32 sendServiceMessage(s32, s32, u8 *, s32);

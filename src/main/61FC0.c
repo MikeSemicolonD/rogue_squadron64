@@ -28,7 +28,28 @@ INCLUDE_ASM("asm/nonmatchings/main/61FC0", startPlayerSlotAnimationChannelLoopin
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", buildPlayerCraftAssetTemplate);
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", resolvePlayerAnimChannelKeyValue);
+extern u16 D_main_bss_80139970[];
+extern s8 D_main_8009ED88[];
+s16 resolvePlayerAnimChannelKeyValue(u16 font, u16 key) {
+    struct someFontThing *t = D_main_8009FC10[font];
+    u16 i;
+    u16 j;
+
+    for (i = 0; i < t->symbolCount; i++) {
+        if (t->unk024[i] == key || t->unk028[i] == key) {
+            if (*(u8 *)&t->unk014 != 0) {
+                return t->unk002;
+            }
+            return t->unk018[i];
+        }
+    }
+    for (j = 0; j < 6; j++) {
+        if (D_main_bss_80139970[j] == key) {
+            return D_main_8009ED88[j];
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", initAllPlayerSlots);
 
@@ -50,7 +71,16 @@ struct ui_element *getPlayerSlotFieldAt34(u16 arg0, u16 arg1) {
     return D_main_8009FC10[arg0]->unk034[arg1];
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", resetPlayerSlotAllChannels);
+void resetPlayerSlotAllChannels(u16 slot, u8 arg1) {
+    struct someFontThing *t = D_main_8009FC10[slot];
+    u32 i;
+
+    if (t->unk0F4 != NULL) {
+        for (i = 0; i < *(u16 *)&t->unk02C; i++) {
+            insertLookupEntry(t->unk0F4, t->unk034[i], arg1);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", setPlayerSlotAnimationFlag);
 
@@ -103,7 +133,11 @@ struct ui_element *getPlayerAnimChannelEntryByIds(void *arg0) {
     return D_main_8009FC10[(*(u8 *)((u8 *)(arg0) + 8))]->unk034[(*(u8 *)((u8 *)(arg0) + 0)) + (*(u8 *)((u8 *)(arg0) + 9))];
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", getPlayerAnimChannelEntryReversed);
+struct ui_element *getPlayerAnimChannelEntryReversed(u8 *arg0) {
+    s32 t = arg0[0] - 1;
+    u16 idx = arg0[9] - t;
+    return D_main_8009FC10[arg0[8]]->unk034[idx];
+}
 
 s32 identityReturnArg(s32 arg0) {
     return arg0;
@@ -137,7 +171,23 @@ u16 findCharEntryValueByKey(u16 arg0, u8 arg1) {
     return 0xFFFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", findCharEntryAltValueByKey);
+extern u16 D_main_bss_80139980[];
+u16 findCharEntryAltValueByKey(u16 font, u8 ch) {
+    struct someFontThing *t = D_main_8009FC10[font];
+    u16 i;
+
+    for (i = 0; i < t->symbolCount; i++) {
+        if ((u8)t->symbolList[i] == ch) {
+            return t->unk024[i];
+        }
+    }
+    for (i = 0; i < 6; i++) {
+        if (ch == (u8)(i + 1)) {
+            return D_main_bss_80139980[i];
+        }
+    }
+    return 0xFFFF;
+}
 
 u8 findCharEntryByteByKey(u16 arg0, u8 arg1) {
     s32 var_a2;
@@ -179,6 +229,15 @@ void setPlayerSlotEnabledFlag(u16 arg0, u8 arg1) {
     D_main_8009FC10[arg0]->unk102 = arg1 == 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", invokeMenuOverlayHeaderCallback);
+s16 invokeMenuOverlayHeaderCallback(s16 arg0) {
+    s16 ret;
+
+    if (D_main_bss_80139960 & 8) {
+        ret = ((s16 (*)(s16))D_main_bss_80139968)(arg0);
+    } else {
+        ret = 0;
+    }
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", fake_func_80064294);

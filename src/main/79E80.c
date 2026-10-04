@@ -3,30 +3,35 @@
 
 INCLUDE_ASM("asm/nonmatchings/main/79E80", heavyMechSubEffectNpcHandler);
 
-extern void mat3x4Multiply(void *, void *, void *);
-extern void zmemcpy(void *, void *, s32);
-
-void concatChildTransformAlongChain(u8 *node, u8 *arg1) {
-    u8 *out = arg1;
-    u8 buf[2][0x30];
+void zmemcpy(void *, void *, u32);
+void mat3x4Multiply(void *, void *, void *);
+typedef struct TransformChainNode {
+    u8 pad0[8];
+    struct TransformChainNode *child;
+    u8 padC[0x10];
+    f32 mtx[12];
+} TransformChainNode;
+void concatChildTransformAlongChain(TransformChainNode *node, f32 *arg1) {
+    f32 *out = arg1;
+    f32 tmp[2][12];
     s32 n = 0;
-    u8 *src;
-    u8 *dst;
+    f32 *src;
+    f32 *dst;
 
-    if (*(u8 **)(node + 8) == NULL) {
-        zmemcpy(arg1, node + 0x1C, 0x30);
+    if (node->child == NULL) {
+        zmemcpy(out, node->mtx, 0x30);
         return;
     }
-    src = node + 0x1C;
-    node = *(u8 **)(node + 8);
+    src = node->mtx;
+    node = node->child;
     do {
         dst = out;
-        if (*(u8 **)(node + 8) != NULL) {
+        if (node->child != NULL) {
             n++;
-            dst = buf[n & 1];
+            dst = tmp[n & 1];
         }
-        mat3x4Multiply(node + 0x1C, src, dst);
-        node = *(u8 **)(node + 8);
+        mat3x4Multiply(node->mtx, src, dst);
+        node = node->child;
         src = dst;
     } while (node != NULL);
 }
@@ -41,12 +46,15 @@ void initWaterSprayEffectAndSfx(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/79E80", spawnNpcWithRandomRotation);
 
-extern u16 spawnNpcOfType(void *, void *, u32, u8);
-extern void heavyMechSubEffectNpcHandler(void);
-
-u16 spawnHeavyMechSubEffect(u8 *args, u8 *parent, s32 arg2) {
-    *(u16 *)args = *(u16 *)(parent + 0x16);
-    *(s32 *)(args + 4) = arg2;
+void heavyMechSubEffectNpcHandler();
+u16 spawnNpcOfType(void *, void *, u32, u8);
+typedef struct {
+    u16 unk0;
+    s32 unk4;
+} HeavyMechSubEffectArgs;
+u16 spawnHeavyMechSubEffect(HeavyMechSubEffectArgs *args, u8 *parent, s32 arg2) {
+    args->unk0 = *(u16 *)(parent + 0x16);
+    args->unk4 = arg2;
     return spawnNpcOfType(heavyMechSubEffectNpcHandler, args, 2, parent[0x19] + 1);
 }
 

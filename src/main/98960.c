@@ -1,7 +1,21 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", clearStreamedVoiceFlags);
+typedef struct {
+    u8 active;
+    u8 pad[0x17];
+} StreamedVoice;
+
+extern u8 D_main_bss_80141AD0;
+extern StreamedVoice D_main_bss_80152A20[];
+
+void clearStreamedVoiceFlags(void) {
+    s32 i;
+
+    for (i = 0; i < D_main_bss_80141AD0; i++) {
+        D_main_bss_80152A20[i].active = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", serviceStreamedVoices);
 
@@ -23,13 +37,54 @@ INCLUDE_ASM("asm/nonmatchings/main/98960", applyVoice3DMixParams);
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", updateActive3DAudioSource);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", isAudioVoiceActive);
+extern u8 gMusyXActiveFlag;
+
+s32 isAudioVoiceActive(u8 *voice) {
+    s32 r;
+
+    if (gMusyXActiveFlag == 0) {
+        r = 0;
+    } else {
+        r = *(u16 *)(voice + 8) & 1;
+    }
+    return r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", play3DSoundEvent);
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", play3DSoundEventVariant);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", factor5RemoveListNode);
+extern s32 D_main_bss_80153414;
+extern u8 gMusyXActiveFlag;
+s32 flagVoiceChainForStop(s32);
+
+s32 factor5RemoveListNode(void *arg0) {
+    s32 temp_a0;
+    void **temp_v1_2;
+    void *temp_v1;
+
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        temp_v1 = (*(void **)((u8 *)(arg0) + 0));
+        if (temp_v1 != NULL) {
+            (*(void ***)((u8 *)(temp_v1) + 4)) = (void **) (*(void ***)((u8 *)(arg0) + 4));
+        }
+        temp_v1_2 = (*(void ***)((u8 *)(arg0) + 4));
+        if (temp_v1_2 != NULL) {
+            *temp_v1_2 = (*(void **)((u8 *)(arg0) + 0));
+        } else {
+            D_main_bss_80153414 = (s32) (*(void **)((u8 *)(arg0) + 0));
+        }
+        temp_a0 = (*(s32 *)((u8 *)(arg0) + 0x34));
+        (*(s32 *)((u8 *)(arg0) + 8)) = (s32) (*(u16 *)((u8 *)(arg0) + 0xA));
+        if (temp_a0 != -1) {
+            flagVoiceChainForStop(temp_a0);
+        }
+        factor5MutexRelease();
+        return 1;
+    }
+    return 0;
+}
 
 s32 factor5MutexAcquire();
 s32 factor5MutexRelease();
@@ -55,7 +110,28 @@ INCLUDE_ASM("asm/nonmatchings/main/98960", setMusyX3DProperties);
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", register3DAudioListenerNode);
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", unlinkMusyXListNode);
+extern s32 D_main_bss_80153418;
+s32 unlinkMusyXListNode(void *arg0) {
+    void **temp_v1_2;
+    void *temp_v1;
+
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        temp_v1 = (*(void **)((u8 *)(arg0) + 0));
+        if (temp_v1 != NULL) {
+            (*(void ***)((u8 *)(temp_v1) + 4)) = (void **) (*(void ***)((u8 *)(arg0) + 4));
+        }
+        temp_v1_2 = (*(void ***)((u8 *)(arg0) + 4));
+        if (temp_v1_2 != NULL) {
+            *temp_v1_2 = (*(void **)((u8 *)(arg0) + 0));
+        } else {
+            D_main_bss_80153418 = (s32) (*(void **)((u8 *)(arg0) + 0));
+        }
+        factor5MutexRelease();
+        return 1;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", enqueueSoundInPriorityGroup);
 

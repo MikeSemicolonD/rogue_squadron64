@@ -101,7 +101,20 @@ void disposeFormatMsgQueueMember(void *arg0, void *arg1) {
     freeJfifDecodeState((*(s32 *)((u8 *)(arg1) + 0x6C)));
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", initFormatMessageWorker);
+extern s32 D_menu_overlay_800CC858;
+s32 registerServiceWorker(s32, s32, s32, s32 *);
+s32 startServiceWorker(s32);
+extern s32 D_menu_overlay_800CC854;
+extern s32 tickFormatMessageWorker;
+
+void initFormatMessageWorker(s32 arg0) {
+    s32 temp_v0;
+
+    D_menu_overlay_800CC854 = 1;
+    temp_v0 = registerServiceWorker(8, 0x800, arg0 & 0xFF, &tickFormatMessageWorker);
+    D_menu_overlay_800CC858 = temp_v0;
+    startServiceWorker(temp_v0);
+}
 
 s32 unregisterServiceWorker(s32);
 extern s32 D_menu_overlay_800CC858;

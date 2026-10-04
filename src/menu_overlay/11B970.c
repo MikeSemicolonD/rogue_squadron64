@@ -378,7 +378,48 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", buildHudAmmoReadout);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", readAccountForSelectionScreen);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", resetMaterialTextureEffectSlots);
+typedef struct {
+    s32 unk0;
+    s16 unk4;
+    s16 unk6;
+    f32 unk8;
+    s32 unkC;
+    u8 pad10[4];
+    u8 unk14;
+    u8 unk15;
+    u8 unk16;
+    u8 pad17;
+    s32 unk18;
+    f32 unk1C;
+    u8 unk20;
+    u8 unk21;
+    u8 pad22[0x1F];
+    u8 unk41;
+    u8 pad42[2];
+    s32 unk44;
+} MaterialTexEffectSlot;
+extern MaterialTexEffectSlot D_menu_overlay_800CF180[];
+void resetMaterialTextureEffectSlots(void) {
+    u8 i;
+
+    for (i = 0; i < 3; i++) {
+        MaterialTexEffectSlot *s = &D_menu_overlay_800CF180[i];
+        s->unk0 = 0;
+        s->unk4 = 0;
+        s->unk6 = 0;
+        s->unk8 = 1.0f;
+        s->unkC = 0;
+        s->unk14 = 0;
+        s->unk16 = 0;
+        s->unk18 = 0;
+        s->unk20 = 0;
+        s->unk21 = 0;
+        s->unk41 = 3;
+        s->unk1C = 1.0f;
+        s->unk15 = 1;
+        s->unk44 = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMaterialTextureByName);
 
@@ -560,7 +601,50 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", postLevelStatScreen);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuShipSelectScreen);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuScreenRenderContext);
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    s32 unk8;
+    s32 unkC;
+    s32 unk10;
+    s32 unk14;
+    s32 unk18;
+    s32 unk1C;
+    f32 unk20;
+    f32 unk24;
+    f32 unk28;
+    f32 unk2C[12];
+} MenuScreenRenderContext;
+extern MenuScreenRenderContext D_menu_overlay_800CF090;
+extern void *D_menu_overlay_800CF078;
+extern void *D_menu_overlay_800CF07C;
+extern s32 D_main_bss_8013889C;
+void setRenderStateFlagByteOne(s32);
+void selectRenderPresetByIndex(s32);
+void selectSecondaryPresetByIndex(s32);
+void clearVec4QuadStruct(void *);
+void *allocateSlotTable(u16);
+void initFormatMessageWorker(s32);
+void initMenuScreenRenderContext(void) {
+    D_menu_overlay_800CF090.unk10 = 0x280;
+    D_menu_overlay_800CF090.unk14 = 0x12C;
+    D_menu_overlay_800CF090.unk18 = 0x140;
+    D_menu_overlay_800CF090.unk4 = 0;
+    D_menu_overlay_800CF090.unk8 = 0;
+    D_menu_overlay_800CF090.unkC = 0;
+    D_menu_overlay_800CF090.unk1C = 0x96;
+    D_menu_overlay_800CF090.unk20 = 45.0f;
+    D_menu_overlay_800CF090.unk24 = 0.1171875f;
+    D_menu_overlay_800CF090.unk28 = 93.75f;
+    setRenderStateFlagByteOne(0);
+    selectRenderPresetByIndex(0);
+    selectSecondaryPresetByIndex(0);
+    clearVec4QuadStruct(D_menu_overlay_800CF090.unk2C);
+    D_menu_overlay_800CF078 = allocateSlotTable(0x40);
+    D_menu_overlay_800CF07C = allocateSlotTable(8);
+    D_main_bss_8013889C = 0;
+    initFormatMessageWorker(5);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuContentStateMachine);
 
@@ -620,7 +704,40 @@ void preloadMenuMusicSetA(void) {
     playSimpleAudioCmd(0x78, 0x32, 0xFD);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", cueMenuScreenAudioB);
+typedef struct {
+    u16 unk0;
+    u16 unk2;
+    u8 pad4[0xE];
+    u8 unk12;
+    u8 pad13[7];
+    u8 unk1A;
+    u8 unk1B;
+    u8 unk1C;
+    u8 pad1D;
+    u16 unk1E;
+    u16 unk20;
+    u16 unk22;
+    u16 unk24;
+} MenuScreenAudioCue;
+void syncMusyXIfActive();
+extern MenuScreenAudioCue D_menu_overlay_800CF020;
+void cueMenuScreenAudioB(void) {
+    parseLoadedSndSection(0x1D);
+    loadSongAssetByName(D_main_bss_80138920, 0x3B);
+    playSimpleAudioCmd(0x7F, 0x32, 0xFE);
+    playSimpleAudioCmd(0x78, 0x32, 0xFD);
+    D_menu_overlay_800CF020.unk0 = 0xA0;
+    D_menu_overlay_800CF020.unk1A = 1;
+    D_menu_overlay_800CF020.unk2 = 0x9B;
+    D_menu_overlay_800CF020.unk12 = 0x78;
+    D_menu_overlay_800CF020.unk1B = 0x41;
+    D_menu_overlay_800CF020.unk1E = 0x51E;
+    D_menu_overlay_800CF020.unk20 = 0xF5C;
+    D_menu_overlay_800CF020.unk22 = 0x1999;
+    D_menu_overlay_800CF020.unk1C = 1;
+    D_menu_overlay_800CF020.unk24 = 0x800;
+    syncMusyXIfActive(&D_menu_overlay_800CF020);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", cueMenuScreenAudioC);
 
@@ -693,7 +810,23 @@ void *allocCraftPreviewEffectObject(void) {
     return temp_s0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initCraftPreviewEffectWithRandom);
+s32 rand(void);
+void playerTieInterceptorMainUpdate(void *);
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    s32 unk8;
+    u8 unkC;
+    s32 unk10;
+} CraftPreviewEffect;
+void initCraftPreviewEffectWithRandom(CraftPreviewEffect *arg0, s32 arg1, s32 arg2, s32 arg3) {
+    arg0->unkC = rand() & 1;
+    arg0->unk0 = 0;
+    arg0->unk4 = arg2;
+    arg0->unk8 = arg3;
+    arg0->unk10 = 0xCDCD;
+    playerTieInterceptorMainUpdate(arg0);
+}
 
 void initMenuElementScrollAnimParams(void *arg0, s32 arg1, s32 arg2) {
     (*(s32 *)((u8 *)(arg0) + 0x14EC)) = 0;
@@ -702,9 +835,44 @@ void initMenuElementScrollAnimParams(void *arg0, s32 arg1, s32 arg2) {
     (*(f32 *)((u8 *)(arg0) + 0x14F0)) = 86.8997f;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", applyMenuCheatCode);
+u8 applyCheatCodeFromInput(s32, s32, u8 *);
+void bsearchFactor5TableByU16Key(s32, s32, s32);
+void serializeSettingsToSaveAndPersist(void);
+void applyMenuCheatCode(s32 arg0) {
+    u8 changed = 0;
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", getCraftStatIfThresholdMet);
+    switch (applyCheatCodeFromInput(arg0, 0, &changed)) {
+        case 0:
+            bsearchFactor5TableByU16Key(0x67, 0x6E, 0x40);
+            break;
+        case 1:
+            bsearchFactor5TableByU16Key(0x18, 0x5F, 0x40);
+            break;
+    }
+    if (changed) {
+        serializeSettingsToSaveAndPersist();
+    }
+}
+
+typedef struct {
+    u8 pad0[0x14];
+    u16 stat;
+    u16 threshold;
+    u8 pad18[0xC];
+} CraftStatEntry;
+extern CraftStatEntry D_menu_overlay_800CC89C[];
+extern s8 D_menu_overlay_800CF150;
+s16 getCraftStatIfThresholdMet(s16 arg0) {
+    CraftStatEntry *base = D_menu_overlay_800CC89C;
+    s32 idx = D_menu_overlay_800CF150;
+    CraftStatEntry *e = &base[idx];
+    u16 ret = 0;
+
+    if (arg0 < e->threshold) {
+        ret = e->stat;
+    }
+    return ret;
+}
 
 extern s32 D_menu_overlay_800CEF40;
 
@@ -714,23 +882,115 @@ void resetMenuSelectionGlobalState(void) {
     (*(s32 *)((u8 *)(&D_menu_overlay_800CEF40) + 4)) = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", spawnMenuListItemSprite);
+s32 allocTextRenderTarget(s32, s32);
+u8 *createUiSpriteAt(s32, s32, s32);
+void insertLookupEntry(void *, void *, u8);
+void createHudSpritePair(void *, void *, void *, s32, s32, f32, u8);
+extern u8 *D_menu_overlay_800CFA68;
+void spawnMenuListItemSprite(void *list, u8 idx) {
+    D_menu_overlay_800CFA68 = createUiSpriteAt(allocTextRenderTarget(0x80, 0x10), -0x40, 0x50);
+    insertLookupEntry(list, D_menu_overlay_800CFA68, idx - 1);
+    insertLookupEntry(list, D_menu_overlay_800CFA68 + 0x30, idx);
+    createHudSpritePair(list, D_menu_overlay_800CFA68 + 0x60, D_menu_overlay_800CFA68 + 0x30, 0x80, 0x10, 5.0f, idx);
+    D_menu_overlay_800CFA68[0x74] = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", createUiSpriteAt);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateUiSpriteScrollAndAlpha);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMenuAnimGroupFrame);
+void activateAnimationKeyframe(s32, s32, u8);
+void setMenuAnimGroupFrame(f32 t) {
+    u8 v = t * 254.0f;
+    u8 i;
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", createMenuTextElement);
+    for (i = 0; i < 4; i++) {
+        activateAnimationKeyframe(5, i, v);
+    }
+    for (i = 2; i < 16; i++) {
+        activateAnimationKeyframe(8, i, v);
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", allocMenuScreenState);
+void loadCharTextureSet(void *, s32, s32, s32);
+void resetPlayerSlotAllChannels(u16, u8);
+void *getPlayerSlotFieldAt34(u16, u16);
+void setPlayerSlotEntryRGB(u16, u16, void *);
+void rs_memset(void *, u8, u32);
+extern void *D_menu_overlay_800CF078;
+extern s32 D_menu_overlay_800CD510;
+extern u8 mainMenuLightBlueColor[];
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    u8 pad8[0xC];
+    u8 unk14;
+    u8 unk15;
+    u8 pad16[0x4A];
+    u8 unk60;
+    u8 pad61[3];
+} MenuTextElement;
+MenuTextElement *createMenuTextElement(void) {
+    MenuTextElement *e = rs_malloc(0x64, 0);
+    u8 i;
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", freeMenuScreenState);
+    rs_memset(e, 0, 0x64);
+    loadCharTextureSet(D_menu_overlay_800CF078, 9, 0x12, 0x1000);
+    resetPlayerSlotAllChannels(9, 0x14);
+    for (i = 0; i < 0x12; i++) {
+        getPlayerSlotFieldAt34(9, i);
+        setPlayerSlotEntryRGB(9, i, mainMenuLightBlueColor);
+    }
+    e->unk4 = D_menu_overlay_800CD510;
+    e->unk0 = D_menu_overlay_800CD510;
+    e->unk15 = 0;
+    e->unk14 = 0;
+    e->unk60 = 0;
+    return e;
+}
+
+typedef struct {
+    u8 pad0[0x18];
+    void *unk18;
+    void *unk1C;
+    void *unk20[14];
+    s32 unk58;
+    f32 unk5C;
+} MenuScreenState;
+void allocMenuScreenState(MenuScreenState *arg0) {
+    u8 i;
+
+    for (i = 0; i < 16; i++) {
+        if (i >= 2) {
+            arg0->unk20[i - 2] = rs_malloc(0x80, 0);
+        }
+    }
+    arg0->unk18 = rs_malloc(0x1000, 0);
+    arg0->unk1C = rs_malloc(0x1000, 0);
+    arg0->unk58 = 0;
+    arg0->unk5C = 18.5f;
+}
+
+void freeMenuScreenState(MenuScreenState *arg0) {
+    u8 i;
+
+    rs_free(arg0->unk18);
+    rs_free(arg0->unk1C);
+    for (i = 2; i < 16; i++) {
+        rs_free(arg0->unk20[i - 2]);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateMenuElementTimedPosition);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", applyCraftSlotAnimations);
+void activateAnimationKeyframe(s32, s32, u8);
+void applyCraftSlotAnimations(f32 t) {
+    u8 v = (u32)(t * 254.0f);
+
+    activateAnimationKeyframe(8, 1, v);
+    activateAnimationKeyframe(8, 2, v);
+    activateAnimationKeyframe(8, 3, v);
+}
 
 void setMaterialFadeTargetIfIdle(void *arg0, s32 arg1) {
     if ((*(f32 *)((u8 *)(arg0) + 0xA4)) == 0.0f) {
@@ -738,15 +998,25 @@ void setMaterialFadeTargetIfIdle(void *arg0, s32 arg1) {
     }
 }
 
-void setMaterialTextureByName(u8, s32, s32);
-
+void setMaterialTextureByName(u8 a, s32 b, s32 c);
 void setCraftMaterialTextureByName(u8 arg0, s32 arg1) {
     setMaterialTextureByName(arg0, arg1, 0);
 }
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initMenuBackdropAndPickRandom);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initSongAssetLoadWorker);
+extern s32 D_menu_overlay_800CCE18;
+s32 registerServiceWorker(s32, s32, s32, s32 *);
+s32 startServiceWorker(s32);
+void tickSongAssetLoadWorker(s32 *);
+
+void initSongAssetLoadWorker(s32 arg0) {
+    s32 temp_v0;
+
+    temp_v0 = registerServiceWorker(4, 0x800, arg0 & 0xFF, &tickSongAssetLoadWorker);
+    D_menu_overlay_800CCE18 = temp_v0;
+    startServiceWorker(temp_v0);
+}
 
 s32 unregisterServiceWorker(s32);
 extern s32 D_menu_overlay_800CCE18;
@@ -757,8 +1027,28 @@ void shutdownSongAssetLoadWorker(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", tickSongAssetLoadWorker);
+void *recvServiceMessage(s32);
+void sendServiceMessage(s32, s32, void *, s32);
+void rs_free(void *);
+typedef struct {
+    u8 pad0[0x14];
+    s32 unk14;
+    s32 unk18;
+    s32 unk1C;
+} SongLoadMsg;
+void tickSongAssetLoadWorker(s32 *arg0) {
+    s32 reply[6];
+    SongLoadMsg *msg;
+
+    while (1) {
+        msg = recvServiceMessage(*arg0);
+        parseLoadedSndSection(msg->unk14);
+        loadSongAssetByName(*arg0, msg->unk18);
+        sendServiceMessage(*arg0, msg->unk1C, reply, 0);
+        rs_free(msg);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", fake_func_800C5898);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A7550);
+const u32 rodata_pad_11B970[3] = { 0xAC680000, 0xAC690004, 0xAC6A0008 };

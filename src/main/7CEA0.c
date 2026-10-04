@@ -169,6 +169,15 @@ void clearObjectPoolStateFlag(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcSpawnInitTimedEffect);
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcSpawnInitMarkActive);
+s32 setNpcHealth(void *, void *, s32);
+void setObjectDetailLevel(void *, s16);
+void npcSpawnInitMarkActive(u8 *arg0, s32 arg1, u8 *arg2) {
+    u8 *s = *(u8 **)(arg0 + 4);
+
+    (*(u8 **)(s + 0x34))[0x1A7] = 1;
+    setNpcHealth(*(u8 **)(s + 0x34), arg2 + 0x34, 0);
+    setObjectDetailLevel(*(u8 **)(s + 0x34), 1);
+    *(s16 *)(s + 0x7C) = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", fake_func_80082268);
