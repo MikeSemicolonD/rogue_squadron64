@@ -74,7 +74,57 @@ INCLUDE_ASM("asm/nonmatchings/main/738F0", buildNpcAnchoredCameraEffectTransform
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", computeWalkerLimbStrideTargets);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", extrapolateNpcPositionForCurrentMode);
+typedef struct {
+    f32 x, y, z;
+} ExtrapVec3;
+
+extern s32 D_8010CA20;
+extern void distanceAndDopplerNpcHelper(f32 *, f32, f32);
+extern void spawnNpcType0xAFromTemplate(f32 *, f32);
+extern void spawnRandomScaleColoredEffectFromCaller(void *, f32, f32, s32);
+
+static __inline__ void extrapolateVec3Inline(f32 *src, f32 *out, f32 t) {
+    out[0] = src[0] - src[3] * t;
+    out[1] = src[1] - src[4] * t;
+    out[2] = src[2] - src[5] * t;
+}
+
+void extrapolateNpcPositionForCurrentMode(u8 *obj) {
+    f32 pos[8];
+    f32 *src = *(f32 **)(obj + 8);
+    f32 *out;
+    f32 k;
+
+    if (src != NULL) {
+        if (D_8010CA20 == 0) {
+            out = pos;
+            k = 0.2f;
+            pos[0] = src[0] - src[3] * k;
+            out[1] = src[1] - src[4] * k;
+            out[2] = src[2] - src[5] * k;
+        } else {
+            *(ExtrapVec3 *)pos = *(ExtrapVec3 *)src;
+        }
+        switch (*(u16 *)(obj + 4)) {
+        case 12:
+            spawnRandomScaleColoredEffectFromCaller(pos, 0.4f, 0.8f, 0);
+            return;
+        case 8:
+        case 9:
+            return;
+        case 10:
+        case 11:
+        case 13:
+        case 14:
+            spawnNpcType0xAFromTemplate(pos, 0.6f);
+            return;
+        default:
+            distanceAndDopplerNpcHelper(pos, 0.05f, 0.2f);
+            spawnNpcType0xAFromTemplate(pos, 0.2f);
+            return;
+        }
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D220);
 
