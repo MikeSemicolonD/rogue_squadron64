@@ -101,7 +101,14 @@ void getConfigFloatPair(f32 *arg0, f32 *arg1) {
     *arg1 = D_mission_overlay_8010A1FC;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", accumulateVectorInObjectFrame);
+extern void vec3Cross(f32 *out, f32 *a, f32 *b);
+void accumulateVectorInObjectFrame(f32 *a, f32 *b, f32 *c) {
+    f32 t[3];
+    vec3Cross(t, c + 7, c + 4);
+    a[0] = a[0] + (t[0] * b[0] + c[7] * b[1] + c[4] * b[2]);
+    a[1] = a[1] + (t[1] * b[0] + c[8] * b[1] + c[5] * b[2]);
+    a[2] = a[2] + (t[2] * b[0] + c[9] * b[1] + c[6] * b[2]);
+}
 
 extern f32 D_mission_overlay_8010A200;
 
