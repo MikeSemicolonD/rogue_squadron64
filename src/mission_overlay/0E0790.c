@@ -192,7 +192,63 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", tickCraftSplineOrientatio
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", tickCraftSplineOrientationDual);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", tickTrainCarStateMachine);
+extern u8 *D_main_bss_801375D8;
+
+void tickTrainCarStateMachine(u8 *arg0) {
+    u8 *p;
+    u8 *e;
+    s32 i;
+    s32 cnt;
+
+    if (arg0[0xFD] == 0) {
+        if ((((arg0[0xFC] = arg0[0xFC] - 1)) << 24) <= 0) {
+            arg0[0xFD] = 1;
+            if (arg0[0xB2] == 0) {
+                e = *(u8 **)(arg0 + 0x34);
+                if (*(s32 *)(e + 0x134) == 0) {
+                    *(s16 *)(arg0 + 0xFA) = 0;
+                    return;
+                }
+                p = e + (*(s32 *)(e + 0x138) + 0x134);
+            } else {
+                e = *(u8 **)(arg0 + 0x34);
+                if (*(s32 *)(e + 0xD4) == 0) {
+                    *(s16 *)(arg0 + 0xFA) = 0;
+                    return;
+                }
+                p = e + (*(s32 *)(e + 0xD8) + 0xD4);
+            }
+            for (i = 0, cnt = 1; i < 16; i++) {
+                if (cnt == 0) {
+                    break;
+                }
+                e = *(u8 **)(*(u8 **)(D_main_bss_801375D8 + 4) + *(u16 *)(p + 2) * 4);
+                *(u16 *)(arg0 + i * 2 + 0xCA) = *(u16 *)(e + 6);
+                *(u8 *)(arg0 + i + 0xEA) = 1;
+                switch (*(u16 *)e) {
+                case 0x2F:
+                    cnt = *(s32 *)(e + 0x134);
+                    p = e + (*(s32 *)(e + 0x138) + 0x134);
+                    break;
+                case 0x30:
+                    cnt = *(s32 *)(e + 0x11C);
+                    p = e + (*(s32 *)(e + 0x120) + 0x11C);
+                    break;
+                case 0x34:
+                    cnt = *(s32 *)(e + 0xD4);
+                    p = e + (*(s32 *)(e + 0xD8) + 0xD4);
+                    break;
+                case 0x31:
+                case 0x35:
+                    cnt = *(s32 *)(e + 0xC8);
+                    p = e + (*(s32 *)(e + 0xCC) + 0xC8);
+                    break;
+                }
+            }
+            *(s16 *)(arg0 + 0xFA) = i;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", buildDebrisTransformStack);
 
