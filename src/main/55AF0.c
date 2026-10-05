@@ -2,7 +2,102 @@
 
 #include "main/55AF0.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/55AF0", loadAssetAndIterateSubchunks);
+extern s32 D_main_bss_80137CFC;
+extern s32 D_main_bss_80138920;
+s32 get_asset_size_extra(s32, s32);
+s32 get_asset_size_simple(s32, s32);
+s32 findAssetAcrossSegments(s32, s32, s32, s32, s32);
+void setupAssetDma(s32, s32, s32, s32, s32, void *);
+void teardownAssetDma(s32, s32);
+void *rs_malloc(s32, s32);
+s32 rs_free(s32);
+void sprintf(char *, const char *, ...);
+void rs_strncpy(char *, char *, s32);
+s32 registerHmtTextureInTable(struct material_entry *, struct texture_entry *, u32);
+
+u16 *loadAssetAndIterateSubchunks(s32 assetId, char *prefix, u16 *out, s32 flags, s32 every) {
+    struct material_entry mat;
+    struct full_image_header *file;
+    struct full_image_header *hdr;
+    struct texture_entry *tex;
+    u16 *list;
+    u16 *p;
+    s32 size;
+    s32 handle;
+    u32 off;
+    s32 count;
+    s32 i;
+    s32 j;
+    u32 base;
+    s32 rem;
+
+    size = get_asset_size_extra(D_main_bss_80137CFC, assetId);
+    file = rs_malloc(size, 4);
+    if (file == NULL) {
+        file = rs_malloc(size, 0);
+    }
+    size = get_asset_size_simple(D_main_bss_80137CFC, assetId);
+    hdr = file;
+    off = 0;
+    count = 0;
+    handle = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, assetId, 0);
+    setupAssetDma(D_main_bss_80138920, 0, handle, 0, size, file);
+    teardownAssetDma(D_main_bss_80138920, handle);
+    while (off < (u32)(size - 0x10)) {
+        count++;
+        off += (hdr->image_size + 7) & ~3;
+        hdr = (struct full_image_header *)((u8 *)file + off);
+    }
+    list = out;
+    if (list == NULL) {
+        list = rs_malloc((count + 1) * 2, 0);
+    }
+    hdr = file;
+    off = 0;
+    i = 0;
+    mat.material_type = 1;
+    mat.zero = 0;
+    *(u8 *)&mat.alwaysa = 1;
+    mat.misc_float = 0.2f;
+    mat.one = 1.0f;
+    if (count > 0) {
+        do {
+        tex = &hdr->ent;
+        base = (u32)tex;
+        for (j = 0; j < 8; j++) {
+            if (tex->pixel_offsets[j] != 0) {
+                tex->pixel_offsets[j] += base;
+            }
+        }
+        if (tex->plte_offset != 0) {
+            tex->plte_offset += base;
+        }
+        if (tex->texture_name_offset != 0) {
+            tex->texture_name_offset += base;
+        }
+        if (every == 0 || (rem = i % every) == 0) {
+            hdr->ent.flags_type |= flags;
+            if (prefix != NULL) {
+                sprintf(mat.material_name, "%s%d", prefix, i);
+                hdr->ent.texture_name_offset = (u32)mat.material_name;
+            } else {
+                rs_strncpy(mat.material_name, (char *)hdr->ent.texture_name_offset, 0x10);
+            }
+            list[i] = registerHmtTextureInTable(&mat, &hdr->ent, 0);
+        } else {
+            list[i] = list[i - rem];
+        }
+        i++;
+        off += (hdr->image_size + 7) & ~3;
+        hdr = (struct full_image_header *)((u8 *)file + off);
+        } while (i < count);
+    }
+    if (out == NULL) {
+        list[i] = 0xFFFF;
+    }
+    rs_free((s32)file);
+    return list;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/55AF0", loadSpriteSheetTextureFrames);
 
