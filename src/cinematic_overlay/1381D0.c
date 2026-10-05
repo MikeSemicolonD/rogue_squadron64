@@ -271,7 +271,91 @@ INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", initCutsceneScene);
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", initSceneForMission);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", emit3DSoundsForActiveNpcs);
+struct V3 { s32 a, b, c; };
+extern void *rs_memset(void *, s32, s32);
+extern void play3DSoundEventP(void *, void *, void *, f32, f32, s32, s32, s32, s32) __asm__("play3DSoundEvent");
+extern void play3DSoundEventVariantP(void *, void *, void *, f32, f32, s32, s32, s32, s32, s32) __asm__("play3DSoundEventVariant");
+extern void register3DAudioListenerNodeP(void *, void *, void *, void *, void *, f32, f32, f32, s32, s32) __asm__("register3DAudioListenerNode");
+extern u8 D_cinematic_overlay_800B1A50[];
+extern s32 D_cinematic_overlay_800B1A40[];
+
+void emit3DSoundsForActiveNpcs(u8 *arg0, f32 *arg1) {
+    f32 sp28[3];
+    f32 sp38[3];
+    f32 sp48[3];
+    s32 sp58[3];
+    u32 i;
+    u8 *p;
+    s32 q;
+
+    rs_memset(sp58, 0, 0xC);
+    for (i = 0; i < *(u16 *)(arg0 + 0x4A); i++) {
+        {
+            p = (u8 *)(i * 0x13C + (s32)D_cinematic_overlay_800B1900);
+            if (p[3] & 2) {
+                p[0x100] = 0;
+                switch (((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C)[2]) {
+                case 0:
+                    play3DSoundEventP((void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0xBC), (void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0x70), sp58, 10.0f, 0.3f, 0xF, 0xF, 0x78, 0);
+                    ((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C)[0x100] = 0x5A;
+                    break;
+                case 4:
+                    play3DSoundEventP((void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0xBC), (void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0x70), sp58, 10.0f, 0.0f, 0xF, 0x13, 0x78, 0);
+                    ((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C)[0x100] = 0x5A;
+                    break;
+                case 1:
+                    play3DSoundEventP((void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0xBC), (void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0x70), sp58, 10.0f, 0.3f, 0xF, 0x12, 0x78, 0);
+                    ((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C)[0x100] = 0x64;
+                    break;
+                case 2:
+                    play3DSoundEventP((void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0xBC), (void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0x70), sp58, 10.0f, 0.5f, 0xF, 0xE, 0x78, 0);
+                    ((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C)[0x100] = 0x64;
+                    break;
+                case 3:
+                    play3DSoundEventP((void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0xBC), (void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0x70), sp58, 10.0f, 0.3f, 0xF, 0x11, 0x78, 0);
+                    ((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C)[0x100] = 0x64;
+                    break;
+                case 5:
+                    play3DSoundEventP((void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0xBC), (void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0x70), sp58, 12.0f, 0.6f, 0xF, 0x2E, 0x78, 0);
+                    ((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C)[0x100] = 0x78;
+                    break;
+                case 6:
+                    play3DSoundEventP((void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0xBC), (void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0x70), sp58, 10.0f, 0.7f, 0xF, 0x6F, 0x5A, 0);
+                    ((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C)[0x100] = 0x6E;
+                    break;
+                case 7:
+                case 8:
+                case 9:
+                case 10:
+                    play3DSoundEventVariantP((void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0xBC), (void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0x70), sp58, 21.0f, 0.6f, 0xF, 7, 1, 0x7F, 0x28);
+                    ((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C)[0x100] = 0x7F;
+                    break;
+                case 15:
+                case 16:
+                case 17:
+                    play3DSoundEventVariantP((void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0xBC), (void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0x70), sp58, 10.0f, 0.4f, 0xF, 0x39, 1, 0x5A, 0x28);
+                    ((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C)[0x100] = 0x78;
+                    break;
+                case 14:
+                    play3DSoundEventVariantP((void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0xBC), (void *)((s32)D_cinematic_overlay_800B1900 + i * 0x13C + 0x70), sp58, 34.0f, 0.8f, 0xF, 0x38, 1, 0x7F, 0x50);
+                    ((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C)[0x100] = 0x7F;
+                    break;
+                }
+            }
+        }
+    }
+    sp28[0] = arg1[9];
+    sp28[1] = arg1[10];
+    sp28[2] = arg1[11];
+    sp38[0] = arg1[2];
+    sp38[1] = arg1[5];
+    sp38[2] = arg1[8];
+    sp48[0] = -arg1[1];
+    sp48[1] = -arg1[4];
+    sp48[2] = -arg1[7];
+    register3DAudioListenerNodeP(D_cinematic_overlay_800B1A50, sp28, sp38, sp38, sp48, 2.0f, 2.0f, 50.0f, 1, 0x7F);
+    *(struct V3 *)D_cinematic_overlay_800B1A40 = *(struct V3 *)sp28;
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", updatePositionalAudioSource);
 
