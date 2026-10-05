@@ -62,7 +62,50 @@ INCLUDE_ASM("asm/nonmatchings/main/6C310", allocateAndInitCraftNpcContext);
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", advanceNpcOnCurvedPath);
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", splineWalkerCraftNpcHandler);
+extern u16 D_main_bss_80139594;
+u8 *allocateAndInitCraftNpcContext(f32, f32, u16);
+void advanceNpcOnCurvedPath(s32, s32, s32, u8 *);
+s32 destroyNpcSlotByIndex(u16);
+s32 isNpcWithinActiveReferenceRange(u8 *);
+s32 popNpcSlotFromTail(u16, void *);
+
+s32 splineWalkerCraftNpcHandler(u8 *arg0, u16 arg1, u8 *arg2) {
+    u8 *npc;
+    u8 *ctx;
+    f32 c;
+
+    npc = *(u8 **)(arg0 + 4);
+    switch (arg1) {
+    case 1:
+        ctx = allocateAndInitCraftNpcContext(*(f32 *)(arg2 + 4), *(f32 *)(arg2 + 8), *(u16 *)(arg2 + 0xC));
+        *(u8 **)(npc + 0xC) = ctx;
+        if (ctx == NULL) {
+            destroyNpcSlotByIndex(*(u16 *)(arg0 + 0x16));
+            return 1;
+        }
+        c = 100.0f;
+        *(s32 *)(ctx + 0x10) = 0;
+        *(f32 *)(ctx + 0x14) = c;
+        advanceNpcOnCurvedPath(0, 0, *(s32 *)arg2, ctx);
+        *(s32 *)(ctx + 0x78) = (*(s32 *)(ctx + 0x78) & 0xF1FFFFFF) | 0x08000000;
+        *(f32 *)(npc + 0) = *(f32 *)(ctx + 0x60);
+        *(f32 *)(npc + 4) = *(f32 *)(ctx + 0x64);
+        *(f32 *)(npc + 8) = *(f32 *)(ctx + 0x68);
+        popNpcSlotFromTail(D_main_bss_80139594, arg0);
+        return 1;
+    case 2:
+        rs_free(*(s32 *)(npc + 0xC));
+        return 1;
+    case 4:
+        if (isNpcWithinActiveReferenceRange(npc) == 0) {
+            destroyNpcSlotByIndex(*(u16 *)(arg0 + 0x16));
+            return 1;
+        }
+        advanceNpcOnCurvedPath(*(s32 *)(arg2 + 8), *(s32 *)arg2, 0, *(u8 **)(npc + 0xC));
+        break;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", stubNpcHandler);
 
@@ -75,7 +118,7 @@ void clearTrackedNpcSlots(void) {
     }
 }
 
-void splineWalkerCraftNpcHandler();
+s32 splineWalkerCraftNpcHandler();
 u16 spawnNpcOfType(void *, void *, u32, u8);
 typedef struct {
     s32 a;
