@@ -253,7 +253,35 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", tickObjectAnimSubstruct);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", resolveNpcAttachmentPos);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", quicksortFloatKeysWithValues);
+static __inline__ void swapKV(f32 *keys, u16 *vals, s32 a, s32 b) {
+    f32 tf = keys[a];
+    u16 tu;
+
+    keys[a] = keys[b];
+    keys[b] = tf;
+    tu = vals[a];
+    vals[a] = vals[b];
+    vals[b] = tu;
+}
+
+void quicksortFloatKeysWithValues(f32 *keys, u16 *vals, s32 lo, s32 hi) {
+    s32 last;
+    s32 i;
+
+    if (lo < hi) {
+        swapKV(keys, vals, lo, (lo + hi) / 2);
+        last = lo;
+        for (i = lo + 1; i <= hi; i++) {
+            if (keys[i] < keys[lo]) {
+                last++;
+                swapKV(keys, vals, last, i);
+            }
+        }
+        swapKV(keys, vals, lo, last);
+        quicksortFloatKeysWithValues(keys, vals, lo, last - 1);
+        quicksortFloatKeysWithValues(keys, vals, last + 1, hi);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", gatherAndSortNearbyNpcViewPoints);
 
