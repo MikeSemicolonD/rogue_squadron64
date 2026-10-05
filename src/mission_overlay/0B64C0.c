@@ -9,7 +9,155 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0B64C0", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B64C0", playerAwingInit);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B64C0", resetEngineTrailQuads);
+typedef struct {
+    s32 unk0;
+    u8 pad4[0xB4];
+    s32 unkB8;
+    u8 padBC[0xE8 - 0xBC];
+    f32 unkE8;
+    f32 unkEC;
+    f32 unkF0;
+    f32 unkF4;
+    u8 padF8[0x180 - 0xF8];
+    u16 unk180;
+    u8 pad182[0x2A0 - 0x182];
+} TrailObj;
+typedef struct {
+    u8 pad0[0x4C];
+    s32 flags;
+    f32 pos[3];
+    f32 scale[3];
+    f32 quat[4];
+    f32 off[3];
+} TrailNode;
+typedef struct {
+    s32 unk0;
+    TrailNode *n4;
+    TrailNode *n8;
+    u8 *unkC;
+    u8 *unk10;
+    TrailNode *n14;
+    TrailNode *n18;
+    u8 *unk1C;
+    u8 *unk20;
+} TrailArg;
+typedef struct {
+    u16 pad0[3];
+    u16 unk6;
+    u16 pad8[5];
+    u16 unk12;
+    u16 pad14[2];
+    u16 unk18;
+    u16 pad1A[3];
+    u16 unk20;
+    u16 pad22;
+} TrailBtn;
+extern TrailObj D_trail_objs[] __asm__("D_main_bss_80137DBC");
+extern u16 D_main_bss_80130B88[][3];
+extern TrailBtn D_mission_overlay_8010BE18[];
+extern f32 D_mission_overlay_8010BDD8[][2];
+extern u8 D_main_bss_8013800C[];
+u8 getCraftAnimationSlotFlag(s32);
+f32 getCraftAnimationSlotValue(s32);
+void setCraftAnimationSlotParams(s32, s32, f32);
+void updatePlayerCraftPhysics(TrailObj *, f32);
+void computeBootConfigScaledVec4(s32, f32, f32, u8 *, f32, f32);
+void clearVec4QuadStruct(u8 *);
+void addVec3At0x24(u8 *, f32, f32, f32);
+void applyScaleToMat3x4(u8 *, f32, f32, f32);
+void composeQuatToMat3x4(u8 *, f32 *);
+void composeRotationMatrixSlot1(u8 *, f32);
+
+static __inline__ void placeTrailQuad(u8 *q, TrailNode *n, f32 ang) {
+    clearVec4QuadStruct(q);
+    if (n->flags & 1) {
+        addVec3At0x24(q, -n->pos[0], -n->pos[1], -n->pos[2]);
+    }
+    if (n->flags & 2) {
+        applyScaleToMat3x4(q, n->scale[0], n->scale[1], n->scale[2]);
+    }
+    if (n->flags & 4) {
+        composeQuatToMat3x4(q, n->quat);
+    }
+    composeRotationMatrixSlot1(q, ang);
+    if ((n->flags & 9) == 9) {
+        addVec3At0x24(q, n->off[0] + n->pos[0], n->off[1] + n->pos[1], n->off[2] + n->pos[2]);
+    } else if ((n->flags & 9) == 8) {
+        addVec3At0x24(q, n->off[0], n->off[1], n->off[2]);
+    } else if (n->flags & 1) {
+        addVec3At0x24(q, n->pos[0], n->pos[1], n->pos[2]);
+    }
+}
+
+void resetEngineTrailQuads(TrailArg *arg0, f32 arg1) {
+    TrailObj *o = &D_trail_objs[arg0->unk0];
+    f32 v;
+    TrailNode *n;
+    u8 *q;
+    f32 ang;
+
+    if (*(u16 *)((s32)D_trail_objs + o->unkB8 * sizeof(TrailObj) + 0x180) & 1) {
+        v = o->unkEC;
+        if (D_main_bss_80130B88[arg0->unk0][0] & D_mission_overlay_8010BE18[arg0->unk0].unk12) {
+            v -= 0.09375f;
+        }
+        if (v < 2.25f) {
+            v = 2.25f;
+        }
+        if (D_main_bss_80130B88[arg0->unk0][0] & D_mission_overlay_8010BE18[arg0->unk0].unk18) {
+            v += 0.09375f;
+            if (getCraftAnimationSlotFlag(0) == 0) {
+                setCraftAnimationSlotParams(0, 1, 0);
+            }
+        } else if (getCraftAnimationSlotFlag(0) == 1) {
+            if (getCraftAnimationSlotValue(0) == 0.0f) {
+                setCraftAnimationSlotParams(0, 1, 0.5f);
+            }
+        }
+        if (!(D_main_bss_80130B88[arg0->unk0][0] & D_mission_overlay_8010BE18[arg0->unk0].unk12) && !(D_main_bss_80130B88[arg0->unk0][0] & D_mission_overlay_8010BE18[arg0->unk0].unk18) && o->unkE8 < 3.0f) {
+            v += 0.09375f;
+            if (v > 3.0f) {
+                v = 3.0f;
+            }
+        }
+        if (v > 5.625f) {
+            v = 5.625f;
+        }
+        o->unkEC = v;
+        if (o->unkF0 < v - o->unkE8) {
+            o->unkE8 = o->unkE8 + o->unkF0;
+        } else {
+            o->unkE8 = v;
+        }
+        if (v - o->unkE8 < -o->unkF4) {
+            o->unkE8 = o->unkE8 - o->unkF4;
+        } else {
+            o->unkE8 = v;
+        }
+    }
+    updatePlayerCraftPhysics(o, arg1);
+    computeBootConfigScaledVec4(arg0->unk0, 0.28125f, 0.28125f, D_main_bss_8013800C + arg0->unk0 * 0x2A0, (o->unkE8 - 2.25f) / 3.375f + 1.5f, arg1);
+    {
+        if (!(D_main_bss_80130B88[arg0->unk0][0] & D_mission_overlay_8010BE18[arg0->unk0].unk6) && !(D_main_bss_80130B88[arg0->unk0][0] & D_mission_overlay_8010BE18[arg0->unk0].unk20)) {
+            n = arg0->n4;
+            q = arg0->unkC + 0x1C;
+            ang = D_mission_overlay_8010BDD8[o->unkB8][0] * -20.25f * 0.5f;
+            placeTrailQuad(q, n, ang);
+            n = arg0->n14;
+            q = arg0->unk1C + 0x1C;
+            ang = D_mission_overlay_8010BDD8[o->unkB8][0] * -31.5f * 0.5f;
+            placeTrailQuad(q, n, ang);
+            n = arg0->n8;
+            q = arg0->unk10 + 0x1C;
+            ang = D_mission_overlay_8010BDD8[o->unkB8][0] * -20.25f * 0.5f;
+            placeTrailQuad(q, n, ang);
+            n = arg0->n18;
+            q = arg0->unk20 + 0x1C;
+            ang = D_mission_overlay_8010BDD8[o->unkB8][0] * -31.5f * 0.5f;
+            placeTrailQuad(q, n, ang);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B64C0", acquireLockOnTarget);
 
@@ -137,7 +285,7 @@ void cancelSceneQueueHandle(void *);
 void releaseMeshAsset(s32);
 void teardownHudInstancesAndUnbindNpcs(void);
 void freePlayerAuxBuffersIfActive(s32);
-void resetEngineTrailQuads(s32 *, s32);
+void resetEngineTrailQuadsCall(s32 *, s32) __asm__("resetEngineTrailQuads");
 void updateEngineThrustEffect(s32 *, s32);
 void tryPlaySpatialSoundWithGates(void *, void *);
 void enqueueMeshTypeForCleanup(s32);
@@ -204,7 +352,7 @@ s32 playerAwingUpdate(AwUpdNpc *arg0, s32 arg1, u32 *arg2) {
             freePlayerAuxBuffersIfActive(0);
             return 1;
         case 3:
-            resetEngineTrailQuads(s0, *arg2);
+            resetEngineTrailQuadsCall(s0, *arg2);
             updateEngineThrustEffect(s0, *arg2);
             return 1;
         case 5:
