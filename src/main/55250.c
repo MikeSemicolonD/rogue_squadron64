@@ -1,7 +1,40 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/55250", tickWrappingTimerAccumulatorList);
+typedef struct {
+    u8 *mat;
+    s16 frameCount;
+    u16 flags;
+    u32 frame;
+    u32 phase;
+} PoolEntryT;
+u8 *getTextureDataByMaterialId(u16);
+void uploadTextureDescriptorData(void *, void *);
+extern s32 D_main_bss_80137C80;
+extern s32 D_main_bss_80137C84;
+
+void tickWrappingTimerAccumulatorList(f32 dt) {
+    s32 n;
+    PoolEntryT *p;
+    PoolEntryT *e;
+    s32 i;
+    u16 idx;
+
+    n = D_main_bss_80137C80;
+    p = (PoolEntryT *)D_main_bss_80137C84;
+    e = p;
+    for (i = n; i > 0; i--, e++) {
+        if (e->flags & 0x4000) {
+            idx = e->frame >> 8;
+            e->frame = e->frame + e->phase * dt;
+            if (idx != (e->frame >> 8)) {
+                idx = (e->frame >> 8) % e->frameCount;
+                *(u8 **)(e->mat + 0x10) = getTextureDataByMaterialId(*(u16 *)e->mat);
+                uploadTextureDescriptorData(e->mat, e->mat + 0x14 + *(s32 *)(e->mat + 0xC) * idx);
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/55250", loadAssetIntoNewSlot);
 
