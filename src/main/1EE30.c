@@ -626,7 +626,42 @@ s32 findMatchingTextureRecursive(u16 arg0, struct material_entry *arg1, struct t
     return 0xFFFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", findTextureByName);
+extern u8 *D_main_bss_801143AC;
+
+s32 findTextureByName(u8 *name) {
+    s32 i;
+    s32 idx;
+    u16 type;
+    register struct D_main_bss_8011A444 *e asm("$3");
+    s32 base;
+
+    i = 0;
+    if (D_main_bss_8011A8B4 != 0) {
+        do {
+            idx = i & 0xFFFF;
+            { register s32 o asm("$2") = idx * 4; e = (struct D_main_bss_8011A444 *)(o + (s32)D_main_bss_8011A444); }
+            type = e->material_type;
+            if (type != 0) {
+                if (D_main_bss_801143AC != 0) {
+                    if (type & 2) {
+                        if (rs_strncmp(D_main_bss_801143AC + idx * 16, name, 16) == 0) {
+                            return idx;
+                        }
+                        goto next;
+                    }
+                } else if (!(type & 1)) {
+                    goto next;
+                }
+                if (rs_strncmp(D_main_bss_80128F08[e->D_80128F08_index].texture_name, name, 16) == 0) {
+                    return idx;
+                }
+            }
+next:
+            i++;
+        } while ((u16)i < D_main_bss_8011A8B4);
+    }
+    return 0xFFFF;
+}
 
 typedef struct {
     u8 b[4];
