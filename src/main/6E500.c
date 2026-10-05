@@ -353,7 +353,36 @@ void applyVolumeSettingsToMixer(void) {
     setMusyXVoiceTickGate(((u8 *)&gGameSettings.unlockAndSettingsFlags[1])[3] & 0x80);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", resetGameSettingsAndMissionStats);
+extern u8 missionStats;
+s32 resetGameSettingsAndMissionStats(void) {
+    u32 i;
+    u32 big;
+    u32 sz;
+
+    rs_memset((u8 *)&gGameSettings, 0, 0x30);
+    rs_memset((u8 *)&gMissionState, 0, 0x28);
+    rs_memset((u8 *)&missionStats, 0, 0x10);
+    i = 0;
+    gGameSettings.unlockAndSettingsFlags[1] = 0x10;
+    gGameSettings.unk2C = 0;
+    do {
+        gGameSettings.unlockAndSettingsFlags[(u8)i] = 0x19B;
+        i++;
+    } while ((u8)i == 0);
+    gGameSettings.unk23 = big = (u32)getUsableRdramSize() > 0x400000;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~1;
+    if (big) {
+        gGameSettings.unlockAndSettingsFlags[1] |= 1;
+    }
+    gGameSettings.musicVolume = 0x7F;
+    gGameSettings.soundFxVolume = 0x7F;
+    gGameSettings.speechVolume = 0x7F;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~0x80;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~4;
+    gGameSettings.unlockAndSettingsFlags[1] &= ~8;
+    gGameSettings.unlockAndSettingsFlags[1] |= 0x10;
+    return gGameSettings.unlockAndSettingsFlags[1];
+}
 
 extern u32 D_main_bss_80130B18;
 extern char gUnlockString[];
