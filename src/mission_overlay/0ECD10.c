@@ -1,7 +1,112 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ECD10", allocObjectPoolNode);
+typedef struct PoolPage {
+    u8 freeCount;
+    u8 freeFlags[4];
+    u8 pad5[3];
+    struct PoolPage *prev;
+    struct PoolPage *next;
+    u8 slots[4][0x1AC];
+} PoolPage;
+
+typedef struct {
+    PoolPage *page;
+    s8 count;
+    s8 index;
+} PoolSlotHdr;
+
+extern PoolPage *sPoolFree __asm__("D_mission_overlay_8010C0D0");
+extern PoolPage *sPoolFull __asm__("D_mission_overlay_8010C0D4");
+void *rs_malloc(s32, s32);
+
+void *allocObjectPoolNode(s32 size) {
+    PoolPage *page;
+    PoolPage *prev;
+    PoolSlotHdr *hdr;
+    s32 i;
+    s32 n;
+    s32 start;
+    s32 j;
+    s32 cnt;
+    u8 *p;
+    u8 v;
+
+    if (sPoolFree == NULL) {
+        sPoolFree = rs_malloc(0x6C0, 1);
+        if (sPoolFree == NULL) {
+            return NULL;
+        }
+        sPoolFree->prev = NULL;
+        sPoolFree->next = NULL;
+        sPoolFree->freeCount = 4;
+        for (n = 0; n < 4; n++) {
+            sPoolFree->freeFlags[n] = 1;
+        }
+    }
+    n = (u32)(size + 0x1AB) / 0x1AC;
+    page = sPoolFree;
+    prev = NULL;
+    for (; page != NULL; page = page->next) {
+        if (page->freeCount >= n) {
+            for (start = 0; start < 4 - n; start++) {
+                if (page->freeFlags[start] != 0) {
+                    for (j = start, cnt = 0; j < start + n; j++) {
+                        if (page->freeFlags[j] == 1) {
+                            cnt++;
+                        }
+                    }
+                    if (cnt == n) {
+                        goto found;
+                    }
+                }
+            }
+        }
+        prev = page;
+    }
+    page = rs_malloc(0x6C0, 1);
+    page->freeCount = 4;
+    v = 1;
+    i = 3;
+    p = (u8 *)page + i;
+    do {
+        p[1] = v;
+        p--;
+    } while (--i >= 0);
+    start = 0;
+    page->next = NULL;
+    page->prev = prev;
+    prev->next = page;
+found:
+    for (j = start; j < start + n; j++) {
+        page->freeFlags[j] = 0;
+    }
+    page->freeCount -= n;
+    if (page->freeCount == 0) {
+        if (page->prev != NULL) {
+            page->prev->next = page->next;
+        }
+        if (page->next != NULL) {
+            page->next->prev = page->prev;
+        }
+        if (page == sPoolFree) {
+            sPoolFree = page->next;
+        }
+        page->prev = NULL;
+        if (sPoolFull != NULL) {
+            page->next = sPoolFull;
+            sPoolFull->prev = page;
+        } else {
+            page->next = NULL;
+        }
+        sPoolFull = page;
+    }
+    hdr = (PoolSlotHdr *)(page->slots[start]);
+    hdr->page = page;
+    hdr->count = n;
+    hdr->index = start;
+    return hdr;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ECD10", unlinkAndFreeChildNpcNode);
 
