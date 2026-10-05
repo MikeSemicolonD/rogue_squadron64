@@ -104,7 +104,63 @@ void resetTextureAnimSlots(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/55250", registerTextureAnimSlot);
+typedef struct {
+    u16 chunk;
+    u8 a;
+    u8 b;
+    u16 flags;
+    u16 speed;
+    u16 phase;
+} RegAnimSlot;
+
+s32 findTextureByName(s32);
+s32 getTextureAttrBySlot(s32);
+
+s32 registerTextureAnimSlot(s32 arg0, s8 arg1, s8 arg2, f32 arg3, u16 arg4) {
+    f32 scale;
+    f32 wrap;
+    f32 v;
+    u32 val;
+    u16 tex;
+    s32 attr;
+    RegAnimSlot *s;
+    s32 i;
+
+    scale = 256.0f;
+    i = 0;
+    wrap = 2147483648.0f;
+    s = (RegAnimSlot *)D_main_bss_80137C90;
+    do {
+        if (s->flags != 0) {
+            i++, s++;
+        } else {
+            tex = findTextureByName(arg0);
+            if (tex == 0xFFFF) {
+                i++, s++;
+            } else {
+                attr = getTextureAttrBySlot(tex);
+                if ((attr & 0xFFFF) != 0xFFFF) {
+                    v = arg3 * scale;
+                    s->chunk = attr;
+                    s->a = arg1;
+                    s->b = arg2;
+                    if (!(wrap <= v)) {
+                        val = (s32)v;
+                    } else {
+                        val = (s32)(v - wrap);
+                        val |= 0x80000000;
+                    }
+                    s->speed = val;
+                    s->phase = 0;
+                    s->flags = arg4;
+                    return i & 0xFFFF;
+                }
+                i++, s++;
+            }
+        }
+    } while (i < 8);
+    return 0xFFFF;
+}
 
 typedef struct {
     u16 chunk;
