@@ -22,7 +22,33 @@ extern char hangarSecondaryWeaponStrings[4][0x30];
 extern u8  D_menu_overlay_800CD520[0x20];
 extern u8  D_menu_overlay_800CD6D0;
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", loadCutsceneAssetsByIndex);
+typedef struct {
+    s32 unk0;
+    s32 *unk4;
+    u8 pad8[0x38];
+    u16 flags;
+    u8 pad42[0x22F];
+    u8 unk271;
+    u8 pad272[6];
+} CutAssetEnt;
+
+extern CutAssetEnt *gCutAssetEnts __asm__("D_menu_overlay_800CDA5C");
+extern s32 *gCutAssetHead __asm__("D_menu_overlay_800CD670");
+u8 projectModelBoundsToScreen(void *, void *, void *, void *, s32, s32);
+
+void loadCutsceneAssetsByIndex(u16 idx) {
+    if ((gCutAssetEnts[idx].flags & 8) || projectModelBoundsToScreen(&gCutAssetHead, (u8 *)gCutAssetEnts[idx].unk4 + 0x28, (u8 *)*gCutAssetEnts[idx].unk4 + 0x5C, (u8 *)*gCutAssetEnts[idx].unk4 + 0x68, (gCutAssetEnts[idx].flags >> 4) & 1, gCutAssetEnts[idx].unk0)) {
+        gCutAssetEnts[idx].unk4[3] = (s32)gCutAssetHead;
+        if (gCutAssetHead) {
+            *(s32 *)(gCutAssetEnts[idx].unk4[3] + 4) = (s32)(gCutAssetEnts[idx].unk4 + 3);
+        }
+        gCutAssetEnts[idx].unk4[4] = 0;
+        gCutAssetHead = gCutAssetEnts[idx].unk4 + 3;
+        gCutAssetEnts[idx].unk271 = 1;
+    } else {
+        gCutAssetEnts[idx].unk271 = 0;
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/110410", D_menu_overlay_800A5130);
 
