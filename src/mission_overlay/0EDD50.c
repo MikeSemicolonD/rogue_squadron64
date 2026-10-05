@@ -484,7 +484,91 @@ void stopAllMusicWithFade(f32 arg0) {
     resetMusicSubsystemState(1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", startLevelBackgroundMusic);
+typedef struct {
+    s32 unk0;
+    u8 pad4[4];
+    s32 unk8;
+    s32 unkC;
+    u8 pad10[0x10];
+    u16 unk20;
+    u16 unk22;
+    u16 unk24;
+    u16 unk26;
+    u16 unk28;
+    u16 unk2A;
+    u16 unk2C;
+    s8 unk2E;
+    s8 unk2F;
+    s8 unk30;
+    s8 unk31;
+    u8 pad32[0xE];
+} LevelSongReq;
+extern s32 gCurrentLevel;
+extern u8 D_mission_overlay_8010C424;
+extern u8 D_mission_overlay_8010C261;
+extern u8 D_mission_overlay_8010B2EC[];
+void tickSongFadeTimer(f32);
+s32 isSongHandleFree(void *);
+void setSongPauseStateByHandle(s32, s32);
+
+void startLevelBackgroundMusic(f32 arg0) {
+    LevelSongReq req;
+    s32 i;
+    s32 cur;
+    u8 lvl;
+    SoundDescriptor *d;
+    typeof(&D_mission_overlay_8010B1C0[0]) tbl;
+
+    if (D_mission_overlay_8010C424 == 0) {
+        cur = gCurrentLevel;
+        tbl = D_mission_overlay_8010B1C0;
+        req.unk0 = 0;
+        req.unk8 = 0;
+        req.unkC = 0;
+        lvl = D_mission_overlay_8010B2EC[cur];
+        i = 0;
+        while (tbl[i].b != lvl) {
+            i++;
+        }
+        req.unk20 = i + 2;
+        req.unk22 = 1;
+        req.unk2C = 0xFFFF;
+        req.unk24 = 1;
+        req.unk26 = 1;
+        req.unk28 = 0;
+        req.unk2A = 0;
+        req.unk2E = 1;
+        req.unk2F = 1;
+        req.unk30 = 0;
+        req.unk31 = 0;
+        D_mission_overlay_8010C424 = 1;
+        stageSongFromRequestDescriptor((SongRequest *)&req);
+    }
+    if (D_mission_overlay_8010C260 == 1) {
+        if (D_mission_overlay_8010C261 == D_mission_overlay_8010C260) {
+            d = &gSoundDesc0E0;
+            if (!(isSongHandleActive(d->unk0) & 0xFF)) {
+                D_mission_overlay_8010C261 = 0;
+                D_mission_overlay_8010C260 = 0;
+                *d = *(SoundDescriptor *)&D_mission_overlay_8010C140;
+                D_mission_overlay_8010C263 = 0;
+                D_mission_overlay_8010C300 = 0;
+            }
+        } else if (isSongHandleFree(&D_mission_overlay_8010C140) & 0xFF) {
+            D_mission_overlay_8010C261 = 0;
+            D_mission_overlay_8010C260 = 0;
+            gSoundDesc0E0 = *(SoundDescriptor *)&D_mission_overlay_8010C140;
+            D_mission_overlay_8010C300 = 0;
+            if (D_mission_overlay_8010C265 != 0) {
+                D_mission_overlay_8010C265 = 0;
+                D_mission_overlay_8010C264 = 1;
+                setSongPauseStateByHandle(D_mission_overlay_8010C0E0, 0);
+            }
+        }
+    } else {
+        tickSongFadeTimer(arg0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", tickObjectSoundCueState);
 
