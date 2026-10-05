@@ -385,7 +385,46 @@ s32 findManifestEntryByName(u8 *arg0) {
     return var_s4;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/04080", findManifestEntryByName);
+struct tyler {
+    u32 unk0;
+    u32 unk4;
+};
+
+s32 findManifestEntryByName(u8 *arg0) {
+    u32 temp_s0;
+    s32 temp_s2_2;
+    s32 var_s0;
+    s32 var_s4;
+    struct D_80110A80_entry *temp_s3;
+    struct manifest_entry *temp_v0;
+    u32 temp_s5;
+    struct tyler *temp_s2;
+
+    for (var_s0 = 0; var_s0 < D_main_bss_80110D40; var_s0++) {
+        if (rs_strcmp(D_main_bss_80110A74[var_s0].name, arg0) == 0) break;
+    }
+    temp_s5 = D_main_bss_80110A74[var_s0].data_offset;
+    for (var_s4 = 0; var_s4 < 4; var_s4++) {
+        if (gManifestTable[var_s4].one == 0) break;
+    }
+    temp_s2 = rs_malloc(8, 9U);
+    temp_s3 = &gManifestTable[var_s4];
+    if (D_main_bss_80110A74[var_s0].unk18 == 0) {
+        waitDmaSlotComplete(submitDmaSlot(&D_main_bss_80110D44[temp_s5], temp_s2, 8));
+        temp_s2_2 = temp_s2->unk0;
+        temp_s0 = temp_s2->unk4 & 0x7FFFFFFF;
+        rs_free(temp_s2);
+        temp_s3->manifest = rs_malloc(temp_s0, 9U);
+        temp_s3->one = 1;
+        temp_s3->data = &D_main_bss_80110D44[temp_s5];
+        *((u8 *)temp_s3 + 0) = 0;
+        *((u8 *)temp_s3 + 0x20) = 0;
+        temp_s3->entry_count = temp_s0 >> 5;
+        temp_s3->unk4C = 0;
+        waitDmaSlotComplete(submitDmaSlot(D_main_bss_80110D44 + temp_s5 + temp_s2_2, temp_s3->manifest, temp_s0));
+    }
+    return var_s4;
+}
 #endif
 
 s32 freeManifestSegmentAssets(s32 arg0) {
