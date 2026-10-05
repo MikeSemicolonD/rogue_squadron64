@@ -92,7 +92,161 @@ s32 tickAtStCannonFireEffect(CfActor *arg0, s32 arg1) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", updateAtStBodyKinematics);
+extern f32 D_mission_overlay_8010A68C[];
+void play3DSoundEventVariant(void *, void *, void *, f32, f32, s32, s32, s32, s32, s32);
+void *getObjectMeshTransformOrLocal(s32, void *);
+s32 isPendingChildNpcActive(s32);
+s32 computeActorAnchorDeltaAfterLOS(s32);
+void mat34CrossRowsAndCopyPos(void *, void *, f32);
+void mat3x3InverseInto(void *, void *);
+void transformVec3ByMat34(void *, void *, void *);
+void vec3NormalizeInto(void *, void *);
+void buildRotationMatrixSlot0(void *, f32);
+void composeRotationMatrixSlot1(void *, f32);
+void buildRotationMatrixSlot1(void *, f32);
+f32 constMinusSinfApprox(f32);
+f32 vec3Dot(void *, void *);
+f32 vec3Length(void *);
+void vec3Cross(void *, void *, void *);
+void normalize_vector(void *);
+void quatFromAxisAngle(void *, void *, f32);
+void rotateVec3ByQuat(void *, void *, void *);
+void factor5RemoveListNode(void *);
+
+typedef struct { f32 x, y, z; } AkV3;
+typedef struct { f32 x, y, z, w; } AkV4;
+typedef struct { u8 pad0[0x24]; u8 p24[0x14]; s32 f38; u8 pad3C[0x1C]; f32 f58; f32 f5C; f32 f60; u8 pad64[8]; f32 f6C; u8 pad70[0x44]; u8 pB4[0x44]; u8 fF8; } AkBody;
+
+void updateAtStBodyKinematics(AkBody *self, f32 dt) {
+    f32 m28[12];
+    f32 m58[12];
+    AkV4 v88;
+    AkV4 v98;
+    f32 mA8[12];
+    u8 a;
+    s32 b;
+    f32 *t;
+    f32 ang;
+    f32 lim;
+    f32 ang2;
+    f32 c1;
+    f32 c2;
+
+    a = isPendingChildNpcActive(self->f38);
+    if (a == 1) {
+        b = computeActorAnchorDeltaAfterLOS(self->f38) & 0xFF;
+        if (b == a) {
+            AkV4 vD8;
+            f32 qE8[4];
+            AkV4 vF8;
+            AkV4 v108;
+            AkV4 v118;
+            t = getObjectMeshTransformOrLocal(self->f38, mA8);
+            mat34CrossRowsAndCopyPos(m28, self, 1.0f);
+            mat3x3InverseInto(m58, m28);
+            transformVec3ByMat34(m58, t, &v98);
+            v98.y -= self->f6C;
+            vec3NormalizeInto(&v88, &v98);
+            buildRotationMatrixSlot0(m28, self->f5C);
+            composeRotationMatrixSlot1(m28, self->f58);
+            transformVec3ByMat34(m28, D_mission_overlay_8010A68C, &v98);
+            ang = constMinusSinfApprox(vec3Dot(&v98, &v88)) * 57.29578f;
+            if (ang > 0.001f) {
+                if (ang > 5.0f && self->fF8 == 0) {
+                    self->fF8 = b;
+                    play3DSoundEventVariant(self->pB4, self, self->p24, 8.0f, 0.5f, 7, 0x49, b, 0x6E, 0x28);
+                }
+                lim = self->f60 * (dt * 30.0f);
+                if (lim < ang) ang = lim;
+                vec3Cross(&vD8, &v98, &v88);
+                normalize_vector(&vD8);
+                quatFromAxisAngle(qE8, &vD8, ang);
+                rotateVec3ByQuat(qE8, &v98, &v88);
+                vD8.x = v88.x;
+                vD8.y = 0.0f;
+                vD8.z = v88.z;
+                ang = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A68C, &vD8) / (vec3Length(D_mission_overlay_8010A68C) * vec3Length(&vD8)));
+                *(AkV3 *)&v108 = *(AkV3 *)D_mission_overlay_8010A68C;
+                v108.y = 0.0f;
+                *(AkV3 *)&v118 = *(AkV3 *)&vD8;
+                v118.y = 0.0f;
+                ang = ang * 57.29578f;
+                vec3Cross(&vF8, &v108, &v118);
+                if (!(vF8.y >= 0.0f)) ang = -ang;
+                buildRotationMatrixSlot1(m28, -ang);
+                transformVec3ByMat34(m28, &v88, &vD8);
+                vD8.x = 0.0f;
+                self->f58 = ang;
+                ang2 = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A68C, &vD8) / (vec3Length(D_mission_overlay_8010A68C) * vec3Length(&vD8))) * 57.29578f;
+                if (!(vD8.y <= 0.0f)) ang2 = -ang2;
+                c1 = self->f58;
+                self->f5C = ang2;
+                if (c1 > 360.0f) {
+                    self->f58 = 360.0f;
+                } else if (c1 < -360.0f) {
+                    self->f58 = -360.0f;
+                }
+                c2 = self->f5C;
+                if (c2 > 20.0f) {
+                    self->f5C = 20.0f;
+                } else if (c2 < -20.0f) {
+                    self->f5C = -20.0f;
+                }
+            } else if (self->fF8 == b) {
+                self->fF8 = 0;
+                factor5RemoveListNode(self->pB4);
+            }
+            return;
+        }
+    }
+    {
+        f32 mD8[12];
+        AkV4 v108;
+        AkV4 v118;
+        AkV4 v128;
+        f32 q138[4];
+        AkV4 v148;
+        AkV4 v158;
+        AkV4 v168;
+        buildRotationMatrixSlot0(mD8, self->f5C);
+        composeRotationMatrixSlot1(mD8, self->f58);
+        transformVec3ByMat34(mD8, D_mission_overlay_8010A68C, &v118);
+        ang = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A68C, &v118)) * 57.29578f;
+        if (ang > 0.001f) {
+            if (ang > 5.0f && self->fF8 == 0) {
+                self->fF8 = 1;
+                play3DSoundEventVariant(self->pB4, self, self->p24, 8.0f, 0.5f, 7, 0x49, 1, 0x6E, 0x28);
+            }
+            lim = self->f60 * (dt * 30.0f);
+            if (lim < ang) ang = lim;
+            vec3Cross(&v128, &v118, D_mission_overlay_8010A68C);
+            normalize_vector(&v128);
+            quatFromAxisAngle(q138, &v128, ang);
+            rotateVec3ByQuat(q138, &v118, &v108);
+            v128.x = v108.x;
+            v128.y = 0.0f;
+            v128.z = v108.z;
+            ang = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A68C, &v128) / (vec3Length(D_mission_overlay_8010A68C) * vec3Length(&v128)));
+            *(AkV3 *)&v158 = *(AkV3 *)D_mission_overlay_8010A68C;
+            v158.y = 0.0f;
+            *(AkV3 *)&v168 = *(AkV3 *)&v128;
+            v168.y = 0.0f;
+            ang = ang * 57.29578f;
+            vec3Cross(&v148, &v158, &v168);
+            if (!(v148.y >= 0.0f)) ang = -ang;
+            buildRotationMatrixSlot1(mD8, -ang);
+            transformVec3ByMat34(mD8, &v108, &v128);
+            v128.x = 0.0f;
+            self->f58 = ang;
+            ang2 = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A68C, &v128) / (vec3Length(D_mission_overlay_8010A68C) * vec3Length(&v128))) * 57.29578f;
+            if (!(v128.y <= 0.0f)) ang2 = -ang2;
+            self->f5C = ang2;
+        } else if (self->fF8 == 1) {
+            self->fF8 = 0;
+            factor5RemoveListNode(self->pB4);
+        }
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A705C);
 
