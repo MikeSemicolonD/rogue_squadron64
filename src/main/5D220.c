@@ -136,7 +136,78 @@ INCLUDE_ASM("asm/nonmatchings/main/5D220", dispatchCueByCategory);
 
 INCLUDE_RODATA("asm/nonmatchings/main/5D220", D_main_8003B168);
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", loadWeaponsHobObjects);
+extern s32 D_main_8003B168;
+extern s32 D_main_bss_80137CFC;
+extern s32 D_main_bss_80138920;
+extern s32 D_main_bss_8013961C;
+extern s32 D_main_bss_80139740;
+extern u8 *D_main_bss_801395E0[];
+extern s16 D_main_bss_80139738;
+extern s8 D_main_bss_80139730;
+extern s8 D_main_bss_80139734[];
+extern s8 D_main_bss_8013973A;
+extern f32 D_main_bss_8013973C;
+void load_hmt_and_hob(char *, s32, s32, s32);
+u8 *getHobObjectByName(char *);
+s16 loadAndRelocateAsset(s32 *, s32, s32);
+void loadExplosionTextures(void);
+s32 rs_malloc(s32, s32);
+s32 findAssetAcrossSegments(s32, s32, s32, char *, s32);
+void setupAssetDma(s32, s32, s32, s32, s32, s32);
+void teardownAssetDma(s32, s32);
+void initWeaponSlotIndexTable(void);
+s32 load_asset(char *);
+
+void loadWeaponsHobObjects(void) {
+    s32 i;
+    u8 **s0;
+    char **s1;
+    u8 *obj;
+    char *name;
+    u8 *p;
+    s8 *q;
+    s32 h;
+    u32 flag;
+
+    load_hmt_and_hob("weapons", 0, 0, 0);
+    i = 0;
+    flag = 0x10000;
+    s0 = D_main_bss_801395E0;
+    s1 = D_main_8009ED00;
+    do {
+        name = *s1;
+        if (name != NULL) {
+            obj = getHobObjectByName(name);
+            *s0 = obj;
+            p = *(u8 **)(*(u8 **)(obj + 0x10) + 0x10);
+            *(u32 *)(p + 0xC) |= flag;
+        } else {
+            *s0 = NULL;
+        }
+        s0++;
+        i++;
+        s1++;
+    } while (i < 0xF);
+    D_main_bss_80139738 = loadAndRelocateAsset(&D_main_8003B168, 0, 0);
+    loadExplosionTextures();
+    D_main_bss_80139740 = rs_malloc(0x400, 0);
+    h = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, "lights_PAL", 1);
+    i = 3;
+    setupAssetDma(D_main_bss_80138920, 0, h, 0, 0x400, D_main_bss_80139740);
+    teardownAssetDma(D_main_bss_80138920, h);
+    q = D_main_bss_80139734 + i;
+    do {
+        *q = i;
+        i -= 1;
+        q -= 1;
+    } while (i >= 0);
+    i = 4;
+    D_main_bss_80139730 = i;
+    initWeaponSlotIndexTable();
+    D_main_bss_8013961C = load_asset("weapon_info");
+    D_main_bss_8013973A = 0;
+    D_main_bss_8013973C = 0.5f;
+}
 
 s32 findSegmentObjectSphereHit(s32, void *, void *, void *);
 s32 findNpcInScaledBoxRegion(u8 *arg0, f32 scale, u16 ex, u16 slot, f32 *out) {
