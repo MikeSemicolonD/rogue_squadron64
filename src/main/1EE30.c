@@ -645,7 +645,85 @@ s32 fillTextureDescriptorNoCopy(u16 id, TextureDescriptor *desc) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", loadAndDecodeTexture);
+typedef struct {
+    u16 matIdx;
+    u8 allocated;
+    u8 pad3;
+    u16 flags;
+    u8 name[6];
+    s32 size;
+} TexLoadDesc;
+
+extern s32 D_main_bss_8011A7D0;
+void *parseImageFile(void *, s32, s32, s32, s32, s32, void *);
+u16 *packTlutEntriesRgba5551(u16 *, s32, u8 *, s16, u8 *);
+
+s32 loadAndDecodeTexture(TexLoadDesc *d, void **out, s32 arg2, u32 tlutSrc) {
+    register u16 i asm("$4");
+    s16 t;
+    u16 flags;
+    u8 shift;
+    u16 w;
+    u16 h;
+    void *img;
+    u16 tl;
+    u16 n;
+    u16 fl;
+    u8 *nm;
+
+    if (*out == NULL) {
+        *out = rs_malloc(d->size, 0);
+        if (*out == NULL) {
+            return 0;
+        }
+        d->allocated = 1;
+    } else {
+        d->allocated = 0;
+    }
+    img = *out;
+    flags = d->flags;
+    t = D_main_bss_8011A444[d->matIdx].D_80128F08_index;
+    shift = D_main_bss_80128F08[t].unk03;
+    w = D_main_bss_80128F08[t].width;
+    h = D_main_bss_80128F08[t].height;
+    img = parseImageFile(img, flags, w, h, D_main_bss_80128F08[t].unk02, arg2, d->name);
+    if (flags & 0x800) {
+        parseImageFile(img, 4, (u16)(w >> shift), (u16)(h >> shift), 1, arg2 + 4, NULL);
+    } else if (flags & 0x400) {
+        parseImageFile(img, 5, (u16)(w >> shift), (u16)(h >> shift), 1, arg2 + 4, NULL);
+    }
+    tl = D_main_bss_80128F08[t].unk0E;
+    fl = d->flags;
+    nm = d->name;
+    switch (fl & 0xF) {
+    case 0:
+        n = 0x10;
+        break;
+    case 1:
+        n = 0x100;
+        break;
+    default:
+        return;
+    }
+    if ((tlutSrc & 0xFF000000) != 0x80000000) {
+        return 1;
+    }
+    if (tl == 0xFFFF) {
+        for (i = 0; i < D_main_bss_80128F04; i++) {
+            if (D_main_bss_80128EFC[i] == NULL) {
+                break;
+            }
+        }
+        if (i != D_main_bss_80128F04) {
+            D_main_bss_8011A7D0 -= n * 2;
+            D_main_bss_80128EFC[i] = (u16 *)D_main_bss_8011A7D0;
+            packTlutEntriesRgba5551((u16 *)D_main_bss_8011A7D0, fl, (u8 *)tlutSrc, n, nm);
+        }
+    } else {
+        packTlutEntriesRgba5551(D_main_bss_80128EFC[tl], fl, (u8 *)tlutSrc, n, nm);
+    }
+    return 1;
+}
 
 s32 rs_free(void *);
 
