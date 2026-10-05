@@ -127,7 +127,80 @@ void releaseSndMidiSetupRecords(SndMidiSetup *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/97D20", parseSndFiles);
 
-INCLUDE_ASM("asm/nonmatchings/main/97D20", unloadLastSndFileGroup);
+extern u8 gMusyXActiveFlag;
+extern u8 *D_main_bss_801529D0[];
+extern void factor5BucketedTableRemoveEntry(u16);
+extern void factor5SortedTableRemoveWidePair(u16);
+extern void factor5SecondSortedTableRemoveValue(u16);
+extern void factor5SortedTableRemoveValue(u16);
+extern void factor5SortedTableRemoveTaggedValue(u16);
+extern void factor5SortedTableRemoveVoiceRecord(u16);
+
+static __inline__ void unl0(u16 *ids) {
+    while (*ids != 0xFFFF) {
+        factor5BucketedTableRemoveEntry(*ids);
+        ids++;
+    }
+}
+
+static __inline__ void unl1(u16 *ids) {
+    while (*ids != 0xFFFF) {
+        factor5SortedTableRemoveWidePair(*ids);
+        ids++;
+    }
+}
+
+static __inline__ void unl2(u16 *ids) {
+    while (*ids != 0xFFFF) {
+        factor5SecondSortedTableRemoveValue(*ids);
+        ids++;
+    }
+}
+
+static __inline__ void unl3(u16 *ids) {
+    while (*ids != 0xFFFF) {
+        factor5SortedTableRemoveValue(*ids);
+        ids++;
+    }
+}
+
+static __inline__ void unl4(u16 *ids) {
+    while (*ids != 0xFFFF) {
+        factor5SortedTableRemoveTaggedValue(*ids);
+        ids++;
+    }
+}
+
+s32 unloadLastSndFileGroup(void) {
+    u8 *e;
+    u8 *g;
+    u8 *q;
+    s16 n;
+    s32 i;
+
+    if (gMusyXActiveFlag != 0 && D_main_bss_80152A10 != 0) {
+        n = D_main_bss_80152A10 - 1;
+        e = D_main_bss_801529D0[n];
+        {
+            s32 o0 = *(s32 *)(e + 8);
+            D_main_bss_80152A10 = n;
+            unl0((u16 *)(o0 + (s32)e + 8));
+        }
+        unl1((u16 *)(*(s32 *)(e + 0xC) + (s32)e + 8));
+        unl2((u16 *)(*(s32 *)(e + 0x10) + (s32)e + 8));
+        unl3((u16 *)(*(s32 *)(e + 0x14) + (s32)e + 8));
+        unl4((u16 *)(*(s32 *)(e + 0x18) + (s32)e + 8));
+        if (*(u16 *)(e + 6) == 1) {
+            g = (u8 *)(*(s32 *)(e + 0x1C) + (s32)e);
+            g += 8;
+            for (i = 0; i < *(u16 *)g; i++) {
+                factor5SortedTableRemoveVoiceRecord(*(u16 *)(g + i * 0xC + 4));
+            }
+        }
+        return 1;
+    }
+    return 0;
+}
 
 s32 returnZeroAudioStub(void) {
     return 0;
