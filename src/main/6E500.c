@@ -23,7 +23,93 @@ extern u8 D_main_bss_8013A5B0;
 
 s32 D_main_800A0A60 = -1;
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", runIdleFramesAndLoadSaveData);
+typedef struct { u8 pad[0x10]; s32 a, b, c, d; f32 e, f, g; u8 rest[0x30]; } CamArgs;
+extern void setFrameLevelStateBytes(s32, s32, s32);
+extern void waitForPrevFrameDone(void);
+extern void frameStartReset(void);
+extern void setupCameraMatrices(u8 *);
+extern void drawFrameProfilerBars(void);
+extern void submitGfxFrame(void);
+extern s32 resetGameSettingsAndMissionStats();
+extern s32 findManifestEntryByName(char *);
+extern s32 initSaveData(s32, s32 (*)(s32));
+extern s32 load_asset(char *);
+extern void rs_free(s32);
+extern s32 loadSaveDataIfNotLoaded(void);
+extern s8 D_main_bss_8013A5B1;
+extern void resetSettingsClearSaveAndReload(void);
+extern s8 D_main_bss_80130B38;
+extern s8 D_main_bss_80130B39;
+extern s8 D_main_bss_80130B3A;
+extern s8 D_main_bss_80130B56;
+extern s8 D_main_bss_80130B6C;
+extern s8 D_main_bss_80130BA0;
+extern s32 D_main_bss_80137CFC;
+
+void runIdleFramesAndLoadSaveData(void) {
+    CamArgs ca;
+
+    s32 sv;
+    u32 i;
+    rs_memset((u8 *)&ca, 0, 0x5C);
+    ca.a = 0x140;
+    ca.b = 0xE0;
+    ca.c = 0xA0;
+    ca.d = 0x70;
+    ca.e = 45.0f;
+    ca.f = 0.5f;
+    ca.g = 10.0f;
+    clearVec4QuadStruct((void *)ca.rest);
+    setFrameLevelStateBytes(0, 0, 0);
+    i = 0;
+    do {
+        i++;
+        pollControllerInputs();
+        waitForPrevFrameDone();
+        frameStartReset();
+        setupCameraMatrices((u8 *)&ca);
+        drawFrameProfilerBars();
+        submitGfxFrame();
+    } while (i < 0x20);
+    rs_memset((u8 *)&gSaveDataBody, 0, 0xB0);
+    resetGameSettingsAndMissionStats();
+    D_main_bss_80137CFC = findManifestEntryByName("data");
+    D_main_bss_8013A5B0 = 0;
+    D_main_bss_8013A5B1 = 0;
+    sv = load_asset("gamesave");
+    if (!(initSaveData(sv, classifySaveStateFromInput) & 0xFF)) {
+        D_main_bss_80130B6C = 1;
+    }
+    rs_free(sv);
+    if (D_main_bss_8013A5B0 != 1) goto test;
+reset:
+    resetSettingsClearSaveAndReload();
+    D_main_bss_8013A5B0 = 0;
+    goto done;
+test:
+    if (!(loadSaveDataIfNotLoaded() & 0xFF)) goto reset;
+    if (isSaveStateNotPending() & 0xFF) goto reset;
+done:
+    i = 0;
+    freeManifestSegmentAssets(D_main_bss_80137CFC);
+    D_main_bss_80130B3A = 0;
+    D_main_bss_80130B39 = 0;
+    D_main_bss_80130BA0 = 0;
+    D_main_bss_80130B38 = 0;
+    gMissionState.unk20 = 1;
+    gMissionState.unk21 = 0;
+    do {
+        i++;
+        pollControllerInputs();
+        waitForPrevFrameDone();
+        frameStartReset();
+        setupCameraMatrices((u8 *)&ca);
+        drawFrameProfilerBars();
+        submitGfxFrame();
+    } while (i < 8);
+    D_main_bss_80130B56 = (isControllerStickReady(0) & 0xFF) == 0;
+    applyAccountUnlocksToSettings();
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6E500", applySaveSlotToMissionState);
 
