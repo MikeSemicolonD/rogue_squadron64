@@ -122,7 +122,7 @@ extern s32 isPlayerShipActive();
 extern void markStructInitializedOnce(s32);
 extern void startPlayerSlotAnimationChannel(s32, s32);
 extern void stopVoiceByHandleLocked(s32);
-extern void bsearchFactor5TableByU16Key(s32, s32, s32);
+extern s32 bsearchFactor5TableByU16Key(s32, s32, s32);
 
 void handleLevelSelectStartConfirm(void) {
     u8 start = 0;
@@ -296,7 +296,52 @@ void printLevelSelectWeaponText(u8 arg0) {
     setPlayerSlotEntryRGB(2, 1, &bridgeWhiteColor);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", startSlotLoopAnimWithVoiceSync);
+extern s32 D_menu_overlay_800CDFB0;
+extern u8 bridgeMenuDesiredLevel;
+extern u8 D_menu_overlay_800CDABF;
+extern f32 D_menu_overlay_800CDB0C;
+extern void setVoiceLineLoopFlag(s32);
+s32 mallocVoiceLineStruct(u16 *, f32, s32);
+s32 startPlayerSlotAnimationChannelLooping(s32, f32);
+
+void startSlotLoopAnimWithVoiceSync(f32 arg0) {
+    u16 sp10[2] = {0, 0xFFFF};
+    s32 r;
+
+    r = startPlayerSlotAnimationChannelLooping(D_menu_overlay_800CDFAC, arg0) & 0xFF;
+    switch (r) {
+    case 1:
+        if (D_menu_overlay_800CDFB0 == 0) {
+            sp10[0] = bridgeMenuDesiredLevel + 0x279;
+            D_menu_overlay_800CDFB0 = mallocVoiceLineStruct(sp10, 0.7f, 0x6E);
+            D_menu_overlay_800CDABF = r;
+            D_menu_overlay_800CDB0C = -10.0f;
+        }
+        D_menu_overlay_800CC700 = bsearchFactor5TableByU16Key(0x43, 0x32, 0x40);
+        break;
+    case 2:
+        stopVoiceByHandleLocked(D_menu_overlay_800CC700);
+        D_menu_overlay_800CC700 = -1;
+        break;
+    case 3:
+        if (D_menu_overlay_800CDFB0 != 0) {
+            setVoiceLineLoopFlag(D_menu_overlay_800CDFB0);
+        }
+        stopVoiceByHandleLocked(D_menu_overlay_800CC700);
+    case 4:
+        bsearchFactor5TableByU16Key(0x42, 0x55, 0x40);
+        break;
+    }
+    if (bridgeTransitionState == 0) {
+        D_menu_overlay_800CDB0C = D_menu_overlay_800CDB0C - arg0;
+        if (D_menu_overlay_800CDB0C > -5.0f && D_menu_overlay_800CDB0C < 0.0f && D_menu_overlay_800CDABF == 0 && D_menu_overlay_800CDFB0 == 0 && bridgeMenuState != 4) {
+            sp10[0] = bridgeMenuDesiredLevel + 0x279;
+            D_menu_overlay_800CDFB0 = mallocVoiceLineStruct(sp10, 0.7f, 0x6E);
+            D_menu_overlay_800CDABF = 1;
+            D_menu_overlay_800CDB0C = -10.0f;
+        }
+    }
+}
 
 void samplePlayerAnimChannel(s32, s32, f32);
 void activateAnimationKeyframe(s32, s32, u8);
