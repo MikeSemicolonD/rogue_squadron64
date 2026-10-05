@@ -87,7 +87,32 @@ s32 npcTickEffectChannelD(void *arg0)
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0DDED0", npcTickEffectChannelE);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0DDED0", playAttachmentMaterialFadeSound);
+s32 playAttachmentMaterialFadeSound(void *arg0)
+{
+  u8 sp28[0x30];
+  f32 sp58;
+  f32 fv;
+  s32 r;
+  struct EffectRow *e;
+  u8 *npc = *((u8 **) (((u8 *) arg0) + 4));
+  lookupHmtTextureByName(*((s32 *) (npc + 0x30)), D_mission_overlay_800A7E28, 0, sp28, 0, 0);
+  fv = ((f32 *) (*((u8 **) (npc + 0x34))))[D_main_bss_80137CE4 + 0x37];
+  if (fv != 0.0f)
+  {
+    e = &D_mission_overlay_8010A9C4[npc[0xCF]];
+    e++;
+    e--;
+    resolveNpcAttachmentPos(*((s32 *) (npc + 0x38)), sp28, *((s32 *) (&e->unkC)), fv);
+  }
+  r = tickProgressChannel(*((s32 *) (npc + 0x38)), sp28, 0, &sp58) & 0xFF;
+  if (r == 1)
+  {
+    *((f32 *) (npc + 0xDC)) = 0.0f;
+    triggerCueWithSlotEffect(*((s32 *) (npc + 0x38)), 0, sp28, &D_mission_overlay_8010A9C4[npc[0xCF]], r, D_mission_overlay_8010A9C4[npc[0xCF]].unkC, sp58);
+    play3DSoundEvent(0, npc, npc + 0x24, 19.0f, 0.5f, 0, 0x48, 0x78, 0x28);
+  }
+  return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0DDED0", transformCraftDualAnchorsAndApplyMotion);
 
