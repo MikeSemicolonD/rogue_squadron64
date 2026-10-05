@@ -37,7 +37,67 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0ADF80", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", updateCinematicCameraStateMachine);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", submitCameraTrackedObjectToRender);
+extern s8 D_mission_overlay_8010B6E8;
+extern f32 vec3Length(f32 *);
+extern void initVec4TripletFromArgs(f32 *, f32, f32, f32);
+extern void mat3x4Multiply(void *, void *, void *);
+extern void addNpcToVisibilityBucket(s32, void *, void *, f32);
+typedef struct {
+    u8 active;
+    u8 head;
+    u8 count;
+} CtState;
+typedef struct {
+    u8 pad[4];
+    u8 *cam;
+} CtCam;
+extern CtCam D_main_bss_80138D18;
+
+void submitCameraTrackedObjectToRender(s32 *arg0) {
+    f32 m[12];
+    f32 d[4];
+    f32 pos[3];
+    f32 f;
+    s32 i;
+    EffectModelInstance *pool;
+    u8 *inst;
+    u8 *p;
+    s32 idx;
+    CtState *st = (CtState *)&D_mission_overlay_8010B6E8;
+
+    if (st->active != 0 && st->count != 0) {
+        i = 0;
+        do {
+            idx = st->head - i;
+            if (idx < 0) {
+                idx += 60;
+            }
+            pool = D_mission_overlay_8010B6E0;
+            p = (u8 *)(idx * 0xF8 + (s32)pool);
+            if (p[0xF4] != 0) {
+                u8 *cam;
+                inst = p;
+                cam = D_main_bss_80138D18.cam;
+                d[0] = *(f32 *)(inst + 0) - *(f32 *)(cam + 0x10);
+                d[1] = *(f32 *)(inst + 4) - *(f32 *)(cam + 0x14);
+                d[2] = *(f32 *)(inst + 8) - *(f32 *)(cam + 0x18);
+                f = (vec3Length(d) - 1.2f) * 6.2f;
+                if (f < 1.0f) {
+                    f = 1.0f;
+                } else if (15.0f < f) {
+                    f = 15.0f;
+                }
+                pos[0] = *(f32 *)(inst + 0) + *(f32 *)(inst + 0x28) * 0.165f;
+                pos[1] = *(f32 *)(inst + 4) + *(f32 *)(inst + 0x2C) * 0.165f;
+                pos[2] = *(f32 *)(inst + 8) + *(f32 *)(inst + 0x30) * 0.165f;
+                initVec4TripletFromArgs(m, f, f, 1.0f);
+                mat3x4Multiply(inst + 0x10, m, inst + 0x68);
+                addNpcToVisibilityBucket(*arg0, inst + 0x40, pos, 0.33f);
+            }
+            i++;
+        } while (i < st->count);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", emitEffectParticlesAlongPath);
 
