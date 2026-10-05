@@ -12,4 +12,6 @@ trap 'rm -f "$CTX"' EXIT
 if [ -n "$C" ]; then
     mips-linux-gnu-cpp -P -undef -D__GNUC__ -D_LANGUAGE_C -DM2CTX -D_MIPS_SZLONG=32 -D_MIPS_SZINT=32 -I include -I ultralib/include "$C" > "$CTX"
 fi
+# pycparser cannot read inline asm; m2c only needs the declarations.
+sed -i -E "s/(__asm__|asm)[[:space:]]*(volatile[[:space:]]*)?\([^;]*;/;/g" "$CTX"
 python3 -m m2c.main -t mips-gcc-c --context "$CTX" --globals=used "$@" "$S"

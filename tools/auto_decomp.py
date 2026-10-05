@@ -77,7 +77,7 @@ def m2c(func, s_path, c_path, extra):
     ctx = subprocess.run(CPP + [str(c_path)], capture_output=True, text=True)
     if ctx.returncode:
         return None, "cpp failed"
-    pathlib.Path("/tmp/auto_ctx.c").write_text(ctx.stdout)
+    pathlib.Path("/tmp/auto_ctx.c").write_text(re.sub(r"(__asm__|asm)\s*(volatile\s*)?\([^;]*;", ";", ctx.stdout))
     r = subprocess.run([sys.executable, "-m", "m2c.main", "-t", "mips-gcc-c", "--valid-syntax",
                         "--context", "/tmp/auto_ctx.c", "--globals=used", *[e for e in extra if e.startswith("--")], str(s_path)],
                        capture_output=True, text=True)
