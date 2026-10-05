@@ -810,7 +810,55 @@ u16 getTextureAttrBySlot(u16 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", texPackTlutAtAllocSlot);
+u16 texPackTlutAtAllocSlot(u32 arg0, u8 arg1, u8 arg2, u8 *key) {
+    u16 fl;
+    u16 n;
+    register u16 ret asm("$2");
+    u16 tl;
+
+    fl = arg1 != 0x10;
+    if (key != 0) {
+        fl |= 0x4000;
+    }
+    if (arg2 != 0) {
+        fl |= 0x8000;
+    }
+    tl = 0xFFFF;
+    switch (fl & 0xF) {
+    case 0:
+        n = 0x10;
+        break;
+    case 1:
+        n = 0x100;
+        break;
+    default:
+        ret = 0xFFFF;
+        goto done;
+    }
+    if ((arg0 & 0xFF000000) != 0x80000000) {
+        ret = arg0;
+        goto done;
+    }
+    if (tl == 0xFFFF) {
+        for (tl = 0; tl < D_main_bss_80128F04; tl++) {
+            if (D_main_bss_80128EFC[tl] == NULL) {
+                break;
+            }
+        }
+        if (tl == D_main_bss_80128F04) {
+            ret = 0xFFFF;
+            goto done;
+        }
+        D_main_bss_8011A7D0 -= n * 2;
+        D_main_bss_80128EFC[tl] = (u16 *)D_main_bss_8011A7D0;
+        packTlutEntriesRgba5551((u16 *)D_main_bss_8011A7D0, fl, (u8 *)arg0, n, key);
+    } else {
+        packTlutEntriesRgba5551(D_main_bss_80128EFC[tl], fl, (u8 *)arg0, n, key);
+    }
+    ret = tl;
+done:
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", texPackTlutSlotOrAlloc);
 
