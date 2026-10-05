@@ -192,7 +192,47 @@ INCLUDE_ASM("asm/nonmatchings/main/9BB60", serviceVoicePoolFrame);
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", getVoicePlaybackProgressByKey);
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", loadSpeechFile);
+extern void *speechSampleOffsets;
+extern u8 speechSampleOffsetsLoaded;
+void *rs_malloc(u32, u16);
+void rs_free(void *);
+extern void setupAssetDma(s32, s32, s32, s32, s32, void *);
+extern s32 getAssetRamAddress(s32);
+
+s32 loadSpeechFile(s32 arg0, s32 arg1) {
+    u32 *buf;
+    u32 *offs;
+
+    if (speechFileLoaded) {
+        if (speechSampleOffsets != NULL && speechSampleOffsetsLoaded) {
+            rs_free(speechSampleOffsets);
+        }
+        if ((arg0 & 0xF0000000) != 0x80000000) {
+            speechFile = getAssetRamAddress(arg0);
+            buf = rs_malloc(4, 8);
+            if (buf == NULL) {
+                return 0;
+            }
+            setupAssetDma(arg1, 0, arg0, 0, 4, buf);
+            numSpeechSamples = *buf;
+            rs_free(buf);
+            offs = rs_malloc(numSpeechSamples * 4, 0);
+            speechSampleOffsets = offs;
+            if (offs == NULL) {
+                return 0;
+            }
+            setupAssetDma(arg1, 0, arg0, 4, numSpeechSamples * 4, offs);
+            { register u8 one asm("$2") = 1; speechSampleOffsetsLoaded = one; }
+            return 1;
+        }
+        speechFile = arg0;
+        speechSampleOffsets = (void *)(arg0 + 4);
+        { register u32 n asm("$2") = *(u32 *)arg0; numSpeechSamples = n; }
+        speechSampleOffsetsLoaded = 0;
+        return 1;
+    }
+    return 0;
+}
 
 extern void *speechSampleOffsets;
 extern void *D_main_bss_80154674;
