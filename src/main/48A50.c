@@ -5,7 +5,35 @@ INCLUDE_ASM("asm/nonmatchings/main/48A50", allocAndInitGridCellArray);
 
 INCLUDE_ASM("asm/nonmatchings/main/48A50", loadLevelTextureCache);
 
-INCLUDE_ASM("asm/nonmatchings/main/48A50", buildGridCellAdjacencyTable);
+typedef struct {
+    u16 f0;
+    u16 f2;
+    u8 pad4[8];
+} GridCellB2;
+extern s32 D_main_bss_80137A44;
+extern u16 D_main_bss_80137A46;
+extern GridCellB2 *D_main_bss_80137614_b __asm__("D_main_bss_80137614");
+
+void buildGridCellAdjacencyTable(void) {
+    s32 i;
+    GridCellB2 *c;
+
+    for (i = 5; i < D_main_bss_80137A44; i++) {
+        D_main_bss_80137614_b[i].f0 = i - 1;
+        D_main_bss_80137614_b[i].f2 = i + 1;
+    }
+    c = D_main_bss_80137614_b;
+    c[5].f0 = 3;
+    c[D_main_bss_80137A44 - 1].f2 = 4;
+    for (i = 0; i < 3; i++) {
+        c[i].f2 = 0xFFFF;
+        c[i].f0 = 0xFFFF;
+    }
+    D_main_bss_80137614_b[3].f0 = 0xFFFF;
+    D_main_bss_80137614_b[3].f2 = 5;
+    D_main_bss_80137614_b[4].f0 = D_main_bss_80137A46 - 1;
+    D_main_bss_80137614_b[4].f2 = 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/48A50", getGridCellValueAt);
 
