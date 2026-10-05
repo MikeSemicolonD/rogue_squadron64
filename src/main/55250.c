@@ -37,7 +37,11 @@ void setPoolEntryPhaseAndMarkActive(u16 idx, f32 phase, s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/55250", setPoolEntryPhase);
+void setPoolEntryPhase(u16 idx, f32 phase) {
+    if (idx < D_main_bss_80137C80) {
+        ((PoolEntryP *)D_main_bss_80137C84)[idx].phase = phase * 256.0f;
+    }
+}
 
 typedef struct {
     s32 unk0;
