@@ -336,7 +336,209 @@ void spawnRandomizedEffectBurst(u8 *arg0) {
     releaseEffectObjectNpcSlotsVariant(*(s32 *)(arg0 + 0xB8), 1, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", spawnScatteredDebrisParticles);
+#include "rs_math.h"
+typedef struct {
+    f32 v[4];
+    f32 p[4];
+    f32 s[4];
+    f32 q[4];
+} SsdLocals;
+static __inline__ f32 ssdAbs(f32 x) {
+    f32 r;
+    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+    return r;
+}
+extern void clampVec3ToUnitIfLongerThan(f32 *);
+extern void scaleVec3ByScalar(f32 *, f32, f32 *);
+
+void spawnScatteredDebrisParticles(u8 *arg0) {
+    u8 *e;
+    u8 *t;
+    u8 *obj;
+    s32 sel;
+    s32 r;
+    f32 x;
+    register f32 f asm("$f0");
+    SsdLocals l;
+
+    if (*(u16 *)((u8 *)D_main_bss_80138D18[*(s32 *)(arg0 + 0xB8)].unk4 + 4) != 3 || !(rand() & 3)) {
+        e = D_main_bss_80138A28[*(s32 *)(arg0 + 0xB8)];
+        t = (u8 *)&D_main_bss_8013800C[*(s32 *)(arg0 + 0xB8)];
+        *(u16 *)(e + 2) = 0;
+        *(u16 *)(e + 4) = 0;
+        *(u16 *)(e + 0) = 0;
+        clearVec4QuadStruct(e + 0x28);
+        *(u8 **)(e + 0x70) = D_main_8009EC14;
+        *(u8 **)(e + 0x74) = D_main_8009EC14;
+        *(s32 *)(e + 0x58) = 0;
+        *(s32 *)(e + 0x5C) = 0;
+        *(s32 *)(e + 0x60) = 0;
+        *(s32 *)(e + 0x64) = 0;
+        *(s32 *)(e + 0x68) = 0;
+        *(s32 *)(e + 0x6C) = 0;
+        *(s32 *)(e + 0x78) = 0;
+        *(s32 *)(e + 0x7C) = 0;
+        *(s32 *)(e + 0x80) = 0;
+        *(s32 *)(e + 0x84) = 0;
+        *(s32 *)(e + 0x88) = 0;
+        *(s32 *)(e + 0x8C) = 0;
+        *(s32 *)(e + 0x10) = 0;
+        *(s32 *)(e + 0x14) = 0;
+        *(s32 *)(e + 0x18) = 0;
+        *(s32 *)(e + 0x1C) = 0;
+        *(s32 *)(e + 0x20) = 0;
+        *(s32 *)(e + 0x24) = 0;
+        *(s32 *)(e + 0x90) = 0;
+        *(s32 *)(e + 0x94) = 0;
+        *(s32 *)(e + 0x98) = 0;
+        *(s32 *)(e + 0x9C) = 0;
+        *(s32 *)(e + 0xA0) = 0;
+        *(u8 **)(e + 0xBC) = (u8 *)D_main_bss_80138268;
+        *(u8 **)(e + 0xC0) = (u8 *)D_main_bss_80138268;
+        *(s32 *)(e + 0xC4) = 0;
+        *(s32 *)(e + 0xCC) = 0;
+        *(s32 *)(e + 0xD0) = 0;
+        *(s32 *)(e + 0xD8) = 0;
+        *(s32 *)(e + 0xE0) = 0;
+        *(f32 *)(e + 0xC8) = 1.0f;
+        *(s32 *)(e + 0xDC) = 0;
+        *(f32 *)(e + 0xD4) = 80.0f;
+        *(f32 *)(e + 0xE4) = -45.0f;
+        *(f32 *)(e + 0xE8) = 45.0f;
+        *(f32 *)(e + 0xA4) = 0.033333335f;
+        *(s32 *)(e + 0xA8) = 0;
+        *(f32 *)(e + 0xAC) = 0.075f;
+        *(f32 *)(e + 0xB0) = 10.0f;
+        *(s32 *)(e + 0xEC) = 0;
+        *(u16 *)(e + 0xF4) = 0xFFFF;
+        *(f32 *)(e + 0xB8) = 0.3515625f;
+        *(s32 *)(e + 0xF0) = 0;
+        *(s32 *)(e + 0xB4) = 0;
+        *(f32 *)(e + 0x94) = 1.0f;
+        *(u16 *)(e + 0) |= 0x53;
+        *(f32 *)(e + 0xB8) = 1.5f;
+        r = rand() & 3;
+        if (*(u16 *)((u8 *)D_main_bss_80138D18[*(s32 *)(arg0 + 0xB8)].unk4 + 4) == 2) {
+            r = 3;
+        }
+        sel = r & 0xFFFF;
+        l.v[0] = *(f32 *)(t + 8);
+        l.v[1] = *(f32 *)(t + 0x14);
+        l.v[2] = *(f32 *)(t + 0x20);
+        switch (sel) {
+        case 0:
+        default:
+            *(u16 *)(e + 2) = 2;
+            *(u16 *)(e + 4) = 0;
+            *(u16 *)(e + 0) |= 0x48;
+            *(SrbM48 *)(e + 0x28) = *(SrbM48 *)t;
+            *(s32 *)(e + 0x78) = 0;
+            *(s32 *)(e + 0x7C) = 0;
+            *(s32 *)(e + 0x80) = 0;
+            l.v[1] = 0.0f;
+            clampVec3ToUnitIfLongerThan(l.v);
+            scaleVec3ByScalar(l.s, 2.0f * *(f32 *)(arg0 + 0xE8), l.v);
+            l.p[0] = *(f32 *)(t + 0x24);
+            l.p[1] = *(f32 *)(t + 0x28);
+            l.p[2] = *(f32 *)(t + 0x2C);
+            l.p[0] = l.s[0] + l.p[0];
+            l.p[1] = l.s[1] + l.p[1];
+            l.p[2] = l.s[2] + l.p[2];
+            quatFromCardinalAxis(l.q, 1, ((f32)(rand() & 0x7F) - 64.0f) / 0.7111111f);
+            l.v[1] = 0.0f;
+            clampVec3ToUnitIfLongerThan(l.v);
+            scaleVec3ByScalar(l.v, ssdAbs(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f) + 1.0f, l.v);
+            rotateVec3ByQuat(l.q, l.v, l.s);
+            l.p[0] = l.s[0] + l.p[0];
+            l.p[1] = l.s[1] + l.p[1];
+            l.p[2] = l.s[2] + l.p[2];
+            *(f32 *)(e + 0x4C) = l.p[0];
+            *(f32 *)(e + 0x50) = l.p[1];
+            *(f32 *)(e + 0x54) = l.p[2];
+            applyPlayerVehicleStateUpdate(e);
+            break;
+        case 1:
+            *(u16 *)(e + 2) = 2;
+            *(u16 *)(e + 4) = 4;
+            f = (fabsf(((f32)(rand() & 0x7F) - 64.0f) / 6.4f) + 10.0f) * 0.25f;
+            *(f32 *)(e + 0xDC) = -0.125f;
+            *(f32 *)(e + 0x94) = f;
+            *(f32 *)(e + 0xD0) = ssdAbs(((f32)(rand() & 0x7F) - 64.0f) / 0.17777778f);
+            if (ssdAbs(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f) < 0.5f) {
+                *(f32 *)(e + 0xD8) = 45.0f;
+            } else {
+                *(f32 *)(e + 0xD8) = -45.0f;
+            }
+            *(s32 *)(e + 0x58) = 0;
+            *(s32 *)(e + 0x5C) = 0;
+            *(s32 *)(e + 0x60) = 0;
+            *(f32 *)(e + 0xE0) = 45.0f;
+            obj = D_main_bss_80138D18[*(s32 *)(arg0 + 0xB8)].unk4;
+            *(SrbM48 *)(e + 0x28) = *(SrbM48 *)(obj + 0x28);
+            break;
+        case 2:
+            *(u16 *)(e + 2) = sel;
+            *(u16 *)(e + 4) = 4;
+            *(f32 *)(e + 0x9C) = 5.0f;
+            *(f32 *)(e + 0x98) = 5.0f;
+            f = (fabsf(((f32)(rand() & 0x7F) - 64.0f) / 6.4f) + 10.0f) * 0.25f;
+            *(s32 *)(e + 0xDC) = 0;
+            *(f32 *)(e + 0xAC) = 0.075f;
+            *(u16 *)(e + 0) |= 0x40;
+            *(f32 *)(e + 0x94) = f;
+            *(f32 *)(e + 0xD0) = ssdAbs(((f32)(rand() & 0x7F) - 64.0f) / 0.17777778f);
+            *(s32 *)(e + 0xD8) = 0;
+            if (ssdAbs(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f) < 0.5f) {
+                *(f32 *)(e + 0xD0) = -*(f32 *)(e + 0xD0);
+            }
+            *(f32 *)(e + 0xE0) = ssdAbs(((f32)(rand() & 0x7F) - 64.0f) / 1.0666667f);
+            *(s32 *)(e + 0x58) = 0;
+            *(s32 *)(e + 0x5C) = 0;
+            *(s32 *)(e + 0x60) = 0;
+            obj = D_main_bss_80138D18[*(s32 *)(arg0 + 0xB8)].unk4;
+            *(SrbM48 *)(e + 0x28) = *(SrbM48 *)(obj + 0x28);
+            break;
+        case 3:
+            *(u16 *)(e + 2) = sel;
+            *(u16 *)(e + 4) = 1;
+            *(s32 *)(e + 0xDC) = 0;
+            *(f32 *)(e + 0x9C) = 6.0f;
+            *(f32 *)(e + 0x98) = 6.0f;
+            *(f32 *)(e + 0x94) = 0.625f;
+            x = ((f32)(rand() & 0x7F) - 64.0f) / 21.333334f * 0.25f;
+            *(f32 *)(e + 0x5C) = -0.375f;
+            *(f32 *)(e + 0x60) = -0.75f;
+            *(f32 *)(e + 0xAC) = 0.05f;
+            *(f32 *)(e + 0x58) = x;
+            obj = D_main_bss_80138D18[*(s32 *)(arg0 + 0xB8)].unk4;
+            *(SrbM48 *)(e + 0x28) = *(SrbM48 *)(obj + 0x28);
+            break;
+        }
+        obj = D_main_bss_80138D18[*(s32 *)(arg0 + 0xB8)].unk4;
+        {
+            register u16 j asm("$3") = *(u16 *)(obj + 4);
+            __asm__ volatile("" : : "r"(j));
+        }
+        *(f32 *)(e + 0x10) = *(f32 *)(e + 0x4C);
+        *(f32 *)(e + 0x14) = *(f32 *)(e + 0x50);
+        *(f32 *)(e + 0x18) = *(f32 *)(e + 0x54);
+        *(SrbV3 *)(e + 0x64) = *(SrbV3 *)(e + 0x58);
+        applyPlayerVehicleStateUpdate(e);
+        *(u8 **)(e + 0x70) = t;
+        *(u8 **)(e + 0x74) = t;
+        *(s32 *)(e + 0x78) = 0;
+        *(s32 *)(e + 0x7C) = 0;
+        *(s32 *)(e + 0x80) = 0;
+        *(s32 *)(e + 0x84) = 0;
+        *(s32 *)(e + 0x88) = 0;
+        *(s32 *)(e + 0x8C) = 0;
+        *(s32 *)(e + 0x90) = 0;
+        *(s32 *)(e + 0xA4) = 0;
+        *(f32 *)(e + 0xB8) = 0.3515625f;
+        *(f32 *)(e + 0xA0) = *(f32 *)(e + 0x9C);
+        releaseEffectObjectNpcSlotsVariant(*(s32 *)(arg0 + 0xB8), 1, 0);
+    }
+}
 
 #include "common_types.h"
 typedef struct { s32 b[12]; } SaBlob30;
