@@ -110,7 +110,133 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", updateCraftSelectAnimStat
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", placeRadarDots);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", findClosestRadarContactAndSetSweep);
+extern s32 gObjectiveCounts[];
+extern u8 gObjectiveBooleans[];
+typedef struct {
+    s32 a, b, c;
+} Raw3;
+
+typedef struct {
+    u8 pad0[0x10];
+    f32 pos[3];
+    u8 pad1C[0x2C - 0x1C];
+    u8 *src;
+    s32 boolA;
+    s32 cntB;
+    s32 cntBLim;
+    s32 boolC;
+    s32 cntD;
+    s32 cntDLim;
+} RadarContact;
+
+typedef struct {
+    u8 pad0[0xDBC];
+    f32 sweepAngle;
+    f32 sweepA;
+    f32 sweepB;
+    s16 sel;
+    s16 padDCA;
+    s32 selTimer;
+} RadarState;
+
+extern RadarContact *gRadarContacts[] __asm__("D_mission_overlay_8010C000");
+extern s16 D_mission_overlay_8010C080;
+extern f32 atan2Approx(f32, f32);
+extern u8 *getNpcContextField8(u16);
+
+void findClosestRadarContactAndSetSweep(RadarState *st, f32 *pos, f32 unused, f32 range) {
+    f32 d[3];
+    f32 fs0;
+    f32 fs1;
+    f32 t;
+    RadarContact *c;
+    u8 *s0;
+    u8 *np;
+    s32 ok;
+    s32 i;
+    s32 best;
+
+    best = -1;
+    i = 0;
+    if (D_mission_overlay_8010C080 > 0) {
+        do {
+            c = gRadarContacts[i];
+            ok = 1;
+            if (c->boolA > 0) {
+                ok = gObjectiveBooleans[c->boolA - 1] != 0;
+            }
+            if (c->cntB > 0 && gObjectiveCounts[c->cntB - 1] < c->cntBLim) {
+                ok = 0;
+            }
+            if (c->boolC > 0 && gObjectiveBooleans[c->boolC - 1] != 0) {
+                ok = 0;
+            }
+            if (c->cntD > 0 && gObjectiveCounts[c->cntD - 1] >= c->cntDLim) {
+                ok = 0;
+            }
+            if (ok != 0) {
+                s0 = c->src;
+                if (s0 != NULL) {
+                    u16 nid = *(u16 *)(s0 + 6);
+                    if (nid != 0xFFFF && (np = getNpcContextField8(*(u16 *)(s0 + 6))) != NULL) {
+                        *(Raw3 *)c->pos = *(Raw3 *)np;
+                    } else {
+                        *(Raw3 *)c->pos = *(Raw3 *)(s0 + 0x10);
+                    }
+                }
+                d[0] = c->pos[0] - pos[0];
+                d[2] = c->pos[2] - pos[2];
+                fs1 = d[0] * d[0] + d[2] * d[2];
+                if (best < 0 || fs1 < fs0) {
+                    best = i;
+                    fs0 = fs1;
+                }
+            } else if (i == st->sel) {
+                st->sel = -1;
+            }
+            i += 1;
+        } while (i < D_mission_overlay_8010C080);
+    }
+    if (st->sel >= 0) {
+        if (best != st->sel) {
+            d[0] = gRadarContacts[st->sel]->pos[0] - pos[0];
+            d[2] = gRadarContacts[st->sel]->pos[2] - pos[2];
+            fs1 = d[0] * d[0] + d[2] * d[2];
+            fs1 = fs1 * 1.5625f;
+            if (best >= 0 && fs0 < fs1) {
+                st->sel = best;
+                goto clear;
+            }
+            goto after;
+        }
+        if (best < 0) {
+            goto setsel;
+        }
+        goto compute;
+    }
+setsel:
+    st->sel = best;
+clear:
+    st->selTimer = 0;
+after:
+    if (st->sel >= 0) {
+compute:
+        d[0] = gRadarContacts[st->sel]->pos[0] - pos[0];
+        d[2] = gRadarContacts[st->sel]->pos[2] - pos[2];
+        __asm__ volatile("sqrt.s %0, %1" : "=f"(fs1) : "f"(d[0] * d[0] + d[2] * d[2]));
+        if (fs1 > 8.0f) {
+            if (fs1 > 20.0f) {
+                fs1 = 20.0f;
+            }
+            fs1 = 1.0f - (fs1 - 8.0f) / 12.0f;
+            st->sweepAngle = atan2Approx(d[0], d[2]) * 57.29578f;
+            st->sweepA = fs1 * 145.0f + 15.0f;
+            st->sweepB = (1.0f - fs1) * range;
+            return;
+        }
+    }
+    st->sweepB = 0.0f;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", renderRadarSweep);
 
