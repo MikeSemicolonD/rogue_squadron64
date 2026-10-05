@@ -1167,7 +1167,23 @@ void resetMenuElementInputState(void *arg0) {
     (*(s16 *)((u8 *)(arg0) + 0x98)) = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateCraftSelectFlags);
+void animateCraftSelectFlags(u8 *arg0, u32 mask, u8 mode) {
+    u32 i;
+    u8 *v;
+
+    for (i = 0; i < arg0[0x95]; i++) {
+        if (mask & (1 << i)) {
+            setPlayerSlotAnimationFlag(5, *(void **)(arg0 + i * 4 + 8), (u16)i, (s16)(*(u16 *)(arg0 + i * 4 + 0x30) - 0x100), (s16)(*(u16 *)(arg0 + i * 4 + 0x32) + (*(u16 *)(arg0 + 0x96) + (i * 0x24 - arg0[0x95] * 18))));
+            samplePlayerAnimChannel(5, (u16)i, *(f32 *)(arg0 + i * 4 + 0x54));
+            if (mode == 1) {
+                activateAnimationKeyframe(5, (u16)i, 0);
+            }
+            v = getPlayerSlotFieldAt34(5, (u16)i);
+            *(f32 *)(arg0 + i * 4 + 0xB0) = *(f32 *)(v + 0x18);
+            *(f32 *)(arg0 + i * 4 + 0xD0) = *(f32 *)(v + 0x1C);
+        }
+    }
+}
 
 void *rs_malloc(s32, s32);
 s32 spawnTieInterceptorParticles();
