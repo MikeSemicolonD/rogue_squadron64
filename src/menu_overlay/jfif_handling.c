@@ -196,7 +196,57 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifDHTMarker);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", paserJfifSOSMarker);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", rebuildDebrisCellGeometry);
+typedef struct {
+    u8 pad[0x77C];
+    s32 blk[8];
+} JpS;
+extern void buildDebrisCellBitfield(u8 *, u8, s32);
+extern void emitDebrisCellFaces(u8 *, u8, s32, s32, s32);
+
+s32 rebuildDebrisCellGeometry(u8 *s) {
+    u8 mcu;
+    u8 k;
+    u8 ci;
+    u8 j;
+    u8 fp;
+    u8 *c;
+    s32 s1;
+    s32 s3;
+    u8 r;
+
+    mcu = 0;
+    while (mcu < *(u16 *)(s + 0x7CC)) {
+        k = 0;
+        while (k < *(u16 *)(s + 0x7CE)) {
+            buildDebrisCellBitfield(s, (s + k)[0x7BC], ((JpS *)s)->blk[k]);
+            k++;
+        }
+        fp = 0;
+        ci = 0;
+        while (ci < s[0x4C]) {
+            c = s + 0x6F8 + ci * 0x2C;
+            s3 = *(u16 *)(s + 0x7EC) >> (s[0x4B] - c[2]);
+            j = 0;
+            while (j < *(s32 *)(c + 0x18)) {
+                s1 = mcu * *(s32 *)(c + 0x20);
+                k = 0;
+                while (k < *(s32 *)(c + 0x14)) {
+                    emitDebrisCellFaces(s, ci, ((JpS *)s)->blk[fp + k], s1, s3);
+                    s1 += 8;
+                    k++;
+                }
+                j++;
+                fp += c[0x17];
+                s3 += 8;
+            }
+            ci++;
+        }
+        mcu++;
+    }
+    *(u16 *)(s + 0x7D2) += 1;
+    *(u16 *)(s + 0x7EC) += *(u16 *)(s + 0x7D4);
+    return !(*(u16 *)(s + 0x7D2) < *(u16 *)(s + 0x7D0));
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", emitDebrisCellFaces);
 
