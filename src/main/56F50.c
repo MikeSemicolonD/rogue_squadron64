@@ -251,7 +251,73 @@ loop1:
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", releaseFlaggedMeshInstanceMeshes);
+void releaseFlaggedMeshInstanceMeshes(u8 **arg0) {
+    s32 i;
+    s32 k;
+    s32 cnt;
+    u8 *p;
+    u16 *tbl;
+    struct meshdef1 **mp;
+    struct meshdef1 *m;
+    u32 idx;
+    s32 k2;
+    u8 *q;
+
+    if (arg0 == NULL) {
+        for (i = 0; i < 25; i++) {
+            idx = hobObjectHashMap[i];
+            {
+                while (idx != 0xFFFF) {
+                    u8 *e = (u8 *)hobObjectListItems[idx].object_entry;
+                    if (!(*(u16 *)(e + 0x38) & 2)) {
+                        k = 0;
+                        p = e;
+loop1:
+                        tbl = *(u16 **)(p + 0x18);
+                        if (tbl != NULL) {
+                            cnt = tbl[0];
+                            mp = (struct meshdef1 **)(tbl + 2);
+                            for (; cnt > 0; cnt--, mp++) {
+                                while ((m = *mp) != NULL) {
+                                    if (*(u32 *)((u8 *)m + 0xC) & 0x10) {
+                                        enqueueMeshForDeferredRelease(m);
+                                        *(u32 *)((u8 *)m + 0xC) |= 8;
+                                    }
+                                    mp++;
+                                }
+                            }
+                            k++;
+                            p += 4;
+                            if (k < 4) goto loop1;
+                        }
+                    }
+                    idx = hobObjectListItems[idx].nextIndex;
+                }
+            }
+        }
+    } else {
+        k2 = 0;
+        q = *arg0;
+loop2:
+        tbl = *(u16 **)(q + 0x18);
+        if (tbl != NULL) {
+            cnt = tbl[0];
+            mp = (struct meshdef1 **)(tbl + 2);
+            for (; cnt > 0; cnt--, mp++) {
+                while ((m = *mp) != NULL) {
+                    if (*(u32 *)((u8 *)m + 0xC) & 0x10) {
+                        enqueueMeshForDeferredRelease(m);
+                        *(u32 *)((u8 *)m + 0xC) |= 8;
+                    }
+                    mp++;
+                }
+            }
+            k2++;
+            q += 4;
+            if (k2 < 4) goto loop2;
+        }
+    }
+}
 
 struct object_entry *getHobObjectByName(u8 *name) {
     s32 sum = 0;
