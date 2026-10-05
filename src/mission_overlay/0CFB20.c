@@ -266,7 +266,602 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A7100);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", npcAtStUpdate);
+typedef struct { f32 x, y, z; } SVec3;
+typedef struct { f32 m[12]; } SMat;
+typedef struct {
+    SVec3 pos;
+    SVec3 fwd;
+    SVec3 up;
+    SVec3 vel;
+    u8 *mesh;
+    u8 *rec;
+    s32 obj;
+    u8 *node0;
+    u8 *node1;
+    u8 *mat0;
+    u8 *mat1;
+    u8 *ctx;
+    f32 radius;
+    f32 scale;
+    f32 f58;
+    f32 f5C;
+    f32 f60;
+    f32 f64;
+    f32 f68;
+    f32 f6C;
+    u16 slot70;
+    u16 slot72;
+    u16 slot74;
+    u16 slot76;
+    u16 slot78;
+    u16 slot7A;
+    u16 slot7C;
+    s16 animIdx;
+    s32 anim[3];
+    s32 animSlot;
+    s32 chan;
+    f32 phase;
+    f32 dur;
+    f32 rate;
+    f32 fA0;
+    s32 iA4;
+    u8 bA8;
+    u8 bA9;
+    u8 bAA;
+    u8 bAB;
+    f32 fAC;
+    f32 fB0;
+    u8 audio[0x44];
+    u8 audioOn;
+    u8 outCount;
+    u8 mode;
+    u8 bFB;
+} AtSt;
+
+#define SABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
+
+extern u8 D_main_bss_80130B39;
+extern u8 D_main_bss_80130B63;
+extern u8 *D_main_bss_80138D1C;
+extern u8 D_main_bss_80138058[];
+extern u16 D_main_bss_80139560[];
+extern u16 D_main_bss_80139574;
+extern char D_mission_overlay_800A7060[];
+extern char D_mission_overlay_800A70DC[];
+extern char D_mission_overlay_800A70E0[];
+extern char D_mission_overlay_800A70E8[];
+extern char D_mission_overlay_800A70F4[];
+extern char D_mission_overlay_800A7100[];
+extern u8 D_mission_overlay_8010A680[];
+void *walkMeshdef0List(char *);
+void composeEulerRotationXYZ(void *, s32, s32, s32);
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+void composeRotationMatrixSlot0(void *, s32);
+void composeRotationMatrixSlot1I(void *, s32) __asm__("composeRotationMatrixSlot1");
+void composeRotationMatrixSlot2(void *, s32);
+void addVec3At0x24(void *, f32, f32, f32);
+u16 popNpcSlotFromTail(u16, void *);
+s32 lookupHmtMaterialByName(void *, char *, void *);
+u16 spawnInheritedNpcVariantA(u16, void *);
+void *allocateAndInitCraftNpcContext(f32, f32, s32);
+void createAndInitObject(void *, s32, void *, void *, void *);
+void npcInitFromTemplate(u8 *);
+void *getLevelDatItemByName(char *);
+void initActorAsType1(s32, void *, s32, s32, f32, f32, s32);
+void updateObjectFlags110(s32, s32, s32);
+s32 load_model_animation(char *);
+s32 flattenAnimTreeAndAllocateSlot(s32, s32);
+s32 markModelAnimChannelEntryActive(s32, s32);
+s32 rand(void);
+void setModelAnimSlotCycleDuration(s32, f32);
+void seekAllModelAnimChannelsInSlotToTime(s32, f32);
+void clearModelAnimChannelEntry(s32);
+void releaseModelAnimSlot(s32);
+void rs_free(void *);
+void destroyNpcSlotByIndex(u16);
+s32 getNpcCurrentHealth(s32);
+void initActorRenderDescriptorIfUninit(s32, s32, void *, s32, void *);
+void clearPendingAndDestroyChildNpc(void *);
+void releaseMeshAsset(void *);
+void func_mission_overlay_800AA6D0(void *, f32, void *);
+void dispatchEffectByActorType(s32, f32);
+void advanceAtStDeathAnimPhase(void *);
+void setType1ActorParams(s32, f32, u8, u8, u8, s32);
+u8 func_mission_overlay_800EFDE0(s32, s32, s32, f32);
+void applyToObjectSubstructByFlag(s32, f32, f32, s32);
+u8 validateActorTargetLOS(s32);
+s32 isNpcWithinActiveReferenceRange(void *);
+void destroyObjectOwnedNpcSlot(s32);
+s32 checkAndReturnByteFlagAsU8(s32, void *, void *, f32);
+s32 sampleTerrainAtNpcPosition(void *, void *, void *, s32);
+void parseModelAnimType2Entry(s32);
+void zmemcpy(void *, void *, s32);
+void mat3x4Multiply(void *, void *, void *);
+void clearVec4QuadStruct(void *);
+void applyScaleToMat3x4(void *, f32, f32, f32);
+void composeQuatToMat3x4(void *, void *);
+s32 updateActive3DAudioSource(void *, void *, void *, u8);
+void addNpcToVisibilityBucket(s32, void *, void *, f32);
+void enqueueMeshTypeForCleanup(void *);
+void advanceNpcOnCurvedPath(s32, s32, void *, void *);
+void spawnNpcType0xAFromTemplate(void *, f32);
+void spawnRandomParticleWithParent(void *, u16, f32, s32);
+void extrapolateNpcPositionForCurrentMode(void *);
+s32 getObjectDetailLevel(s32);
+void func_mission_overlay_800EFD6C(s32);
+s32 dealDamageToNpc(s32, u16);
+void npcAtStHandleDestruction(void *);
+void unregisterAndFreeNpcSlot(u16, void *);
+void datItemSetObjectiveBooleanCount(s32, s32, s32, s32, s32, s32);
+void tallyMidDetailObject(void *);
+s32 clearPendingChildNpc(s32);
+void setObjectFlagBit4(void *);
+void setObjectDetailLevel(s32, s32);
+void dispatchSlotAction5IfActive(void *, void *);
+
+static __inline__ s32 atStCheckLOS(AtSt *s2, SMat *a, SMat *b) {
+    s32 flag = 0;
+    if ((u8)isPendingChildNpcActive(s2->obj) == 1) {
+        *a = *(SMat *)s2;
+        buildRotationMatrixSlot0(b, s2->f5C);
+        composeRotationMatrixSlot1(b, s2->f58);
+        transformVec3ByMat34(b, &a->m[3], &s2->fwd);
+        transformVec3ByMat34(b, &a->m[6], &s2->up);
+        if (validateActorTargetLOS(s2->obj) == 1) {
+            flag = 1;
+        }
+        *(SMat *)s2 = *a;
+    }
+    return flag;
+}
+
+s32 npcAtStUpdate(u8 *arg0, s32 action, u8 *arg2) {
+    AtSt *s2 = *(AtSt **)(arg0 + 4);
+    SVec3 sp28;
+    SMat sp38;
+    SMat sp68;
+    f32 sp98[4];
+    f32 spA8[4];
+    f32 spB8[3];
+    f32 dt;
+    s32 cnt;
+    char *name;
+    u8 *rec;
+    u8 *msg;
+    u8 *a4;
+    u8 *a5;
+    u8 *a9;
+    s32 flag;
+    s32 act;
+
+    act = action;
+    switch ((u16)action) {
+    case 1:
+    case 8:
+        rec = arg2;
+        msg = arg2;
+        *(u16 *)(arg0 + 0x14) |= 0x100;
+        if (!(*(u16 *)(arg0 + 0x14) & 0x20)) {
+            s2->rec = arg2;
+            s2->pos.x = *(f32 *)(arg2 + 0x10);
+            s2->pos.y = *(f32 *)(arg2 + 0x14);
+            s2->pos.z = *(f32 *)(arg2 + 0x18);
+            name = (char *)(*(s32 *)(arg2 + 0x8C) + (s32)arg2);
+        } else {
+            rec = *(u8 **)(arg2 + 0xC);
+            s2->rec = rec;
+            if (*(u8 *)(*(u8 **)(arg2 + 4) + 2) == 3) {
+                s2->pos = **(SVec3 **)(arg2 + 8);
+                name = *(char **)arg2;
+            } else {
+                name = D_mission_overlay_800A70DC;
+                s2->pos.x = 0.0f;
+                s2->pos.y = 0.0f;
+                s2->pos.z = 0.0f;
+            }
+        }
+        cnt = *(s32 *)(D_main_bss_80137CE4 * 4 + (s32)s2->rec + 0x6C);
+        {
+            u8 *t;
+            u8 *mesh;
+            *(u8 **)((u8 *)s2 + 0x30) = walkMeshdef0List(cnt > 0 ? D_mission_overlay_800A70E0 : D_mission_overlay_800A7060);
+            mesh = *(u8 **)((u8 *)s2 + 0x30);
+            if (D_main_bss_80130B63 != 0) {
+                t = D_mission_overlay_8010A680;
+            } else {
+                t = &D_mission_overlay_8010A680[8];
+            }
+            *(u8 **)(mesh + 4) = t;
+        }
+        composeEulerRotationXYZ(s2, *(s32 *)(rec + 0x1C), *(s32 *)(rec + 0x20), *(s32 *)(rec + 0x24));
+        s2->vel.x = s2->vel.y = s2->vel.z = 0.0f;
+        {
+            f32 inv = 1.0f / *(f32 *)(*(u8 **)s2->mesh + 0x34);
+            f32 sc = inv * *(f32 *)(rec + 0x28);
+            s2->scale = sc;
+            s2->f6C = sc * 4.0f * -0.520477f;
+            initVec4TripletFromArgs(s2->mesh + 0x28, inv * *(f32 *)(rec + 0x28), inv * *(f32 *)(rec + 0x2C), inv * *(f32 *)(rec + 0x30));
+        }
+        composeRotationMatrixSlot0(s2->mesh + 0x28, *(s32 *)(rec + 0x1C));
+        composeRotationMatrixSlot1I(s2->mesh + 0x28, *(s32 *)(rec + 0x20));
+        composeRotationMatrixSlot2(s2->mesh + 0x28, *(s32 *)(rec + 0x24));
+        addVec3At0x24(s2->mesh + 0x28, s2->pos.x, s2->pos.y, s2->pos.z);
+        *(AtSt **)(arg0 + 8) = s2;
+        *(u8 **)(arg0 + 0xC) = s2->mesh;
+        if (cnt > 0) {
+            u8 *b = (u8 *)D_main_bss_80139560;
+            s32 o;
+            s2->slot70 = popNpcSlotFromTail(*(u16 *)(b + 0x1C), arg0);
+            o = 0x2C;
+            if (*(s32 *)(rec + 0xA0) == 1) {
+                o = 0x2E;
+            }
+            s2->slot72 = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+            s2->node0 = (u8 *)lookupHmtMaterialByName(s2->mesh, D_mission_overlay_800A70E8, &s2->mat0);
+            s2->node1 = (u8 *)lookupHmtMaterialByName(s2->mesh, D_mission_overlay_800A70F4, &s2->mat1);
+            o = 0x12;
+            if (*(s32 *)(rec + 0xA0) == 1) {
+                o = 0xE;
+            }
+            s2->slot76 = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+            if (*(s32 *)(rec + 0xA4) != 0) {
+                o = 0x18;
+                if (*(s32 *)(rec + 0xA0) == 1) {
+                    o = 0x1A;
+                }
+                s2->slot78 = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+            } else {
+                s2->slot78 = 0xFFFF;
+            }
+            sp28.x = s2->scale * 0.0f;
+            sp28.y = s2->scale * -1.8f;
+            sp28.z = s2->scale * 0.0f;
+            s2->slot7A = spawnInheritedNpcVariantA(*(u16 *)(arg0 + 0x16), &sp28);
+        } else {
+            u8 *b = (u8 *)D_main_bss_80139560;
+            popNpcSlotFromTail(*(u16 *)(b + 0x14), arg0);
+            s2->slot70 = popNpcSlotFromTail(*(u16 *)(b + 0x1C), arg0);
+            s2->slot7A = 0xFFFF;
+        }
+        {
+            f32 sc = s2->scale;
+            s2->radius = *(f32 *)(*(u8 **)s2->mesh + 0x44) * sc;
+            s2->f58 = 0.0f;
+            s2->f5C = 0.0f;
+            s2->outCount = 0;
+            s2->audioOn = 0;
+            s2->ctx = allocateAndInitCraftNpcContext(sc * 0.7f, sc * 0.9f, 0xA);
+        }
+        *(f32 *)(s2->ctx + 0x14) = 1.0f;
+        *(f32 *)(s2->ctx + 4) = s2->scale * -0.65f;
+        *(f32 *)(s2->ctx + 0x10) = 0.0f;
+        *(f32 *)(s2->ctx + 0x18) = 0.6f;
+        createAndInitObject(&s2->obj, 0, arg0, npcInitFromTemplate, (u16)act == 1 ? NULL : msg);
+        if (cnt > 0) {
+            if (*name != '-') {
+                void *item = getLevelDatItemByName(name);
+                u8 *r = s2->rec;
+                initActorAsType1(s2->obj, item, *(s32 *)(r + 0x90), *(s32 *)(r + 0x9C), *(f32 *)(r + 0x94), *(f32 *)(s2->rec + 0x98), 0);
+                updateObjectFlags110(s2->obj, 7, 0);
+            }
+            s2->animIdx = 0;
+            s2->fAC = 0.0f;
+            s2->rate = 0.5f / s2->scale;
+            s2->fB0 = D_mission_overlay_8010A6A4[0];
+            s2->bFB = 0;
+            s2->bAB = 0;
+            s2->anim[0] = load_model_animation(D_mission_overlay_800A7100);
+            s2->anim[1] = load_model_animation("imp_stuff/atst_start");
+            s2->anim[2] = load_model_animation("imp_stuff/atst_stop");
+            s2->animSlot = flattenAnimTreeAndAllocateSlot(*(s32 *)(s2->mesh + 0x18), s2->anim[s2->animIdx]);
+            s2->chan = markModelAnimChannelEntryActive(s2->animSlot, 0);
+            s2->phase = SABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f);
+            s2->dur = 1.0f / (*(f32 *)(s2->rec + 0x90) * s2->rate);
+            setModelAnimSlotCycleDuration(s2->animSlot, s2->dur);
+            seekAllModelAnimChannelsInSlotToTime(s2->animSlot, 0.0f);
+            return 1;
+        }
+        s2->anim[0] = s2->anim[1] = s2->anim[2] = 0;
+        break;
+    case 2:
+        if (s2->anim[0] != 0) {
+            s2->anim[0] = 0;
+            clearModelAnimChannelEntry(s2->chan);
+            releaseModelAnimSlot(s2->animSlot);
+        }
+        if (s2->audioOn == 1) {
+            s2->audioOn = 0;
+            factor5RemoveListNode(s2->audio);
+        }
+        if (s2->ctx != NULL) {
+            rs_free(s2->ctx);
+        }
+        if (s2->slot7A != 0xFFFF) {
+            destroyNpcSlotByIndex(s2->slot7A);
+            s2->slot7A = 0xFFFF;
+        }
+        if (!(*(u16 *)(arg0 + 0x14) & 0x20)) {
+            initActorRenderDescriptorIfUninit(s2->obj, *(s32 *)(s2->rec + 0xA8) != 0, s2->rec, 0, s2->rec + 0x70);
+        } else {
+            initActorRenderDescriptorIfUninit(s2->obj, getNpcCurrentHealth(s2->obj) < 1, s2->rec, 0, s2->rec + 0x70);
+        }
+        clearPendingAndDestroyChildNpc(&s2->obj);
+        releaseMeshAsset(s2->mesh);
+        return 1;
+    case 3:
+        dt = *(f32 *)arg2;
+        {
+            f32 inc = dt * 4.0f;
+            if (s2->f64 < 1.0f) {
+                s2->f64 += inc;
+                if (1.0f < s2->f64) {
+                    s2->f64 = 1.0f;
+                    s2->f68 = 0.0f;
+                } else if (s2->f64 < 0.2f) {
+                    s2->f68 = s2->f64 * 5.0f;
+                } else {
+                    s2->f68 = 1.0f - (s2->f64 - 0.2f) * 1.25f;
+                }
+            }
+        }
+        switch (s2->mode) {
+        case 0:
+            s2->mode = 1;
+        case 1:
+            switch (s2->animIdx) {
+            case 0:
+                func_mission_overlay_800AA6D0(s2, dt, s2->rec + 0x34);
+                dispatchEffectByActorType(s2->obj, dt);
+                s2->phase += dt / s2->dur;
+                if (s2->phase > 1.0f) {
+                    s2->phase -= 1.0f;
+                    if (s2->bAB != 0) {
+                        advanceAtStDeathAnimPhase(s2);
+                    }
+                }
+                advanceAtStEffectPhaseSound((u8 *)s2, dt, 0);
+                break;
+            case 1:
+                func_mission_overlay_800AA6D0(s2, dt, s2->rec + 0x34);
+                dispatchEffectByActorType(s2->obj, dt);
+                s2->phase += dt / s2->dur;
+                if (s2->phase > 1.0f) {
+                    s2->phase -= 1.0f;
+                    s2->bAB = 3;
+                    advanceAtStDeathAnimPhase(s2);
+                }
+                advanceAtStEffectPhaseSound((u8 *)s2, dt, 0);
+                break;
+            case 2:
+                if (s2->phase < 1.0f) {
+                    s2->phase += dt / s2->dur;
+                    if (s2->phase >= 1.0f) {
+                        s2->phase = 1.0f;
+                        setType1ActorParams(s2->obj, s2->fA0, s2->bA9, s2->bAA, s2->bA8, s2->iA4);
+                    } else if (s2->phase < 0.25f) {
+                        func_mission_overlay_800AA6D0(s2, dt, s2->rec + 0x34);
+                        dispatchEffectByActorType(s2->obj, dt);
+                        advanceAtStEffectPhaseSound((u8 *)s2, dt, 0);
+                    }
+                } else {
+                    dispatchEffectByActorType(s2->obj, dt);
+                    if (s2->bAB != 0) {
+                        advanceAtStDeathAnimPhase(s2);
+                    }
+                }
+                break;
+            }
+            seekAllModelAnimChannelsInSlotToTime(s2->animSlot, s2->phase * s2->dur);
+            if (func_mission_overlay_800EFDE0(s2->obj, *(s32 *)(s2->rec + 0xAC), *(s32 *)(s2->rec + 0xB0), dt)) {
+                s2->mode = 1;
+            }
+            updateAtStBodyKinematics((AkBody *)s2, dt);
+            flag = atStCheckLOS(s2, &sp38, &sp68);
+            if (flag == 1) {
+                applyToObjectSubstructByFlag(s2->obj, dt, 0.0f, 0);
+            }
+            break;
+        case 2:
+            break;
+        case 3:
+        destroy:
+            destroyNpcSlotByIndex(*(u16 *)(arg0 + 0x16));
+            return 1;
+        }
+        if (*(s32 *)(s2->rec + 0x88) == 0) {
+            s2->outCount = 0;
+        } else if (isNpcWithinActiveReferenceRange(s2) != 0) {
+            s2->outCount = 0;
+        } else {
+            s2->outCount++;
+            if (s2->outCount >= 0x15) {
+                goto destroy;
+            }
+        }
+        destroyObjectOwnedNpcSlot(s2->obj);
+        return 1;
+    case 4:
+        a4 = arg2;
+        if (checkAndReturnByteFlagAsU8(*(s32 *)arg2, s2->mesh, s2, s2->radius) != 0) {
+            if (s2->mode != 2) {
+                u8 *m;
+                u8 *mp;
+                {
+                    f32 x = s2->pos.x - s2->fwd.x * s2->scale * 0.3f;
+                    f32 y;
+                    f32 z;
+                    sp98[0] = x;
+                    y = s2->pos.y - s2->scale * 2.6f;
+                    sp98[1] = y;
+                    z = s2->pos.z - s2->fwd.z * s2->scale * 0.3f;
+                    m = D_main_bss_80138D1C + 0x28;
+                    sp98[2] = z;
+                    spA8[0] = *(f32 *)(m + 0x24);
+                    spA8[1] = *(f32 *)(m + 0x28);
+                    spA8[2] = *(f32 *)(m + 0x2C);
+                    spB8[0] = x - spA8[0];
+                    spB8[1] = y - spA8[1];
+                    spB8[2] = z - spA8[2];
+                    if (sampleTerrainAtNpcPosition(spA8, spB8, D_main_bss_80138058, 0) == 0) {
+                        parseModelAnimType2Entry(s2->animSlot);
+                    }
+                }
+                m = s2->node0 + 0x1C;
+                buildRotationMatrixSlot0(&sp38, -s2->f5C);
+                composeRotationMatrixSlot1(&sp38, s2->f58);
+                zmemcpy(&sp68, m, 0x30);
+                mat3x4Multiply(&sp68, &sp38, m);
+                mp = s2->mat1;
+                m = s2->node1 + 0x1C;
+                clearVec4QuadStruct(m);
+                if (*(s32 *)(mp + 0x4C) & 1) {
+                    addVec3At0x24(m, -*(f32 *)(mp + 0x50), -*(f32 *)(mp + 0x54), -*(f32 *)(mp + 0x58));
+                }
+                if (*(s32 *)(mp + 0x4C) & 2) {
+                    applyScaleToMat3x4(m, *(f32 *)(mp + 0x5C), *(f32 *)(mp + 0x60), *(f32 *)(mp + 0x64));
+                }
+                if (*(s32 *)(mp + 0x4C) & 4) {
+                    composeQuatToMat3x4(m, mp + 0x68);
+                }
+                addVec3At0x24(m, 0.0f, 0.0f, s2->f68 * 8.0f);
+                if ((*(s32 *)(mp + 0x4C) & 9) == 9) {
+                    addVec3At0x24(m, *(f32 *)(mp + 0x78) + *(f32 *)(mp + 0x50), *(f32 *)(mp + 0x7C) + *(f32 *)(mp + 0x54), *(f32 *)(mp + 0x80) + *(f32 *)(mp + 0x58));
+                } else if ((*(s32 *)(mp + 0x4C) & 9) == 8) {
+                    addVec3At0x24(m, *(f32 *)(mp + 0x78), *(f32 *)(mp + 0x7C), *(f32 *)(mp + 0x80));
+                } else if (*(s32 *)(mp + 0x4C) & 1) {
+                    addVec3At0x24(m, *(f32 *)(mp + 0x50), *(f32 *)(mp + 0x54), *(f32 *)(mp + 0x58));
+                }
+            }
+            if (s2->audioOn != 0) {
+                updateActive3DAudioSource(s2->audio, s2, &s2->vel, 0x64);
+            }
+            mat34CrossRowsAndCopyPos(s2->mesh + 0x28, s2, s2->scale);
+            addNpcToVisibilityBucket(*(s32 *)a4, s2->mesh, s2, s2->radius);
+        } else {
+            if (s2->audioOn != 0) {
+                updateActive3DAudioSource(s2->audio, s2, &s2->vel, 0x64);
+            }
+            enqueueMeshTypeForCleanup(s2->mesh);
+            mat34CrossRowsAndCopyPos(s2->mesh + 0x28, s2, s2->scale);
+        }
+        if (s2->ctx != NULL) {
+            advanceNpcOnCurvedPath(*(s32 *)(a4 + 8), *(s32 *)a4, s2, s2->ctx);
+            return 1;
+        }
+        return 1;
+    case 5:
+        a5 = arg2;
+        if (s2->mode == 2) {
+            u8 *p = *(u8 **)(arg2 + 8);
+            if (p != NULL) {
+                f32 k = 0.15f;
+                if (*(u16 *)(arg2 + 4) != 0xC) {
+                    spawnNpcType0xAFromTemplate(p, k);
+                } else {
+                    spawnRandomParticleWithParent(p, 0xFFFF, k, 0);
+                }
+            }
+        } else {
+            extrapolateNpcPositionForCurrentMode(arg2);
+        }
+        if (getNpcCurrentHealth(s2->obj) > 0) {
+            play3DSoundEvent(0, s2, &s2->vel, 24.0f, 0.5f, 0, 0x21, 0x7D, 0x50);
+            if (getObjectDetailLevel(s2->obj) == 1 && D_main_bss_80130B39 == 0) {
+                func_mission_overlay_800EFD6C(0x1F4);
+            }
+            if (dealDamageToNpc(s2->obj, *(u16 *)(a5 + 6)) <= 0) {
+                npcAtStHandleDestruction(s2);
+                if (s2->ctx != NULL) {
+                    rs_free(s2->ctx);
+                }
+                s2->ctx = NULL;
+                unregisterAndFreeNpcSlot(s2->slot72, arg0);
+                unregisterAndFreeNpcSlot(s2->slot76, arg0);
+                if (s2->slot78 != 0xFFFF) {
+                    unregisterAndFreeNpcSlot(s2->slot78, arg0);
+                }
+                popNpcSlotFromTail(D_main_bss_80139574, arg0);
+                {
+                    u8 *r = s2->rec;
+                    datItemSetObjectiveBooleanCount(*(s32 *)(r + 0x78), *(s32 *)(r + 0x7C), *(s32 *)(r + 0x70), *(s32 *)(r + 0x74), *(s32 *)(r + 0x80), *(s32 *)(s2->rec + 0x84));
+                }
+                tallyMidDetailObject(arg0);
+                clearPendingChildNpc(s2->obj);
+                setObjectFlagBit4(arg0);
+                if (s2->slot7A != 0xFFFF) {
+                    destroyNpcSlotByIndex(s2->slot7A);
+                    s2->slot7A = 0xFFFF;
+                }
+                if (s2->audioOn == 1) {
+                    s2->audioOn = 0;
+                    factor5RemoveListNode(s2->audio);
+                }
+            }
+        }
+        if (*(u16 *)a5 != 0xFFFF) {
+            destroyNpcSlotByIndex(*(u16 *)a5);
+            return 1;
+        }
+        return 1;
+    case 9:
+        a9 = arg2;
+        switch (arg2[0x18]) {
+        case 1:
+            s2->bA9 = arg2[9];
+            s2->bAA = arg2[0xA];
+            s2->bA8 = arg2[8];
+            s2->iA4 = *(s32 *)(arg2 + 4);
+            s2->fA0 = *(f32 *)arg2;
+            s2->bAB = 1;
+            break;
+        case 2:
+            s2->dur = 1.0f / (*(f32 *)arg2 * s2->rate);
+            setModelAnimSlotCycleDuration(s2->animSlot, s2->dur);
+            return 1;
+        case 3:
+            s2->bAB = 2;
+            break;
+        case 8:
+            if (getNpcCurrentHealth(s2->obj) > 0) {
+                u8 *b;
+                s32 o;
+                unregisterAndFreeNpcSlot(s2->slot72, arg0);
+                b = (u8 *)D_main_bss_80139560;
+                o = 0x2C;
+                if (*(s32 *)arg2 == 1) {
+                    o = 0x2E;
+                }
+                s2->slot72 = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+                unregisterAndFreeNpcSlot(s2->slot76, arg0);
+                o = 0x12;
+                if (*(s32 *)arg2 == 1) {
+                    o = 0xE;
+                }
+                s2->slot76 = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+                if (s2->slot78 != 0xFFFF) {
+                    unregisterAndFreeNpcSlot(s2->slot78, arg0);
+                    if (*(s32 *)(s2->rec + 0xA4) != 0) {
+                        o = 0x18;
+                        if (*(s32 *)arg2 == 1) {
+                            o = 0x1A;
+                        }
+                        s2->slot78 = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+                    }
+                }
+                setObjectDetailLevel(s2->obj, *(s32 *)a9);
+                return 1;
+            }
+            return 1;
+        default:
+            return 1;
+        }
+        break;
+    case 7:
+        dispatchSlotAction5IfActive(arg0, arg2);
+        break;
+    }
+    return 1;
+}
 
 #include "game_settings.h"
 typedef struct {
