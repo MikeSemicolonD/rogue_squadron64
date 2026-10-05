@@ -538,7 +538,102 @@ INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", computeCutsceneScreenSc
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", tickCutsceneCameraFromTimeline);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", transformAndNormalizeDirectionByMatrix);
+extern u16 D_cinematic_overlay_800B1B20[];
+extern Vec3f D_cinematic_overlay_800B1BA0[];
+extern void normalize_vector(Vec3f);
+
+typedef struct {
+    u8 pad0[0x8];
+    u8 *base;
+    s32 count;
+} DirHdr;
+
+typedef struct {
+    u8 pad0[0x20];
+    DirHdr *hdr;
+    s16 *pts;
+    s16 *dirs;
+} DirObj;
+
+void transformAndNormalizeDirectionByMatrix(DirObj *obj, Mat4x3 mat, Vec3f origin, f32 scale) {
+    Vec3f in;
+    s32 ff;
+    Vec3f out;
+    u8 *p;
+    u16 *dirIdx;
+    u16 *ptIdx;
+    s16 *dst;
+    s32 left;
+    s32 k;
+    s32 i;
+    u32 w;
+    u32 a;
+    u32 id;
+    Vec3f *n;
+    u16 *tb;
+    f32 d;
+    s16 *q;
+
+    ff = 0xFFFF;
+    for (id = 0x3F; (s32)id >= 0; id--) {
+        D_cinematic_overlay_800B1B20[id] = ff;
+    }
+    left = obj->hdr->count;
+    p = obj->hdr->base;
+    if (left > 0) {
+        do {
+            w = *(u32 *)(p + 4);
+            a = *(u32 *)p;
+            dirIdx = (u16 *)(p + ((w & 0xFC0) >> 4));
+            ptIdx = (u16 *)(p + ((w >> 16) & 0xFC));
+            dst = (s16 *)(p + (w & 0x3F) * 4);
+            if (a & 4) {
+                k = 2;
+                if (a & 8) {
+                    k = 3;
+                }
+                if (k >= 0) {
+                    do {
+                        id = *dirIdx;
+                        dirIdx += 1;
+                        n = &D_cinematic_overlay_800B1BA0[id & 0x3F];
+                        tb = &D_cinematic_overlay_800B1B20[id & 0x3F];
+                        if (*tb != id) {
+                            *tb = id;
+                            q = obj->dirs + id * 4;
+                            in[0] = q[0];
+                            in[1] = q[1];
+                            in[2] = q[2];
+                            rotateVec3ByMat3x3(mat, in, *n);
+                            normalize_vector(*n);
+                        }
+                        q = obj->pts + *ptIdx * 4;
+                        in[0] = q[0] * 0.00390625f;
+                        in[1] = q[1] * 0.00390625f;
+                        in[2] = q[2] * 0.00390625f;
+                        transformVec3ByMat34(mat, in, out);
+                        out[0] -= origin[0];
+                        out[1] -= origin[1];
+                        out[2] -= origin[2];
+                        normalize_vector(out);
+                        d = (*n)[0] * out[0] + (*n)[1] * out[1] + (*n)[2] * out[2];
+                        d = d + d;
+                        out[0] -= d * (*n)[0];
+                        out[1] -= d * (*n)[1];
+                        out[2] -= d * (*n)[2];
+                        ptIdx += 1;
+                        dst[0] = (u32)(scale * (1.0f - out[0]) * 4096.0f);
+                        dst[1] = (u32)(scale * (1.0f - out[2]) * 4096.0f);
+                        k -= 1;
+                        dst += 2;
+                    } while (k >= 0);
+                }
+            }
+            left -= 1;
+            p += (*(u32 *)(p + 4) >> 22) & 0xFC;
+        } while (left > 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", loadBackdropAsset);
 
