@@ -73,7 +73,50 @@ s32 attachedMeshOverlayNpcHandler(struct D_80130BB8_type *arg0, s32 a1, u16 *arg
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/544B0", load_full_header_image);
+typedef struct {
+    s16 material_type;
+    f32 misc_float;
+    f32 one;
+    s32 zero;
+    u8 alwaysa;
+    u8 pad[0x17];
+} HdrMat;
+extern s32 D_main_bss_80137CFC;
+extern s32 D_main_bss_80138920;
+extern u16 D_main_bss_80137C70;
+u32 get_asset_size_extra(s32, char *);
+s32 findAssetAcrossSegments(s32, s32, s32, char *, s32);
+void setupAssetDma(s32, s32, s32, s32, u32, void *);
+void teardownAssetDma(s32, s32);
+s32 rs_free(s32);
+s32 rs_malloc(s32, s32);
+void full_header_image_offset_convert(void *, void *);
+s32 registerHmtTextureInTable(void *, void *, s32);
+
+u16 load_full_header_image(char *name) {
+    HdrMat mat;
+    u32 size;
+    s32 buf;
+    s32 handle;
+    s32 hdr;
+
+    size = get_asset_size_extra(D_main_bss_80137CFC, name);
+    buf = rs_malloc(size, 0);
+    handle = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, name, 0);
+    setupAssetDma(D_main_bss_80138920, 0, handle, 0, size, (void *)buf);
+    teardownAssetDma(D_main_bss_80138920, handle);
+    hdr = buf + 4;
+    full_header_image_offset_convert((void *)hdr, (void *)hdr);
+    mat.material_type = 1;
+    mat.zero = 0;
+    mat.alwaysa = 1;
+    mat.misc_float = 0.2f;
+    mat.one = 1.0f;
+    *(u16 *)((u8 *)buf + 0x32) |= 0x300;
+    D_main_bss_80137C70 = registerHmtTextureInTable(&mat, (void *)hdr, 1);
+    rs_free(buf);
+    return D_main_bss_80137C70;
+}
 
 s32 dispatchOverlaySetupByParentAssetName(s32, s32, s32);
 s32 rs_malloc(s32, s32);
