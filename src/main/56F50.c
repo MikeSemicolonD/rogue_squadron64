@@ -495,7 +495,73 @@ s32 lookupHmtTextureByName(u8 **arg0, u8 *name, s32 idx, f32 *out, f32 *mtxBuf, 
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", computeNamedAttachPointTransform);
+s32 computeNamedAttachPointTransform(u8 **arg0, u8 *name, s32 idx, s32 *slot, f32 *out, f32 *mtxBuf, s32 useBuf) {
+    f32 tmp[2][12];
+    u8 *e;
+    u8 *elem;
+    HmtNode *node;
+    f32 *m;
+    f32 *prev;
+    s32 i;
+    s32 count;
+
+    e = *(u8 **)(arg0[0] + 0x30);
+    count = 0;
+    if (name == NULL) {
+        for (count = *slot; count > 0; count--) {
+            e = e + e[7] * 0x24 + 8;
+        }
+        goto found;
+    }
+    while (e[0] != 0) {
+        for (i = 0; i < 6; i++) {
+            if (e[i] != name[i] || e[i] == 0) {
+                break;
+            }
+        }
+        if (e[i] == name[i] && e[i] == 0) {
+        found:
+            elem = ((idx < e[7]) ? e + idx * 0x24 : e + (e[7] - 1) * 0x24) + 8;
+            if (mtxBuf != NULL && useBuf != 0) {
+                m = mtxBuf;
+            } else {
+                node = (HmtNode *)&((u8 *)arg0)[e[6] * 0x4C + 0xC];
+                if (node->parent == NULL) {
+                    if (mtxBuf != NULL) {
+                        m = mtxBuf;
+                        zmemcpy((u8 *)m, (u8 *)node->mtx, 0x30);
+                    } else {
+                        m = node->mtx;
+                    }
+                } else {
+                    prev = node->mtx;
+                    for (node = node->parent; node != NULL; node = node->parent) {
+                        if (node->parent == NULL && mtxBuf != NULL) {
+                            m = mtxBuf;
+                        } else {
+                            i++;
+                            m = tmp[i & 1];
+                        }
+                        mat3x4Multiply(node->mtx, prev, m);
+                        prev = m;
+                    }
+                }
+            }
+            transformVec3ByMat34(m, elem, out);
+            rotateVec3ByMat3x3(m, elem + 0xC, out + 3);
+            normalize_vector(out + 3);
+            rotateVec3ByMat3x3(m, elem + 0x18, out + 6);
+            normalize_vector(out + 6);
+            if (name != NULL) {
+                *slot = count;
+            }
+            return 1;
+        }
+        count++;
+        e = e + e[7] * 0x24 + 8;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", meshdef1_offset_convert);
 
