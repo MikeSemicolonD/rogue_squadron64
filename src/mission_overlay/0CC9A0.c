@@ -81,7 +81,45 @@ s32 tickActorTexturedSoundEffect(u8 *arg0, s32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", tickAtAtBodyTransform);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", tickAtAtAudioAndWeaponState);
+extern void clearModelAnimChannelEntry(s32);
+extern void releaseModelAnimSlot(s32);
+extern void initActorRenderDescriptorWithNpcVelocity(s32, s32);
+extern s32 flattenAnimTreeAndAllocateSlot(s32, s32);
+extern s32 markModelAnimChannelEntryActive(s32, s32);
+extern void setModelAnimSlotCycleDuration(s32, f32);
+extern f32 D_mission_overlay_8010A630;
+
+void tickAtAtAudioAndWeaponState(u8 *arg0) {
+    f32 t;
+    f32 t2;
+
+    clearModelAnimChannelEntry(*(s32 *)(arg0 + 0x7C));
+    releaseModelAnimSlot(*(s32 *)(arg0 + 0x78));
+    arg0[0x6F] = 1;
+    t = *(f32 *)(arg0 + 0x84) * *(f32 *)(arg0 + 0x88);
+    *(f32 *)(arg0 + 0x88) = 0.101220004f / *(f32 *)(arg0 + 0x54);
+    *(f32 *)(arg0 + 0x84) = 1.0f / t;
+    play3DSoundEvent(0, arg0, arg0 + 0x24, 24.0f, 0.8f, 0, 0x60, 0x7F, 0x7F);
+    arg0[0x6D] = 0;
+    initActorRenderDescriptorWithNpcVelocity(*(s32 *)(arg0 + 0x38), *(s32 *)(arg0 + 0x34));
+    *(f32 *)(arg0 + 0x84) = 1.0f / (*(f32 *)(arg0 + 0x84) * *(f32 *)(arg0 + 0x88));
+    *(s32 *)(arg0 + 0x78) = flattenAnimTreeAndAllocateSlot(*(s32 *)(*(u8 **)(arg0 + 0x30) + 0x18), *(s32 *)(arg0 + (arg0[0x6F] << 2) + 0x70));
+    *(s32 *)(arg0 + 0x7C) = markModelAnimChannelEntryActive(*(s32 *)(arg0 + 0x78), 0);
+    setModelAnimSlotCycleDuration(*(s32 *)(arg0 + 0x78), *(f32 *)(arg0 + 0x84));
+    if (arg0[0x6F] == 0) {
+        register f32 d asm("$f4") = *(f32 *)(arg0 + 0x84);
+        register f32 c asm("$f0") = 10.0f;
+        register f32 y asm("$f2") = *(f32 *)(arg0 + 0xF0);
+        t2 = y + c / d;
+        *(f32 *)(arg0 + 0xF0) = t2;
+        if (t2 > 1.0f) {
+            arg0[0xE7] = 0;
+            *(f32 *)(arg0 + 0xF0) = *(f32 *)(arg0 + 0x80);
+            *(f32 *)(arg0 + 0xF4) = D_mission_overlay_8010A630;
+        }
+    }
+    arg0[0x90] = 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CC9A0", D_mission_overlay_800A6DCC);
 
