@@ -37,7 +37,215 @@ void allocAndInitParticlePool(void) {
     } while (i < 0x80);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", randomBurstNpcHandlerVariant);
+typedef struct { s32 a, b, c; } BurstV3w;
+
+typedef struct BurstNode {
+    struct BurstNode *a;
+    struct BurstNode *b;
+} BurstNode;
+
+typedef struct {
+    u32 w0;
+    f32 f4;
+    f32 f8;
+    f32 fC;
+    u8 pad10[0x10];
+    s32 w20;
+    s32 w24;
+    s32 w28;
+    u8 pad2C[0x14];
+    f32 f40;
+    f32 f44;
+    f32 f48;
+    u8 pad4C[0x28];
+    u16 h74;
+    u8 pad76[2];
+    s32 w78;
+    u16 h7C;
+    u8 pad7E[2];
+    BurstNode n80;
+    s32 w88;
+    s32 w8C;
+    void *p90;
+    s32 w94;
+    u8 pad98[4];
+    u8 v9C[0x30];
+    s32 wCC;
+    s32 wD0;
+    s32 wD4;
+    s32 wD8;
+    s32 wDC;
+    s32 wE0;
+    s32 wE4;
+    u8 padE8[4];
+    s32 wEC;
+    u8 padF0[0x38];
+    f32 f128;
+    f32 f12C;
+    u16 h130;
+    u8 pad132[2];
+    s32 w134;
+    u8 pad138[8];
+    u16 h140;
+    u8 pad142[2];
+    f32 f144;
+    f32 f148;
+    f32 f14C;
+    f32 f150;
+    f32 f154;
+    f32 f158;
+    f32 f15C;
+    u8 b160;
+} BurstNpc;
+
+void vec3Cross(void *, void *, void *);
+extern void clearStructPair2C30(void *);
+extern void computeNpcGroupCentroidAndCull(void *, f32, f32 *, void *, void *);
+extern void initVec4TripletFromArgs(void *, f32, f32, f32);
+extern void mat34CrossRowsAndCopyPos(void *, void *, f32);
+extern void setVec3At0x24(void *, f32, f32, f32);
+extern void spawnNpcFormationWithRandomOrientation(void *, void *, void *, f32 *);
+extern void transformVec3ByMat34(void *, void *, f32 *);
+extern s32 transformVec3ToNpcLocalWithScale(void *, s32, void *, s32, s32);
+extern s16 rand(void);
+extern u16 D_main_bss_80139574;
+
+s32 randomBurstNpcHandlerVariant(struct D_80130BB8_type *self, u16 arg1, void *arg2) {
+    BurstNpc *s = self->unk04;
+    f32 v[3];
+    f32 sp28[3];
+    u8 mtx[0x30];
+    BurstNpc *a;
+    u8 *ctx;
+    u16 id;
+    f32 one;
+    f32 i;
+    void *a2;
+    f32 t;
+    BurstNode **p;
+    BurstNode *head;
+
+    switch (arg1) {
+    case 1:
+        s = rs_malloc(0x164, 0);
+        self->unk04 = s;
+        zmemcpy(s, arg2, 0x80);
+        s->h130 = 0xFFFF;
+        s->h140 = 0xFFFF;
+        *(s32 *)&s->f128 = 0;
+        *(s32 *)&s->f12C = 0;
+        s->w134 = 0;
+        s->b160 = 0;
+        s->w8C = 0;
+        s->w88 = 0;
+        s->n80.b = 0;
+        s->n80.a = 0;
+        s->p90 = &s->wCC;
+        s->w94 = 0;
+        s->wD4 = 0;
+        s->wD0 = 0;
+        s->wCC = 0;
+        s->wDC = 0;
+        s->wE4 = 0;
+        s->wE0 = 0;
+        s->wEC = 0;
+        s->f150 = s->f154 = s->f158 = s->f144 = s->f148 = s->f14C = 0.0f;
+        s->wD8 = s->w78 | 0x40000000;
+        clearStructPair2C30(&s->wCC);
+        popNpcSlotFromTail(D_main_bss_80139574, self);
+        break;
+    case 2:
+        destroyNpcSlotChain(s->h140);
+        if (s->h130 != 0xFFFF) {
+            v[0] = v[1] = v[2] = 0.0f;
+            computeNpcGroupCentroidAndCull(s, 10000.0f, v, NULL, NULL);
+        }
+        break;
+    case 3:
+        if (s->b160 != 0) {
+            s->f128 = 0.0f;
+            if (s->h130 == 0xFFFF) {
+                destroyNpcSlotByIndex(self->unk16);
+            }
+        } else {
+            s->f128 = s->f128 + *(f32 *)arg2 * (s->f40 + s->f44 * (f32)(rand() % 100) / 100.0f);
+        }
+        s->f12C = s->f12C + *(f32 *)arg2;
+        break;
+    case 4:
+        a2 = arg2;
+        v[0] = v[1] = v[2] = 0.0f;
+        if (s->h140 != 0xFFFF && 0.0f < s->f12C) {
+            id = getNextSlotNpcTypeId(s->h140);
+            if (id != 0xFFFF) {
+                ctx = getNpcContextField8(id);
+                one = 1.0f;
+                mat34CrossRowsAndCopyPos(mtx, ctx, one);
+                transformVec3ByMat34(mtx, &s->f144, v);
+                v[0] = v[0] - s->f4;
+                s->f4 = s->f4 + v[0];
+                v[1] = v[1] - s->f8;
+                s->f8 = s->f8 + v[1];
+                v[2] = v[2] - s->fC;
+                s->fC = s->fC + v[2];
+                s->f150 = v[0] / s->f12C * s->f15C;
+                s->f154 = v[1] / s->f12C * s->f15C;
+                s->f158 = v[2] / s->f12C * s->f15C;
+                if ((s->h7C & 2) && one < s->f128) {
+                    *(BurstV3w *)&s->w20 = *(BurstV3w *)(ctx + 0xC);
+                    vec3Cross(s->pad2C, ctx + 0xC, ctx + 0x18);
+                }
+            } else {
+                s->b160 = 1;
+            }
+        }
+        v[0] = -v[0] * 0.25f;
+        v[1] = -v[1] * 0.25f;
+        v[2] = -v[2] * 0.25f;
+        if (1.0f <= s->f128) {
+            for (i = 1.0f; i <= s->f128; i += 1.0f) {
+                t = i / s->f128 + -1.0f;
+                sp28[0] = v[0] * t;
+                sp28[1] = v[1] * t;
+                sp28[2] = v[2] * t;
+                spawnNpcFormationWithRandomOrientation(s, &s->f150, &s->h130, sp28);
+                if (s->h74 != 0) {
+                    s->h74 = s->h74 - 1;
+                    if (s->h74 == 0) {
+                        s->b160 = 1;
+                        break;
+                    }
+                }
+            }
+            s->f128 = s->f128 - (i - 1.0f);
+        }
+        s->f40 = s->f40 - s->f48 * s->f12C;
+        if (s->f40 < 0.0f) {
+            s->b160 = 1;
+        }
+        s->wEC = 0;
+        computeNpcGroupCentroidAndCull(s, s->f12C, v, &s->wEC, a2);
+        s->f12C = 0.0f;
+        if (s->wEC != 0) {
+            initVec4TripletFromArgs(s->v9C, 0.25f, 0.25f, 0.25f);
+            setVec3At0x24(s->v9C, s->f4, s->f8, s->fC);
+            if (transformVec3ToNpcLocalWithScale(*(void **)a2, 0, &s->f4, s->w0, 0) & 0xFF) {
+                head = **(BurstNode ***)a2;
+                s->n80.a = head;
+                if (head != NULL) {
+                    head->b = &s->n80;
+                }
+                s->n80.b = NULL;
+                **(BurstNode ***)a2 = &s->n80;
+            }
+        }
+        break;
+    case 0x1000:
+        *(void **)arg2 = s;
+        break;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/40F10", spawnNpcFormationWithRandomOrientation);
 
