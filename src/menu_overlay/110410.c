@@ -72,7 +72,98 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarTickCameraOrbit);
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/110410", D_menu_overlay_800A5804);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarInitializeShipShadowHob);
+#include "common_types.h"
+extern u16 D_main_bss_8013A528[];
+extern u8 hangarShipShadowFaces[];
+extern void clearStructPair2C30(u8 *);
+extern void zmemcpy(u8 *, u8 *, u32);
+
+void hangarInitializeShipShadowHob(u8 *p, s32 id, u8 *arg2)
+{
+  s32 j;
+  u16 sid;
+  s32 v;
+  u8 *q;
+  u8 *face;
+  s32 *new_var;
+  s32 i;
+  f32 *vtx;
+  u8 *new_var2;
+  *((s32 *) (p + 0x58)) = 0x02860021;
+  sid = id;
+  *((s32 *) (p + 0x60)) = 9;
+  *((u8 **) (p + 0x6C)) = p + 0xA8;
+  *((s32 *) (p + 0xC)) = 0;
+  *((s32 *) (p + 0x8)) = 0;
+  *((s32 *) (p + 0x4)) = 0;
+  *((s32 *) (p + 0x0)) = 0;
+  *((u8 **) (p + 0x10)) = p + 0x4C;
+  *((s32 *) (p + 0x14)) = 0;
+  new_var = (s32 *) (p + 0x50);
+  *new_var = 0;
+  *((s32 *) (p + 0x4C)) = 0;
+  *((s32 *) (p + 0x54)) = 0;
+  *((s32 *) (p + 0x68)) = 0;
+  *((s32 *) (p + 0x5C)) = 0;
+  new_var2 = p;
+  *((s32 *) (p + 0x64)) = 0;
+  *((u8 **) (p + 0x70)) = new_var2 + 0xB8;
+  *((s32 *) (p + 0x74)) = 0;
+  clearStructPair2C30(p + 0x4C);
+  *((s32 *) (p + 0xAC)) = 0;
+  *((s32 *) (p + 0xA8)) = 0;
+  *((u8 **) (p + 0xB0)) = p + 0x124;
+  *((s32 *) (p + 0xB4)) = 4;
+  zmemcpy(p + 0x124, hangarShipShadowFaces, 0xA0);
+  v = sid << 16;
+  *((s32 *) (p + 0x1A4)) = v;
+  *((s32 *) (p + 0x17C)) = v;
+  *((s32 *) (p + 0x154)) = v;
+  *((s32 *) (p + 0x12C)) = v;
+  if ((sid == D_main_bss_8013A528[5]) || (sid == D_main_bss_8013A528[12]))
+  {
+    *((u16 *) (p + 0x1B4)) = 0x800;
+    *((u16 *) (p + 0x1B0)) = 0x800;
+    *((u16 *) (p + 0x194)) = 0x800;
+    *((u16 *) (p + 0x190)) = 0x800;
+    *((u16 *) (p + 0x164)) = 0x800;
+    *((u16 *) (p + 0x160)) = 0x800;
+    *((u16 *) (p + 0x144)) = 0x800;
+    *((u16 *) (p + 0x140)) = 0x800;
+    *((u16 *) (p + 0x1BC)) = 0x1000;
+    *((u16 *) (p + 0x1B8)) = 0x1000;
+    *((u16 *) (p + 0x16C)) = 0x1000;
+    *((u16 *) (p + 0x168)) = 0x1000;
+  }
+  face = p + 0x124;
+  for (i = 0; i < 2; i++)
+  {
+    for (j = 0; j < 2; j++)
+    {
+      face[0x24] = 0;
+      face[0x25] = 0;
+      face[0x26] = 0;
+      face[0x27] = arg2[3];
+      face += 0x28;
+    }
+
+ do { } while (0);
+  }
+
+  vtx = *((f32 **) (p + 0x70));
+  for (i = 0; i < 3; i++)
+  {
+    for (j = 0; j < 3; j++)
+    {
+      vtx[0] = ((f32) (j - 1)) * 0.5f;
+      vtx[1] = 0;
+      vtx[2] = ((f32) (i - 1)) * 0.5f;
+      vtx += 3;
+    }
+
+  }
+
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", craftSelectionVoiceLineHelper);
 
