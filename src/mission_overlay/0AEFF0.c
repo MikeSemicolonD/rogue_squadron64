@@ -80,7 +80,106 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0AEFF0", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", spawnSceneDebrisAndEffectCluster);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", spawnNpcDestructionDebris);
+typedef struct {
+    u8 pad0[0xB6];
+    u16 unkB6;
+    s32 unkB8;
+    u8 padBC[4];
+    s32 unkC0;
+    u8 padC4[0x7C];
+    f32 unk140;
+    u8 pad144[0x3C];
+    u16 unk180;
+    u8 pad182[0xA];
+    f32 unk18C;
+    u8 pad190[0x3C];
+    u16 unk1CC;
+    u8 pad1CE[0x7E];
+    u8 unk24C;
+} NpcDebrisObj;
+#include "player.h"
+extern void resetHudInstancesAndUnbindNpcs(void);
+extern void triggerPlayerVehicleSpecialSlotEffect(void);
+extern void spawnScatteredDebrisParticles(void *);
+extern u16 spawnDestructionDebris(u16, void *, f32, f32, f32);
+extern void *getNpcContextByIndex(u16);
+extern u16 popNpcSlotFromTail(u16, void *);
+extern void setObjectFlagBit4(void *);
+extern u16 rand(void);
+extern s32 D_mission_overlay_8010CA1C;
+extern u8 gGameSettings;
+u8 isRumbleSlotActive(u8);
+s32 startRumbleEffect(u8, void *);
+s32 stopRumbleEffect(s32);
+extern s32 D_main_bss_80130B50;
+extern u32 D_mission_overlay_8010CA20;
+extern u8 D_mission_overlay_8010BBD0[][12];
+void playSpeechClip(s32, s32, f32, u16);
+static __inline__ void rumbleInline(u8 *arg0, s32 arg1) {
+    if (D_main_bss_80130B50 & 0x60) {
+        return;
+    }
+    if (D_mission_overlay_8010CA20 != 0) {
+        return;
+    }
+    if (arg1 < *(s32 *)(arg0 + 0x1C4) && isRumbleSlotActive(arg0[0xBB])) {
+        return;
+    }
+    if (*(s32 *)(arg0 + 0x1C0) != -1) {
+        stopRumbleEffect(*(s32 *)(arg0 + 0x1C0));
+    }
+    *(s32 *)(arg0 + 0x1C0) = startRumbleEffect(arg0[0xBB], D_mission_overlay_8010BBD0[arg1]);
+    if (*(s32 *)(arg0 + 0x1C0) != -1) {
+        *(s32 *)(arg0 + 0x1C4) = arg1;
+    }
+}
+void factor5RemoveListNode(void *);
+
+void spawnNpcDestructionDebris(NpcDebrisObj *arg0) {
+    u16 flags;
+    struct player_struct *pl;
+    s32 a;
+    u16 id;
+
+    pl = gPlayers;
+    flags = ((u16 *)&pl[arg0->unkB8].inner.unk178[2])[0];
+    if (!(flags & 8))
+    if (!(flags & 0x10))
+    if (!(flags & 0x20)) {
+        resetHudInstancesAndUnbindNpcs();
+        triggerPlayerVehicleSpecialSlotEffect();
+        D_mission_overlay_8010CA1C |= 0x100;
+        arg0->unk180 = (arg0->unk180 & 0xFFFE) | 8;
+        if ((f32)(rand() & 0x3F) * 0.015625f < 0.5f) {
+            arg0->unk140 = -60.0f;
+        } else {
+            arg0->unk140 = 60.0f;
+        }
+        arg0->unkC0 = 0;
+        a = rand() & 3;
+        if (a >= 3) {
+            a = 2;
+        }
+        if (gGameSettings != 0xF) {
+            a += 0x116;
+        } else {
+            a += 0x1FE;
+        }
+        playSpeechClip(a, 0x73, 0, 0x30);
+        arg0->unk18C = 6.0f;
+        spawnScatteredDebrisParticles(arg0);
+        id = spawnDestructionDebris(arg0->unkB6, (u8 *)arg0 + 4, 1.0f, 20.0f, 3.0f);
+        if (id != 0xFFFF) {
+            popNpcSlotFromTail(arg0->unk1CC, getNpcContextByIndex(id));
+        }
+        setObjectFlagBit4(getNpcContextByIndex(arg0->unkB6));
+        rumbleInline((u8 *)arg0, 0xB);
+        if (arg0->unk24C != 0) {
+            arg0->unk24C = 0;
+            factor5RemoveListNode((u8 *)arg0 + 0x208);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", updateSplineCraftTransform);
 
