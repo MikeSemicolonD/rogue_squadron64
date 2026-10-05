@@ -230,35 +230,7 @@ s32 tickEasedCameraKeyframeBlend(s32 arg0, s32 arg1, f32 arg2) {
     return var_v0;
 }
 
-#if 0
-
-/*
-This function may prove to be a problem child.
-The last format string in this function, "%s%s", is right before the bogus file padding.
-While there is a way to get that bogus padding into the rodata section itself, there's 2 major problems.
-
-1) For reasons I cannot comprehend, there's an extra 16 bytes of padding being added by the compiler.
-2) Moving the string out of the function creates an unwinnable situation concerning bridgeSecondaryWeaponTextIds
-2a) If the string and bridgeSecondaryWeaponTextIds are in the function, they will be appropriately ordered in the rodata section.
-BUT the compiler will also add extraneous padding between them.
-2b) If you pull the strings and bridgeSecondaryWeaponTextIds out of the function, the compiler will place them next to each other
-as desired.
-BUT, you then can't lose the memcpy like assignemt to bridgeSecondaryWeaponTextIds in the function body.
-
-Because of this, this function may not be truly matchable.
-If there was ever an indicator that I was using the wrong compiler for this project, this would be it.
-
-Note that as currently writte the .text section for this matches 100%, its just the rodata handling that is screwy.
-*/
-
-// const u8 blah0[8] = {
-//     "%s%s%s"
-// };
-
-// const u8 blah1[20] = {
-//     "%s%s\x00\x04\x18\x80\x00\x62\x18\x21\x00\x03\x21\x00\x00\x82\x20\x21"
-// };
-
+extern char D_menu_overlay_800A514C[];
 char *hangarGenerateSecondaryWeaponString(enum Level level, enum PlayerCraft craft) {
     u16 bridgeSecondaryWeaponTextIds[10] = {
         0x0000, 0x004E, 0x0050, 0x0051, 0x0052, 0x0053, 0x004F, 0x0054, 0x0055, 0x0056
@@ -283,7 +255,7 @@ char *hangarGenerateSecondaryWeaponString(enum Level level, enum PlayerCraft cra
         if (isAdvanced) {
             var_s1_2 = getGameOrFrontText(0x4B);
         } else {
-            var_s1_2 = "";
+            var_s1_2 = D_menu_overlay_800A514C;
         }
         sprintf(hangarSecondaryWeaponStrings[temp_s2], "%s%s%s", temp_s3, var_s1_2, getGameOrFrontText(temp_s0));
     } else {
@@ -293,14 +265,7 @@ char *hangarGenerateSecondaryWeaponString(enum Level level, enum PlayerCraft cra
     hangarActiveSecondaryWeaponString &= 3; // the really ought to be %= 4, but that leads to a ton of intruction reordering
     return hangarSecondaryWeaponStrings[temp_s2];
 }
-#else
-
-const u16 bridgeSecondaryWeaponTextIds[] = {
-    0x0000, 0x004E, 0x0050, 0x0051, 0x0052, 0x0053, 0x004F, 0x0054, 0x0055, 0x0056
-};
-
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarGenerateSecondaryWeaponString);
-#endif
+__asm__(".section .rodata\n.byte 0x04,0x18,0x80,0x00,0x62,0x18,0x21,0x00,0x03,0x21,0x00,0x00,0x82,0x20,0x21\n.section .text");
 
 void tickMusyXIfActive(void);
 u8 anyAudioSlotActive(void);
