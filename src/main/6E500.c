@@ -296,7 +296,33 @@ void serializeSettingsToSaveAndPersist(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", setUnlockBitAndPersist);
+void setUnlockBitAndPersist(u8 idx)
+{
+  u8 *new_var;
+  u8 sp18[16];
+  struct D_8013A5C0_type *s = &gSaveDataBody;
+  new_var = &s->unkA3[idx >> 3];
+  if (!(((*new_var) >> (idx & 7)) & 1))
+  {
+    s->unkA3[idx >> 3] |= 1 << (idx & 7);
+    if (D_main_800A0A60 != (-1))
+    {
+      unregisterServiceWorker(D_main_800A0A60);
+    }
+    D_main_800A0A60 = -1;
+    s->unkA2 = 0x3A;
+    s->unkA3[6] = gGameSettings.unk23;
+    s->unkAC = gGameSettings.nabooStarfighterCheatHash;
+    if (!(saveLoadDispatcher(1, 0, 0, sp18, s, 0xB0) & 0xFF))
+    {
+      gGameSettings.unk2C = 1;
+    }
+    if (!(saveLoadDispatcher(1, 0, 1, sp18, s, 0xB0) & 0xFF))
+    {
+      gGameSettings.unk2C = 1;
+    }
+  }
+}
 
 void applyMusicOrSfxVolume(u8, s32, s32, s32);
 void setMusyXVoiceTickGate(s32);
