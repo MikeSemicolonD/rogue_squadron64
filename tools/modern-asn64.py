@@ -174,6 +174,12 @@ with open(input_filename, mode="r") as input_file:
             pass
         else: # Macros or instructions
             is_instruction = True
+            # SN64 also separates a cop1 compare from its bc1 branch when a label sits between them (GCC emits no #nop there)
+            if identifier in cop1_branch_mnemonics:
+                prev_tokens: List[str] = get_line_tokens(input_lines[prev_instruction_index])
+                between = input_lines[prev_instruction_index + 1:line_index]
+                if prev_tokens and prev_tokens[0] in compare_mnemonics and not any(l[1:5] == "#nop" for l in between):
+                    line = "\tnop\n" + line
             if identifier in branch_mnemonics:
                 is_branch = True
                 if is_reorder:
