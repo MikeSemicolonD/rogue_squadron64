@@ -348,7 +348,111 @@ void initMusyXVoiceSlot(u8 *voice, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
     voice[0x11DE] = 2;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", serviceStreamingVoice);
+typedef struct {
+    u8 pad0[0x190];
+    void (*readFn)(u32, void *, s32, void *);
+    u32 srcBase;
+    u32 bufBase;
+    u32 bufSize;
+    u8 pad1A0[0x4];
+    u32 hdrA;
+    u32 hdrB;
+    u8 pad1AC[0x11A0 - 0x1AC];
+    u16 blocksLeft;
+    u16 blocksLeftLo;
+    u32 remain;
+    u32 endMark;
+    u8 mq[0x1C];
+    u32 unk11C8;
+    u32 unk11CC;
+    s32 unk11D0;
+    u32 unk11D4;
+    u32 unk11D8;
+    u8 pending;
+    u8 state;
+    u8 budget;
+} StreamVoice;
+extern void decodeAndFillVoiceBlock(void *, u32);
+
+void serviceStreamingVoice(StreamVoice *v) {
+    s32 n;
+    s32 budget;
+    u32 t;
+    u8 st;
+    u32 t2;
+    u32 t3;
+    u32 t4;
+    u32 t5;
+    u32 t6;
+    u16 bl;
+
+    budget = v->budget;
+    if (v->pending != 0) {
+        if (osRecvMesg(v->mq, NULL, 0) >= 0) {
+            if (v->unk11D0 == 0) {
+                v->unk11C8 = 0x60;
+                v->blocksLeft = *(u16 *)&v->hdrA;
+                v->blocksLeftLo = v->hdrA;
+                v->remain = v->hdrB & 0xFFFFFF;
+            }
+            t2 = v->remain;
+            v->unk11D0 += 0x400;
+            v->remain = (t2 < 0x101) ? 0 : t2 - 0x100;
+            v->pending = 0;
+        }
+        if (v->pending != 0) {
+            goto skip;
+        }
+    }
+    st = v->state;
+    if (st == 1 || st == 2 || (st & 0xFF) == 3) {
+        t3 = v->unk11D0;
+        if (t3 - v->unk11CC < 0xC01) {
+            if (t3 == 0) {
+                n = 0x400;
+            } else {
+                t4 = v->remain;
+                n = 0x400;
+                if (t4 < 0x101) {
+                    n = t4 * 4;
+                }
+            }
+            if (n > 0) {
+                v->pending = 1;
+                v->readFn(v->srcBase + v->unk11D0, (u8 *)v + ((v->unk11D0 & 0xFF8) + 0x1A0), n, v->mq);
+            }
+        }
+    }
+skip:
+    if (v->unk11D8 - v->unk11D4 < v->bufSize - 0xA0) {
+        do {
+            if (!((v->state == 1 || v->blocksLeft != 0) && ((t5 = v->unk11D0, t5 != 0) && v->remain == 0 || t5 - v->unk11CC >= 0x25) && budget > 0)) {
+                break;
+            }
+            decodeAndFillVoiceBlock(v, v->bufBase + ((v->unk11D8 % v->bufSize) >> 2) * 8);
+            bl = v->blocksLeft - 1;
+            v->blocksLeft = bl;
+            v->unk11CC = (v->unk11C8 >> 3) & ~3;
+            v->unk11D8 += 0xA0;
+            if (!(bl & 0xFFFF)) {
+                v->endMark = v->bufSize;
+            }
+            budget -= 1;
+        } while (v->unk11D8 - v->unk11D4 < v->bufSize - 0xA0);
+    }
+    if ((u32)(v->state - 3) < 2 && v->blocksLeft == 0) {
+        t6 = v->unk11D8;
+        while ((t6 - v->unk11D4 < v->bufSize - 0xA0) & (budget > 0)) {
+            bzero((void *)(v->bufBase + ((t6 % v->bufSize) >> 2) * 8), 0x140);
+            budget -= 1;
+            v->unk11D8 += 0xA0;
+            t6 = v->unk11D8;
+        }
+    }
+    if (v->state == 1 && v->unk11D8 - v->unk11D4 >= v->bufSize - 0x140) {
+        v->state = 2;
+    }
+}
 
 u32 consumeVoiceSamples(void *v, u32 count)
 {
