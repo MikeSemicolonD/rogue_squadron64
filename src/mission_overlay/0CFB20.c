@@ -220,7 +220,69 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", spawnPlayerAtStCannonFire);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", advancePlayerAtStLocomotion);
+extern u16 D_main_bss_8013957C;
+extern u8 D_main_bss_80138058[];
+s32 findActiveNpcInSlotChain(u16, void *);
+u8 *getNpcContextByIndex(u16);
+s32 revalidateNpcSlotIterator(void *);
+f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+s32 findSegmentObjectSphereHit(s32, void *, void *, void *);
+
+typedef struct { f32 x, y, z; } AdV3;
+s32 advancePlayerAtStLocomotion(f32 *p) {
+    u8 sp10[0x28];
+    AdV3 a;
+    AdV3 b;
+    u8 it[8];
+    u16 cur;
+    s32 idx;
+    s32 mesh;
+    f32 n;
+    f32 t;
+
+    if (0.0f <= p[0x18]) {
+        a.x = p[0] + p[3];
+        a.z = p[2] + p[5];
+    } else {
+        n = -p[3];
+        t = p[0];
+        t += n;
+        a.x = t;
+        n = -p[5];
+        t = p[2];
+        t += n;
+        a.z = t;
+    }
+    if (wrapAngleToCyclicRange(a.x, a.z, D_main_bss_80138058, 0) < 0.8f) {
+        return 1;
+    }
+    a = *(AdV3 *)p;
+    a.y = a.y - 0.12f;
+    b.x = p[3] * 0.2f;
+    b.y = p[4] * 0.2f;
+    b.z = p[5] * 0.2f;
+    if (p[0x18] < 0.0f) {
+        b.x = -b.x;
+        b.y = -b.y;
+        b.z = -b.z;
+    }
+    idx = findActiveNpcInSlotChain(D_main_bss_8013957C, it);
+    if ((idx & 0xFFFF) != 0xFFFF) {
+        do {
+            cur = idx;
+            if (cur != *(u16 *)((u8 *)p + 0x72)) {
+                mesh = *(s32 *)(getNpcContextByIndex(cur) + 0xC);
+                if (mesh != 0) {
+                    if (findSegmentObjectSphereHit(mesh, &a, &b, sp10) != 0) {
+                        return 1;
+                    }
+                }
+            }
+            idx = revalidateNpcSlotIterator(it);
+        } while ((idx & 0xFFFF) != 0xFFFF);
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", updatePlayerAtStBehavior);
 
