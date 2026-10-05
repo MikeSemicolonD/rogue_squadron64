@@ -262,7 +262,74 @@ void playSpeechClip(s32 id, u8 prio, f32 vol, s32 flags)
   }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", queueSpeechClipWithPriority);
+void queueSpeechClipWithPriority(s32 id, u8 prio, f32 vol, s32 flags)
+{
+  s32 *p;
+  s32 slot;
+  u8 i;
+  s32 n;
+  s32 t;
+  s32 k;
+  unsigned short fl = flags;
+  if ((((((*((u8 *) (&D_main_bss_80139C8E))) == 0) && (((*((u8 *) (&D_main_bss_80139C8C))) == 0) || (flags & 0x40))) && ((subtitleSlotsAvailable == 0x10) || (!(flags & 8)))) && (!(D_main_bss_80130B50 & 8))))
+  {
+    if (flags & 0x10)
+    {
+      slot = D_main_80139C73;
+      i = slot - 1;
+      if (i < 8)
+      {
+        s32 *base = D_main_80139B80;
+        p = base + ((u8) (slot - 1));
+        if ((*p) != (-1))
+        {
+          if ((u8) isVoiceHandleActive(*p))
+          {
+            stopVoiceByHandle(*p);
+          }
+          *p = -1;
+        }
+      }
+      subtitleSlotTail = 0;
+      subtitleSlotHead = 0;
+      subtitleSlotsAvailable = 0x10;
+      D_main_80139C73 = 0;
+      D_main_bss_80139C78 = 0;
+      D_main_bss_80139C7C = 0.0f;
+    }
+    if (subtitleSlotsAvailable != 0)
+    {
+      n = subtitleSlotHead + 0xF;
+      t = n;
+      if (n < 0)
+      {
+        t = subtitleSlotHead + 0x1E;
+      }
+      k = n - (t & 0x1F0);
+      if (vol < 0.5f)
+      {
+        if (D_main_bss_80139C8F == 0)
+        {
+          if (fl & 6)
+          {
+            vol = 0.5f;
+          }
+        }
+      }
+      *((f32 *) (&D_main_bss_80139C78)) = vol;
+      subtitleSlots[k].id = id;
+      subtitleSlots[k].flags = fl;
+      subtitleSlots[k].prio = prio;
+      subtitleSlots[k].f0 = vol;
+      subtitleSlotHead = k;
+      subtitleSlotsAvailable--;
+    }
+    if (fl & 0x20)
+    {
+      D_main_bss_80139C8C = 1;
+    }
+  }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/67690", tickSpeechSubsystem);
 
