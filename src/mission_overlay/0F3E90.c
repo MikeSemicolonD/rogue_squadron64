@@ -25,7 +25,125 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType4);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", buildSineWaveEffectGeometryA);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", buildSineWaveEffectGeometryB);
+typedef struct {
+    f32 f0;
+    u8 pad4[4];
+    f32 f8;
+} SineWaveIn;
+
+typedef struct {
+    u8 pad0[8];
+    f32 f8;
+    u8 padC[5];
+    u8 b11;
+    u8 b12;
+    u8 pad13;
+    u8 b14;
+    u8 b15;
+    u8 pad16;
+    u8 b17;
+    u8 b18;
+    u8 pad19;
+    u8 b1A;
+    u8 b1B;
+    u8 pad1C;
+    u8 b1D;
+    u8 b1E;
+    u8 pad1F;
+    u8 b20;
+    u8 b21;
+    u8 pad22;
+    u8 b23;
+    u8 b24;
+} SineWaveOut;
+
+f32 sinfApprox(f32);
+
+void buildSineWaveEffectGeometryB(s32 mode, SineWaveIn *in, f32 base, SineWaveOut *out) {
+    f32 a[4];
+    f32 b[4];
+    f32 max;
+    f32 scale;
+    f32 amp;
+
+    max = out->f8;
+    scale = 255.0f / max;
+    amp = (1.0f - (sinfApprox(in->f8) / 1.5707964f)) * base;
+    a[0] = base + amp;
+    if (a[0] < 0.0f) {
+        a[0] = 0.0f;
+    }
+    if (max < a[0]) {
+        a[0] = max;
+    }
+    b[0] = base - amp;
+    if (b[0] < 0.0f) {
+        b[0] = 0.0f;
+    }
+    if (max < b[0]) {
+        b[0] = max;
+    }
+    amp = (sinfApprox(in->f0) / 1.5707964f) * (max - base);
+    b[2] = base + amp;
+    a[2] = base - amp;
+    switch (mode) {
+    case 0:
+        out->b1A = (u32)(a[0] * scale);
+        out->b18 = (u32)(b[2] * scale);
+        out->b1E = (u32)(a[2] * scale);
+        b[3] = a[0] * (b[2] / base);
+        if (max < b[3]) {
+            b[3] = max;
+        }
+        out->b17 = (u32)(b[3] * scale);
+        a[1] = a[0] * (a[2] / base);
+        if (max < a[1]) {
+            a[1] = max;
+        }
+        out->b1D = (u32)(a[1] * scale);
+        break;
+    case 1:
+        out->b14 = (u32)(a[0] * scale);
+        if (out->b1A == 0xFF) {
+            out->b18 = (u32)(a[2] * scale);
+            a[1] = a[0] * (a[2] / base);
+            if (max < a[1]) {
+                a[1] = max;
+            }
+            out->b17 = (u32)(a[1] * scale);
+        } else {
+            out->b17 = (u32)(((f32)out->b1A + (f32)out->b14) * 0.5f);
+            out->b18 = (u32)(((f32)out->b1B + (f32)out->b15) * 0.5f);
+        }
+        out->b12 = (u32)(b[2] * scale);
+        b[3] = a[0] * (b[2] / base);
+        if (max < b[3]) {
+            b[3] = max;
+        }
+        out->b11 = (u32)(b[3] * scale);
+        break;
+    case 2:
+        out->b20 = (u32)(a[0] * scale);
+        if (out->b1A == 0xFF) {
+            out->b1E = (u32)(b[2] * scale);
+            b[3] = a[0] * (b[2] / base);
+            if (max < b[3]) {
+                b[3] = max;
+            }
+            out->b1D = (u32)(b[3] * scale);
+        } else {
+            out->b1D = (u32)(((f32)out->b1A + (f32)out->b20) * 0.5f);
+            out->b1E = (u32)(((f32)out->b1B + (f32)out->b21) * 0.5f);
+        }
+        out->b24 = (u32)(a[2] * scale);
+        a[1] = a[0] * (a[2] / base);
+        if (max < a[1]) {
+            a[1] = max;
+        }
+        out->b23 = (u32)(a[1] * scale);
+        break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", renderNpcAnchoredProceduralEffect);
 
