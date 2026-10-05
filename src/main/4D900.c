@@ -393,7 +393,150 @@ void submitActiveEffectObjectRender(s32 idx) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", initEffectObjectDefaults);
+extern s16 D_main_8009EBC4;
+extern u8 *getNpcContextByIndex(u16);
+extern u16 findFreeNpcSlotByKey(u16, u16);
+extern void computeAngleToTargetFromTransform(u8 *, u8 *, u8 *);
+typedef struct { s32 w[12]; } IeM48;
+typedef struct { u8 pad[0xC8]; f32 c8; } IeObj;
+typedef struct { s32 a, b, c; } IeV3;
+
+void initEffectObjectDefaults(s32 arg0, u16 arg1) {
+    u8 *e;
+    u8 *s5;
+    register u16 a1s asm("$20");
+    u8 *ctx;
+    u16 key;
+    register s32 four asm("$7");
+    u8 *cur;
+    u8 *c2;
+    u8 *nw;
+    f32 t;
+    f32 fk = 0.3515625f;
+
+    e = (u8 *)&D_main_bss_80138C18[arg0];
+    s5 = e + 0x28;
+    *(u16 *)(e + 2) = 0;
+    *(u16 *)(e + 4) = 0;
+    *(u16 *)(e + 0) = 0;
+    clearVec4QuadStruct(s5);
+    a1s = arg1;
+    key = a1s;
+    *(u8 **)(e + 0x70) = D_main_8009EC14;
+    *(u8 **)(e + 0x74) = D_main_8009EC14;
+    *(u8 **)(e + 0xBC) = (u8 *)D_main_bss_80138268;
+    *(u8 **)(e + 0xC0) = (u8 *)D_main_bss_80138268;
+    *(s32 *)(e + 0x58) = 0;
+    *(s32 *)(e + 0x5C) = 0;
+    *(s32 *)(e + 0x60) = 0;
+    *(s32 *)(e + 0x64) = 0;
+    *(s32 *)(e + 0x68) = 0;
+    *(s32 *)(e + 0x6C) = 0;
+    *(s32 *)(e + 0x78) = 0;
+    *(s32 *)(e + 0x7C) = 0;
+    *(s32 *)(e + 0x80) = 0;
+    *(s32 *)(e + 0x84) = 0;
+    *(s32 *)(e + 0x88) = 0;
+    *(s32 *)(e + 0x8C) = 0;
+    *(s32 *)(e + 0x10) = 0;
+    *(s32 *)(e + 0x14) = 0;
+    *(s32 *)(e + 0x18) = 0;
+    *(s32 *)(e + 0x1C) = 0;
+    *(s32 *)(e + 0x20) = 0;
+    *(s32 *)(e + 0x24) = 0;
+    *(s32 *)(e + 0x90) = 0;
+    *(s32 *)(e + 0x94) = 0;
+    *(s32 *)(e + 0x98) = 0;
+    *(s32 *)(e + 0x9C) = 0;
+    *(s32 *)(e + 0xA0) = 0;
+    *(s32 *)(e + 0xC4) = 0;
+    *(s32 *)(e + 0xCC) = 0;
+    *(s32 *)(e + 0xD0) = 0;
+    *(s32 *)(e + 0xD8) = 0;
+    *(s32 *)(e + 0xE0) = 0;
+    *(f32 *)(e + 0xC8) = 1.0f;
+    *(s32 *)(e + 0xDC) = 0;
+    *(f32 *)(e + 0xD4) = 80.0f;
+    *(f32 *)(e + 0xE4) = -45.0f;
+    *(f32 *)(e + 0xE8) = 45.0f;
+    *(f32 *)(e + 0xA4) = 0.033333335f;
+    *(s32 *)(e + 0xA8) = 0;
+    *(f32 *)(e + 0xAC) = 0.075f;
+    *(f32 *)(e + 0xB0) = 10.0f;
+    *(s32 *)(e + 0xEC) = 0;
+    *(u16 *)(e + 0xF4) = 0xFFFF;
+    *(s32 *)(e + 0xF0) = 0;
+    *(s32 *)(e + 0xB4) = 0;
+    *(f32 *)(e + 0xB8) = fk;
+    ctx = *(u8 **)(getNpcContextByIndex(key) + 0xC);
+    if (ctx != 0) {
+        f32 z = 0.0f;
+        *(u16 *)(e + 0xF4) = findFreeNpcSlotByKey(0xFFFF, key);
+        *(u16 *)(e + 0) = 0x13;
+        *(u8 **)(e + 0x74) = ctx + 0x28;
+        *(u8 **)(e + 0x70) = (u8 *)&D_main_bss_80137A80;
+        D_main_8009EBBC = 0;
+        *(s32 *)(e + 0x58) = 0;
+        *(s32 *)(e + 0x5C) = 0;
+        *(s32 *)(e + 0x60) = 0;
+        *(IeV3 *)(e + 0x64) = *(IeV3 *)(e + 0x58);
+        *(s32 *)(e + 0x78) = 0;
+        *(s32 *)(e + 0x80) = 0;
+        D_main_8009EBC4 = a1s;
+        *(f32 *)(e + 0x7C) = -7.5f;
+        *(IeV3 *)(e + 0x84) = *(IeV3 *)(e + 0x78);
+        *(s32 *)(e + 0x90) = 0;
+        *(f32 *)(e + 0xA8) = z;
+        *(f32 *)(e + 0xA4) = z;
+        *(f32 *)(e + 0xEC) = z;
+        ((void (*)(s32, f32))submitActiveEffectObjectRender)(arg0, z);
+        *(u16 *)(e + 2) = 3;
+        *(u16 *)(e + 4) = 1;
+        *(f32 *)(e + 0xDC) = z;
+        *(f32 *)(e + 0x98) = z;
+        *(f32 *)(e + 0xB8) = fk;
+        *(f32 *)(e + 0x94) = 0.5f;
+        *(f32 *)(e + 0x9C) = 3.5f;
+        *(f32 *)(e + 0xA0) = 3.5f;
+        *(IeM48 *)s5 = *(IeM48 *)((u8 *)D_main_bss_80138D18[arg0].unk4 + 0x28);
+        computeAngleToTargetFromTransform(e + 0x28, e + 0x10, e + 0x1C);
+        four = 4;
+        cur = D_main_bss_80138D18[arg0].unk4;
+        if (*(u16 *)((u8 *)cur + 2) == four) {
+            releaseEffectObjectNpcSlotsVariant(arg0, 3, 1);
+            return;
+        }
+        c2 = cur;
+        if (c2 != e) {
+            nw = D_main_bss_80138930[arg0][0];
+            *(u16 *)(nw + 2) = four;
+            *(u8 **)(nw + 0xBC) = c2;
+            *(u8 **)(nw + 0xC0) = e;
+            *(s32 *)(nw + 0xC4) = 0;
+            *(s32 *)(nw + 0xCC) = 0;
+            *(s32 *)(nw + 0x74) = 0;
+            *(u16 *)nw |= 1;
+            ((IeObj *)nw)->c8 = 1.0f;
+            if (D_main_bss_80138260 == 1) {
+                D_main_bss_80138894->unk4 = nw;
+            }
+            D_main_bss_80138D18[arg0].unk4 = nw;
+            *(IeM48 *)(nw + 0x28) = *(IeM48 *)((u8 *)c2 + 0x28);
+            *(IeV3 *)(nw + 0x10) = *(IeV3 *)((u8 *)c2 + 0x10);
+            *(IeV3 *)(nw + 0x1C) = *(IeV3 *)((u8 *)c2 + 0x1C);
+            *(u16 *)c2 |= 1;
+            *(u16 *)e |= 1;
+            *(IeM48 *)(e + 0x28) = *(IeM48 *)((u8 *)c2 + 0x28);
+            *(f32 *)(e + 0x10) = *(f32 *)(e + 0x4C);
+            *(f32 *)(e + 0x14) = *(f32 *)(e + 0x50);
+            *(f32 *)(e + 0x18) = *(f32 *)(e + 0x54);
+            *(f32 *)(e + 0x98) = *(f32 *)(e + 0xA0);
+            *(f32 *)(e + 0x9C) = *(f32 *)(e + 0xA0);
+            D_main_bss_80138D18[arg0].unk4 = nw;
+            updateAudioListenerPosFromPlayer();
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", spawnEffectObjectAtNpc);
 
