@@ -87,7 +87,55 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CC9A0", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CC9A0", D_mission_overlay_800A6DD0);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", processAtAtSubFeatureSlot);
+s32 findActiveNpcInSlotChain(u16, void *);
+u8 *getNpcContextField8(s32);
+s32 revalidateNpcSlotIterator(void *);
+extern u16 D_main_bss_80139582;
+
+typedef struct { u8 pad[0x18]; u8 action; u8 pad19[7]; } AtAtSlotArgs;
+
+void processAtAtSubFeatureSlot(u8 *arg0) {
+    f32 buf[12];
+    u8 iter[8];
+    f32 d[3];
+    u8 name[4];
+    AtAtSlotArgs args;
+    u8 *npc;
+    u16 idx;
+    s32 r;
+    f32 dy;
+    f32 dx;
+    f32 dz;
+    f32 rad;
+
+    name[0] = 0x73;
+    name[1] = 0x66;
+    name[2] = arg0[0x6E] + 0x31;
+    name[3] = 0;
+    lookupHmtTextureByName(*(s32 *)(arg0 + 0x30), name, 0, (u8 *)buf, 0, 0);
+    r = findActiveNpcInSlotChain(D_main_bss_80139582, iter);
+    if ((r & 0xFFFF) != 0xFFFF) {
+        do {
+            idx = r;
+            npc = getNpcContextField8(idx);
+            dy = *(f32 *)(npc + 4) - buf[1];
+            d[1] = dy;
+            if (dy < 0.05f) {
+                dx = *(f32 *)npc - buf[0];
+                d[0] = dx;
+                dz = *(f32 *)(npc + 8) - buf[2];
+                d[2] = dz;
+                rad = (*(f32 *)(arg0 + 0x54) / 0.042175f) * 0.3239f;
+                if (dx * dx + dz * dz <= rad * rad) {
+                    args.action = 9;
+                    slotDispatcherIter(idx, 9, &args);
+                }
+            }
+            r = revalidateNpcSlotIterator(iter);
+        } while ((r & 0xFFFF) != 0xFFFF);
+    }
+    arg0[0x6E] = (arg0[0x6E] + 1) & 3;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CC9A0", D_mission_overlay_800A6DE0);
 
