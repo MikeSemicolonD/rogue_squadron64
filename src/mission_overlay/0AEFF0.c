@@ -184,7 +184,106 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", tickCutsceneObject);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", findNearestSceneObjectToPoint);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", loadPlayerStartPosition);
+typedef struct { s32 a, b, c; } V3;
+typedef struct {
+    u8 pad0[0x10];
+    f32 x, y, z;
+    V3 r;
+    u8 pad1[0x84 - 0x28];
+    f32 f84, f88, f8C;
+} StartDat;
+typedef struct {
+    u8 pad[0x20];
+    f32 a20, a24, pad28, a2C, a30;
+} StartBounds;
+typedef struct {
+    f32 pad0;
+    f32 x, y, z;
+    u8 pad1[0xB6 - 0x10];
+    u16 npc;
+    s32 idx;
+} StartPl;
+extern StartBounds D_main_bss_80136DC0;
+typedef struct { u8 pad[0x24]; f32 x, y, z; u8 pad2[0x2A0 - 0x30]; } Tf;
+extern Tf D_main_bss_8013800C[];
+extern f32 D_mission_overlay_8010B790;
+extern f32 D_mission_overlay_8010B794;
+extern f32 D_mission_overlay_8010B798;
+extern f32 D_mission_overlay_8010B79C;
+extern f32 D_mission_overlay_8010B7A0;
+extern f32 D_mission_overlay_8010B7A4;
+extern void *findNearestSceneObjectToPoint(s32);
+extern StartDat *getLevelDatItemByName(char *);
+extern f32 wrapAngleToCyclicRange(f32, f32, void *, u8 *);
+extern u8 D_main_bss_80138058[];
+extern void buildTransformMatrixFromEulerAngles(void *, f32, f32, f32);
+extern void composeRotationMatrixSlot0(void *, s32);
+extern void composeRotationMatrixSlot1(void *, s32);
+extern void composeRotationMatrixSlot2(void *, s32);
+extern void extractOrthonormalFrameFromStruct(void *, void *);
+extern void computeAngleToTargetFromTransform(void *, s32 *, void *);
+extern void clearObjectFlagBit4(void *);
+extern void *getNpcContextByIndex(u16);
+
+#define PM (&D_main_bss_8013800C[arg0->idx])
+void loadPlayerStartPosition(StartPl *arg0, s32 arg1) {
+    V3 sp;
+    StartDat *d;
+    StartDat *o;
+    f32 var_fv0;
+    f32 b;
+    f32 t;
+
+    if (arg1 == 0 || (o = findNearestSceneObjectToPoint(arg1)) == NULL) {
+        d = getLevelDatItemByName("player_StartPosition");
+        if (d != NULL) {
+            arg0->x = d->x;
+            arg0->y = d->y;
+            arg0->z = d->z;
+            sp = d->r;
+            D_mission_overlay_8010B790 = D_main_bss_80136DC0.a20 + d->f8C;
+            D_mission_overlay_8010B794 = D_main_bss_80136DC0.a24 - d->f8C;
+            D_mission_overlay_8010B798 = D_main_bss_80136DC0.a2C + d->f8C;
+            D_mission_overlay_8010B79C = D_main_bss_80136DC0.a30 - d->f8C;
+            if (d->f84 < d->f88) {
+                D_mission_overlay_8010B7A0 = d->f84;
+                D_mission_overlay_8010B7A4 = d->f88;
+            } else {
+                D_mission_overlay_8010B7A0 = -15.0f;
+                D_mission_overlay_8010B7A4 = 15.0f;
+            }
+        } else {
+            arg0->x = D_main_bss_80136DC0.a20 + (D_main_bss_80136DC0.a24 - D_main_bss_80136DC0.a20) * 0.5f;
+            arg0->z = D_main_bss_80136DC0.a2C + (D_main_bss_80136DC0.a30 - D_main_bss_80136DC0.a2C) * 0.5f;
+            var_fv0 = wrapAngleToCyclicRange(arg0->x, arg0->z, D_main_bss_80138058, 0) - 10.0f;
+            D_mission_overlay_8010B7A0 = -15.0f;
+            arg0->y = var_fv0;
+            D_mission_overlay_8010B7A4 = 15.0f;
+            sp.a = 0;
+            sp.b = 0;
+            *(f32 *)&sp.c = 1.0f;
+            D_mission_overlay_8010B790 = D_main_bss_80136DC0.a20 + 15.0f;
+            D_mission_overlay_8010B794 = D_main_bss_80136DC0.a24 - 15.0f;
+            D_mission_overlay_8010B798 = D_main_bss_80136DC0.a2C + 15.0f;
+            D_mission_overlay_8010B79C = D_main_bss_80136DC0.a30 - 15.0f;
+        }
+    } else {
+        arg0->x = o->x;
+        arg0->y = o->y;
+        arg0->z = o->z;
+        sp = o->r;
+    }
+    buildTransformMatrixFromEulerAngles(PM, 0.0f, 0.0f, 0.0f);
+    composeRotationMatrixSlot0(PM, sp.a);
+    composeRotationMatrixSlot1(PM, sp.b);
+    composeRotationMatrixSlot2(PM, sp.c);
+    PM->x = arg0->x;
+    PM->y = arg0->y;
+    PM->z = arg0->z;
+    extractOrthonormalFrameFromStruct(&arg0->x, PM);
+    computeAngleToTargetFromTransform(PM, &sp.a, (u8 *)arg0 + 0xCC);
+    clearObjectFlagBit4(getNpcContextByIndex(arg0->npc));
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0AEFF0", D_mission_overlay_800A55C0);
 
