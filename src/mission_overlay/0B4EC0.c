@@ -23,7 +23,148 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B4EC0", playWeaponFireSound);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B4EC0", playerXwingFireBlaster);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B4EC0", playXwingEngineSound);
+typedef struct {
+    /* 0x00 */ s32 idx;
+    /* 0x04 */ f32 f4;
+    /* 0x08 */ u32 w8;
+    /* 0x0C */ u8 padC[0xC];
+    /* 0x18 */ u8 b18;
+    /* 0x19 */ u8 b19;
+    /* 0x1A */ u16 h1A;
+    /* 0x1C */ u8 b1C[0x10];
+} XesNpc;
+
+typedef struct {
+    /* 0x000 */ s32 mesh;
+    /* 0x004 */ u8 pad4[0xB0];
+    /* 0x0B4 */ u16 hB4;
+    /* 0x0B6 */ u16 hB6;
+    /* 0x0B8 */ s32 index;
+    /* 0x0BC */ u8 padBC[0x158 - 0xBC];
+    /* 0x158 */ u16 h158;
+    /* 0x15A */ u8 pad15A[2];
+    /* 0x15C */ s32 w15C;
+    /* 0x160 */ f32 f160;
+    /* 0x164 */ f32 f164;
+    /* 0x168 */ f32 f168;
+    /* 0x16C */ u8 pad16C[0x178 - 0x16C];
+    /* 0x178 */ s32 w178;
+    /* 0x17C */ u8 pad17C[0x2A0 - 0x17C];
+} XesPlayer;
+
+typedef struct {
+    u8 pad0[0x1A];
+    u16 mask1A;
+    u8 pad1C;
+    u8 mask1D;
+    u16 mask1E;
+    u8 pad20[4];
+} XesHud;
+
+typedef struct {
+    u8 pad0[4];
+    u8 *p4;
+    u8 pad8[0x144 - 8];
+} XesCam;
+
+extern u8 D_main_bss_80137DBC[];
+extern u16 D_main_bss_80130B88[][3];
+extern XesHud D_mission_overlay_8010BE18[];
+extern XesCam D_main_bss_80138D18[];
+extern u8 gGameSettings;
+void playerXwingFireBlaster(void *, u32, void *);
+void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+void playSpeechClipOncePerLevel(s32, s32);
+u8 tickHudInstanceTargetingAndSpawns(s32, f32, void *, s32, s32, void *, s32);
+void dispatchHudInstanceWeaponEffect(s32, s32, void *, s32, s32, s32, s32);
+s32 findLockOnTarget(void *, void *, u16, f32, f32, f32);
+void tickCraftAnimationSlot(s32, f32);
+
+#define XP ((XesPlayer *)D_main_bss_80137DBC)
+
+void playXwingEngineSound(XesNpc *e, f32 dt) {
+    XesPlayer *p;
+    u8 *b4;
+    f32 f;
+    struct { u8 b[0x10]; } sp28;
+    u16 out[2];
+    register void *a1 asm("$5");
+    s32 mode;
+    u32 w;
+
+    p = &XP[e->idx];
+    b4 = D_main_bss_80137DBC - 4;
+    if (*(u16 *)(b4 + p->index * 0x2A0 + 0x184) & 1) {
+        D_mission_overlay_8010BC80[e->idx] = e->w8;
+        D_mission_overlay_8010BC90[e->idx] = e->f4;
+        f = p->f160;
+        if (0.0f < f) {
+            p->f160 = f - dt;
+        } else if (D_main_bss_80130B88[e->idx][0] & D_mission_overlay_8010BE18[e->idx].mask1A) {
+          w = e->w8;
+          if (w != 1) {
+            mode = *(s32 *)(b4 + e->idx * 0x2A0 + 0x160);
+            if (mode == 1) {
+                p->f160 = f + p->f168;
+                playerXwingFireBlaster(e, p->h158, 0);
+                playerXwingFireBlaster(e, p->h158 + 1, 0);
+                p->h158 ^= 2;
+                play3DSoundEvent(0, (u8 *)p + 4, (u8 *)p + 0x28, 20.0f, 0.2f, 0, 3, 0x5A, 0x28);
+            } else if (mode == 2) {
+                p->f160 = (f32)((f64)f + (f64)p->f168 * 1.5);
+                playerXwingFireBlaster(e, 0, 0);
+                playerXwingFireBlaster(e, 1, 0);
+                playerXwingFireBlaster(e, 2, 0);
+                playerXwingFireBlaster(e, 3, 0);
+                play3DSoundEvent(0, (u8 *)p + 4, (u8 *)p + 0x28, 20.0f, 0.2f, 0, 4, 0x5A, 0x28);
+            } else {
+                p->f160 = f + p->f164;
+                playerXwingFireBlaster(e, p->h158, &sp28);
+                p->h158 = (p->h158 + 1) & 3;
+                play3DSoundEvent(0, &sp28, (u8 *)p + 0x28, 20.0f, 0.2f, 0, 2, 0x5A, 0x28);
+            }
+          } else if (e->b18 == 0) {
+            e->b18 = w;
+            if (e->f4 > 0.95f) {
+                playSpeechClipOncePerLevel(gGameSettings != 0xF ? 0x134 : 0x28C, 9);
+            }
+          }
+        } else {
+            e->b18 = 0;
+        }
+        if (tickHudInstanceTargetingAndSpawns(0, dt, (u8 *)p + 4, p->mesh, (D_main_bss_80130B88[e->idx][0] & 0xFF) & D_mission_overlay_8010BE18[e->idx].mask1D, out, p->hB6)) {
+            dispatchHudInstanceWeaponEffect(0, p->hB6, (u8 *)p + 4, p->mesh, p->w178, e->b19, out[0]);
+            e->b19 ^= 1;
+        }
+        if (D_main_bss_80130B88[e->idx][0] & D_mission_overlay_8010BE18[e->idx].mask1E) {
+            p->w15C++;
+            if (p->w15C >= 3) {
+                p->w15C = 0;
+            }
+            p->h158 = 0;
+        }
+    }
+    a1 = (u8 *)p + 4;
+    {
+        f32 range = 9.0f;
+        u8 *bp = e->b1C;
+        s32 hh = e->h1A;
+        s32 r;
+        s32 t;
+        if (*(u16 *)(D_main_bss_80138D18[e->idx].p4 + 4) == 3) {
+            range = 16.0f;
+        }
+        r = findLockOnTarget(a1, bp, hh, range, 0.992f, 12.5f);
+        t = r & 0xFFFF;
+        out[0] = r;
+        if (t != 0xFFFF) {
+            e->h1A = r;
+        } else {
+            e->h1A = t;
+        }
+    }
+    tickCraftAnimationSlot(0, dt);
+}
 
 #include "main/3F160.h"
 #include "main/02420.h"
@@ -52,14 +193,9 @@ typedef struct {
     /* 0x16 */ u16 h16;
 } FalconUpdNpc;
 
-typedef struct {
-    /* 0x00 */ u8 pad0[4];
-    /* 0x04 */ u8 *p4;
-    /* 0x08 */ u8 pad8[0x144 - 8];
-} FalconUpdCam;
+typedef XesCam FalconUpdCam;
 
 #define FUP ((FalconUpdPlayer *)D_main_bss_80137DBC)
-extern FalconUpdCam D_main_bss_80138D18[];
 extern u16 D_main_bss_80139560[];
 extern u8 D_mission_overlay_801097BC[];
 extern u8 D_main_bss_80137DBC[];
@@ -82,7 +218,7 @@ void releaseMeshAsset(s32);
 void teardownHudInstancesAndUnbindNpcs(void);
 void freePlayerAuxBuffersIfActive(s32);
 void playWeaponFireSound(s32 *, s32);
-void playXwingEngineSound(s32 *, s32);
+void playXwingEngineSound(XesNpc *, f32);
 void tryPlaySpatialSoundWithGates(void *, void *);
 void enqueueMeshTypeForCleanup(s32);
 void addNpcToVisibilityBucket(s32, s32, void *, f32);
@@ -149,7 +285,7 @@ s32 playerXwingUpdate(FalconUpdNpc *arg0, s32 arg1, u32 *arg2) {
             return 1;
         case 3:
             playWeaponFireSound(s0, *arg2);
-            playXwingEngineSound(s0, *arg2);
+            playXwingEngineSound((XesNpc *)s0, *(f32 *)arg2);
             return 1;
         case 5:
             tryPlaySpatialSoundWithGates(&FUP[*s0], arg2);
