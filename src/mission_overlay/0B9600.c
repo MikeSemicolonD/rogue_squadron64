@@ -4,7 +4,136 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0B9600", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0B9600", D_mission_overlay_800A5C28);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B9600", playerVwingInit);
+#include "common_types.h"
+typedef struct {
+    s32 f00;
+    u8 p04[0x18 - 4];
+    s32 f18;
+    u8 f1C;
+    u8 f1D;
+    u8 p1E[2];
+    u16 f20;
+} VwHdr;
+typedef struct {
+    s32 f00;
+    u8 p04[0xB4 - 4];
+    s16 fB4;
+    u8 pB6[0xC0 - 0xB6];
+    f32 fC0;
+    f32 fC4;
+    u8 pC8[0xD8 - 0xC8];
+    s32 fD8;
+    s32 fDC;
+    s32 fE0;
+    u8 pE4[4];
+    f32 fE8;
+    f32 fEC;
+    f32 fF0;
+    f32 fF4;
+    f32 fF8;
+    f32 fFC;
+    u8 p100[4];
+    f32 f104;
+    f32 f108;
+    u8 p10C[4];
+    f32 f110;
+    f32 f114;
+    f32 f118;
+    s32 f11C;
+    f32 f120;
+    f32 f124;
+    f32 f128;
+    f32 f12C;
+    f32 f130;
+    f32 f134;
+    f32 f138;
+    s32 f13C;
+    f32 f140;
+    f32 f144;
+    f32 f148;
+    s32 f14C;
+    f32 f150;
+    f32 f154;
+    s16 f158;
+    u8 p15A[6];
+    s32 f160;
+    f32 f164;
+    f32 f168;
+    u8 p16C[4];
+    s32 f170;
+    f32 f174;
+    u8 p178[8];
+    s16 f180;
+    u8 p182[0x190 - 0x182];
+    s32 f190;
+    u8 p194[0x2A0 - 0x194];
+} VwPlayer;
+
+extern VwPlayer sVwPlayers[] __asm__("D_main_bss_80137DBC");
+extern s32 D_main_bss_80130B58;
+void initPlayerCraftMovementMode(VwPlayer *);
+s32 lookupHmtMaterialByName(s32, char *, void *);
+
+void playerVwingInit(s32 *a0, s32 arg1, s32 arg2)
+{
+  VwHdr *arg0 = (VwHdr *)a0;
+  VwPlayer *p = &sVwPlayers[arg1];
+  f32 v;
+  register f32 c asm("$f10");
+  p->f180 = arg2;
+  arg0->f00 = arg1;
+  p->fB4 = 3;
+  initPlayerCraftMovementMode(p);
+  v = 150.0f;
+  if (D_main_bss_80130B58 & 0x40) {
+    v = 40.0f;
+  }
+  p->fC0 = v;
+  p->fC4 = v;
+  p->f13C = 0;
+  p->f14C = 0;
+  p->f11C = 0;
+  p->fD8 = 0;
+  p->fDC = 0;
+  p->fE0 = 0;
+  p->f158 = 0;
+  p->f160 = 0;
+  p->fF0 = 0.14999999f;
+  p->fE8 = 3.0f;
+  p->fEC = 3.0f;
+  p->fF4 = 0.33333334f;
+  p->fF8 = 1.6f;
+  p->fFC = 1.5f;
+  p->f104 = 15.0f;
+  p->f108 = 20.0f;
+  p->f110 = -40.0f;
+  p->f114 = -45.0f;
+  p->f118 = 50.0f;
+  p->f120 = 45.0f;
+  p->f124 = 75.0f;
+  p->f138 = 20.0f;
+  p->f140 = 10.0f;
+  p->f148 = 10.0f;
+  p->f154 = 50.0f;
+  p->f128 = 0.25f;
+  p->f12C = 0.25f;
+  c = 0.2f;
+  p->f164 = c;
+  p->f130 = 0.75f;
+  p->f134 = 1.75f;
+  p->f144 = 60.0f;
+  p->f150 = 5.0f;
+  p->f168 = 0.05f;
+  arg0->f18 = 0;
+  arg0->f1C = 0;
+  arg0->f1D = 0;
+  p->f170 = 0;
+  p->f174 = c;
+  p->f190 = 0;
+  *(s32 *)((u8 *)arg0 + 0xC) = lookupHmtMaterialByName(p->f00, "f_trns_l", (u8 *)arg0 + 4);
+  *(s32 *)((u8 *)arg0 + 0x10) = lookupHmtMaterialByName(p->f00, "f_trns_r", (u8 *)arg0 + 8);
+  arg0->f20 = 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B9600", updateVwingEngineEffect);
 
