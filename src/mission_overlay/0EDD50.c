@@ -371,7 +371,59 @@ s32 resetMusicSubsystemState(s32 arg0) {
     return -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", initLevelMusicBank);
+extern s32 D_main_bss_80138920;
+extern s32 D_main_bss_80139B4C;
+extern s32 D_main_bss_80139B50;
+extern s32 D_main_bss_80139B54;
+extern s32 D_main_8009FCD0;
+extern s32 gCurrentLevel;
+extern u8 D_mission_overlay_8010C424;
+extern struct {
+    s32 unk0;
+    s32 unk4;
+    u8 pad8[0x10];
+    s32 unk18;
+    s32 unk1C;
+    u8 pad20[6];
+    u8 unk26;
+    u8 unk27;
+} D_mission_overlay_8010C230;
+s32 parseSndFiles(s32, s32, void *, s32, s32);
+void loadSongAssetByName(s32, s32);
+
+s32 initLevelMusicBank(void) {
+    resetMusicSubsystemState(1);
+    D_mission_overlay_8010C424 = 0;
+    D_mission_overlay_8010C230.unk0 = 0;
+    D_mission_overlay_8010C230.unk1C = 0;
+    D_mission_overlay_8010C230.unk18 = 0;
+    D_mission_overlay_8010C230.unk27 = 0;
+    D_mission_overlay_8010C230.unk26 = 0;
+    D_mission_overlay_8010C230.unk4 = 0;
+    parseSndFiles(D_main_bss_80139B54, 0x1D, (void *)D_main_8009FCD0, D_main_bss_80139B4C, D_main_bss_80139B50);
+    loadSongAssetByName(D_main_bss_80138920, 0x35);
+    loadSongAssetByName(D_main_bss_80138920, 0x36);
+    loadSongAssetByName(D_main_bss_80138920, 0x37);
+    loadSongAssetByName(D_main_bss_80138920, 0x3C);
+    switch (gCurrentLevel) {
+    case 3:
+        loadSongAssetByName(D_main_bss_80138920, 0x3A);
+        break;
+    case 8:
+        loadSongAssetByName(D_main_bss_80138920, 0x39);
+        break;
+    case 9:
+        loadSongAssetByName(D_main_bss_80138920, 0x3A);
+        loadSongAssetByName(D_main_bss_80138920, 0x3B);
+        break;
+    case 0x12:
+        loadSongAssetByName(D_main_bss_80138920, 0x3B);
+        break;
+    }
+    parseSndFiles(D_main_bss_80139B54, 0x1E, (void *)D_main_8009FCD0, D_main_bss_80139B4C, D_main_bss_80139B50);
+    loadSongAssetByName(D_main_bss_80138920, 0x59);
+    return 1;
+}
 
 typedef struct { s32 key; s32 unk4; s32 unk8; s32 unkC; } SongSlotB;
 extern SongSlotB gSongSlotsB[8] __asm__("D_mission_overlay_8010C270");
