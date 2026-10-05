@@ -28,7 +28,14 @@ void freeAnimationPhasePool(void) {
     rs_free(D_main_bss_80137C84);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/55250", setPoolEntryPhaseAndMarkActive);
+typedef struct { s32 unk0; s16 frameCount; u16 flags; u32 frame; u32 phase; } PoolEntryP;
+
+void setPoolEntryPhaseAndMarkActive(u16 idx, f32 phase, s32 flags) {
+    if (idx < D_main_bss_80137C80) {
+        ((PoolEntryP *)D_main_bss_80137C84)[idx].phase = phase * 256.0f;
+        ((PoolEntryP *)D_main_bss_80137C84)[idx].flags = flags | 0xC000;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/55250", setPoolEntryPhase);
 
