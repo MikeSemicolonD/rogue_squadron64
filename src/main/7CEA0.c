@@ -162,7 +162,47 @@ INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcQuatOrientedMultiPhaseUpdate);
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", emitPresetSparkBurst);
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", updateWalkerLegStrideAndDust);
+extern void computeWalkerLimbStrideTargets(u16, f32 *, f32 *, f32 *, f32);
+extern void emitPresetSparkBurst(f32 *);
+extern f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+extern u8 D_main_bss_80138058[];
+
+void updateWalkerLegStrideAndDust(u8 *arg0) {
+    f32 a[3];
+    f32 b[3];
+    f32 c[3];
+    f32 p[3];
+    s32 i;
+    f32 t;
+
+    computeWalkerLimbStrideTargets(*(u16 *)(*(u8 **)(arg0 + 0x38) + 0x198), a, b, c, 1.05f);
+    i = 0;
+    do {
+        t = i;
+        p[0] = a[0] + (b[0] / 3.0f) * t;
+        p[2] = a[2] + (b[2] / 3.0f) * t;
+        p[1] = wrapAngleToCyclicRange(p[0], p[2], D_main_bss_80138058, 0);
+        emitPresetSparkBurst(p);
+        i++;
+        p[0] = a[0] + c[0] + (b[0] / 3.0f) * t;
+        p[2] = a[2] + c[2] + (b[2] / 3.0f) * t;
+        p[1] = wrapAngleToCyclicRange(p[0], p[2], D_main_bss_80138058, 0);
+        emitPresetSparkBurst(p);
+    } while (i < 3);
+    i = 1;
+    do {
+        t = i;
+        p[0] = a[0] + (c[0] / 5.0f) * t;
+        p[2] = a[2] + (c[2] / 5.0f) * t;
+        p[1] = wrapAngleToCyclicRange(p[0], p[2], D_main_bss_80138058, 0);
+        emitPresetSparkBurst(p);
+        i++;
+        p[0] = a[0] + b[0] + (c[0] / 5.0f) * t;
+        p[2] = a[2] + b[2] + (c[2] / 5.0f) * t;
+        p[1] = wrapAngleToCyclicRange(p[0], p[2], D_main_bss_80138058, 0);
+        emitPresetSparkBurst(p);
+    } while (i < 4);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcWalkerUpdate);
 
