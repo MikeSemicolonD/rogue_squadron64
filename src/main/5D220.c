@@ -56,7 +56,77 @@ u32 data_pad_5D220[] = {
     0xC4620000,
 };
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", checkTrackedNpcProximityForCue);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} PxV3;
+
+typedef struct {
+    f32 m[12];
+} PxMat;
+
+s32 findActiveNpcInSlotChain(u16, void *);
+u8 *getNpcContextByIndex(u16);
+void transformMeshPartIntoWorld(s32, f32 *);
+void vec3Cross(void *, void *, void *);
+f32 vec3Length(void *);
+f32 vec3Dot(void *, void *);
+void normalize_vector(void *);
+f32 constMinusSinfApprox(f32);
+void quatFromAxisAngleSafe(void *, void *, f32);
+void rotateVec3ByQuat(void *, void *, void *);
+void orthonormalizeFrame(void *);
+
+void checkTrackedNpcProximityForCue(u8 *o, f32 dt) {
+    PxMat m;
+    PxV3 d;
+    PxV3 axis;
+    f32 q[4];
+    u16 idx;
+    u8 *ctx;
+    f32 lim;
+    f32 a;
+
+    if (o[0x11C] == 1) {
+        idx = findActiveNpcInSlotChain(*(u16 *)(o + 0x118), NULL);
+        if (idx != 0xFFFF) {
+            ctx = getNpcContextByIndex(idx);
+            m = **(PxMat **)(ctx + 8);
+            if (*(void **)(ctx + 0xC) != NULL) {
+                transformMeshPartIntoWorld(*(s32 *)(ctx + 0xC), m.m);
+            }
+            d.x = m.m[0] - *(f32 *)(o + 0xB4);
+            d.y = m.m[1] - *(f32 *)(o + 0xB8);
+            d.z = m.m[2] - *(f32 *)(o + 0xBC);
+            vec3Cross(&axis, o + 0xC0, &d);
+            if (vec3Length(&axis) > 1e-5f) {
+                lim = *(f32 *)(o + 0x114) * 30.0f * dt;
+                normalize_vector(&d);
+                a = constMinusSinfApprox(vec3Dot(&d, o + 0xC0)) * 57.29578f;
+                if (lim < a) {
+                    a = lim;
+                } else if (a < -lim) {
+                    a = -lim;
+                }
+                quatFromAxisAngleSafe(q, &axis, a);
+                rotateVec3ByQuat(q, o + 0xC0, &d);
+                *(PxV3 *)(o + 0xC0) = d;
+                rotateVec3ByQuat(q, o + 0xCC, &d);
+                *(PxV3 *)(o + 0xCC) = d;
+                orthonormalizeFrame(o + 0xB4);
+                if (vec3Dot(o + 0x100, o + 0xC0) <= *(f32 *)(o + 0x110)) {
+                    o[0x11C] = 0;
+                }
+            }
+            *(f32 *)(o + 0xD8) = *(f32 *)(o + 0xC0) * *(f32 *)(o + 0x10C);
+            *(f32 *)(o + 0xDC) = *(f32 *)(o + 0xC4) * *(f32 *)(o + 0x10C);
+            *(f32 *)(o + 0xE0) = *(f32 *)(o + 0xC8) * *(f32 *)(o + 0x10C);
+        } else {
+            o[0x11C] = 0;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/5D220", audioCueDispatcherNpcHandler);
 
