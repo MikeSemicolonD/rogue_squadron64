@@ -77,7 +77,76 @@ void populateCutsceneSubtitleTextIds(void) {
     D_mission_overlay_8010B740[13] = (gGameSettings != 0xF) ? 0x133 : 0x28C;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", playRandomCutsceneVoiceLine);
+extern void playSpeechClip(s32, s32, f32, u16);
+extern s32 D_mission_overlay_801096B4;
+extern f32 D_mission_overlay_801096B0;
+extern u8 D_mission_overlay_801096B8;
+extern s32 D_mission_overlay_80109680[];
+extern s32 D_mission_overlay_80109698[];
+extern u16 rand(void);
+
+static __inline__ void playOnceInline(s32 arg0, s32 arg1) {
+    if (arg0 != D_mission_overlay_801096B4 && arg0 != 0x28C) {
+        playSpeechClip(arg0, 0x73, 0, arg1);
+        D_mission_overlay_801096B4 = arg0;
+        D_mission_overlay_801096B0 = 5.0f;
+    }
+}
+
+void playRandomCutsceneVoiceLine(u8 *arg0) {
+    s32 s0 = D_mission_overlay_801096B4;
+
+    if (D_mission_overlay_801096B0 > 0.0f) {
+        return;
+    }
+    if ((f32)(rand() & 0x3F) * 0.015625f >= 0.5f) {
+        return;
+    }
+    if (s0 == D_mission_overlay_801096B4) {
+        do {
+            if (gGameSettings != 0xF) {
+                s0 = D_mission_overlay_80109680[(s32)((f32)(rand() & 0x3F) / 10.666667f)];
+            } else {
+                s0 = D_mission_overlay_80109698[(s32)((f32)(rand() & 0x3F) / 10.666667f)];
+            }
+        } while (s0 == D_mission_overlay_801096B4);
+    }
+    switch (*(u16 *)(arg0 + 0xB4)) {
+    case 0:
+    case 1:
+    case 8:
+        if (D_mission_overlay_801096B8 == 1) {
+            if ((f32)(rand() & 0x3F) * 0.015625f < 0.2f && D_mission_overlay_801096B4 != 0x112 && *(f32 *)(arg0 + 0xC0) / *(f32 *)(arg0 + 0xC4) > 0.25f) {
+                s0 = 0x112;
+                D_mission_overlay_801096B4 = s0;
+                goto play;
+            }
+            if ((f32)(rand() & 0x3F) * 0.015625f < 0.1f) {
+                do {
+                    s0 = (s32)((f32)(rand() & 0x3F) * 0.03125f + (gGameSettings != 0xF ? 265.0f : 652.0f));
+                } while (s0 == D_mission_overlay_801096B4);
+                playOnceInline(s0, 0);
+                D_mission_overlay_801096B4 = s0;
+                s0 = (s32)((f32)(rand() & 0x3F) * 0.03125f + (gGameSettings != 0xF ? 620.0f : 652.0f));
+                goto play;
+            } else {
+                if ((f32)(rand() & 0x3F) * 0.015625f < 0.1f) {
+                    s0 = (gGameSettings != 0xF) ? 0x102 : 0x28C;
+                    D_mission_overlay_801096B4 = s0;
+                }
+                goto play;
+            }
+        }
+        D_mission_overlay_801096B4 = s0;
+        goto play;
+    default:
+        D_mission_overlay_801096B4 = s0;
+        break;
+    }
+play:
+    playSpeechClip(s0, 0x73, 0, 1);
+    D_mission_overlay_801096B0 = 5.0f;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", integrateCraftVelocityAndCollide);
 
