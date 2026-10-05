@@ -778,7 +778,7 @@ extern s32 D_menu_overlay_800CF0FC;
 extern s32 *D_menu_overlay_800CFE20[];
 extern u16 D_menu_overlay_800CFA6C;
 s32 applyFlagsToMeshTreeOrList(s32, s32, s32, s32);
-s32 loadVwingMeshAssets(s32, s32);
+s32 loadVwingMeshAssets(u8, u8);
 s32 load_hmt_and_hob(s32 *, s32, s32, s32);
 s32 walkMeshdef0List(s32 *);
 void *lookupHmtMaterialByName(s32, s32 *, s32);
@@ -1200,7 +1200,7 @@ next:
 
 s32 applyFlagsToMeshTreeOrList(s32, s32, s32, s32);
 s32 loadHelmetModel();
-s32 loadVwingMeshAssets(s32, s32);
+s32 loadVwingMeshAssets(u8, u8);
 s32 load_hmt_and_hob(s32 *, s32, s32, s32);
 s32 walkMeshdef0List(s32 *);
 extern s32 D_menu_overlay_800A699C;
