@@ -59,7 +59,82 @@ s32 tickScheduledSongEvents(void) {
 INCLUDE_ASM("asm/nonmatchings/main/94F50", tickScheduledSongEvents);
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", stepSongPitchBendLanes);
+typedef struct {
+    s32 baseTime;
+    s32 pad4;
+    u8 *stream;
+    s32 padC;
+    u16 value;
+    u16 pad12;
+    u32 time;
+    s32 pad18;
+    u8 channel;
+    u8 pad1D[7];
+} SongLane;
+
+#define LANE(o) ((SongLane *)((u8 *)D_main_bss_801529C0 + (o) + 0x56C))
+
+extern u8 D_main_bss_801529CB;
+void setChannelNoteCell(u8, u8, u8, u8);
+
+void stepSongPitchBendLanes(void) {
+    s32 off;
+    s32 o;
+    u8 done;
+    s32 b0;
+    s32 b1;
+    s32 delta;
+    s32 len;
+    u32 t;
+    s32 v;
+    u8 *p;
+    u8 *q;
+
+    off = 0;
+    do {
+        if (LANE(off)->stream != NULL) {
+            done = 0;
+            o = off;
+            do {
+                b0 = LANE(o)->stream[0];
+                b1 = LANE(o)->stream[1];
+                if ((b0 == 0x80) & (b1 == 0)) {
+                    LANE(o)->stream = NULL;
+                    done = 1;
+                } else {
+                    if (b0 & 0x80) {
+                        delta = b1 | ((b0 & 0x7F) << 8);
+                        len = 2;
+                    } else {
+                        delta = b0 & 0xFF;
+                        len = 1;
+                    }
+                    t = delta + LANE(o)->time;
+                    if (LANE(o)->baseTime + D_main_bss_801529C0->unk110[4] >= t) {
+                        LANE(o)->stream = LANE(o)->stream + len;
+                        LANE(o)->time = t;
+                        p = LANE(o)->stream;
+                        b0 = p[0];
+                        b1 = p[1];
+                        if (b0 & 0x80) {
+                            v = ((s32)((b1 | ((b0 & 0x7F) << 8)) << 17)) >> 17;
+                            LANE(o)->stream = p + 2;
+                        } else {
+                            v = ((s32)(b0 << 25)) >> 25;
+                            LANE(o)->stream = p + 1;
+                        }
+                        LANE(o)->value += v;
+                        setChannelNoteCell(0x80, LANE(o)->channel, D_main_bss_801529CB, (LANE(o)->value >> 7) & 0xFF);
+                        setChannelNoteCell(0x81, LANE(o)->channel, D_main_bss_801529CB, LANE(o)->value & 0x7F);
+                    } else {
+                        done = 1;
+                    }
+                }
+            } while (!done);
+        }
+        off += 0x24;
+    } while (off < 0x900);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", stepSongModulationLanes);
 
