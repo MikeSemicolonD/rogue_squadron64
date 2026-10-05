@@ -1,4 +1,5 @@
 #include "common.h"
+#include "common_types.h"
 
 #include "common_types.h"
 
@@ -160,7 +161,83 @@ s32 slotDispatcherIter(u16 arg0, s32 arg1, void *arg2) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/3F160", slotDispatcherInner);
+struct FreeBlkA {
+    s8 cnt;
+    s8 idx[0x43];
+    struct FreeBlkA *prev;
+    struct FreeBlkA *next;
+};
+void slotDispatcherInner(struct D_80130BB8_type *arg0) {
+    struct FreeBlkA **head;
+    struct FreeBlkA *b;
+    struct FreeBlkA *n;
+    struct FreeBlkA *x;
+    s32 i;
+    s8 *q;
+    s32 off;
+    u8 t;
+    s8 c;
+
+    if (arg0->unk14 & 4) return;
+    if (arg0->unk14 & 1) {
+        head = (struct FreeBlkA **)&D_main_bss_80130BC0;
+    } else {
+        head = (struct FreeBlkA **)&D_main_bss_80130BC4;
+    }
+    b = *head;
+    if (b == NULL) {
+        b = rs_malloc(0x204C, 0);
+        i = 0x3F;
+        q = (s8 *)b + 0x3F;
+        b->prev = NULL;
+        b->next = NULL;
+        do {
+            q[1] = i;
+            i--;
+            q--;
+        } while (i >= 0);
+        c = 0x1F;
+        if (arg0->unk14 & 1) c = 0x3F;
+        b->cnt = c;
+        *head = b;
+    }
+    arg0->unk18 = b->idx[(s8)b->cnt];
+    if (arg0->unk14 & 1) {
+        off = b->idx[(s8)b->cnt--] << 7;
+    } else {
+        off = b->idx[(s8)b->cnt--] << 8;
+    }
+    arg0->unk04 = (u8 *)b + (off + 0x4C);
+    c = (s8)b->cnt;
+    if (c < 0) {
+        if (b->prev != NULL) {
+            b->prev->next = b->next;
+        } else {
+            *head = b->next;
+        }
+        if (b->next != NULL) {
+            b->next->prev = b->prev;
+        }
+        b->prev = NULL;
+        b->next = NULL;
+        return;
+    }
+    if (b->prev != NULL && c < (s8)b->prev->cnt) {
+        n = b->next;
+        if (n != NULL) n->prev = b->prev;
+        b->prev->next = b->next;
+        x = b->prev;
+        b->next = x;
+        n = b->prev->prev;
+        if (n != NULL) {
+            n->next = b;
+        } else {
+            *head = b;
+        }
+        b->prev = b->prev->prev;
+        b->next->prev = b;
+    }
+}
 
 struct FreeBlk {
     u8 cnt;
