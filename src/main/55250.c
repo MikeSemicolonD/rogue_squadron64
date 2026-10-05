@@ -81,7 +81,7 @@ void tickTextureAnimSlots(f32 dt) {
     TlutAnimSlot *s;
 
     i = 0;
-    __asm__("lwc1 %0, D_main_8003AD14" : "=f"(wrap));
+    wrap = 2147483648.0f;
     s = (TlutAnimSlot *)D_main_bss_80137C90;
     do {
         if (s->flags != 0) {
@@ -104,3 +104,7 @@ void tickTextureAnimSlots(f32 dt) {
         s++;
     } while (i < 8);
 }
+
+__asm__(".section .rodata
+.word 0x025E1821, 0x8FAF05A4
+.section .text");

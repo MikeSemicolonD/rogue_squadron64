@@ -546,7 +546,7 @@ SECTIONS
         build/asm/data/main/3B4C0.rodata.o(.rodata);
         build/src/main/4D900.o(.rodata);
         build/src/main/544B0.o(.rodata);
-        build/asm/data/main/3B8D0.rodata.o(.rodata);
+        build/src/main/55250.o(.rodata);
         build/src/main/55AF0.o(.rodata);
         build/src/main/56630.o(.rodata);
         build/src/main/56F50.o(.rodata);
