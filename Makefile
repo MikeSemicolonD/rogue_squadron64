@@ -90,7 +90,6 @@ build/src/main/03290.s: N64CC = $(GCC272SN0001)
 build/src/main/04030.s: N64CC = $(GCC272SN0001)
 build/src/main/1D000.s: N64CC = $(GCC272SN0001)
 build/src/main/1D000.s: CFLAGS += -ffast-math
-build/src/mission_overlay/0AEFF0.s: CFLAGS += -fno-strength-reduce
 build/src/main/1EE30.s: N64CC = $(GCC272SN0001)
 build/src/main/24570.s: N64CC = $(GCC272SN0001)
 build/src/main/94F50.s: N64CC = $(GCC272SN0001)

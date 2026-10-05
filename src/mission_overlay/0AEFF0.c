@@ -3,7 +3,48 @@
 
 #include "mission_overlay/0AEFF0.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", initPlayerCraftTrailBuffers);
+typedef struct {
+    u16 onTime;
+    u16 count;
+    u16 *strength;
+    u16 *period;
+} RumbleDef;
+
+void serviceRumblePakMotors(void);
+s32 clearControllerPakPresence(u8);
+extern u16 D_mission_overlay_801096BC[];
+extern u16 D_mission_overlay_801096D8[];
+extern u16 D_mission_overlay_801096F4[];
+extern u16 D_mission_overlay_80109710[];
+extern u16 D_mission_overlay_8010B7B0[13][20];
+extern u16 D_mission_overlay_8010B9C0[13][20];
+extern RumbleDef sRumbleDefs[] __asm__("D_mission_overlay_8010BBD0");
+
+void initPlayerCraftTrailBuffers(u8 *arg0) {
+    s32 i;
+    s32 j;
+    f32 a;
+    f32 b;
+
+    serviceRumblePakMotors();
+    clearControllerPakPresence(arg0[0xBB]);
+    *(s32 *)(arg0 + 0x1C4) = 0;
+    *(s32 *)(arg0 + 0x1C0) = -1;
+    for (i = 0; i < 13; i++) {
+        sRumbleDefs[i].onTime = D_mission_overlay_801096BC[*(s32 *)(arg0 + 0xB8)];
+        sRumbleDefs[i].count = D_mission_overlay_801096D8[*(s32 *)(arg0 + 0xB8)];
+        sRumbleDefs[i].strength = D_mission_overlay_8010B7B0[i];
+        sRumbleDefs[i].period = D_mission_overlay_8010B9C0[i];
+        a = D_mission_overlay_801096F4[i];
+        b = D_mission_overlay_80109710[i];
+        for (j = 0; j < D_mission_overlay_801096D8[*(s32 *)(arg0 + 0xB8)]; j++) {
+            D_mission_overlay_8010B7B0[i][j] = a;
+            D_mission_overlay_8010B9C0[i][j] = b;
+            a *= 1.1f;
+            b *= 0.9f;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", computeCraftSelectTurnFromInput);
 
@@ -268,14 +309,21 @@ extern s32 D_mission_overlay_8010B740[];
 extern u8 D_mission_overlay_8010B780[];
 
 void resetSpeechOncePerLevelFlag(s32 arg0) {
-    s32 i;
+    s32 i = 0;
+    s32 *ids;
+    u8 *flags;
 
     if (arg0 != 0x28C) {
-        for (i = 0; i < 14; i++) {
-            if (D_mission_overlay_8010B740[i] == arg0) {
-                D_mission_overlay_8010B780[i] = 0;
-                return;
-            }
+        ids = D_mission_overlay_8010B740;
+        flags = D_mission_overlay_8010B780;
+    loop:
+        if (ids[i] == arg0) {
+            *(u8 *)(i + (s32)flags) = 0;
+            return;
+        }
+        i++;
+        if (i < 14) {
+            goto loop;
         }
     }
 }
