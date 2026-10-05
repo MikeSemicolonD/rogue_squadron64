@@ -336,7 +336,6 @@ segments:
       - [0x3D4D0, .rodata,  "main/6A6F0"]
       - [0x3D500, .rodata,  "main/6B8B0"]
       - [0x3D560, .rodata,  "main/6C310"]
-      - [0x3D5D0, rodata,  "main/3D5D0"]
       - [0x3D6F0, .rodata,  "main/6E500"]
       - [0x3D770, .rodata,  "main/700B0"]
       - [0x3DAF0, .rodata,  "main/738F0"]

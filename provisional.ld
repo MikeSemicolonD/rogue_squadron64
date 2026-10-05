@@ -566,7 +566,6 @@ SECTIONS
         build/src/main/6A6F0.o(.rodata);
         build/src/main/6B8B0.o(.rodata);
         build/src/main/6C310.o(.rodata);
-        build/asm/data/main/3D5D0.rodata.o(.rodata);
         build/src/main/6E500.o(.rodata);
         build/src/main/700B0.o(.rodata);
         build/src/main/738F0.o(.rodata);

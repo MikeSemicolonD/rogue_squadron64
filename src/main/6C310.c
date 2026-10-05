@@ -201,5 +201,7 @@ u16 getPlayerField2(s32 arg0) {
 INCLUDE_ASM("asm/nonmatchings/main/6C310", attachDebrisModelVariant);
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", updateDestructionDebrisNpc);
+__asm__(".section .rodata\n.globl D_main_8003CAE4\nD_main_8003CAE4:\n.word 0x3F4CCCCD\n.word 0x3C01003F\n.word 0x01415824\n.section .text");
+
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", fake_func_8006D8FC);
