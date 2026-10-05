@@ -1640,7 +1640,34 @@ void freeMenuScreenState(MenuScreenState *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateMenuElementTimedPosition);
+extern u8 *D_menu_overlay_800CFE2C;
+extern void *D_menu_overlay_800CFE38;
+void setChildPosFromI16Pair(void *, s16, s16);
+void setLookupEntryField5ByKey(s32, u8 *, s32);
+
+void updateMenuElementTimedPosition(f32 dt, u8 flag) {
+    f32 t;
+    f32 f;
+    f32 x;
+    f32 y;
+
+    if (dt > 0.05f) {
+        t = dt * 1.675f;
+        f = t * 512.0f / 640.0f;
+        *(f32 *)(D_menu_overlay_800CFE2C + 0x24) = f;
+        if (flag) {
+            *(f32 *)(D_menu_overlay_800CFE2C + 0x24) = f * 1.075f;
+        }
+        *(f32 *)(D_menu_overlay_800CFE2C + 0x28) = t;
+        if (flag) {
+            *(f32 *)(D_menu_overlay_800CFE2C + 0x28) = t * 1.075f;
+        }
+        x = *(f32 *)(D_menu_overlay_800CFE2C + 0x24) * -128.0f + 14.0f;
+        y = *(f32 *)(D_menu_overlay_800CFE2C + 0x28) * -128.0f + 18.0f;
+        setChildPosFromI16Pair(D_menu_overlay_800CFE38, (s16)x, (s16)y);
+    }
+    setLookupEntryField5ByKey((s32)D_menu_overlay_800CF07C, D_menu_overlay_800CFE2C, dt > 0.05f);
+}
 
 void activateAnimationKeyframe(s32, s32, u8);
 void applyCraftSlotAnimations(f32 t) {
