@@ -16,7 +16,7 @@ typedef struct {
     s16 unk24;
 } HeavyBurstArgs;
 
-extern void heavyRandomBurstNpcHandler(void);
+extern s32 heavyRandomBurstNpcHandler(void *, u16, void *);
 
 __asm__(".section .rodata\n.align 2\nD_main_8003CEF0:\n.asciz \"gnrc_stuff/wtrspray\"\n.align 2\n.section .text");
 
