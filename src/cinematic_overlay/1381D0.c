@@ -151,7 +151,97 @@ INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cutscenePopulateSlotsFr
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A52B4);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicSlotDispatcher);
+extern void cinematicSlotUpdate(u8 *, f32 *, f32, f32, s32);
+extern f32 D_cinematic_overlay_800B0950[];
+struct E5C { u8 p[0x54]; f32 v; u8 q[4]; };
+extern struct E5C D_800AF92C[];
+extern void setVec3At0x24f(void *, f32, f32, f32) __asm__("setVec3At0x24");
+extern void addVec3At0x24(void *, f32, f32, f32);
+extern void applyScaleToMat3x4f(void *, f32, f32, f32) __asm__("applyScaleToMat3x4");
+extern void composeRotationMatrixSlot1(void *, f32);
+extern void quatFromAxisAngleSafe(void *, void *, f32);
+extern void composeQuatToMat3x4(void *, void *);
+struct C13C { u8 p[2]; u8 t; u8 q[0x139]; };
+extern f32 D_cinematic_overlay_800B0B30;
+extern u8 D_cinematic_overlay_800A52B4[];
+
+f32 *cinematicSlotDispatcher(u8 *arg0, s32 arg1, void *arg2, f32 arg3) {
+    struct { f32 a18, a1C, a20, a24, a28, a2C, a30, a34; f32 q[4]; f32 a48, a4C; } L;
+    register void *a2v asm("$20") = arg2;
+    s32 off;
+    u8 *b;
+    f32 sc;
+    u8 tv;
+    u8 *s1 = arg0 + ((arg1 & 0xFF) * 0x4C + 0x13D8);
+
+    if (s1[0x1F] & 0x40) {
+        cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x20) * 0xC + 0x25AC), &D_cinematic_overlay_800B0950[0], arg3, 6.0f, 0);
+        cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x24) * 0xC + 0x25AC), &D_cinematic_overlay_800B0950[1], arg3, 6.0f, 0);
+        cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x28) * 0xC + 0x25AC), &D_cinematic_overlay_800B0950[2], arg3, 6.0f, 0);
+        cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x2C) * 0xC + 0x25AC), &L.a48, arg3, 6.0f, 0);
+        cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x40) * 0xC + 0x25AC), &L.a28, arg3, 3.5f, 0);
+        cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x44) * 0xC + 0x25AC), &L.a2C, arg3, 3.5f, 0);
+        cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x48) * 0xC + 0x25AC), &L.a30, arg3, 3.5f, 0);
+        cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x30) * 0xC + 0x25AC), &L.a18, arg3, 3.5f, 1);
+        cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x34) * 0xC + 0x25AC), &L.a1C, arg3, 3.5f, 1);
+        cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x38) * 0xC + 0x25AC), &L.a20, arg3, 3.5f, 1);
+        cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x3C) * 0xC + 0x25AC), &L.a4C, arg3, 3.5f, 1);
+    } else {
+        D_cinematic_overlay_800B0950[0] = *(f32 *)(s1 + 0x20);
+        D_cinematic_overlay_800B0950[1] = *(f32 *)(s1 + 0x24);
+        D_cinematic_overlay_800B0950[2] = *(f32 *)(s1 + 0x28);
+        L.a48 = *(f32 *)(s1 + 0x2C);
+        L.a28 = *(f32 *)(s1 + 0x40);
+        L.a2C = *(f32 *)(s1 + 0x44);
+        L.a30 = *(f32 *)(s1 + 0x48);
+        L.a18 = *(f32 *)(s1 + 0x30);
+        L.a1C = *(f32 *)(s1 + 0x34);
+        L.a20 = *(f32 *)(s1 + 0x38);
+        L.a4C = *(f32 *)(s1 + 0x3C);
+    }
+    D_cinematic_overlay_800B0950[0] *= 0.25f;
+    D_cinematic_overlay_800B0950[1] *= 0.25f;
+    D_cinematic_overlay_800B0950[2] *= 0.25f;
+    L.a28 *= 0.25f;
+    L.a2C *= 0.25f;
+    L.a30 *= 0.25f;
+    if (s1[0x1F] & 0x80) {
+        if (!(bytesDiffer(s1, D_cinematic_overlay_800A52B4, 2) & 0xFF)) {
+            L.a48 = D_800AF92C[((struct C13C *)D_cinematic_overlay_800B1900)[arg1 & 0xFF].t].v;
+        } else {
+            f32 t = L.a48 * 0.22222222f;
+            f32 u = D_800AF92C[((struct C13C *)D_cinematic_overlay_800B1900)[arg1 & 0xFF].t].v;
+            L.a48 = t;
+            if (u != 0.0f) {
+                L.a48 = t * u;
+            }
+        }
+    } else {
+        L.a48 = 1.0f;
+    }
+    off = arg1 & 0xFF;
+    b = (u8 *)D_cinematic_overlay_800B1900;
+    off *= 0x13C;
+    *(f32 *)(off + (s32)b + 0x64) = L.a48;
+    setVec3At0x24f(a2v, -L.a28, -L.a2C, -L.a30);
+    tv = ((u8 *)D_cinematic_overlay_800B1900)[off + 2];
+    if (tv == 0x1A) goto rot;
+    if (tv == 0x1B) {
+rot:
+        {
+        composeRotationMatrixSlot1(a2v, 180.0f);
+        }
+    }
+    quatFromAxisAngleSafe(L.q, &L.a18, L.a4C);
+    composeQuatToMat3x4(a2v, L.q);
+    sc = L.a48;
+    applyScaleToMat3x4f(a2v, sc, sc, sc);
+    if (((u8 *)D_cinematic_overlay_800B1900)[(arg1 & 0xFF) * 0x13C + 2] == 0x1B) {
+        applyScaleToMat3x4f(a2v, D_cinematic_overlay_800B0B30, D_cinematic_overlay_800B0B30, D_cinematic_overlay_800B0B30);
+    }
+    addVec3At0x24(a2v, L.a28 + D_cinematic_overlay_800B0950[0], L.a2C + D_cinematic_overlay_800B0950[1], L.a30 + D_cinematic_overlay_800B0950[2]);
+    return D_cinematic_overlay_800B0950;
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", spawnCutsceneObjectsFromList);
 
