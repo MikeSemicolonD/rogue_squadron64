@@ -259,7 +259,122 @@ void orientEffectToVelocity(s32 *arg0, EffectOrient *st, f32 dt) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B81D0", spawnTexturedExplosionBurst);
+typedef struct {
+    s32 unk0;
+    u8 pad4[0xB2];
+    u16 unkB6;
+    s32 unkB8;
+    u8 padBC[0x158 - 0xBC];
+    u16 unk158;
+    u8 pad15A[2];
+    s32 unk15C;
+    f32 unk160;
+    f32 unk164;
+    f32 unk168;
+    f32 unk16C;
+    u8 pad170[8];
+    s32 unk178;
+    u8 pad17C[0x2A0 - 0x17C];
+} BurstPlayer;
+
+typedef struct {
+    f32 x, y, z;
+} BurstVec;
+
+typedef struct {
+    u8 pad0[4];
+    f32 *unk4;
+} BurstNpcCtx;
+
+extern BurstPlayer gBurstPlayers[] __asm__("D_main_bss_80137DBC");
+extern u16 D_main_bss_80130B88[][3];
+extern char D_mission_overlay_800A5B9C[];
+extern u8 D_mission_overlay_801098B0[];
+extern BurstVec D_mission_overlay_801098E4[];
+extern u16 dispatchCueByCategory(s32, u16, void *, void *, s32, f32, f32);
+extern void *getNpcContextByIndex(u16);
+extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+extern void tickCraftAnimationSlot(s32, f32);
+extern u8 tickHudInstanceTargetingAndSpawns(s32, f32, void *, s32, s32, void *, s32);
+extern void dispatchHudInstanceWeaponEffect(s32, s32, void *, s32, s32, s32, s32);
+
+typedef struct {
+    u8 pad0[0x1A];
+    u16 mask1A;
+    u8 pad1C;
+    u8 mask1D;
+    u16 mask1E;
+    u8 pad20[2];
+    u8 mask22;
+    u8 mask23;
+} BurstHud;
+extern BurstHud D_mission_overlay_8010BE18[];
+
+typedef struct {
+    BurstVec v;
+    u8 pad[0x24];
+} BurstTmp;
+
+static __inline__ void emitCueInline(s32 *arg0, s32 arg1, BurstVec *arg2, BurstTmp *sp20) {
+    s32 s2;
+    BurstPlayer *s1;
+    char *name = D_mission_overlay_800A5B9C;
+
+    s2 = arg1 & 1;
+    s1 = &gBurstPlayers[*arg0];
+    lookupHmtTextureByName(s1->unk0, name, s2, &sp20->v, 0, 0);
+    if (gEffMeta[*arg0].info->kind == 3) {
+        accumulateVectorInObjectFrame(&sp20->v, &D_mission_overlay_801098E4[s2], s1);
+    }
+    dispatchCueByCategory(0, s1->unkB6, &sp20->v, D_mission_overlay_801098B0, 1, 12.5f, s1->unk16C);
+    *arg2 = sp20->v;
+}
+
+void spawnTexturedExplosionBurstImpl(s32 *arg0, f32 dt) __asm__("spawnTexturedExplosionBurst");
+void spawnTexturedExplosionBurstImpl(s32 *arg0, f32 dt) {
+    BurstVec pos;
+    BurstTmp tmp;
+    u16 out;
+    f32 *ctx;
+    BurstPlayer *p;
+    u8 *b;
+
+    p = &gBurstPlayers[*arg0];
+    b = (u8 *)gBurstPlayers - 4;
+    ctx = ((BurstNpcCtx *)getNpcContextByIndex(*(u16 *)(b + p->unkB8 * 0x2A0 + 0x292)))->unk4;
+    if (*(u16 *)(b + p->unkB8 * 0x2A0 + 0x184) & 1) {
+        if (0.0f < p->unk160) {
+            p->unk160 = p->unk160 - dt;
+        } else if (D_main_bss_80130B88[*arg0][0] & D_mission_overlay_8010BE18[*arg0].mask1A) {
+            if (*(s32 *)(b + *arg0 * 0x2A0 + 0x160) == 1) {
+                p->unk160 = p->unk160 + p->unk168;
+                emitCueInline(arg0, p->unk158, &pos, &tmp);
+                emitCueInline(arg0, p->unk158 + 1, &pos, &tmp);
+                p->unk158 = p->unk158 ^ 2;
+            } else {
+                p->unk160 = p->unk160 + p->unk164;
+                emitCueInline(arg0, p->unk158, &pos, &tmp);
+                p->unk158 = (p->unk158 + 1) & 1;
+            }
+            play3DSoundEvent(0, &pos, (u8 *)p + 0x28, 20.0f, 0.2f, 0, 2, 0x5A, 0x28);
+        }
+        if (tickHudInstanceTargetingAndSpawns(0, dt, (u8 *)p + 4, p->unk0, (D_main_bss_80130B88[*arg0][0] & 0xFF) & D_mission_overlay_8010BE18[*arg0].mask1D, &out, p->unkB6)) {
+            dispatchHudInstanceWeaponEffect(0, p->unkB6, (u8 *)p + 4, p->unk0, p->unk178, p->unk158, out);
+            if (gEffMeta[p->unkB8].info->kind == 3) {
+                ctx[5] = 2.0f;
+            }
+        }
+        if (tickHudInstanceTargetingAndSpawns(1, dt, (u8 *)p + 4, p->unk0, (D_main_bss_80130B88[*arg0][0] & 0xFF) & D_mission_overlay_8010BE18[*arg0].mask23, &out, p->unkB6)) {
+            dispatchHudInstanceWeaponEffect(1, p->unkB6, (u8 *)p + 4, p->unk0, 1, p->unk158, out);
+        }
+        if (D_main_bss_80130B88[*arg0][0] & D_mission_overlay_8010BE18[*arg0].mask1E) {
+            p->unk158 = 0;
+            p->unk15C = p->unk15C ^ 1;
+        }
+    }
+    orientEffectToVelocity(&p->unk0, (EffectOrient *)arg0, dt);
+    tickCraftAnimationSlot(0, dt);
+}
 
 typedef struct {
     s32 idx;
@@ -449,7 +564,7 @@ extern EffectCueSrc D_main_bss_80137DBC[];
 extern EffectCueMeta D_main_bss_80138D18[];
 extern char D_mission_overlay_800A5B9C[];
 extern u8 D_mission_overlay_801098B0[];
-extern EffectCueVec D_mission_overlay_801098E4[];
+extern BurstVec D_mission_overlay_801098E4[];
 void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
 void accumulateVectorInObjectFrame(void *, void *, void *);
 u16 dispatchCueByCategory(s32, u16, void *, void *, s32, f32, f32);
