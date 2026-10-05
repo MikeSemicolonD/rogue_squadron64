@@ -689,7 +689,10 @@ typedef struct {
     s16 unk98;
     u8 pad9A[2];
     s32 unk9C;
-    u8 padA0[0x10];
+    u8 padA0[4];
+    f32 unkA4;
+    u8 padA8[4];
+    char *unkAC;
     f32 animX[8];
     f32 animY[8];
     u8 padF0[8];
@@ -804,7 +807,146 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", computeNabooBankingOrientati
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", handleNabooFlightInput);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", handleNabooActionButtons);
+void bsearchFactor5TableByU16Key(s32, s32, s32);
+typedef struct {
+    u8 a;
+    u8 b;
+    u8 c;
+    u8 d;
+} Bytes4;
+extern u8 D_menu_overlay_800CEF30;
+extern u8 D_menu_overlay_800CEF31 __asm__("D_menu_overlay_800CEF30+1");
+extern f32 D_menu_overlay_800CEF34;
+extern f32 D_menu_overlay_800CCC4C;
+extern s32 D_menu_overlay_800CCC50;
+extern s8 D_menu_overlay_800CCC54;
+extern s8 D_menu_overlay_800CCC55;
+extern s8 D_menu_overlay_800CCC56;
+extern s8 D_menu_overlay_800CCC57;
+extern Bytes4 D_menu_overlay_800A6654;
+void applyTieInterceptorAnimState(void *, s32, s32);
+void updateMenuPerFrame(void *, f32, f32, s32, s32);
+u32 getControllerNewButtonsPressed(u8);
+void unsetControllerNewButtonsPressed(u8, u32);
+void clearAccountRecordAndMarkInactive(u8);
+
+u16 handleNabooActionButtons(u8 arg0, s32 arg1, f32 arg2, TieAnimBuf *arg3, f32 arg4, u8 arg5) {
+    f32 t;
+    f32 fs1;
+    f32 fs0;
+    u8 j;
+    s32 mask;
+    u8 flag0;
+    u32 i;
+    char *txt;
+    register s32 ret asm("$22");
+
+    ret = arg1;
+    if (arg0 == 1) {
+        D_menu_overlay_800CEF31 = 0;
+        D_menu_overlay_800CEF30 = 0;
+        D_menu_overlay_800CEF34 = 0.0f;
+        return 0;
+    }
+    switch (D_menu_overlay_800CEF30) {
+    case 0:
+        t = D_menu_overlay_800CEF34 + 2.0f * arg2;
+        D_menu_overlay_800CEF34 = t;
+        if (t > 1.0f) {
+            D_menu_overlay_800CEF34 = 1.0f;
+        }
+        j = 2;
+        fs1 = 1.0f - D_menu_overlay_800CEF34;
+        flag0 = D_menu_overlay_800CEF31 == 0;
+        fs0 = fs1 * 254.0f;
+        do {
+            activateAnimationKeyframe(5, j, (u8)fs0);
+            j++;
+        } while (j < 5);
+        if (flag0) {
+            j = 0;
+            do {
+                if (j != D_menu_overlay_800CF162) {
+                    D_menu_overlay_800CF180[j].unk1C = fs1;
+                }
+                j++;
+            } while (j < 3);
+        }
+        t = arg4 * 85.0f * ((f32)((u8 *)getPlayerSlotFieldAt34(5, arg3->unk94))[0x2F] / 255.0f);
+        activateAnimationKeyframe(5, 8, (u8)t);
+        if (D_menu_overlay_800CEF34 == 1.0f) {
+            applyTieInterceptorAnimState(arg3, 0xD, 0);
+            if (D_menu_overlay_800CEF31 != 0) {
+                arg3->text[2] = getGameOrFrontText(0xBB);
+                arg3->scale[2] = 1.2f;
+                for (i = 0; i < arg3->count; i++) {
+                    mask = 1;
+                    if (((mask << i) & 4) != 0) {
+                        f32 *v;
+                        setPlayerSlotAnimationFlag(5, arg3->text[i], (u16)i, (s16)(arg3->pos[i].x - 0x100), (s16)(arg3->pos[i].y + (arg3->baseY + (i * 0x24 - arg3->count * 0x12))));
+                        samplePlayerAnimChannel(5, (u16)i, arg3->scale[i]);
+                        v = (f32 *)getPlayerSlotFieldAt34(5, (u16)i);
+                        arg3->animX[i] = v[6];
+                        arg3->animY[i] = v[7];
+                    }
+                }
+            }
+            updateMenuPerFrame(arg3, arg2, arg4, 0, 0);
+            D_menu_overlay_800CEF30 = 1;
+        }
+        break;
+    case 1:
+        t = D_menu_overlay_800CEF34 - 2.0f * arg2;
+        D_menu_overlay_800CEF34 = t;
+        if (t < 0.0f) {
+            D_menu_overlay_800CEF34 = 0.0f;
+            D_menu_overlay_800CEF30 = 2;
+        }
+        j = 2;
+        fs0 = (1.0f - D_menu_overlay_800CEF34) * 254.0f;
+        do {
+            activateAnimationKeyframe(5, j, (u8)fs0);
+            j++;
+        } while (j < 5);
+        t = arg4 * 85.0f * ((f32)((u8 *)getPlayerSlotFieldAt34(5, arg3->unk94))[0x2F] / 255.0f);
+        activateAnimationKeyframe(5, 8, (u8)t);
+        return ret & 0xFFFF;
+    case 2:
+        if (getControllerNewButtonsPressed(arg5) & 0x9000) {
+            if (arg3->unk94 == 3) {
+                if (D_menu_overlay_800CEF31 == 0) {
+                    bsearchFactor5TableByU16Key(0x6A, 0x64, 0x40);
+                    D_menu_overlay_800CEF30 = 0;
+                    D_menu_overlay_800CEF31++;
+                    break;
+                }
+                bsearchFactor5TableByU16Key(0x18, 0x5F, 0x40);
+                clearAccountRecordAndMarkInactive(D_menu_overlay_800CF162);
+                D_menu_overlay_800CF180[D_menu_overlay_800CF162].unkC = 0;
+                D_menu_overlay_800CF180[D_menu_overlay_800CF162].unk14 = 0;
+                D_menu_overlay_800CCC50 = 0;
+                D_menu_overlay_800CCC57 = 0;
+                D_menu_overlay_800CCC55 = 1;
+                *(Bytes4 *)((u8 *)&D_menu_overlay_800CF180[D_menu_overlay_800CF162] + 0x10) = D_menu_overlay_800A6654;
+            } else {
+                bsearchFactor5TableByU16Key(0x19, 0x64, 0x40);
+            }
+            D_menu_overlay_800CCC54 = 0;
+            D_menu_overlay_800CCC56 = 1;
+            D_menu_overlay_800CCC4C = 1.0f;
+            txt = getGameOrFrontText(0xA8);
+            if (arg3->unkA4 == 0.0f) {
+                arg3->unkAC = txt;
+            }
+            ret = 9;
+        } else {
+            unsetControllerNewButtonsPressed(arg5, 0xD000);
+            ret = 0xFFFF;
+        }
+        break;
+    }
+    return ret & 0xFFFF;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6DC0);
 
