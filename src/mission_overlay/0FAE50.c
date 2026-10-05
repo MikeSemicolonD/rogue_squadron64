@@ -134,7 +134,59 @@ s32 endMissionEndTransition(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", requestMissionTransitionMode);
+extern f32 D_mission_overlay_8010C9EC;
+extern u8 D_mission_overlay_8010C9F0;
+extern u8 D_mission_overlay_8010CA18;
+extern struct { u8 pad0[0x10]; u32 f10; u32 pad14; u32 f18; } gGameSettings;
+extern u8 gMissionState[];
+extern u32 gCurrentLevel;
+extern u32 D_mission_overlay_8010C9E0;
+extern s8 D_main_bss_80130B14;
+void resetSecondaryWeaponCount(void);
+void stageSoundCueRequestByIdAndParam(s32, s32, s32, s32);
+
+s32 requestMissionTransitionMode(s32 arg0) {
+    u8 *p;
+    s8 t;
+
+    if (D_mission_overlay_8010CA20 != 0) {
+        return 0;
+    }
+    if (arg0 == 3) {
+        D_mission_overlay_8010CA20 = 3;
+        goto done;
+    }
+    if (arg0 == 2) {
+        D_mission_overlay_8010CA20 = 4;
+        goto done;
+    }
+    if (gGameSettings.f10 & 0x20) {
+        D_mission_overlay_8010C9E0 |= 1;
+        D_main_bss_80130B14 = 4;
+        return 1;
+    }
+    resetSecondaryWeaponCount();
+    if (gCurrentLevel == 0x10) {
+        D_mission_overlay_8010C9E0 |= 4;
+        return 1;
+    }
+    if (gGameSettings.f18 & 0x400000) {
+        gMissionState[D_mission_overlay_8010CA18] += 1;
+    }
+    t = gMissionState[D_mission_overlay_8010CA18] - 1;
+    gMissionState[D_mission_overlay_8010CA18] = t;
+    if (t == 0) {
+        gMissionState[4] = 3;
+        D_mission_overlay_8010C9E0 |= 1;
+        goto done;
+    }
+    stageSoundCueRequestByIdAndParam(0x1D, 0x37, 0, 1);
+    D_mission_overlay_8010CA20 = 1;
+done:
+    D_mission_overlay_8010C9F0 = 0;
+    D_mission_overlay_8010C9EC = 0.0f;
+    return 1;
+}
 
 typedef struct {
     u8 pad0[0x14];
