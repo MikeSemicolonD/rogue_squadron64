@@ -324,7 +324,7 @@ extern f32 cosf(f32);
 extern u8 transformVec3ToNpcLocalWithScale(void *, s32, void *, f32, s32);
 extern u16 D_main_bss_80139574;
 extern u8 *D_main_bss_80138D1C;
-extern struct { u8 p[0x20]; u16 h20; } *D_main_bss_80130C08;
+extern u8 *D_main_bss_80130C08;
 extern void popNpcSlotFromTail(u16, void *);
 extern void destroyNpcSlotByIndex(u16);
 
@@ -359,7 +359,7 @@ s32 heavyRandomBurstNpcHandler(void *selfp, u16 action, void *arg2) {
         n->w1C = 0;
         n->f3C = sp->f4;
         n->f44 = sp->f10;
-        n->h12 = D_main_bss_80130C08->h20;
+        n->h12 = *(u16 *)(D_main_bss_80130C08 + 0x20);
         n->f24 = n->f20 = 0.001f;
         *(HBVec *)&n->f30 = *sp->pos;
         n->f60 = 0.0f;
