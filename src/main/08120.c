@@ -169,7 +169,24 @@ s32 rs_strncmp(u8 *left, u8 *right, s32 count) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08120", rs_strncasecmp);
+static __inline__ u8 lower_(u8 c) {
+    if ((u8)(c - 'A') < 26) {
+        c += 0x20;
+    }
+    return c;
+}
+
+s32 rs_strncasecmp(u8 *left, u8 *right, s32 count) {
+    while (count > 0) {
+        if ((*left == 0) && (*right == 0)) return 0;
+        if (lower_(*left) > lower_(*right)) return 1;
+        if (lower_(*left) < lower_(*right)) return -1;
+        left++;
+        right++;
+        count--;
+    }
+    return 0;
+}
 
 u8 rs_tolower(u8 c) {
     if ((u8)(c - 'A') < 26) {
