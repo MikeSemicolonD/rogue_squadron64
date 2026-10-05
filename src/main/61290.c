@@ -3,7 +3,177 @@
 
 INCLUDE_ASM("asm/nonmatchings/main/61290", randomlyScaledEffectNpcHandler);
 
-INCLUDE_ASM("asm/nonmatchings/main/61290", randomlyScaledColoredEffectNpcHandler);
+#define VABS(x) ({ f32 _x = (x); f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); _r; })
+typedef struct { f32 x, y, z; } V3;
+typedef struct ColorFxCtx {
+    struct ColorFxCtx *next;
+    struct ColorFxCtx *prev;
+    s16 f8;
+    s16 fA;
+    s16 fC;
+    u8 padE[2];
+    u16 f10;
+    u16 f12;
+    u8 pad14[0xC];
+    f32 f20;
+    f32 f24;
+    u8 pad28[4];
+    u8 c2C;
+    u8 c2D;
+    u8 c2E;
+    u8 c2F;
+    f32 f30;
+    f32 f34;
+    f32 f38;
+    f32 f3C;
+    f32 f40;
+    f32 f44;
+    f32 f48;
+    f32 f4C;
+    u8 f50;
+} ColorFxCtx;
+
+typedef struct {
+    u8 pad0[4];
+    ColorFxCtx *ctx;
+    u8 pad8[0xE];
+    u16 f16;
+} ColorFxNpc;
+
+typedef struct {
+    f32 *pos;
+    u8 *color;
+    f32 f8;
+    f32 fC;
+    u8 f10;
+} ColorFxParams;
+
+typedef struct {
+    s32 f0;
+    u8 pad4[0x14];
+    f32 f18;
+    f32 f1C;
+    f32 f20;
+    u8 pad24[0x24];
+    struct { u8 pad[0x20]; ColorFxCtx *head; } *f48;
+} ColorFxUpdate;
+
+extern u8 D_main_bss_80139900[];
+extern u8 D_main_bss_80139910[];
+extern u16 D_main_bss_80139574;
+extern s32 rand();
+extern void popNpcSlotFromTail(u16, void *);
+extern void destroyNpcSlotByIndex(u16);
+extern u8 transformVec3ToNpcLocalWithScale(s32, s32, void *, f32, s32);
+
+s32 randomlyScaledColoredEffectNpcHandler(ColorFxNpc *npc, u16 cmd, void *arg) {
+    ColorFxCtx *c = npc->ctx;
+
+    switch (cmd) {
+    case 1: {
+        ColorFxParams *p = arg;
+        f32 s;
+        f32 s2;
+        u8 t;
+        c->f10 = 0x300;
+        c->f10 |= rand() & 0x1C00;
+        c->c2E = 0xFF;
+        c->c2D = 0xFF;
+        c->c2C = 0xFF;
+        c->c2F = 0xFF;
+        c->f44 = 255.0f;
+        c->f50 = p->f10;
+        switch (c->f50) {
+        case 0:
+        default:
+            c->f12 = *(u16 *)D_main_bss_80139900;
+            break;
+        case 1:
+            c->f12 = *(u16 *)D_main_bss_80139910;
+            break;
+        }
+        s = (VABS(((f32)(rand() & 0x7F) - 64.0f) * 0.00390625f) + 0.625f) * p->f8;
+        c->f48 = s;
+        c->f4C = p->fC * 0.875f - c->f48;
+        c->f20 = c->f24 = c->f48;
+        if (p->color != 0) {
+            c->c2C = p->color[0];
+            c->c2D = p->color[1];
+            c->c2E = p->color[2];
+        }
+        *(V3 *)&c->f30 = *(V3 *)p->pos;
+        *(volatile f32 *)&c->f3C = 0.0f;
+        *(volatile f32 *)&c->f40 = 0.0f;
+        popNpcSlotFromTail(D_main_bss_80139574, npc);
+        return 1;
+    }
+    case 2:
+        break;
+    case 3: {
+        f32 *dt = arg;
+        c->f40 = c->f40 + *dt;
+        switch (c->f50) {
+        case 0:
+        default:
+            c->f3C = c->f3C + *dt * 20.0f;
+            c->f48 = c->f48 + c->f4C * *dt;
+            c->f20 = c->f24 = c->f48;
+            if (c->f40 >= 0.5f) {
+                c->f44 = c->f44 - *dt * 512.0f;
+                if (c->f44 > 0.0f) {
+                    c->c2F = (u32)c->f44;
+                } else {
+                    destroyNpcSlotByIndex(npc->f16);
+                    return 1;
+                }
+            }
+            break;
+        case 1:
+            c->f3C = 2.0f * (c->f40 * 8.0f);
+            c->f44 = 255.0f - 2.0f * (c->f40 * 255.0f);
+            c->f48 = c->f48 + 2.0f * (c->f4C * *dt);
+            c->f20 = c->f24 = c->f48;
+            if (c->f40 <= 0.5f) {
+                c->c2F = (u32)c->f44;
+            } else {
+                destroyNpcSlotByIndex(npc->f16);
+                return 1;
+            }
+            break;
+        }
+        break;
+    }
+    case 4: {
+        ColorFxUpdate *q = arg;
+        if (transformVec3ToNpcLocalWithScale(q->f0, 0, &c->f30, 1.0f, 0)) {
+            switch (c->f50) {
+            case 0:
+            default: {
+                u16 *tb = (u16 *)D_main_bss_80139900;
+                c->f12 = tb[(s32)c->f3C % 6];
+                break;
+            }
+            case 1: {
+                u16 *tb = (u16 *)D_main_bss_80139910;
+                c->f12 = tb[(s32)c->f3C % 8];
+                break;
+            }
+            }
+            c->f8 = (s32)((c->f30 - q->f18) * 256.0f);
+            c->fA = (s32)((c->f34 - q->f1C) * 256.0f);
+            c->fC = (s32)((c->f38 - q->f20) * 256.0f);
+            c->next = q->f48->head;
+            if (c->next != 0) {
+                c->next->prev = c;
+            }
+            c->prev = 0;
+            q->f48->head = c;
+        }
+        break;
+    }
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61290", minimalRandomNpcHandler);
 
@@ -62,7 +232,7 @@ typedef struct {
 
 u16 spawnNpcOfType(void *handler, void *params, u32 arg2, u8 arg3);
 void randomlyScaledEffectNpcHandler(void);
-void randomlyScaledColoredEffectNpcHandler(void);
+s32 randomlyScaledColoredEffectNpcHandler(ColorFxNpc *, u16, void *);
 void minimalRandomNpcHandler(void);
 
 void spawnRandomScaleEffectDefault(s32 arg0) {
