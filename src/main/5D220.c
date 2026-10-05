@@ -140,7 +140,37 @@ INCLUDE_ASM("asm/nonmatchings/main/5D220", loadWeaponsHobObjects);
 
 INCLUDE_ASM("asm/nonmatchings/main/5D220", findNpcInScaledBoxRegion);
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", findNpcInScaledBoxRegionExcludingPair);
+s32 findSegmentObjectSphereHit(s32, void *, void *, void *);
+
+u16 findNpcInScaledBoxRegionExcludingPair(u8 *arg0, u16 ex1, f32 scale, u16 ex2, u16 slot, void *out) {
+    u8 it[8];
+    f32 box[3];
+    u16 cur;
+    s32 idx;
+    s32 mesh;
+
+    box[0] = *(f32 *)(arg0 + 0x24) * scale;
+    box[1] = *(f32 *)(arg0 + 0x28) * scale;
+    box[2] = *(f32 *)(arg0 + 0x2C) * scale;
+    idx = findActiveNpcInSlotChain(slot, it);
+    if ((idx & 0xFFFF) != 0xFFFF) {
+        do {
+            cur = idx & 0xFFFF;
+            if (cur != ex1) {
+                if (ex2 == 0xFFFF || ex2 != cur) {
+                    mesh = *(s32 *)(getNpcContextByIndex(cur) + 0xC);
+                    if (mesh != 0) {
+                        if (findSegmentObjectSphereHit(mesh, arg0, box, out) != 0) {
+                            return cur;
+                        }
+                    }
+                }
+            }
+            idx = revalidateNpcSlotIterator(it);
+        } while ((idx & 0xFFFF) != 0xFFFF);
+    }
+    return 0xFFFF;
+}
 
 s32 rs_free(s32);
 extern s32 D_main_bss_8013961C;
