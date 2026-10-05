@@ -226,7 +226,45 @@ void findHudElementExtremes(u8 *out, u8 **objp, s32 flag) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", handleHUD);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", evalPauseMenuInputMode);
+typedef struct {
+    u16 btn;
+    u8 pad2[4];
+} PauseBtn;
+typedef struct {
+    f32 x;
+    f32 y;
+} PauseStick;
+extern PauseBtn D_main_bss_80130B88[];
+extern PauseStick D_mission_overlay_8010BDD8[];
+
+s32 evalPauseMenuInputMode(s32 arg0, u32 arg1) {
+    s32 r = 0;
+
+    switch (arg1) {
+    case 0:
+        r = (D_mission_overlay_8010BDD8[arg0].y > 0.4f) | (u16)(D_main_bss_80130B88[arg0].btn & 0x800);
+        break;
+    case 1:
+        r = (D_mission_overlay_8010BDD8[arg0].y < -0.4f) | (u16)(D_main_bss_80130B88[arg0].btn & 0x400);
+        break;
+    case 2:
+        r = (D_mission_overlay_8010BDD8[arg0].x < -0.4f) | (u16)(D_main_bss_80130B88[arg0].btn & 0x200);
+        break;
+    case 3:
+        r = (D_mission_overlay_8010BDD8[arg0].x > 0.4f) | (u16)(D_main_bss_80130B88[arg0].btn & 0x100);
+        break;
+    case 4:
+        r = (u16)(D_main_bss_80130B88[arg0].btn & 0x4000);
+        break;
+    case 5:
+        r = (u16)(D_main_bss_80130B88[arg0].btn & 0x1000);
+        break;
+    case 6:
+        r = (u16)(D_main_bss_80130B88[arg0].btn & 0x8000);
+        break;
+    }
+    return r != 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C0390", initOrUpdatePauseScreenDim);
 
