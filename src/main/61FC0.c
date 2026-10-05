@@ -24,7 +24,71 @@ INCLUDE_ASM("asm/nonmatchings/main/61FC0", advancePlayerAnimationPhase);
 
 __asm__(".section .rodata\n.globl D_main_8003B764\nD_main_8003B764:\n.word 0x00000000\n.section .text");
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", initPlayerSlotAnimationChannelFull);
+void rs_memset(void *, s32, s32);
+extern char D_main_8003B764[];
+
+u8 *initPlayerSlotAnimationChannelFull(u16 slot, u8 b46, u8 chan, u16 x, u16 y, u8 b48, f32 scale) {
+    register u8 c2 asm("$19") = chan;
+    struct someFontThing *font0 = D_main_8009FC10[slot];
+    struct someFontThing *font;
+    struct ui_element *elem;
+    u8 *inst;
+    u8 *tmpl;
+    u32 a0;
+    u32 a1;
+    u16 s5;
+    u16 s4;
+    u8 *s3;
+
+    inst = rs_malloc(0x458, 0);
+    rs_memset(inst, 0, 0x458);
+    inst[0x3C] = slot;
+    inst[0x3D] = c2;
+    *(u16 *)(inst + 0x40) = x;
+    inst[0x46] = b46;
+    *(u16 *)(inst + 0x42) = y;
+    inst[0x48] = b48;
+    *(f32 *)(inst + 0x38) = scale;
+    *(void **)(inst + 0x450) = font0->unk0F4;
+    tmpl = (u8 *)buildPlayerCraftAssetTemplate(font0->unk002, *(s16 *)((u8 *)font0 + 6));
+    *(u8 **)(inst + 0x44C) = tmpl;
+    tmpl[0x2F] = 0;
+    *(s32 *)(inst + 0x14) = 0x12;
+    *(s16 *)(inst + 8) = 1;
+    *(s16 *)(inst + 0xA) = 1;
+    *(f32 *)(inst + 0x24) = 1.0f;
+    *(f32 *)(inst + 0x28) = 1.0f;
+    if (font0->unk01F == 0) {
+        *(s32 *)(inst + 0x14) |= 1;
+    }
+    if (font0->unk0F4 != NULL) {
+        insertLookupEntry(font0->unk0F4, inst, 10);
+        insertLookupEntry(font0->unk0F4, *(void **)(inst + 0x44C), 10);
+        setLookupEntryField5ByKey(font0->unk0F4, (struct ui_element *)inst, 0);
+        setLookupEntryField5ByKey(font0->unk0F4, *(struct ui_element **)(inst + 0x44C), 0);
+    }
+    a0 = inst[0x3C];
+    a1 = inst[0x3D];
+    s5 = *(u16 *)(inst + 0x40);
+    font = D_main_8009FC10[a0];
+    s4 = *(u16 *)(inst + 0x42);
+    font->unk030 |= 1 << a1;
+    font->unk084[a1] = font->unk01F;
+    s3 = (u8 *)font + a1 * 4;
+    elem = font->unk034[a1];
+    elem->xy_offset_pointer = (struct xy_offset *)((u8 *)font->unk0EC + *(u16 *)((u8 *)font + 0xE8) * a1 * 4);
+    elem->texture_id_pointer = (u16 *)((u8 *)font->unk0F0 + *(u16 *)((u8 *)font + 0xE8) * a1 * 2);
+    measurePlayerSlotTextLayout(a0, elem, *(u16 *)((u8 *)font + 0xE8), (s32)D_main_8003B764, (s16)s5, (s16)s4);
+    if (font->unk0F4 != NULL) {
+        setLookupEntryField5ByKey(font->unk0F4, *(struct ui_element **)(s3 + 0x34), elem->texture_count != 0);
+    }
+    if (font->unk01F == 0) {
+        elem->flags |= 1;
+    }
+    *(u16 *)(s3 + 0x98) = s5;
+    *(u16 *)(s3 + 0x9A) = s4;
+    return inst;
+}
 
 void measurePlayerSlotTextLayout(s32, struct ui_element *, u16, s32, s32, s32);
 void setLookupEntryField5ByKey(void *, struct ui_element *, s32);
