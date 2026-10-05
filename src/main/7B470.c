@@ -71,7 +71,59 @@ void allocateNpcMeshVertexBuffer(u8 *arg0, u8 *arg1)
 
 INCLUDE_ASM("asm/nonmatchings/main/7B470", transformMeshVerticesForNpc);
 
-INCLUDE_ASM("asm/nonmatchings/main/7B470", npcDeformingMeshUpdate);
+extern void buildRotationMatrixSlot0(f32 *, f32);
+extern void composeRotationMatrixSlot1(f32 *, f32);
+extern void composeRotationMatrixSlot2(f32 *, f32);
+extern void rotateVec3ByMat3x3(f32 *, f32 *, f32 *);
+extern f32 sinf(f32);
+
+#define F32(p, o) (*(f32 *)((p) + (o)))
+#define S16(p, o) (*(s16 *)((p) + (o)))
+
+void npcDeformingMeshUpdate(u8 *arg0, f32 dt) {
+    f32 m[12];
+    f32 v[3];
+    f32 o[3];
+    f32 len;
+    f32 zero = 0.0f;
+    u8 *p;
+    u8 *base;
+    s32 i;
+
+    base = arg0 + 0x28;
+    for (i = 0; i < 4; i++) {
+        p = base + i * 0x3C;
+        if (*(u16 *)p != 0) {
+            F32(p, 0x10) += F32(p, 0x14) * dt;
+            if (F32(p, 0x10) < 1.0f) {
+                buildRotationMatrixSlot0(m, F32(p, 4) * dt);
+                if (F32(p, 8) != zero) {
+                    composeRotationMatrixSlot1(m, F32(p, 8) * dt);
+                }
+                if (F32(p, 0xC) != zero) {
+                    composeRotationMatrixSlot2(m, F32(p, 0xC) * dt);
+                }
+                v[0] = S16(p, -8);
+                v[1] = S16(p, -6);
+                v[2] = S16(p, -4);
+                rotateVec3ByMat3x3(m, v, o);
+                {
+                    f32 a = o[0];
+                    __asm__ volatile("sqrt.s %0, %1" : "=f"(len) : "f"(a * a + o[1] * o[1] + o[2] * o[2]));
+                    len = len * 0.00390625f;
+                    if (zero < len) {
+                        S16(p, -8) = a / len;
+                        S16(p, -6) = o[1] / len;
+                        S16(p, -4) = o[2] / len;
+                    }
+                }
+                F32(p, -0x10) = F32(p, 0x18) * sinf(F32(p, 0x10) * 3.1415927f);
+            } else {
+                *(u16 *)p = 0;
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/7B470", npcShieldUpdate);
 
