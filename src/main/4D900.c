@@ -317,7 +317,7 @@ void computeAimAnglesFromPoints(Vec3f arg0, Vec3f arg1, Vec3f arg2, f32 arg3) {
     }
 }
 
-const rodata_pad_4D900[] = {
+const s32 rodata_pad_4D900[] = {
     0x000F1880,
     0x00431021,
     0x02A2102B,
