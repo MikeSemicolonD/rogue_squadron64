@@ -70,7 +70,56 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5D40);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", buildLevelSelectTextTextures);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", buildScaledFormatTextElement);
+typedef struct { u8 pad[0x6C]; u8 *p6C; u8 pad2[8]; } FmtBuf;
+typedef struct {
+    u8 pad0[8];
+    s16 h8;
+    s16 hA;
+    u16 *wC;
+    u8 pad10[0x14];
+    f32 f24;
+    f32 f28;
+    u8 b2C;
+    u8 b2D;
+    u8 b2E;
+    u8 b2F;
+} FmtElem;
+
+s32 buildFormatMessageGlyphBuffer(void *, void *, s32, s32);
+s32 rasterizeFormatMessageGlyphs(void *, void *, u16);
+void disposeFormatMsgQueueMember(void *, void *);
+u8 *spawnProjectileObject(s32, s16, s16, s32);
+
+void *buildScaledFormatTextElement(s32 arg0, s32 arg1, s16 arg2, s16 arg3, s32 arg4, s32 arg5) {
+    FmtBuf buf;
+    u8 *obj;
+    FmtElem *e;
+    u32 i;
+    s32 d2;
+
+    obj = spawnProjectileObject(arg1, arg2, arg3, arg4);
+    buildFormatMessageGlyphBuffer(obj, &buf, arg0, arg5);
+    rasterizeFormatMessageGlyphs(obj, &buf, *(u16 *)(obj + 0xA));
+    e = *(FmtElem **)(obj + 0xC);
+    e->h8 = *(u16 *)(buf.p6C + 0x3C) / arg2;
+    d2 = *(u16 *)(buf.p6C + 0x3E) / arg3;
+    e->f24 = 1.0f;
+    e->f28 = 1.0f;
+    e->b2C = 0xFF;
+    e->b2D = 0xFF;
+    e->b2E = 0xFF;
+    e->b2F = 0xFF;
+    e->hA = d2;
+    i = 0;
+    if (*(s32 *)(obj + 8) != 0) {
+        do {
+            e->wC[i] = (*(u16 **)(obj + 0x14))[i];
+            i += 1;
+        } while (i < *(u32 *)(obj + 8));
+    }
+    disposeFormatMsgQueueMember(obj, &buf);
+    return obj;
+}
 
 s32 buildFormatMessageGlyphBuffer(void *, void *, s32, s32);
 s32 rasterizeFormatMessageGlyphs(void *, void *, u16);
