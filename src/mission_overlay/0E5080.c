@@ -247,7 +247,150 @@ void transformCraftAnchorsApplySubFx2(u8 *npc, f32 dt) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", tickCraftSplineOrientationVariant);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", tickStructureWithDestructionAndChildren);
+typedef struct {
+    /* 0x00 */ u8 pad0[0x4C];
+    /* 0x4C */ u32 flags;
+    /* 0x50 */ f32 f50;
+    /* 0x54 */ f32 f54;
+    /* 0x58 */ f32 f58;
+    /* 0x5C */ s32 w5C;
+    /* 0x60 */ s32 w60;
+    /* 0x64 */ s32 w64;
+    /* 0x68 */ u8 q68[0x10];
+    /* 0x78 */ f32 f78;
+    /* 0x7C */ f32 f7C;
+    /* 0x80 */ f32 f80;
+} TsdDef;
+
+typedef struct {
+    /* 0x00 */ u8 pad0[0x1C];
+    /* 0x1C */ u8 mat[1];
+} TsdObj;
+
+typedef struct {
+    u8 pad0[0x58];
+    f32 f58;
+} TsdRow;
+
+typedef struct {
+    /* 0x00 */ u8 pad0[0x30];
+    /* 0x30 */ u8 *p30;
+    /* 0x34 */ u8 pad34[4];
+    /* 0x38 */ s32 h38;
+    /* 0x3C */ TsdObj *o3C[2];
+    /* 0x44 */ TsdObj *o44[2];
+    /* 0x4C */ TsdObj *o4C[2];
+    /* 0x54 */ TsdDef *d54[2];
+    /* 0x5C */ TsdDef *d5C[2];
+    /* 0x64 */ TsdDef *d64[2];
+    /* 0x6C */ u8 pad6C[4];
+    /* 0x70 */ s32 w70;
+    /* 0x74 */ f32 a74[2];
+    /* 0x7C */ f32 a7C[2];
+    /* 0x84 */ u8 pad84[0x99 - 0x84];
+    /* 0x99 */ u8 b99;
+    /* 0x9A */ u8 pad9A[0xAC - 0x9A];
+    /* 0xAC */ f32 aAC[2];
+} TsdOwner;
+
+void mat34CrossRowsAndCopyPos(void *, void *, s32);
+s32 getNpcCurrentHealth(s32);
+void clearVec4QuadStruct(void *);
+void addVec3At0x24(void *, f32, f32, f32);
+void applyScaleToMat3x4(void *, s32, s32, s32);
+void composeQuatToMat3x4(void *, void *);
+void composeRotationMatrixSlot0(void *, f32);
+
+void tickStructureWithDestructionAndChildren(TsdOwner *s) {
+    s32 i;
+    TsdObj *o;
+    TsdDef *d;
+    u8 *m;
+    u32 fl;
+
+    mat34CrossRowsAndCopyPos(s->p30 + 0x28, s, s->w70);
+    if (getNpcCurrentHealth(s->h38) > 0) {
+        i = 0;
+        do {
+            if (s->o3C[i] != NULL) {
+                o = s->o3C[i];
+                m = o->mat;
+                d = s->d54[i];
+                clearVec4QuadStruct(m);
+                if (d->flags & 1) {
+                    addVec3At0x24(m, -d->f50, -d->f54, -d->f58);
+                }
+                if (d->flags & 2) {
+                    applyScaleToMat3x4(m, d->w5C, d->w60, d->w64);
+                }
+                if (d->flags & 4) {
+                    composeQuatToMat3x4(m, d->q68);
+                }
+                composeRotationMatrixSlot1(m, s->a74[i]);
+                fl = d->flags;
+                if ((fl & 9) == 9) {
+                    addVec3At0x24(m, d->f78 + d->f50, d->f7C + d->f54, d->f80 + d->f58);
+                } else if ((fl & 9) == 8) {
+                    addVec3At0x24(m, d->f78, d->f7C, d->f80);
+                } else if (fl & 1) {
+                    addVec3At0x24(m, d->f50, d->f54, d->f58);
+                }
+            }
+            if (s->o44[i] != NULL) {
+                o = s->o44[i];
+                m = o->mat;
+                d = s->d5C[i];
+                clearVec4QuadStruct(m);
+                if (d->flags & 1) {
+                    addVec3At0x24(m, -d->f50, -d->f54, -d->f58);
+                }
+                if (d->flags & 2) {
+                    applyScaleToMat3x4(m, d->w5C, d->w60, d->w64);
+                }
+                if (d->flags & 4) {
+                    composeQuatToMat3x4(m, d->q68);
+                }
+                if (s->o4C[i] == NULL) {
+                    addVec3At0x24(m, 0.0f, 0.0f, -s->aAC[i] * ((TsdRow *)((u8 *)D_mission_overlay_8010AFF0 + (s->b99 * 0x60 + i * 4)))->f58);
+                }
+                composeRotationMatrixSlot0(m, s->a7C[i]);
+                fl = d->flags;
+                if ((fl & 9) == 9) {
+                    addVec3At0x24(m, d->f78 + d->f50, d->f7C + d->f54, d->f80 + d->f58);
+                } else if ((fl & 9) == 8) {
+                    addVec3At0x24(m, d->f78, d->f7C, d->f80);
+                } else if (fl & 1) {
+                    addVec3At0x24(m, d->f50, d->f54, d->f58);
+                }
+            }
+            if (s->o4C[i] != NULL) {
+                o = s->o4C[i];
+                m = o->mat;
+                d = s->d64[i];
+                clearVec4QuadStruct(m);
+                if (d->flags & 1) {
+                    addVec3At0x24(m, -d->f50, -d->f54, -d->f58);
+                }
+                if (d->flags & 2) {
+                    applyScaleToMat3x4(m, d->w5C, d->w60, d->w64);
+                }
+                if (d->flags & 4) {
+                    composeQuatToMat3x4(m, d->q68);
+                }
+                addVec3At0x24(m, 0.0f, 0.0f, -s->aAC[i] * ((TsdRow *)((u8 *)D_mission_overlay_8010AFF0 + (s->b99 * 0x60 + i * 4)))->f58);
+                fl = d->flags;
+                if ((fl & 9) == 9) {
+                    addVec3At0x24(m, d->f78 + d->f50, d->f7C + d->f54, d->f80 + d->f58);
+                } else if ((fl & 9) == 8) {
+                    addVec3At0x24(m, d->f78, d->f7C, d->f80);
+                } else if (fl & 1) {
+                    addVec3At0x24(m, d->f50, d->f54, d->f58);
+                }
+            }
+            i++;
+        } while (i < 2);
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E5080", D_mission_overlay_800A8304);
 
