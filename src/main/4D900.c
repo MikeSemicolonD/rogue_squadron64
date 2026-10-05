@@ -227,7 +227,62 @@ INCLUDE_ASM("asm/nonmatchings/main/4D900", spawnRandomizedEffectBurst);
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", spawnScatteredDebrisParticles);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", submitActiveEffectObjectRender);
+#include "common_types.h"
+typedef struct { s32 b[12]; } SaBlob30;
+typedef struct { s32 a, b, c; } SaV3;
+typedef struct {
+    u16 flags;
+    u8 pad2[0x6E];
+    SaBlob30 *mat;
+    f32 *node;
+    u8 pad78[0x3E0 - 0x78];
+} SaRec;
+typedef struct { u8 pad[0x24]; f32 x, y, z; } SaPos;
+typedef struct { u8 b[0x2A0]; } SaPlayer;
+extern u8 D_main_8009EBBC;
+extern SaRec D_main_bss_80138C18[];
+extern SaPlayer D_main_bss_8013800C[];
+extern SaPos D_main_bss_80137A80;
+extern void transformVec3ByMat34(void *, f32 *, f32 *);
+extern void clampVec3ToUnitIfLongerThan(f32 *);
+extern void scaleVec3ByScalar(f32 *, f32, f32 *);
+
+void submitActiveEffectObjectRender(s32 idx) {
+    f32 p[3];
+    f32 q[3];
+    f32 r[3];
+    SaRec *rec;
+    if (D_main_8009EBBC == 0) {
+        rec = &D_main_bss_80138C18[idx];
+        if (rec->flags & 1) {
+            *rec->mat = *(SaBlob30 *)&D_main_bss_8013800C[idx];
+            p[0] = 0;
+            p[1] = -1.0f;
+            p[2] = 0.75f;
+            transformVec3ByMat34(rec->mat, p, p);
+            q[0] = *(f32 *)((u8 *)rec->node + 0x24);
+            q[1] = *(f32 *)((u8 *)rec->node + 0x28);
+            q[2] = *(f32 *)((u8 *)rec->node + 0x2C);
+            p[0] = p[0] - q[0];
+            p[1] = p[1] - q[1];
+            p[2] = p[2] - q[2];
+            *(SaV3 *)r = *(SaV3 *)p;
+            r[1] = 0;
+            clampVec3ToUnitIfLongerThan(r);
+            scaleVec3ByScalar(r, 2.0f, r);
+            r[0] = p[0] + r[0];
+            r[1] = p[1] + r[1];
+            r[2] = p[2] + r[2];
+            p[0] = q[0] + r[0];
+            p[1] = q[1] + r[1];
+            p[2] = q[2] + r[2];
+            D_main_bss_80137A80.x = p[0];
+            D_main_bss_80137A80.z = p[2];
+            p[1] = p[1] - 0.25f;
+            D_main_bss_80137A80.y = p[1];
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", initEffectObjectDefaults);
 
