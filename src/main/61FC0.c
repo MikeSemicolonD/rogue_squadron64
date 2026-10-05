@@ -75,7 +75,73 @@ INCLUDE_ASM("asm/nonmatchings/main/61FC0", startPlayerSlotAnimationChannelLoopin
 __asm__(".section .rodata\n.globl D_main_8003B7C8\nD_main_8003B7C8:\n.word 0x00010000\n.word 0x3F800000\n.word 0x3F800000\n.word 0x00000000\n.word 0x00000000\n.align 2\n.globl strZAFnt\nstrZAFnt:\n.word 0x5A415F66\n.word 0x6E740000\n.word 0x00000000\n.word 0x00000000\n.align 2\n.globl D_main_8003B7EC\nD_main_8003B7EC:\n.word 0x5A415F66\n.word 0x6E740000\n.globl D_main_8003B7F4\nD_main_8003B7F4:\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x8003B7EC\n.word 0x00000000\n.word 0x01000005\n.word 0x00000000\n.globl D_main_8003B828\nD_main_8003B828:\n.word 0x3F800000\n.word 0x19C00016\n.section .text");
 
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", buildPlayerCraftAssetTemplate);
+#include "textures.h"
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    s16 unk8;
+    s16 unkA;
+    void *unkC;
+    s32 unk10;
+    s32 unk14;
+    f32 unk18;
+    f32 unk1C;
+    f32 unk20;
+    f32 unk24;
+    f32 unk28;
+    u8 unk2C;
+    u8 unk2D;
+    u8 unk2E;
+    u8 unk2F;
+    s16 unk30;
+} CraftTemplate;
+extern struct material_entry D_main_8003B7C8;
+extern struct texture_entry D_main_8003B7F4;
+void *rs_malloc(s32, s32);
+void rs_memset(void *, s32, s32);
+void rs_free(void *);
+s32 registerHmtTextureInTable(struct material_entry *, struct texture_entry *, u8);
+CraftTemplate *buildPlayerCraftAssetTemplate(s16 arg0, s16 arg1) {
+    struct material_entry mat = D_main_8003B7C8;
+    struct texture_entry tex = D_main_8003B7F4;
+    CraftTemplate *r;
+    CraftTemplate *q;
+    s32 size;
+    void *p;
+    f32 z;
+    f32 c;
+
+    r = rs_malloc(0x34, 0);
+    rs_memset(r, 0, 0x34);
+    size = arg0 * arg1;
+    tex.width = arg0;
+    tex.height = arg1;
+    p = rs_malloc(size, 0);
+    tex.pixel_offsets[0] = (u32)p;
+    rs_memset(p, 0xFF, size);
+    r->unk30 = registerHmtTextureInTable(&mat, &tex, 0);
+    rs_free((void *)tex.pixel_offsets[0]);
+    __asm__ volatile("move %2, %3
+	mtc1 $zero, %0
+	lwc1 %1, D_main_8003B828" : "=f"(z), "=f"(c), "=r"(q) : "r"(r));
+    q->unkA = 1;
+    q->unk8 = 1;
+    q->unk14 = 3;
+    q->unkC = (u8 *)q + 0x30;
+    q->unk4 = 0;
+    q->unk0 = 0;
+    q->unk10 = 0;
+    q->unk2F = 0xFF;
+    q->unk2E = 0xFF;
+    q->unk2D = 0xFF;
+    q->unk2C = 0xFF;
+    q->unk1C = z;
+    q->unk18 = z;
+    q->unk28 = c;
+    q->unk24 = c;
+    q->unk20 = z;
+    return q;
+}
 
 extern u16 D_main_bss_80139970[];
 extern s8 D_main_8009ED88[];
