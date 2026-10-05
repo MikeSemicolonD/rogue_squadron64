@@ -310,7 +310,46 @@ void initMusyXVoiceSlot(u8 *voice, s32 arg1, s32 arg2, s32 arg3, s32 arg4) {
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", serviceStreamingVoice);
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", consumeVoiceSamples);
+u32 consumeVoiceSamples(void *v, u32 count)
+{
+  u8 *voice = v;
+  u32 n = 0;
+  s32 rem;
+  s32 avail;
+  u32 w;
+  if (voice[0x11DD] == 3)
+  {
+    rem = *((s32 *) (voice + 0x11A8));
+    if (rem > 0)
+    {
+      rem -= count;
+      *((s32 *) (voice + 0x11A8)) = rem;
+      if (rem <= 0)
+      {
+        n = 0x11DD;
+        voice[n] = 4;
+        *((s32 *) (voice + 0x11A8)) = 0;
+      }
+    }
+    avail = (*((u32 *) (voice + 0x11D8))) - (*((u32 *) (voice + 0x11D4)));
+    w = avail;
+    if (count < w)
+    {
+      w = count;
+    }
+    n = w;
+    *((u32 *) (voice + 0x11D4)) += w;
+    return n;
+  }
+  if (w || avail)
+  {
+    return n;
+  }
+  else
+  {
+    return n;
+  }
+}
 
 void advanceVoiceStateToPlaying(void *arg0) {
     if ((*(u8 *)((u8 *)(arg0) + 0x11DD)) == 2) {
