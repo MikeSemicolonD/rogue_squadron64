@@ -287,7 +287,22 @@ void gracefulMenuShutdown(void) {
     finalizeCurrentSpeechBuffer();
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", extractTextBeforeFmtChar);
+void extractTextBeforeFmtChar(char *s) {
+    s32 i = 0;
+    register u8 c asm("$5");
+    if (s[1] != 0 && s[1] != 0x23) {
+        s++;
+        while (1) {
+            c = s[i];
+            if (c == 0x2A) break;
+            D_menu_overlay_800CD520[i] = c;
+            i++;
+            if (s[i] == 0 || s[i] == 0x23) break;
+        }
+    }
+    i += (s32)D_menu_overlay_800CD520;
+    *(u8 *)i = 0;
+}
 
 typedef struct {
     u8 pad[0x4C];
