@@ -51,6 +51,8 @@ typedef struct {
     s16 h7C;
 } NpcCtxInit;
 
+__asm__(".section .rodata\n.globl D_main_8003A4B0\nD_main_8003A4B0:\n.word 0x3F800000\n.globl D_main_8003A4B4\nD_main_8003A4B4:\n.word 0x41200000\n.globl D_main_8003A4B8\nD_main_8003A4B8:\n.word 0x40000000\n.globl D_main_8003A4BC\nD_main_8003A4BC:\n.word 0x3F800000\n.globl D_main_8003A4C0\nD_main_8003A4C0:\n.word 0x3F333333\n.globl D_main_8003A4C4\nD_main_8003A4C4:\n.word 0x40A00000\n.word 0x00220821\n.word 0x8C30A770\n.section .text");
+
 void initNpcContextFromTransform(NpcCtxInit *self, u8 *tf) {
     f32 one;
     f32 c10;

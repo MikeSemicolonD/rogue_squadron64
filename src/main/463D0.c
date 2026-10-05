@@ -9,6 +9,8 @@ INCLUDE_ASM("asm/nonmatchings/main/463D0", selectGridCellTileVariant);
 INCLUDE_ASM("asm/nonmatchings/main/463D0", buildGridCellLabel);
 
 INCLUDE_ASM("asm/nonmatchings/main/463D0", populateCraftSelectGrid);
+__asm__(".section .rodata\n.globl D_main_8003A604\nD_main_8003A604:\n.word 0x40000000\n.word 0x1440000C\n.word 0x00AA5006\n.section .text");
+
 
 #include "common_types.h"
 typedef struct {

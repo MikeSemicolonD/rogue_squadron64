@@ -15,6 +15,8 @@ extern u16 D_main_bss_8013A528[14];
 extern char D_main_8003C960[];
 void rs_free(void *);
 
+__asm__(".section .rodata\n.align 2\n.globl D_main_8003C960\nD_main_8003C960:\n.word 0x706C5F63\n.word 0x72616674\n.word 0x732F7368\n.word 0x61646F77\n.word 0x735F544D\n.word 0x00000000\n.section .text");
+
 void loadCraftShadowTextures(s32 arg0) {
     struct material_entry sp10;
     struct full_image_header *temp_s4;
@@ -117,6 +119,8 @@ extern void teardownAssetDma(s32, s32);
 extern char D_main_8003C9B0[];
 extern s32 D_main_bss_80137CFC;
 extern s32 D_main_bss_80138920;
+
+__asm__(".section .rodata\n.align 2\n.globl D_main_8003C9B0\nD_main_8003C9B0:\n.word 0x706C5F63\n.word 0x72616674\n.word 0x732F6B6F\n.word 0x656C7363\n.word 0x685F484D\n.word 0x54008005\n.word 0x45010004\n.word 0x00000000\n.section .text");
 
 u32 load_naboo_starfighter(u32 arg0) {
     u32 buf;

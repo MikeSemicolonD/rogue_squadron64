@@ -99,6 +99,8 @@ INCLUDE_ASM("asm/nonmatchings/main/42AF0", buildGridCellMeshForFace);
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", buildVisibleTerrainGridAroundCamera);
 
 extern f32 D_main_8003A53C;
+__asm__(".section .rodata\n.globl D_main_8003A53C\nD_main_8003A53C:\n.word 0x3F000000\n.section .text");
+
 void markLowLodCellsInGrid(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     s32 x0;
     s32 x1;
@@ -147,6 +149,8 @@ void markLowLodCellsInGrid(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
 }
 
 extern f32 D_main_8003A540;
+
+__asm__(".section .rodata\n.globl D_main_8003A540\nD_main_8003A540:\n.word 0x3F000000\n.section .text");
 
 void markHighLodCellsInGrid(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     s32 x0;

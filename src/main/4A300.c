@@ -21,6 +21,8 @@ INCLUDE_ASM("asm/nonmatchings/main/4A300", buildGridCellMesh);
 INCLUDE_ASM("asm/nonmatchings/main/4A300", getGridCellFromWorldPos);
 
 INCLUDE_ASM("asm/nonmatchings/main/4A300", byteAnimatedDebrisNpcHandler);
+__asm__(".section .rodata\n.globl D_main_8003A8B4\nD_main_8003A8B4:\n.word 0x3F000000\n.word 0x2E020010\n.word 0x1440FFFA\n.section .text");
+
 
 #include "common_types.h"
 
