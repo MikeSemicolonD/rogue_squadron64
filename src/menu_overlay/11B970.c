@@ -372,7 +372,45 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6850);
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6854);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateShipPartAnimation);
+#include "hud.h"
+extern u8 D_menu_overlay_800A6850[];
+extern u8 D_menu_overlay_800A6854[];
+extern u8 mainMenuBlackColor[];
+extern u8 mainMenuGreyColor[];
+s32 isViModeTypePal();
+void activateAnimationKeyframe(s32, s32, u8);
+void samplePlayerAnimChannel(s32, u16, f32);
+void setPlayerSlotAnimationFlag(s32, void *, s32, s32, s32);
+void *getPlayerSlotFieldAt34(u16, u16);
+
+void updateShipPartAnimation(u8 *arg0, f32 arg1) {
+    u8 pal;
+    struct ui_element *a;
+    struct ui_element *b;
+    f32 fv;
+
+    pal = isViModeTypePal();
+    if (arg0[4] == 0) {
+        setPlayerSlotAnimationFlag(8, pal ? D_menu_overlay_800A6850 : D_menu_overlay_800A6854, 1, pal ? -0x41 : -0x4B, pal ? -0xBE : -0xC1);
+        setPlayerSlotAnimationFlag(8, D_menu_overlay_800A6850, 2, -0x46, -0x93);
+        a = (struct ui_element *)getPlayerSlotFieldAt34(8, 1);
+        b = (struct ui_element *)getPlayerSlotFieldAt34(8, 2);
+        a->rgba = *(struct rgba *)mainMenuBlackColor;
+        b->rgba = *(struct rgba *)mainMenuGreyColor;
+        fv = 0.6f;
+        if (pal) {
+            fv = 0.75f;
+        }
+        samplePlayerAnimChannel(8, 1, fv);
+        samplePlayerAnimChannel(8, 2, 0.6f);
+        a->height_scale = 0.625f;
+        b->height_scale = 0.55f;
+        activateAnimationKeyframe(8, 1, (u8)(arg1 * 254.0f));
+        activateAnimationKeyframe(8, 2, (u8)(arg1 * 254.0f));
+        a->width_scale = a->width_scale * 0.8f;
+        b->width_scale = b->width_scale * 0.8f;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", buildHudAmmoReadout);
 
