@@ -199,7 +199,66 @@ INCLUDE_ASM("asm/nonmatchings/main/738F0", randomParticleWithParentNpcHandler);
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D15C);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", buildRandomCameraFacingOrientation);
+extern u8 *D_main_bss_80138D1C;
+extern s16 rand(void);
+typedef struct { f32 x, y, z; } CamVec3;
+extern CamVec3 D_main_8003D15C;
+
+void buildRandomCameraFacingOrientation(Vec3f out, Vec3f dst, f32 scale, s32 range, s32 base, u8 mode) {
+    Mat4x3 frame;
+    Vec4f q40;
+    Vec4f q50;
+    Vec4f q60;
+    Vec3f v70;
+    Vec3f v80;
+    Vec3f v90;
+    f32 len;
+    f32 *axis;
+    f32 *tmp;
+
+    extractOrthonormalFrameFromStruct(frame, (void *)(D_main_bss_80138D1C + 0x28));
+    if (mode == 0) {
+        if (range == 0) {
+            quatFromAxisAngle(q40, frame[2], (f32)base);
+        } else {
+            quatFromAxisAngle(q50, frame[2], (f32)(base + rand() % range));
+            quatFromAxisAngle(q60, frame[1], (f32)rand());
+            quatMultiply(q60, q50, q40);
+        }
+        rotateVec3ByQuat(q40, frame[1], dst);
+    } else {
+        if (range == 0) {
+            *(CamVec3 *)v80 = D_main_8003D15C;
+            vec3Cross(v70, frame[2], frame[1]);
+            vec3Cross(v90, v80, frame[1]);
+            len = vec3Length(v90);
+            if (len > 0.00001f) {
+                v90[0] /= len;
+                v90[1] /= len;
+                v90[2] /= len;
+                vec3Cross(v80, frame[1], v90);
+                normalize_vector(v80);
+                quatFromAxisAngle(q40, frame[1], -sinfApprox(vec3Dot(v70, v80)) * 57.29578f);
+                rotateVec3ByQuat(q40, frame[2], v90);
+            }
+            vec3Cross(v70, v90, frame[1]);
+            if (vec3Length(v70) > 0.00001f) {
+                quatFromAxisAngleSafe(q40, v70, (f32)base);
+                rotateVec3ByQuat(q40, v90, dst);
+            }
+        } else {
+            quatFromAxisAngle(q50, frame[1], (f32)(base + rand() % range));
+            quatFromAxisAngle(q60, frame[2], (f32)rand());
+            quatMultiply(q60, q50, q40);
+            rotateVec3ByQuat(q40, frame[2], dst);
+        }
+    }
+    if (out != NULL) {
+        out[0] = dst[0] * scale;
+        out[1] = dst[1] * scale;
+        out[2] = dst[2] * scale;
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D170);
 
