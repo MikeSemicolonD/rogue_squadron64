@@ -1070,7 +1070,104 @@ s32 selectSecondaryPresetByIndex(u8 arg0) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", emitMaterialTexturedDL);
+extern Gfx *D_main_bss_8011DC58;
+extern Gfx *D_main_bss_801163D4;
+extern struct DisplayListBuffer **D_main_bss_801163FC;
+extern struct DisplayListBuffer **D_main_bss_8011A7DC;
+extern u8 D_main_bss_8011A908;
+extern u8 D_main_bss_801143A8;
+struct DisplayListBuffer *findAndUnlinkSmallestEntry(void);
+Gfx *findOrCreateMaterial(Gfx *, u16, s32);
+Gfx *emitMaterialRenderModeDL(Gfx *, s32, s32);
+
+#define DL_ENSURE()                                                                  \
+    if (D_main_bss_8011DC58 >= D_main_bss_801163D4) {                                \
+        struct DisplayListBuffer *chunk;                                             \
+        struct DisplayListBuffer *tail;                                              \
+        struct DisplayListBuffer *buf;                                               \
+        D_main_bss_8011DC58->words.w0 = 0xB5000000;                                  \
+        D_main_bss_8011DC58->words.w1 = 0;                                           \
+        chunk = D_main_bss_801163B0;                                                 \
+        if (chunk == NULL) {                                                         \
+            chunk = findAndUnlinkSmallestEntry();                                    \
+            if (chunk != NULL) {                                                     \
+                tail = chunk;                                                        \
+                while (tail->next != NULL) {                                         \
+                    tail = tail->next;                                               \
+                }                                                                    \
+                tail->next = D_main_bss_801163B0;                                    \
+                if (D_main_bss_801163B0 != NULL) {                                   \
+                    D_main_bss_801163B0->prev = tail;                                \
+                }                                                                    \
+                D_main_bss_801163B0 = chunk;                                         \
+                chunk->prev = NULL;                                                  \
+            }                                                                        \
+            chunk = D_main_bss_801163B0;                                             \
+        }                                                                            \
+        D_main_bss_801163B0 = D_main_bss_801163B0->next;                             \
+        if (D_main_bss_801163B0 != NULL) {                                           \
+            D_main_bss_801163B0->prev = NULL;                                        \
+        }                                                                            \
+        buf = chunk;                                                                 \
+        if (*D_main_bss_801163FC == NULL) {                                          \
+            *D_main_bss_801163FC = buf;                                              \
+        } else {                                                                     \
+            (*D_main_bss_8011A7DC)->next = buf;                                      \
+            buf->prev = *D_main_bss_8011A7DC;                                        \
+        }                                                                            \
+        buf->next = NULL;                                                            \
+        *D_main_bss_8011A7DC = buf;                                                  \
+        D_main_bss_801163D4 = &buf->displayList[0x1F];                               \
+        D_main_bss_8011DC58 = buf->displayList;                                      \
+    }
+
+void emitMaterialTexturedDL(u16 id, s32 arg1, s32 flags, u8 *p3, u8 *p4) {
+    if ((D_main_bss_8011A444[id].material_type & 1) && !(flags & 8)) {
+        DL_ENSURE();
+        {
+            Gfx *g = D_main_bss_8011DC58++;
+            g->words.w0 = 0xE7000000;
+            g->words.w1 = 0;
+        }
+        D_main_bss_8011DC58 = findOrCreateMaterial(D_main_bss_8011DC58, D_main_bss_8011A444[id].D_80128F08_index, flags);
+        if (*p3 != D_main_bss_8011A908 || *p4 != D_main_bss_801143A8) {
+            D_main_bss_8011DC58 = emitMaterialRenderModeDL(D_main_bss_8011DC58, arg1, flags);
+            *p3 = D_main_bss_8011A908;
+            *p4 = D_main_bss_801143A8;
+        }
+    } else {
+        DL_ENSURE();
+        D_main_bss_801143A8 = 0;
+        {
+            Gfx *g = D_main_bss_8011DC58++;
+            g->words.w0 = 0xE7000000;
+            g->words.w1 = 0;
+        }
+        if (*p3 != D_main_bss_8011A908 || *p4 != 0) {
+            DL_ENSURE();
+            {
+                Gfx *g = D_main_bss_8011DC58++;
+                g->words.w0 = 0xB9000002;
+                g->words.w1 = 0;
+            }
+            D_main_bss_8011DC58 = emitMaterialRenderModeDL(D_main_bss_8011DC58, arg1, flags);
+            *p3 = D_main_bss_8011A908;
+            *p4 = D_main_bss_801143A8;
+        }
+        DL_ENSURE();
+        {
+            Gfx *g = D_main_bss_8011DC58++;
+            g->words.w0 = 0xFCFFFFFF;
+            g->words.w1 = 0xFFFE793C;
+        }
+        DL_ENSURE();
+        {
+            Gfx *g = D_main_bss_8011DC58++;
+            g->words.w0 = 0xBB000000;
+            g->words.w1 = 0;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitMaterialTexturedDLAlt);
 
