@@ -5,7 +5,69 @@
 #include "main/3F160.h"
 #include "main/700B0.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnDestructionDebris);
+typedef struct DebrisSpawnArgs {
+    u8 pad00[0x10];
+    f32 f10, f14, f18;
+    u8 pad1C[0x38 - 0x1C];
+    f32 f38;
+    s16 h3C, h3E;
+    f32 f40;
+    u8 pad44[0x4C - 0x44];
+    f32 f4C;
+    u8 pad50[0x54 - 0x50];
+    f32 f54, f58;
+    u8 pad5C[0x64 - 0x5C];
+    void *p64;
+    s32 i68;
+    s8 b6C, b6D;
+    s16 h6E, h70, h72;
+    s32 pad74;
+    s32 i74;
+    u16 h78;
+} DebrisSpawnArgs;
+extern s32 D_main_bss_80130C04;
+extern u8 D_main_bss_80139870[];
+extern void initNpcContextFromTransform(void *, s32, s32);
+extern s32 spawnRandomBurstNpcVariantWrapper(void *);
+extern void assignNpcTargetAndPosition(s32, s32, void *, f32);
+
+s32 spawnDestructionDebris(s32 arg0, s32 arg1, f32 arg2, f32 arg3, f32 arg4) {
+    DebrisSpawnArgs s;
+    f32 vec[3];
+    s32 r;
+
+    initNpcContextFromTransform(&s, arg1, 0);
+    s.p64 = D_main_bss_80139870;
+    s.b6C = 0xB;
+    s.h6E = 0x1E00;
+    s.b6D = 0x10;
+    s.i68 = D_main_bss_80130C04 + 0x40;
+    s.h78 |= 0x18;
+    if (arg2 < 0.0f) {
+        s.b6C = 0x14;
+        arg2 = -arg2;
+        s.h6E = 0;
+        s.i68 = 0;
+        s.b6D = 0;
+        s.h78 &= 0xFFEF;
+    }
+    s.h70 = (u32)(arg4 * 0.125f * 256.0f);
+    s.h72 = (u32)(arg4 / 6.0f * 256.0f);
+    s.h3C = 0;
+    s.h3E = 0;
+    s.f40 = arg3;
+    s.f4C = arg2;
+    s.f58 = 1.0f;
+    s.f38 = s.f14 = s.f10 = s.f18 = 0.0f;
+    s.f54 = 0.8f;
+    s.i74 |= 0x09000000;
+    r = spawnRandomBurstNpcVariantWrapper(&s);
+    if ((u16)arg0 != 0xFFFF) {
+        vec[1] = vec[2] = vec[0] = 0.0f;
+        assignNpcTargetAndPosition((u16)r, (u16)arg0, vec, 0.0f);
+    }
+    return (u16)r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", npcDebris1Update);
 
