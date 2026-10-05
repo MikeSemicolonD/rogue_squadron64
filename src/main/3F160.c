@@ -459,7 +459,75 @@ u16 spawnInheritedNpcVariantB(s16 arg0, s32 arg1) {
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/3F160", spawnInheritedNpcVariantC);
+void computeNamedAttachPointTransform(s32, s32, s32, s32 *, f32 *, s32, s32);
+
+u16 spawnInheritedNpcVariantC(s16 arg0, s32 arg1, s32 arg2) {
+    struct {
+        s16 type;
+        s16 parent;
+        f32 *mtx;
+        s32 arg;
+        s32 model;
+        s32 attach;
+        s16 hasArg;
+    } msg;
+    f32 mtx[12];
+    s32 attach;
+    f32 sp28;
+    struct D_80130BB8_type *parent;
+    u16 var_a1;
+    u16 ret;
+    struct D_80130BB8_type *temp_s0;
+    u8 temp_s1;
+    npc_update fn;
+    void *msgp;
+
+    parent = gNpcSlotList[(u16)arg0].unk00;
+    computeNamedAttachPointTransform(parent->unk0C, arg1, 0, &attach, mtx, 0, 0);
+    msg.type = 1;
+    msg.parent = arg0;
+    msg.model = parent->unk0C;
+    msg.mtx = mtx;
+    msg.attach = attach;
+    if (arg2 != 0) {
+        msg.hasArg = 1;
+        msg.arg = arg2;
+    } else {
+        msg.hasArg = 0;
+    }
+    temp_s1 = parent->unk19 + 1;
+    fn = spawnChildNpcWithTransform;
+    msgp = &msg;
+    if (gNpcNextOpenSlot < 0) {
+        for (var_a1 = gNpcSlotList[1].prev_idx; var_a1 != 0xFFFF; var_a1 = gNpcSlotList[var_a1].prev_idx) {
+            if ((gNpcSlotList[var_a1].unk00 != NULL) && (gNpcSlotList[var_a1].unk00->unk1A == 0)) {
+                destroyNpcSlotByIndex(var_a1);
+                break;
+            }
+        }
+    }
+    temp_s0 = gNpcContextArrayPtrs[gNpcNextOpenSlot--];
+    temp_s0->unk04 = NULL;
+    temp_s0->unk08 = NULL;
+    temp_s0->unk0C = 0;
+    temp_s0->update_func = fn;
+    temp_s0->unk10 = 0;
+    temp_s0->unk14 = 1;
+    temp_s0->unk1B = 0;
+    temp_s0->unk1A = 0;
+    temp_s0->unk19 = temp_s1;
+    temp_s0->unk16 = allocateNpcSlot(temp_s0);
+    gNpcSlotList[temp_s0->unk16].unk00 = temp_s0;
+    popNpcSlotFromTail(0U, temp_s0);
+    slotDispatcherInner(temp_s0);
+    slotDispatcherIter(temp_s0->unk16, 1, msgp);
+    ret = temp_s0->unk16;
+    if (ret != 0xFFFF) {
+        sp28 = 0.033333335f;
+        slotDispatcherIter(ret, 3, &sp28);
+    }
+    return ret;
+}
 
 void freeNpcSlotArray(void) {
     rs_free(gNpcSlotList);
