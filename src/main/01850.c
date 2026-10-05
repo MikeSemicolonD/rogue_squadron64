@@ -114,7 +114,110 @@ void mainBootstrapWorker(s32 *arg0) {
     D_main_bss_8010FCB0->unk4(arg0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/01850", partitionFramebufferMemory);
+typedef struct {
+    u8 pad0[0x19];
+    u8 tripleBuffer;
+    u8 pad1A[0x12];
+    u32 dlBlocks;
+    u32 size30;
+    u32 size34;
+    u32 size38;
+    u8 pad3C[8];
+    u32 flags;
+} BootMemConfig;
+
+extern BootMemConfig *gBootMemConfig __asm__("D_main_bss_8010FCB0");
+extern u32 gOsMemSize __asm__("D_80000318");
+extern s32 gFramebuffers[3] __asm__("D_main_bss_801163D8");
+extern s32 D_main_bss_801163E4;
+extern s32 D_main_bss_801163E8;
+extern s32 D_main_bss_801163EC;
+extern s32 D_main_bss_801163F0;
+extern s32 D_main_bss_801163F4;
+extern s32 D_main_bss_801163F8;
+
+#define CARVE(size, dst)        \
+    if ((size) < hole) {        \
+        dst = lo;               \
+        lo += (size);           \
+        hole -= (size);         \
+    } else {                    \
+        top -= (size);          \
+        dst = top;              \
+    }
+
+s32 partitionFramebufferMemory(s32 *range, s32 *outTop, s16 w, s16 h, s16 bpp, u8 hasZ) {
+    u32 fbSize;
+    u32 zSize;
+    u32 dlSize;
+    u32 s30;
+    u32 s34;
+    u32 s38;
+    s32 memTop;
+    s32 top;
+    s32 lo;
+    u32 hole;
+    u32 holeSize;
+
+    if (bpp >= 24) {
+        fbSize = w * h * 4;
+    } else {
+        fbSize = w * h * 2;
+    }
+    if (hasZ) {
+        zSize = w * h * 2;
+    } else {
+        zSize = 0;
+    }
+    zSize = (zSize + 0x3F) & ~0x3F;
+    fbSize = (fbSize + 0x3F) & ~0x3F;
+    dlSize = gBootMemConfig->dlBlocks << 6;
+    s30 = (gBootMemConfig->size30 + 0xF) & ~0xF;
+    s34 = (gBootMemConfig->size34 + 0xF) & ~0xF;
+    s38 = (gBootMemConfig->size38 + 0xF) & ~0xF;
+    if (gBootMemConfig->flags & 0x2000) {
+        memTop = 0x80400000;
+    } else {
+        memTop = gOsMemSize | 0x80000000;
+    }
+    D_main_bss_801163E4 = memTop - zSize;
+    if ((*(u32 *)((u8 *)gBootMemConfig + 0x44) & 0x400) || zSize == 0) {
+        gFramebuffers[0] = memTop - zSize - fbSize;
+        hole = 0;
+        lo = 0;
+    } else {
+        holeSize = 0x100000;
+        gFramebuffers[0] = memTop - (fbSize + holeSize);
+        hole = holeSize - zSize;
+        lo = memTop - holeSize;
+    }
+    gFramebuffers[1] = gFramebuffers[0] - fbSize;
+    if (gBootMemConfig->tripleBuffer != 0) {
+        gFramebuffers[2] = gFramebuffers[1] - fbSize;
+    } else {
+        gFramebuffers[2] = 0;
+    }
+    if (gBootMemConfig->flags & 0x80) {
+        top = gFramebuffers[0];
+    } else {
+        top = gFramebuffers[2];
+        if (top == 0) {
+            top = gFramebuffers[1];
+        }
+    }
+    CARVE(dlSize, D_main_bss_801163F0)
+    CARVE(dlSize, D_main_bss_801163F4)
+    CARVE(s30, D_main_bss_801163E8)
+    CARVE(s38, D_main_bss_801163F8)
+    CARVE(s34, D_main_bss_801163EC)
+    if (lo != 0) {
+        range[0] = top;
+        range[1] = lo - top;
+        return 1;
+    }
+    *outTop = top;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/01850", thread3_video_handle);
 
