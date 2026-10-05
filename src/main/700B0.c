@@ -83,7 +83,87 @@ INCLUDE_ASM("asm/nonmatchings/main/700B0", multiEventTemplateNpcHandler);
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", walkDatTreeAndAllocSubtypeBuffers);
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", dispatchDatSubtypeByRandomIndex);
+extern u16 rand(void);
+typedef struct { u8 pad0[0x18]; u32 flags; } DatSubInfo;
+typedef struct { u8 pad0[0x10]; DatSubInfo *info; } DatSubObj;
+extern s32 walkDatTreeAndAllocSubtypeBuffers(void *, void *, char *, s32, s32, s32);
+
+s32 dispatchDatSubtypeByRandomIndex(u8 *arg0, DatSubObj **arg1) {
+    s32 ret;
+    s32 r;
+
+    ret = 0;
+    r = rand() & 0x7FF;
+    *arg0 = 0xFF;
+    if ((*arg1)->info->flags & 0xFFFFF) {
+        if ((*arg1)->info->flags & 0x1) {
+            ret = walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 0, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x200) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 11, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x20) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 5, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x4000) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 15, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x2) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwb", 3, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x400) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwb", 12, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x4) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 129, -1, r) & 0xFF;
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwb", 129, -1, r) & 0xFF;
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwc", 129, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x8) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 4, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x10) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 6, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x40) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 7, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x80) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwb", 0, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x100) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 138, -1, r) & 0xFF;
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwb", 201, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x800) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 12, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x1000) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 13, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x2000) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 14, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x8000) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 80, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x10000) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwb", 2, -1, r) & 0xFF;
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 12, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x20000) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 17, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x40000) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwa", 18, -1, r) & 0xFF;
+        }
+        if ((*arg1)->info->flags & 0x80000) {
+            ret |= walkDatTreeAndAllocSubtypeBuffers(arg0, arg1, "glwb", 18, -1, r) & 0xFF;
+        }
+        return ret > 0;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", walkDatTreeAndVisitChildren);
 
