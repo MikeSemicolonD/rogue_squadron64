@@ -58,7 +58,66 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BAFF0", bindFalconSubmodelMateria
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BAFF0", playerFalconMainUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BAFF0", spawnFalconEngineParticles);
+typedef struct {
+    u8 pad0[0x1A];
+    u16 mask1A;
+    u8 pad1C;
+    u8 mask1D;
+    u16 mask1E;
+    u8 pad20[4];
+} HudDef;
+
+typedef struct {
+    s32 unk0;
+    u8 pad4[0xB6 - 4];
+    u16 unkB6;
+    s32 unkB8;
+    u8 padBC[0x158 - 0xBC];
+    u16 unk158;
+    u8 pad15A[2];
+    s32 unk15C;
+    f32 unk160;
+    f32 unk164;
+    u8 pad168[0x178 - 0x168];
+    s32 unk178;
+    u8 pad17C[4];
+    u16 unk180;
+    u8 pad182[0x2A0 - 0x182];
+} FalconSpawnPlayer;
+
+#define FSP ((FalconSpawnPlayer *)D_main_bss_80137DBC)
+extern u16 D_main_bss_80130B88[][3];
+extern HudDef D_mission_overlay_8010BE18[];
+extern void triggerFalconEngineEffect(s32 *, s32);
+extern void playerFalconMainUpdate(void *, s32 *, f32);
+extern void tickCraftAnimationSlot(s32, f32);
+extern u8 tickHudInstanceTargetingAndSpawns(s32, f32, void *, s32, s32, void *, s32);
+extern void dispatchHudInstanceWeaponEffect(s32, s32, void *, s32, s32, s32, s32);
+
+void spawnFalconEngineParticles(s32 *arg0, f32 dt) {
+    u16 out[2];
+    FalconSpawnPlayer *p;
+
+    p = &FSP[*arg0];
+    if (*(u16 *)((u8 *)D_main_bss_80137DBC + p->unkB8 * 0x2A0 + 0x180) & 1) {
+        if (0.0f < p->unk160) {
+            p->unk160 = p->unk160 - dt;
+        } else if (D_main_bss_80130B88[*arg0][0] & D_mission_overlay_8010BE18[*arg0].mask1A) {
+            p->unk160 = p->unk160 + p->unk164;
+            triggerFalconEngineEffect(arg0, *((u8 *)&p->unk158 + 1));
+            p->unk158 ^= 1;
+        }
+        if (tickHudInstanceTargetingAndSpawns(0, dt, (u8 *)p + 4, p->unk0, (D_main_bss_80130B88[*arg0][0] & 0xFF) & D_mission_overlay_8010BE18[*arg0].mask1D, out, p->unkB6)) {
+            dispatchHudInstanceWeaponEffect(0, p->unkB6, (u8 *)p + 4, p->unk0, p->unk178, p->unk158, out[0]);
+        }
+        if (D_main_bss_80130B88[*arg0][0] & D_mission_overlay_8010BE18[*arg0].mask1E) {
+            p->unk158 = 0;
+            p->unk15C = (p->unk15C + 1) & 3;
+        }
+    }
+    playerFalconMainUpdate(p, arg0, dt);
+    tickCraftAnimationSlot(0, dt);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BAFF0", playerFalconUpdate);
 
