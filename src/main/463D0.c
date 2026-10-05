@@ -1,18 +1,6 @@
 #include "common.h"
-
-INCLUDE_ASM("asm/nonmatchings/main/463D0", initGridLayerFromLevelData);
-
-INCLUDE_ASM("asm/nonmatchings/main/463D0", updateGridLayerScroll);
-
-INCLUDE_ASM("asm/nonmatchings/main/463D0", selectGridCellTileVariant);
-
-INCLUDE_ASM("asm/nonmatchings/main/463D0", buildGridCellLabel);
-
-INCLUDE_ASM("asm/nonmatchings/main/463D0", populateCraftSelectGrid);
-__asm__(".section .rodata\n.globl D_main_8003A604\nD_main_8003A604:\n.word 0x40000000\n.word 0x1440000C\n.word 0x00AA5006\n.section .text");
-
-
 #include "common_types.h"
+
 typedef struct {
     u8 pad0[4];
     u16 u4;
@@ -32,6 +20,73 @@ extern GridLayerRec D_main_bss_80136FF0[];
 extern u8 D_main_bss_80137130[];
 extern s32 D_main_bss_80137140;
 
+
+INCLUDE_ASM("asm/nonmatchings/main/463D0", initGridLayerFromLevelData);
+
+INCLUDE_ASM("asm/nonmatchings/main/463D0", updateGridLayerScroll);
+
+INCLUDE_ASM("asm/nonmatchings/main/463D0", selectGridCellTileVariant);
+
+INCLUDE_ASM("asm/nonmatchings/main/463D0", buildGridCellLabel);
+
+typedef struct { u16 *cell; s16 off; u16 cnt; u16 id; f32 pos; f32 w; } CraftGridEnt;
+s32 isCraftAvailableByIdx(s32);
+
+void populateCraftSelectGrid(s32 arg0) {
+    f32 pos = 0.0f;
+    u16 *p;
+    s32 i;
+    s32 j;
+    s16 off;
+    CraftGridEnt *e;
+    u8 *q;
+    f32 w;
+
+    if (isCraftAvailableByIdx(7) != 0) {
+        D_main_bss_80137140 = 0;
+        return;
+    }
+    i = 15;
+    q = D_main_bss_80137130 + i;
+    do {
+        *q-- = i;
+    } while (--i >= 0);
+    i = 0;
+    off = arg0 + 3;
+    e = (CraftGridEnt *)D_main_bss_80136FF0;
+    p = (u16 *)(((u8 *)D_main_bss_80136DC0.tbl) + arg0 * 4);
+    while (1) {
+        if (p[0] == 0xFFFF) break;
+        e[i].cell = p;
+        e[i].pos = pos;
+        w = 2.0f;
+        if (p[4] != 0) w = (f32)p[4];
+        e[i].w = w;
+        if (8.0f < w) e[i].w = 8.0f;
+        e[i].off = off;
+        e[i].cnt = p[2];
+        e[i].id = p[0];
+        *(u16 *)(((u8 *)D_main_bss_80136DC0.tbl) + p[0] * 4) = off | 0x8000;
+        j = 0;
+        if (p[2] != 0) {
+            do {
+                *(u16 *)((((j * 4) | 2) + (u8 *)p + 0xC)) = 0xFFFF;
+                j++;
+            } while (j < p[2]);
+        }
+        off = off + 3;
+        off = off + j;
+        p = (u16 *)((u8 *)p + (j * 4 + 0xC));
+        i++;
+        pos += 0.06666667f;
+        if (i >= 16) break;
+    }
+    D_main_bss_80137140 = i;
+}
+__asm__(".section .rodata\n.word 0x1440000C\n.word 0x00AA5006\n.section .text");
+
+
+#include "common_types.h"
 void loadGridCellTilesByDistance(f32 arg0) {
     u8 sel[4];
     s32 n = 0;
