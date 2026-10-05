@@ -80,7 +80,86 @@ void buildPositionAndCallTransformHelper(void *spline, void *offv, void *outv, v
 #undef out
 #undef rot
 
-INCLUDE_ASM("asm/nonmatchings/main/66660", projectModelBoundsToScreen);
+typedef struct {
+    u8 pad0[0x24];
+    f32 nearZ;
+} BoundsView;
+#define VABS(x) ({ f32 _x = (x); f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); _r; })
+extern Vec3f D_main_8009FC50[8];
+extern u8 D_main_8009FCB0[12][2];
+extern void mat3x4Multiply(void *, void *, void *);
+
+s32 projectModelBoundsToScreen(BoundsView *view, void *arg1, f32 *min, f32 *max, u8 mode) {
+    Vec3f cube[8];
+    Vec3f proj;
+    Mat4x3 mat;
+    register u8 i asm("$17");
+    u8 c0;
+    u8 c1;
+    f32 *p;
+    f32 *q;
+    f32 *r;
+    f32 nz;
+
+    mat3x4Multiply((u8 *)view + 0x2C, arg1, mat);
+    for (i = 0; i < 8; i++) {
+        cube[i][0] = D_main_8009FC50[i][0] < 0.0f ? min[0] : max[0];
+        cube[i][1] = D_main_8009FC50[i][1] < 0.0f ? min[1] : max[1];
+        cube[i][2] = D_main_8009FC50[i][2] < 0.0f ? min[2] : max[2];
+        p = cube[i];
+        transformVec3ByMat34(mat, p, p);
+        if (mode == 0) {
+            if (p[2] == 0.0f) {
+                return 1;
+            }
+            proj[0] = p[0] * (1.0f / p[2]);
+            proj[1] = p[1] * (1.0f / p[2]);
+            proj[2] = p[2] * (1.0f / p[2]);
+            if (view->nearZ < proj[2] && VABS(proj[0]) < 1.0f && VABS(proj[1]) < 1.0f) {
+                return 1;
+            }
+        }
+        cube[i][0] *= 1.3333334f;
+        cube[i][1] *= 1.3333334f;
+    }
+    for (i = 0; i < 12; i++) {
+        r = cube[D_main_8009FCB0[i][0]];
+        c1 = 0;
+        c0 = 0;
+        if (r[2] <= view->nearZ && cube[D_main_8009FCB0[i][1]][2] <= view->nearZ) {
+            continue;
+        }
+        if (r[0] < -r[2]) {
+            c0 = 1;
+        }
+        if (r[2] < r[0]) {
+            c0 |= 2;
+        }
+        if (r[1] < -r[2]) {
+            c0 |= 4;
+        }
+        if (r[2] < r[1]) {
+            c0 |= 8;
+        }
+        q = cube[D_main_8009FCB0[i][1]];
+        if (q[0] < -q[2]) {
+            c1 = 1;
+        }
+        if (q[2] < q[0]) {
+            c1 |= 2;
+        }
+        if (q[1] < -q[2]) {
+            c1 |= 4;
+        }
+        if (q[2] < q[1]) {
+            c1 |= 8;
+        }
+        if (!(c0 & c1)) {
+            return 1;
+        }
+    }
+    return 0;
+}
 
 extern void evalCubicSplineAtTime(void *, s32, f32 *);
 
