@@ -1169,7 +1169,63 @@ void emitMaterialTexturedDL(u16 id, s32 arg1, s32 flags, u8 *p3, u8 *p4) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", emitMaterialTexturedDLAlt);
+extern u8 D_main_bss_8011A898;
+Gfx *emitMaterialRenderModeDLAlt(Gfx *, s32, s32);
+
+void emitMaterialTexturedDLAlt(u16 id, s32 arg1, s32 flags, u8 *p3) {
+    flags |= 1;
+    if ((D_main_bss_8011A444[id].material_type & 1) && !(flags & 8)) {
+        DL_ENSURE();
+        {
+            Gfx *g = D_main_bss_8011DC58++;
+            g->words.w0 = 0xE7000000;
+            g->words.w1 = 0;
+        }
+        D_main_bss_8011DC58 = findOrCreateMaterial(D_main_bss_8011DC58, D_main_bss_8011A444[id].D_80128F08_index, flags);
+        if (*p3 != D_main_bss_8011A908) {
+            D_main_bss_8011DC58 = emitMaterialRenderModeDLAlt(D_main_bss_8011DC58, arg1, flags);
+            *p3 = D_main_bss_8011A908;
+        }
+    } else {
+        if (!(D_main_bss_8011A908 & 0x80)) {
+            D_main_bss_8011A908 = 1;
+        }
+        DL_ENSURE();
+        {
+            Gfx *g = D_main_bss_8011DC58++;
+            g->words.w0 = 0xB9000002;
+            g->words.w1 = 0;
+        }
+        if (*p3 != D_main_bss_8011A908) {
+            DL_ENSURE();
+            {
+                Gfx *g = D_main_bss_8011DC58++;
+                g->words.w0 = 0xE7000000;
+                g->words.w1 = 0;
+            }
+            D_main_bss_8011DC58 = emitMaterialRenderModeDLAlt(D_main_bss_8011DC58, arg1, flags);
+            *p3 = D_main_bss_8011A908;
+        }
+        DL_ENSURE();
+        {
+            if (!(arg1 & 0x10000) && D_main_bss_8011A898) {
+                Gfx *g = D_main_bss_8011DC58++;
+                g->words.w0 = 0xFCFFFFFF;
+                g->words.w1 = 0xFFFE7638;
+            } else {
+                Gfx *g = D_main_bss_8011DC58++;
+                g->words.w0 = 0xFCFFFFFF;
+                g->words.w1 = 0xFFFE793C;
+            }
+        }
+        DL_ENSURE();
+        {
+            Gfx *g = D_main_bss_8011DC58++;
+            g->words.w0 = 0xBB000000;
+            g->words.w1 = 0;
+        }
+    }
+}
 
 extern u32 D_main_bss_8011A8B8;
 extern struct D_main_bss_8011A444 *D_main_bss_8010E8AC;
@@ -1379,7 +1435,7 @@ s32 setViewStateTripletBytes(s8 arg0, s8 arg1, s8 arg2) {
     return 1;
 }
 
-extern s8 D_main_bss_8011A898;
+
 
 s32 setMissionLevelInitByte(s8 arg0) {
     D_main_bss_8011A898 = arg0;
