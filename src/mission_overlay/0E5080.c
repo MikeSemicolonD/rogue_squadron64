@@ -11,7 +11,54 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E5080", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E5080", D_mission_overlay_800A82B8);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", resetCraftInstanceMotionState);
+typedef struct {
+    u8 pad0[0x18];
+    f32 f18;
+    f32 f1C;
+} CueSlotF;
+
+extern CueSlotF sCueSlotsF[] __asm__("D_mission_overlay_8010AFB0");
+extern s32 D_main_bss_80137CE4;
+extern s32 setNpcHealth(s32, void *, void *);
+extern void setObjectDetailLevel(s32, s32);
+extern void initActorMotionParams(s32, f32, f32, f32, f32);
+extern void initObjectAnimSubstruct(s32, s32, s32, s32, f32, void *, s32, f32, f32, s32);
+s32 playDualTextureAttachmentCueB();
+s32 playDualTextureAttachmentCueC();
+s32 playAttachmentMaterialSoundSimpleB();
+
+void resetCraftInstanceMotionState(void *arg0) {
+    u8 *npc;
+    u8 *def;
+    s32 i;
+    s32 k;
+
+    npc = *(u8 **)((u8 *)arg0 + 4);
+    def = *(u8 **)(npc + 0x34);
+    npc[0x9A] = 0;
+    for (i = 0; i < 2; i++) {
+        ((s32 *)(npc + 0x74))[i] = 0;
+        ((s32 *)(npc + 0x7C))[i] = 0;
+        ((f32 *)(npc + 0xA4))[i] = 1.0f;
+        ((s32 *)(npc + 0xAC))[i] = 0;
+    }
+    npc[0x9B] = 0;
+    *(f32 *)(npc + 0xA0) = *(f32 *)(*(u8 **)(npc + 0x34) + 0x90);
+    setNpcHealth(*(s32 *)(npc + 0x38), *(u8 **)(npc + 0x34) + 0x6C, *(u8 **)(npc + 0x34));
+    setObjectDetailLevel(*(s32 *)(npc + 0x38), *(s32 *)(*(u8 **)(npc + 0x34) + 0xA8));
+    k = D_main_bss_80137CE4;
+    *(f32 *)(npc + 0x9C) = ((f32 *)(*(u8 **)(npc + 0x34) + 0xC0))[k];
+    initActorMotionParams(*(s32 *)(npc + 0x38), ((f32 *)(*(u8 **)(npc + 0x34) + 0xB8))[k], ((f32 *)(*(u8 **)(npc + 0x34) + 0xBC))[k], ((f32 *)(*(u8 **)(npc + 0x34) + 0xC4))[k], ((f32 *)(*(u8 **)(npc + 0x34) + 0xC8))[k]);
+    switch (npc[0x99]) {
+    case 0:
+        initObjectAnimSubstruct(*(s32 *)(npc + 0x38), *(s32 *)(def + 0xCC), *(s32 *)(def + 0xD0), *(s32 *)(def + 0xD4), *(f32 *)(def + 0xD8), playDualTextureAttachmentCueB, 0, sCueSlotsF[npc[0x99]].f18, 15.0f, 0);
+        initObjectAnimSubstruct(*(s32 *)(npc + 0x38), *(s32 *)(def + 0xCC), *(s32 *)(def + 0xD0), *(s32 *)(def + 0xD4), *(f32 *)(def + 0xD8), playAttachmentMaterialSoundSimpleB, 1, sCueSlotsF[npc[0x99]].f1C, 15.0f, 0);
+        break;
+    case 1:
+        initObjectAnimSubstruct(*(s32 *)(npc + 0x38), *(s32 *)(def + 0xCC), *(s32 *)(def + 0xD0), *(s32 *)(def + 0xD4), *(f32 *)(def + 0xD8), playDualTextureAttachmentCueC, 0, sCueSlotsF[npc[0x99]].f18, 15.0f, 0);
+        break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", playDualTextureAttachmentCueB);
 
