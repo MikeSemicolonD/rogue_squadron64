@@ -51,7 +51,38 @@ s32 rs_strcasecmp(u8 *left, u8 *right) {
     return 0;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/08120", rs_strcasecmp);
+static __inline__ u8 lower_(u8 c) {
+    if ((u8)(c - 'A') < 26) {
+        c += 0x20;
+    }
+    return c;
+}
+
+s32 rs_strcasecmp(u8 *left, u8 *right) {
+    s32 leftLen;
+    s32 rightLen;
+    s32 checkLen;
+    u8 *tempLeft;
+    u8 *tempRight;
+
+    leftLen = strlen(left);
+    rightLen = strlen(right);
+    if (rightLen < leftLen) {
+        rightLen = leftLen;
+    }
+    tempLeft = left;
+    checkLen = rightLen;
+    tempRight = right;
+    while (checkLen > 0) {
+        if ((*tempLeft == 0) && (*tempRight == 0)) return 0;
+        if (lower_(*tempLeft) > lower_(*tempRight)) return 1;
+        if (lower_(*tempLeft) < lower_(*tempRight)) return -1;
+        tempLeft++;
+        tempRight++;
+        checkLen--;
+    }
+    return 0;
+}
 #endif
 
 u8 *rs_strcpy(u8 *dest, u8 *src) {
@@ -167,13 +198,6 @@ s32 rs_strncmp(u8 *left, u8 *right, s32 count) {
         count--;
     }
     return 0;
-}
-
-static __inline__ u8 lower_(u8 c) {
-    if ((u8)(c - 'A') < 26) {
-        c += 0x20;
-    }
-    return c;
 }
 
 s32 rs_strncasecmp(u8 *left, u8 *right, s32 count) {
