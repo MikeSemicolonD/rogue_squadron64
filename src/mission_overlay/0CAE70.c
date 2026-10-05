@@ -1,6 +1,31 @@
 #include "common.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CAE70", initNpcActorVariant);
+#include "common_types.h"
+extern s32 rand(void);
+extern void setNpcHealth(s32, void *, void *);
+extern void initActorMotionParams(s32, s32, s32, s32, f32);
+extern void setObjectDetailLevel(s32, s32);
+extern void initObjectAnimSubstruct(s32, s32, s32, s32, f32, void *, s32, f32, f32, f32);
+extern void setEffectIntensity(s32, s32);
+extern s32 D_main_bss_80137CE4;
+extern s32 spawnProbeDroidGroundImpactEffect(void *);
+
+typedef struct { u8 pad0[0x34]; u8 *p34; s32 h38; } NpcA;
+void initNpcActorVariant(void *arg0) {
+    NpcA *s1 = *(NpcA **)((u8 *)arg0 + 4);
+    u8 *s0;
+    f32 r;
+    *(s16 *)((u8 *)s1 + 0xE2) = 0;
+    *(s32 *)((u8 *)s1 + 0x54) = 0;
+    { f32 x = ((f32)(rand() & 0x7F) - 64.0f) * 0.03125f; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); }
+    s0 = s1->p34;
+    *(f32 *)((u8 *)s1 + 0x58) = r + 1.0f;
+    setNpcHealth(s1->h38, s0 + 0x6C, s0);
+    initActorMotionParams(s1->h38, *(s32 *)(s0 + D_main_bss_80137CE4 * 4 + 0xA0), *(s32 *)(s0 + D_main_bss_80137CE4 * 4 + 0xA4), *(s32 *)(s0 + D_main_bss_80137CE4 * 4 + 0xA8), *(f32 *)(s0 + D_main_bss_80137CE4 * 4 + 0xAC));
+    setObjectDetailLevel(s1->h38, *(s32 *)(s0 + 0x90));
+    initObjectAnimSubstruct(s1->h38, *(s32 *)(s0 + 0xB0), *(s32 *)(s0 + 0xB4), *(s32 *)(s0 + 0xB8), *(f32 *)(s0 + 0xBC), spawnProbeDroidGroundImpactEffect, 0, 10.0f, 15.0f, *(f32 *)(s0 + D_main_bss_80137CE4 * 4 + 0xC0));
+    setEffectIntensity(s1->h38, *(s32 *)(s0 + 0xC4));
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CAE70", D_mission_overlay_800A6B94);
 
