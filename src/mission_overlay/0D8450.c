@@ -327,7 +327,55 @@ static u32 D_mission_overlay_800A7B04[] __attribute__((section(".rodata"))) = { 
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcTieVariantTickEffects);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcTieVariantSteerToward);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} TieVec3;
+
+extern u8 spawnNpcAnchoredEffectSlot(s32, f32, s32);
+extern f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+extern s32 isTerrainCellBlockedAtWorldXz(f32, f32, void *);
+extern void quatFromAxisAngle(f32 *, void *, f32);
+extern void rotateVec3ByQuat(f32 *, void *, void *);
+extern u8 D_main_bss_80138058[];
+
+void npcTieVariantSteerToward(u8 *arg0, f32 dt) {
+    f32 q[4];
+    TieVec3 v;
+    f32 h;
+    u8 st;
+
+    if (arg0[0x87] != 2) {
+        return;
+    }
+    *(f32 *)(arg0 + 0) += *(f32 *)(arg0 + 0x24) * dt;
+    *(f32 *)(arg0 + 4) += *(f32 *)(arg0 + 0x28) * dt;
+    *(f32 *)(arg0 + 8) += *(f32 *)(arg0 + 0x2C) * dt;
+    if (spawnNpcAnchoredEffectSlot(*(s32 *)(arg0 + 0x38), dt, 100) == 1) {
+        arg0[0x87] = 3;
+    }
+    *(f32 *)(arg0 + 0x28) += dt * 2.2f;
+    h = wrapAngleToCyclicRange(*(f32 *)(arg0 + 0), *(f32 *)(arg0 + 8), D_main_bss_80138058, 0);
+    if (h < *(f32 *)(arg0 + 4)) {
+        *(f32 *)(arg0 + 4) = h;
+        if (isTerrainCellBlockedAtWorldXz(*(f32 *)(arg0 + 0), *(f32 *)(arg0 + 8), D_main_bss_80138058) == 0) {
+            st = 3;
+        } else {
+            st = 4;
+        }
+        arg0[0x87] = st;
+    }
+    quatFromAxisAngle(q, arg0 + 0x98, -*(f32 *)(arg0 + 0xA4));
+    rotateVec3ByQuat(q, arg0 + 0xC, &v);
+    *(TieVec3 *)(arg0 + 0xC) = v;
+    rotateVec3ByQuat(q, arg0 + 0x18, &v);
+    *(TieVec3 *)(arg0 + 0x18) = v;
+    *(u16 *)(arg0 + 0x84) += (u32)(dt * 2497.561f);
+    if (*(u16 *)(arg0 + 0x84) >= 0x4000) {
+        *(u16 *)(arg0 + 0x84) = 0x3FFF;
+    }
+}
 
 extern u8 validateActorTargetLOS(s32);
 extern void applyToObjectSubstructByFlag(s32, f32, s32, f32);
