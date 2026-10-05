@@ -49,4 +49,7 @@ elif not reason.startswith("build failed"):
     print("compiler:", "GCC 2.7.2" if gcc272 else "GCC 2.8.1")
     r = subprocess.run([sys.executable, "import.py", f"../../{c_path}", f"../../{s_path}"], cwd="tools/decomp-permuter", capture_output=True, text=True)
     print(r.stdout[-600:], r.stderr[-400:])
+    base_c = pathlib.Path("tools/decomp-permuter/nonmatchings", func, "base.c")
+    if base_c.exists():
+        subprocess.run([sys.executable, "tools/perm_fix_base.py", str(base_c)])
 a.write(c_path, original)
