@@ -1,6 +1,124 @@
 #include "common.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BC930", playerTieInterceptorInit);
+#include "common_types.h"
+typedef struct {
+    u8 pad0[0xB4];
+    s16 unkB4;
+    u8 padB6[0xD8 - 0xB6];
+    s32 unkD8;
+    s32 unkDC;
+    s32 unkE0;
+    f32 unkE4;
+    f32 unkE8;
+    f32 unkEC;
+    f32 unkF0;
+    f32 unkF4;
+    f32 unkF8;
+    f32 unkFC;
+    u8 pad100[4];
+    f32 unk104;
+    f32 unk108;
+    u8 pad10C[4];
+    f32 unk110;
+    f32 unk114;
+    f32 unk118;
+    s32 unk11C;
+    f32 unk120;
+    f32 unk124;
+    f32 unk128;
+    f32 unk12C;
+    f32 unk130;
+    f32 unk134;
+    f32 unk138;
+    s32 unk13C;
+    f32 unk140;
+    f32 unk144;
+    f32 unk148;
+    s32 unk14C;
+    f32 unk150;
+    f32 unk154;
+    u16 unk158;
+    u8 pad15A[6];
+    s32 unk160;
+    f32 unk164;
+    f32 unk168;
+    u8 pad16C[4];
+    s32 unk170;
+    f32 unk174;
+    u8 pad178[8];
+    u16 unk180;
+    u8 pad182[0x2A0 - 0x182];
+} TieIntPlayer;
+
+typedef struct {
+    s32 idx;
+    f32 f4;
+    u16 h8;
+} TieIntHandle;
+
+extern u8 D_main_bss_80137DBC[][0x2A0];
+extern u32 D_main_bss_80130B58;
+typedef struct { u8 pad[0x18]; u16 h18; u8 pad1A[0xA]; } TieEnt;
+extern u8 D_mission_overlay_8010BE18[];
+extern u32 D_mission_overlay_8010BEA8[];
+extern void initPlayerCraftMovementMode(void *);
+extern s32 countTrailingZeros16(u16);
+
+void playerTieInterceptorInit(TieIntHandle *h, s32 idx, s32 mode) {
+    TieIntPlayer *p = (TieIntPlayer *)D_main_bss_80137DBC[idx];
+    f32 e;
+    s32 z;
+
+    p->unk180 = mode;
+    h->idx = idx;
+    p->unkB4 = 6;
+    initPlayerCraftMovementMode(p);
+    e = 50.0f;
+    if (D_main_bss_80130B58 & 0x40) {
+        e = 40.0f;
+    }
+    *(f32 *)((u8 *)p + 0xC0) = e;
+    *(f32 *)((u8 *)p + 0xC4) = e;
+    p->unkE8 = 3.375f;
+    p->unkEC = 3.375f;
+    h->f4 = 1.0f;
+    p->unkF0 = 0.14999999f;
+    p->unkF4 = 0.074999995f;
+    p->unkF8 = 1.6f;
+    p->unkFC = 2.0f;
+    p->unk104 = 15.0f;
+    p->unk108 = 10.0f;
+    p->unk13C = 0;
+    p->unk14C = 0;
+    p->unk110 = -35.0f;
+    p->unk114 = -45.0f;
+    p->unk118 = 40.0f;
+    p->unk120 = 60.0f;
+    p->unk124 = 180.0f;
+    p->unk130 = 0.75f;
+    p->unk134 = 2.0f;
+    p->unk138 = 20.0f;
+    p->unk140 = 10.0f;
+    p->unk144 = 60.0f;
+    p->unk148 = 10.0f;
+    p->unk154 = 40.0f;
+    p->unk11C = 0;
+    p->unk128 = 0.1f;
+    p->unk12C = 0.1f;
+    p->unkD8 = 0;
+    p->unkDC = 0;
+    p->unkE0 = 0;
+    p->unk158 = 0;
+    p->unk150 = 5.0f;
+    p->unk160 = 0;
+    p->unk164 = 0.08f;
+    p->unk168 = 0.32f;
+    p->unk170 = 0;
+    p->unk174 = 0.08f;
+    { s32 k = countTrailingZeros16(((TieEnt *)D_mission_overlay_8010BE18)[h->idx].h18);
+    *(u32 *)((u8 *)D_mission_overlay_8010BEA8 + k * 4 + h->idx * 64) = 0; }
+    h->h8 = 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BC930", computeTieInterceptorTransform);
 
@@ -9,7 +127,6 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BC930", triggerTieInterceptorEffe
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BC930", computeTieInterceptorOrientation);
 
 #include "common_types.h"
-extern u8 D_main_bss_80137DBC[][0x2A0];
 extern struct E144 D_main_bss_80138D18[];
 extern u8 D_main_bss_80139560[];
 extern s32 D_mission_overlay_8010CA1C;
@@ -21,7 +138,6 @@ extern void *rs_malloc(s32, s32);
 extern void rs_free(void *);
 extern s32 walkMeshdef0List(char *);
 extern void loadPlayerStartPosition(void *, void *);
-extern void playerTieInterceptorInit(void *, s32, s32);
 extern s32 refreshPlayerSecondaryWeaponHud(s32);
 extern void allocateCraftAnimationStateForSlot(void *, s32, void *);
 extern void popNpcSlotFromTail(u16, void *);
