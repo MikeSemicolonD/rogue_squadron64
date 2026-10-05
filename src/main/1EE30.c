@@ -527,7 +527,49 @@ s32 getTextureDimsBySlot(u16 arg0, u16 *arg1, u16 *arg2) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", parseHmtMaterials);
+/* remaining: arg4 (stack u8) is loaded into a1 at function entry and 0xFFFF const hoisted into t0 in target; sb zero,0x10 ordering */
+typedef struct { u32 a; u32 b; u32 c; u32 d; } HmtCopy16;
+extern u16 D_main_bss_8011A8B4;
+extern f32 D_main_800009F0;
+extern u8 *D_main_bss_801163B4;
+extern u8 *D_main_bss_801143AC;
+extern u16 loadTextureToMemory(struct texture_entry *, u32, u16, u16, u16, u8, u8, s32, u32 *, u32);
+extern u8 *rs_strncpy(u8 *, u8 *, s32);
+
+u16 parseHmtMaterials(s32 arg0, struct material_entry *arg1, struct texture_entry *arg2, u8 arg3, s32 arg4) {
+    u16 tm;
+    u8 *dst;
+    u8 flag = arg4;
+
+    if ((arg0 != D_main_bss_8011A8B4) & (arg0 != 0xFFFF)) {
+        if (arg3) {
+            arg1->zero = 0;
+            arg1->misc_float = D_main_800009F0;
+            arg1->one = D_main_800009F0;
+            *((u8 *)arg1 + 0x10) = 0;
+            arg1->material_type = 2;
+        }
+        if (arg2 != NULL) {
+            tm = loadTextureToMemory(arg2, arg2->plte_offset, arg2->width, arg2->height, arg2->flags_type, arg2->one, arg2->bit_depth, flag ? D_main_bss_8011A444[arg0].D_80128F08_index : 0xFFFF, &arg2->transparency_color, arg2->texture_name_offset);
+            if (tm == 0xFFFF) {
+                return 0xFFFF;
+            }
+            arg1->texture_index = tm;
+            arg1->material_type |= 1;
+        }
+        if (D_main_bss_801163B4 != NULL) {
+            dst = (u8 *)(arg0 * 16) + (s32)D_main_bss_801163B4;
+            *(HmtCopy16 *)dst = *(HmtCopy16 *)((u8 *)arg1 + 4);
+        }
+        if (D_main_bss_801143AC != NULL) {
+            rs_strncpy(D_main_bss_801143AC + arg0 * 16, (u8 *)arg1->material_name, 0x10);
+        }
+        D_main_bss_8011A444[arg0].material_type = arg1->material_type;
+        D_main_bss_8011A444[arg0].D_80128F08_index = arg1->texture_index;
+        return arg0;
+    }
+    return 0xFFFF;
+}
 
 extern u16 D_main_bss_8011A8B4;
 
