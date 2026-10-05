@@ -244,7 +244,41 @@ void layoutMenuTextRow(struct some_ui_list_root *arg0, u8 arg1) {
     }
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", layoutMenuTextRow);
+void layoutMenuTextRow(struct some_ui_list_root *arg0, u8 arg1) {
+    f32 temp_fv0;
+    s32 temp_s4;
+    s32 temp_s6;
+    s32 var_v1;
+    u32 var_s0;
+    s32 j;
+
+    temp_s6 = getAvailablePlayerCraftFlagsConsiderUnlocks(arg1);
+    temp_s4 = getAvailablePlayerCraftFlagsIgnoreUnlocks(arg1);
+    var_v1 = 0;
+    var_s0 = 0;
+    do {
+        if (temp_s4 & (1 << var_s0)) var_v1++;
+        var_s0++;
+    } while (var_s0 < 9);
+    j = 0;
+    for (var_s0 = 0; var_s0 < 9; var_s0++) {
+        if (temp_s4 & (1 << var_s0)) {
+            temp_fv0 = (((bridgeShipBlueprintScreenPositions[var_v1 - 1][j].x / 1.5f) - 32.0f) * 512.0f) * 0.001953125f;
+            bridgeShipBlueprints[var_s0].xpos = temp_fv0;
+            D_menu_overlay_800CDF80[var_s0].x = temp_fv0;
+            temp_fv0 = (((bridgeShipBlueprintScreenPositions[var_v1 - 1][j].y / 1.1f) - 75.0f) * 340.0f) / 340.0f;
+            bridgeShipBlueprints[var_s0].ypos = temp_fv0;
+            D_menu_overlay_800CDF80[var_s0].y = temp_fv0;
+            j++;
+        }
+        if (temp_s6 & (1 << var_s0)) {
+            bridgeShipBlueprints[var_s0].rgba = bridgeGreenColor;
+        } else {
+            bridgeShipBlueprints[var_s0].rgba = bridgeRedColor;
+        }
+        setLookupEntryField5ByKey(arg0, &bridgeShipBlueprints[var_s0], (temp_s4 & (1 << var_s0)) != 0);
+    }
+}
 #endif
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A5BA4);
