@@ -127,7 +127,242 @@ void npcDeformingMeshUpdate(u8 *arg0, f32 dt) {
 
 INCLUDE_ASM("asm/nonmatchings/main/7B470", npcShieldUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/main/7B470", heavyAttachedAudioEmitterNpcHandler);
+typedef struct {
+    u8 r, g, b, a;
+    f32 dr;
+    f32 dg;
+    f32 db;
+    f32 unk10;
+    f32 unk14;
+    s16 v[3];
+    u16 pad1E;
+    u16 active;
+    u16 pad22;
+    f32 rx;
+    f32 ry;
+    f32 rz;
+    f32 t;
+    f32 speed;
+    f32 amp;
+} HaSlot;
+
+typedef struct { u32 w[12]; } HaBlk48;
+typedef struct { f32 x, y, z; } HaV3;
+typedef struct { u8 pad0[0xC]; u8 *next; u8 *prev; } HaMesh;
+
+typedef struct {
+    u8 pad0[0xC];
+    u16 listA;
+    u8 padE[0x1C - 0xE];
+    u16 listB;
+} HaLists;
+
+extern HaLists D_main_bss_80139560;
+extern f32 D_main_800A0D80;
+extern u8 D_main_800A0D84[];
+extern u8 D_main_800A0D88[];
+extern void *D_main_bss_8013A970;
+
+extern void rs_free(void *);
+extern void releaseMeshAsset(void *);
+extern void *getNpcContextField8(u16);
+extern void mat34CrossRowsAndCopyPos(void *, void *, f32);
+extern void mat3x3InverseInto(void *, void *);
+extern void transformVec3ByMat34(void *, void *, void *);
+extern void popNpcSlotFromTail(u16, void *);
+extern u8 *walkMeshdef0List(s32);
+extern void mat3x4Multiply(void *, void *, void *);
+extern void extractOrthonormalFrameFromStruct(void *, void *);
+extern void mat34CrossRowsAndCopyPosPtr(void *, void *, void *);
+extern void normalize_vector(void *);
+extern s16 rand(void);
+extern void buildRotationMatrixSlot1(void *, f32);
+extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+extern void destroyNpcSlotByIndex(u16);
+extern void spawnRandomScaleColoredEffectFromCaller(void *, f32, f32, void *);
+extern s32 checkAndReturnByteFlagAsU8(void *, void *, void *, f32);
+extern void transformMeshVerticesForNpc(void *);
+
+s32 heavyAttachedAudioEmitterNpcHandler(u8 *npc, u16 msg, u8 *arg) {
+    f32 m28[12];
+    f32 inv58[12];
+    f32 rel[3];
+    f32 mm[12];
+    f32 mC8[12];
+    f32 mF8[12];
+    f32 m128[12];
+    f32 v158[3];
+    f32 m168[12];
+    u8 *d;
+
+    d = *(u8 **)(npc + 4);
+    switch (msg) {
+    case 1: {
+        u8 *a = arg;
+        f32 one;
+        f32 inv;
+        f32 c;
+        f32 m;
+        u8 *ctx;
+
+        d = rs_malloc(0x180, 0);
+        *(u8 **)(npc + 4) = d;
+        *(u8 **)(npc + 8) = d + 8;
+        *(HaBlk48 *)(d + 8) = *(HaBlk48 *)a;
+        d[0x17C] = 0;
+        *(u8 **)d = walkMeshdef0List(*(s32 *)(a + 0x40));
+        *(u8 **)(npc + 0xC) = *(u8 **)d;
+        allocateNpcMeshVertexBuffer(d + 0x38, *(u8 **)d);
+        *(s32 *)(**(u8 ***)d + 0x58) = 0;
+        one = 1.0f;
+        inv = one / *(f32 *)(**(u8 ***)d + 0x34);
+        *(f32 *)(d + 0x13C) = inv * *(f32 *)(a + 0x30);
+        *(f32 *)(d + 0x140) = inv * *(f32 *)(a + 0x34);
+        *(f32 *)(d + 0x144) = inv * *(f32 *)(a + 0x38);
+        inv = *(f32 *)(d + 0x13C);
+        if (inv < *(f32 *)(d + 0x140)) {
+            inv = *(f32 *)(d + 0x140);
+        }
+        if (inv < *(f32 *)(d + 0x144)) {
+            inv = *(f32 *)(d + 0x144);
+        }
+        *(f32 *)(d + 0x138) = *(f32 *)(**(u8 ***)d + 0x44) * inv;
+        popNpcSlotFromTail(D_main_bss_80139560.listA, npc);
+        popNpcSlotFromTail(D_main_bss_80139560.listB, npc);
+        *(u16 *)(d + 0x178) = *(u16 *)(a + 0x3C);
+        ctx = getNpcContextField8(*(u16 *)(a + 0x3C));
+        mat34CrossRowsAndCopyPos(m28, ctx, one);
+        m28[9] = m28[10] = m28[11] = 0.0f;
+        mat3x3InverseInto(inv58, m28);
+        rel[0] = *(f32 *)(d + 8) - *(f32 *)(ctx + 0);
+        rel[1] = *(f32 *)(d + 0xC) - *(f32 *)(ctx + 4);
+        rel[2] = *(f32 *)(d + 0x10) - *(f32 *)(ctx + 8);
+        transformVec3ByMat34(inv58, rel, &mm[0]);
+        transformVec3ByMat34(inv58, d + 0x14, &mm[3]);
+        transformVec3ByMat34(inv58, d + 0x20, &mm[6]);
+        mat34CrossRowsAndCopyPos(d + 0x148, mm, one);
+        break;
+    }
+    case 2:
+        rs_free(*(void **)(d + 0x38));
+        releaseMeshAsset(*(void **)d);
+        break;
+    case 3: {
+        f32 dt = *(f32 *)arg;
+        u8 *ctx = getNpcContextField8(*(u16 *)(d + 0x178));
+
+        mat34CrossRowsAndCopyPos(mC8, ctx, 1.0f);
+        mat3x4Multiply(mC8, d + 0x148, mF8);
+        extractOrthonormalFrameFromStruct(d + 8, mF8);
+        *(HaV3 *)(d + 0x2C) = *(HaV3 *)(ctx + 0x24);
+        npcDeformingMeshUpdate(d + 0x38, dt);
+        break;
+    }
+    case 4: {
+        u8 *a = arg;
+        s32 i;
+        u8 *p;
+        HaMesh *mesh;
+
+        for (i = 0, p = d; i < 4; i++, p += 0x3C) {
+            if (*(u16 *)(p + 0x60) != 0) {
+                break;
+            }
+        }
+        if (i < 4 && checkAndReturnByteFlagAsU8(*(void **)a, *(void **)d, d + 8, *(f32 *)(d + 0x138))) {
+            mat34CrossRowsAndCopyPosPtr(*(u8 **)d + 0x28, d + 8, d + 0x13C);
+            transformMeshVerticesForNpc(d + 0x38);
+            mesh = *(HaMesh **)d;
+            __asm__("" :: "r"(mesh));
+            if ((mesh->next = **(u8 ***)a) != NULL) {
+                *(u8 **)(*(u8 **)(*(u8 **)d + 0xC) + 4) = *(u8 **)d + 0xC;
+            }
+            *(s32 *)(*(u8 **)d + 0x10) = 0;
+            **(u8 ***)a = *(u8 **)d + 0xC;
+        }
+        break;
+    }
+    case 5: {
+        u8 *a = arg;
+        s32 ci;
+
+        if (*(u16 *)(a + 4) != 7 && (ci = 0xC, *(void **)(a + 8) != NULL)) {
+            u8 *col;
+            HaSlot *s;
+            u8 *base;
+            s32 i;
+
+            switch (*(u16 *)(a + 4)) {
+            case 0:
+            case 1:
+            case 3:
+            case 5:
+            case 6:
+                col = D_main_800A0D84;
+                break;
+            case 2:
+            case 4:
+                col = D_main_800A0D88;
+                ci = 0xE;
+                break;
+            default:
+                col = NULL;
+                break;
+            }
+            spawnRandomScaleColoredEffectFromCaller(*(void **)(a + 8), 0.2f, 1.4f, col);
+            play3DSoundEvent(0, d + 8, d + 0x2C, 16.0f, 0.8f, 0, 0xC, 0x7F, 0x50);
+            base = d + 0x38;
+            for (i = 0; i < 4; i++) {
+                if (*(u16 *)(base + i * 0x3C + 0x28) == 0) {
+                    s = (HaSlot *)&base[i * 0x3C + 8];
+                    goto found;
+                }
+            }
+            s = NULL;
+        found:
+            if (s != NULL) {
+                u8 *pal;
+
+                mat3x3InverseInto(m128, *(u8 **)d + 0x28);
+                rotateVec3ByMat3x3(m128, *(u8 **)(a + 8) + 0xC, v158);
+                normalize_vector(v158);
+                pal = (u8 *)(ci * 4 + (s32)D_main_bss_8013A970);
+                buildRotationMatrixSlot1(m168, rand());
+                rand();
+                s->v[0] = m168[0] * 256.0f;
+                s->v[0] = m168[3] * 256.0f;
+                s->v[0] = m168[6] * 256.0f;
+                s->r = pal[0];
+                s->g = pal[1];
+                s->b = pal[2];
+                s->a = 0;
+                s->dr = pal[4] - pal[0];
+                s->dg = pal[5] - pal[1];
+                s->db = pal[6] - pal[2];
+                s->unk10 = 255.0f;
+                s->unk14 = 0.0f;
+                s->active = 1;
+                s->rx = 0.0f;
+                s->speed = 1.0f;
+                s->ry = 0.0f;
+                s->amp = 128.0f;
+                s->rz = 0.0f;
+                s->t = 0.0f;
+                s->unk14 = D_main_800A0D80;
+                s->v[0] = v158[0] * -256.0f;
+                s->v[1] = v158[1] * -256.0f;
+                s->v[2] = v158[2] * -256.0f;
+                /*E*/
+            }
+        }
+        if (*(u16 *)a != 0xFFFF) {
+            destroyNpcSlotByIndex(*(u16 *)a);
+        }
+        break;
+    }
+    }
+    return 1;
+}
 
 extern void *D_main_bss_8013A970;
 static const char D_main_8003D624[12] = "shield_PAL\0000";
