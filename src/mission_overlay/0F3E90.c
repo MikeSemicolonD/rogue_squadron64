@@ -37,7 +37,154 @@ void clearObjectField112(void *arg0) {
     (*(s8 *)((u8 *)(arg0) + 0x112)) = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType1);
+typedef struct { s32 x, y, z; } T1V3;
+struct T1Src {
+    u8 pad0[0x1C];
+    s32 unk1C;
+    u8 *unk20;
+    f32 unk24;
+    s32 unk28;
+    f32 *unk2C;
+};
+
+struct T1State {
+    s32 unk0;
+    u8 *unk4;
+    u8 *unk8;
+    s32 unkC;
+    s32 unk10;
+    s32 unk14;
+    s32 unk18;
+    f32 unk1C;
+    s32 unk20;
+    struct T1Src *unk24;
+    s32 unk28;
+    f32 unk2C;
+    f32 unk30;
+    s32 unk34;
+    s32 unk38;
+    s32 unk3C;
+    f32 unk40;
+    f32 unk44;
+    f32 unk48;
+    u8 pad4C[4];
+    f32 unk50;
+    u8 pad54[0xC];
+    s32 unk60;
+    s32 unk64;
+    s32 unk68;
+    s32 unk6C;
+    f32 unk70;
+    f32 unk74;
+    f32 unk78;
+    s32 unk7C;
+    f32 unk80;
+    f32 unk84;
+    s32 unk88;
+    u8 pad8C[4];
+    s32 unk90;
+    u8 pad94[4];
+    s32 unk98;
+    s32 unk9C;
+    s32 unkA0;
+    u8 padA4[4];
+    f32 unkA8;
+    u8 padAC[4];
+    s32 unkB0;
+    s32 unkB4;
+    s32 unkB8;
+    u8 quat[0x10];
+    f32 unkCC;
+    s32 unkD0;
+    s32 unkD4;
+    s32 unkD8;
+    f32 unkDC;
+    f32 unkE0;
+    u8 padE4[4];
+    s32 unkE8;
+    u8 padEC[8];
+    s32 unkF4;
+    s32 unkF8;
+    u8 unkFC;
+    u8 padFD;
+    u8 unkFE;
+    u8 padFF[5];
+    s32 unk104;
+};
+
+extern void *getNpcContextField8(u16);
+extern void setupActorAnchorTransformType1(void *, void *, void *, void *, f32);
+extern void quatFromCardinalAxis(f32 *, u8, f32);
+
+s32 initActorAsType1(u8 *arg0, struct T1Src *arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5, f32 arg6) {
+    u8 *obj = arg0;
+    struct T1State *s = (struct T1State *)(obj + 8);
+    s32 *ctx;
+    u8 *end;
+
+    obj[0x112] = 1;
+    s->unk24 = arg1;
+    s->unk28 = 0;
+    s->unk0 = arg1->unk1C;
+    s->unk4 = arg1->unk20;
+    end = arg1->unk20 + arg1->unk1C * 0xC;
+    s->unk14 = 0;
+    s->unk10 = 0;
+    s->unkC = 0;
+    s->unk34 = 0;
+    s->unk20 = 0;
+    s->unk18 = 0;
+    s->unk1C = 1.0f;
+    s->unk48 = arg2;
+    s->unk50 = arg2;
+    s->unk8 = end;
+    s->unk2C = arg2 / arg1->unk24;
+    s->unk104 = 0;
+    s->unkFC = 0;
+    s->unkFE = 0;
+    s->unk30 = arg3 * s->unk2C;
+    if (s->unk30 > 1.0f) {
+        s->unk30 = 0.0f;
+    }
+    if (arg1->unk28 != 0) {
+        s->unk40 = *arg1->unk2C;
+    } else {
+        s->unk40 = 10.0f;
+    }
+    s->unk3C = 0;
+    s->unk44 = arg6;
+    s->unk38 = 0;
+    ctx = (s32 *)getNpcContextField8(*(u16 *)(arg0 + 0x198));
+    setupActorAnchorTransformType1(s, (u8 *)arg1 + 0x10, ctx, &s->unkC, s->unk30);
+    s->unkA8 = 0.0f;
+    s->unk60 = 0;
+    s->unk64 = 0;
+    s->unk68 = 0;
+    s->unk6C = 0;
+    s->unk88 = 0;
+    s->unk98 = 0;
+    s->unk9C = 0;
+    s->unkA0 = 0;
+    s->unk90 = 0;
+    s->unk70 = 2.0f;
+    s->unk74 = 0.05f;
+    s->unk78 = 0.022f;
+    s->unk80 = 0.5f;
+    s->unk84 = 0.5f;
+    quatFromCardinalAxis((f32 *)s->quat, 2, s->unkA8);
+    s->unkB0 = 0;
+    s->unkB4 = 0;
+    s->unkB8 = 0;
+    s->unk7C = 0;
+    s->unkDC = arg4;
+    s->unkCC = 360.0f;
+    s->unkE0 = arg5;
+    *(T1V3 *)&s->unkD0 = *(T1V3 *)ctx;
+    s->unkE8 = 0;
+    s->unkF4 = 0;
+    s->unkF8 = 0;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType1WithAnchor);
 
