@@ -205,7 +205,79 @@ INCLUDE_ASM("asm/nonmatchings/main/42AF0", cutsceneActorNpcHandler);
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", computeGridTileEdgeAdjacencyMasks);
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", loadLevelAssets);
+extern f32 D_main_8009DEAC;
+extern u8 D_main_bss_80130B39;
+extern s16 D_main_bss_80130C4C;
+extern f32 D_main_bss_80130C50;
+extern f32 D_main_bss_80130C54;
+extern f32 D_main_bss_80130C58;
+extern f32 D_main_bss_80130C5C;
+extern f32 D_main_bss_80130C60;
+extern u8 D_main_bss_80136E18[];
+extern u8 D_main_bss_80136F80[];
+extern f32 D_main_bss_80136FAC;
+extern f32 D_main_bss_80136FBC;
+extern s32 D_main_bss_80138898;
+extern s32 D_main_bss_80138928;
+extern s32 hmpFile;
+extern s32 gCurrentLevel;
+extern s32 D_main_bss_80136E1C;
+void sprintf(char *, void *, ...);
+void allocAndInitGridCellArray(s32);
+void load_level_hmp(s32, void *, void *);
+void loadDatFile(void *);
+void load_full_header_image(void *);
+void initGridLayerFromLevelData(void *, u16);
+void copyLevelConfigColorTriple(void *);
+void setFrameLevelStateBytes(u8, u8, u8);
+void setMissionLevelInitByte(s32);
+void computeGridTileEdgeAdjacencyMasks(s32);
+
+void loadLevelAssets(s32 arg0) {
+    char sp10[0x28];
+    f32 fa;
+    f32 fb;
+
+    D_main_bss_80130C4C = arg0;
+    sprintf((char *)D_main_bss_80136F80, "level/lv_%c", gCurrentLevel < 0xA ? gCurrentLevel + 0x30 : gCurrentLevel + 0x57);
+    hmpFile = 0;
+    if (gCurrentLevel != 0xA) {
+        allocAndInitGridCellArray(arg0);
+        D_main_bss_80136E1C = rs_malloc(arg0 * 0x18, 0);
+    }
+    load_level_hmp(0, D_main_bss_80136F80, D_main_bss_80136F80);
+    loadDatFile(D_main_bss_80136F80);
+    sprintf(sp10, "%s/ref_TM", D_main_bss_80136F80);
+    load_full_header_image(sp10);
+    initGridLayerFromLevelData(&D_main_bss_80136DC0, *(u16 *)(hmpFile + 0x18));
+    D_main_bss_80136FBC = 0.9f;
+    if (gCurrentLevel == 2) {
+        D_main_bss_80136FBC = 0.3f;
+    }
+    D_main_bss_80136FAC = 5.0f;
+    copyLevelConfigColorTriple(D_main_bss_80136E18);
+    setFrameLevelStateBytes(D_main_bss_80136E18[0], D_main_bss_80136E18[1], D_main_bss_80136E18[2]);
+    setMissionLevelInitByte(1);
+    fa = 2.0f;
+    D_main_bss_80130C54 = 16.0f;
+    D_main_bss_80130C58 = 24.0f;
+    D_main_8009DEAC = 16.0f;
+    if (gCurrentLevel == 0xC) {
+        fa = -2.0f;
+    }
+    fb = -8.0f;
+    D_main_bss_80130C5C = fa;
+    if (gCurrentLevel == 0xC) {
+        fb = -20.0f;
+    }
+    D_main_bss_80130C60 = fb;
+    D_main_bss_80130C50 = 1.0f;
+    if (D_main_bss_80130B39 == 0 && gCurrentLevel != 0x11) {
+        computeGridTileEdgeAdjacencyMasks(gCurrentLevel);
+    }
+    D_main_bss_80138928 = 0;
+    D_main_bss_80138898 = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", computeGridLayerScrollOffset);
 
