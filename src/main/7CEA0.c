@@ -43,7 +43,80 @@ u32 data_pad_7CEA0[] = {
     0x24020271,
 };
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", initNpcTexturedEffectFromTemplate);
+typedef struct TexEffTemplate {
+    u8 pad00[0x60];
+    u8 health[0x24];
+    u32 u84;
+    u32 pad88;
+} TexEffTemplate;
+
+s32 setNpcHealth(void *, void *, s32);
+extern s32 D_main_bss_80137CE4;
+extern void initActorMotionParams(void *, f32, f32, f32, f32);
+extern void initObjectAnimSubstruct(void *, s32, s32, s32, f32, void *, s32, f32, f32, s32);
+void setObjectDetailLevel(void *, s16);
+extern s32 npcTexturedEffectUpdate(void *);
+extern s32 npcTexturedEffectUpdateVariant(void *);
+extern s32 npcTexturedEffectUpdateConditional(void *, s32);
+extern s32 npcTexturedEffectUpdateConditionalAlt(void *, s32);
+extern s32 npcTexturedEffectUpdateWithSlotChain(void *, s32);
+
+void initNpcTexturedEffectFromTemplate(void *arg0) {
+    register u8 *eff asm("$17") = *(u8 **)((u8 *)arg0 + 4);
+    register u8 *tpl asm("$16") = *(u8 **)(eff + 0x34);
+    u8 *row;
+    f32 b, a, c, d;
+    void *fn;
+
+    *(s16 *)(eff + 0xAC) = 0;
+    *(u8 *)(*(u8 **)(eff + 0x38) + 0x1A7) = 1;
+    setNpcHealth(*(void **)(eff + 0x38), tpl + 0x60, 0);
+    row = (u8 *)(D_main_bss_80137CE4 * 4 + (s32)tpl);
+    *(f32 *)(eff + 0x94) = *(f32 *)(row + 0x88) * 30.0f;
+    *(s32 *)(eff + 0x9C) = 0;
+    *(s16 *)(eff + 0xAE) = 0;
+    *(f32 *)(eff + 0x98) = 1.0f;
+    a = *(f32 *)(row + 0x84);
+    b = *(f32 *)(row + 0x8C);
+    c = *(f32 *)(row + 0x90);
+    d = *(f32 *)(row + 0x94);
+    if (*(s16 *)(eff + 0xA4) != 4) {
+        if (b > 50.0f) {
+            b = 50.0f;
+        }
+        if (d > 50.0f) {
+            d = 50.0f;
+        }
+        if (a > 70.0f) {
+            a = 70.0f;
+        }
+        if (c > 70.0f) {
+            c = 70.0f;
+        }
+    }
+    initActorMotionParams(*(void **)(eff + 0x38), a, b, c, d);
+    switch (*(s16 *)(eff + 0xA4)) {
+    case 0:
+        fn = npcTexturedEffectUpdate;
+        goto common;
+    case 1:
+        fn = npcTexturedEffectUpdateConditionalAlt;
+        goto common;
+    case 2:
+        fn = npcTexturedEffectUpdateVariant;
+        goto common;
+    case 3:
+        fn = npcTexturedEffectUpdateConditional;
+    common:
+        initObjectAnimSubstruct(*(void **)(eff + 0x38), *(s32 *)(tpl + 0x98), *(s32 *)(tpl + 0x9C), *(s32 *)(tpl + 0xA0), *(f32 *)(tpl + 0xA4), fn, 0, D_main_800A0D9C[*(s16 *)(eff + 0xA4)].block_o_floats[6], 15.0f, 0);
+        break;
+    case 4:
+        initObjectAnimSubstruct(*(void **)(eff + 0x38), *(s32 *)(tpl + 0x98), *(s32 *)(tpl + 0x9C), *(s32 *)(tpl + 0xA0), *(f32 *)(tpl + 0xA4), npcTexturedEffectUpdateWithSlotChain, 0, D_main_800A0D9C[*(s16 *)(eff + 0xA4)].block_o_floats[6], 50.0f, 0);
+        *(s32 *)(eff + 0xA0) = *(s32 *)(tpl + D_main_bss_80137CE4 * 4 + 0xA8);
+        break;
+    }
+    setObjectDetailLevel(*(void **)(eff + 0x38), 1);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/7CEA0", D_main_8003D69C);
 
