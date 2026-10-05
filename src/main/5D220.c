@@ -138,7 +138,40 @@ INCLUDE_RODATA("asm/nonmatchings/main/5D220", D_main_8003B168);
 
 INCLUDE_ASM("asm/nonmatchings/main/5D220", loadWeaponsHobObjects);
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", findNpcInScaledBoxRegion);
+s32 findSegmentObjectSphereHit(s32, void *, void *, void *);
+s32 findNpcInScaledBoxRegion(u8 *arg0, f32 scale, u16 ex, u16 slot, f32 *out) {
+    u8 it[8];
+    f32 box[3];
+    s32 idx;
+    s32 mesh;
+    u16 best;
+    f32 bestDist;
+
+    box[0] = *(f32 *)(arg0 + 0x24) * scale;
+    box[1] = *(f32 *)(arg0 + 0x28) * scale;
+    best = 0xFFFF;
+    (void)0;
+    bestDist = 2.0f;
+    box[2] = *(f32 *)(arg0 + 0x2C) * scale;
+    idx = findActiveNpcInSlotChain(slot, it);
+    if ((idx & 0xFFFF) != 0xFFFF) {
+        do {
+            if (ex == 0xFFFF || ex != (idx & 0xFFFF)) {
+                mesh = *(s32 *)(getNpcContextByIndex(idx & 0xFFFF) + 0xC);
+                if (mesh != 0) {
+                    if (findSegmentObjectSphereHit(mesh, arg0, box, out) != 0) {
+                        if (out[6] < bestDist) {
+                            bestDist = out[6];
+                            best = idx;
+                        }
+                    }
+                }
+            }
+            idx = revalidateNpcSlotIterator(it);
+        } while ((idx & 0xFFFF) != 0xFFFF);
+    }
+    return best;
+}
 
 s32 findSegmentObjectSphereHit(s32, void *, void *, void *);
 
