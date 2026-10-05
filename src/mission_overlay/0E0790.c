@@ -13,7 +13,85 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7F94);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", applyCraftAnimAndDetailParams);
+typedef struct {
+    u8 pad0[0x24];
+    f32 f24;
+    f32 f28;
+    f32 f2C;
+} CueTblA;
+
+extern CueTblA sCueTblA[] __asm__("D_mission_overlay_8010ABA0");
+extern s32 D_main_bss_80137CE4;
+extern s32 D_mission_overlay_8010C0B0;
+extern s32 D_mission_overlay_8010C0B4;
+extern void setNpcHealth(s32, void *, void *);
+extern void setObjectDetailLevel(s32, s32);
+extern void initActorMotionParams(s32, s32, s32, s32, f32);
+extern void initObjectAnimSubstruct(s32, s32, s32, s32, f32, void *, s32, f32, f32, s32);
+extern void initAnimSubstructFromParams(void *, s32, s32, s32, f32, void *, f32, f32, s32);
+extern s32 playAttachmentMaterialSoundVariantA();
+extern s32 playAttachmentMaterialSoundVariantB();
+extern s32 playAttachmentCueWithSlotIter();
+extern void playDualTextureAttachmentCueMode0();
+extern void playDualTextureAttachmentCueMode1();
+extern s32 playAttachmentMaterialSoundSimple();
+
+void applyCraftAnimAndDetailParams(u8 *arg0, u8 *arg1) {
+    u8 *npc;
+    u8 *def;
+    u8 *p;
+    u8 *q;
+    s32 i;
+    s32 k;
+    s32 t;
+
+    npc = *(u8 **)(arg0 + 4);
+    def = *(u8 **)(npc + 0x34);
+    p = arg1;
+    q = npc;
+    *(s16 *)(npc + 0xB4) = 0;
+    for (i = 0; i < 3; i++) {
+        ((s32 *)(npc + 0x8C))[i] = 0;
+        ((s32 *)(npc + 0x98))[i] = 0;
+        ((f32 *)(arg1 + 0x10))[i] = 1.0f;
+        ((s32 *)(arg1 + 0x1C))[i] = 0;
+    }
+    *(s16 *)(npc + 0xB6) = 0;
+    arg1[0xB3] = 0;
+    *(f32 *)(arg1 + 0xC) = *(f32 *)(*(u8 **)(npc + 0x34) + 0x90);
+    npc[0xC6] = 0;
+    npc[0xB1] = 0;
+    setNpcHealth(*(s32 *)(npc + 0x38), *(u8 **)(npc + 0x34) + 0x6C, *(u8 **)(npc + 0x34));
+    setObjectDetailLevel(*(s32 *)(npc + 0x38), *(s32 *)(*(u8 **)(npc + 0x34) + 0xA4));
+    switch (npc[0xB2]) {
+    case 0:
+        k = D_main_bss_80137CE4;
+        *(f32 *)(arg1 + 8) = *(f32 *)(k * 4 + *(s32 *)(npc + 0x34) + 0xD8);
+        t = k * 4 + *(s32 *)(npc + 0x34);
+        initActorMotionParams(*(s32 *)(npc + 0x38), *(s32 *)(t + 0xD0), *(s32 *)(t + 0xD4), *(s32 *)(t + 0xDC), *(f32 *)(t + 0xE0));
+        initObjectAnimSubstruct(*(s32 *)(npc + 0x38), *(s32 *)(def + 0xE4), *(s32 *)(def + 0xE8), *(s32 *)(def + 0xEC), *(f32 *)(def + 0xF0), playAttachmentMaterialSoundVariantA, 0, sCueTblA[npc[0xB2]].f24, 15.0f, 0);
+        initObjectAnimSubstruct(*(s32 *)(npc + 0x38), *(s32 *)(def + 0xE4), *(s32 *)(def + 0xE8), *(s32 *)(def + 0xEC), *(f32 *)(def + 0xF0), playAttachmentMaterialSoundVariantB, 1, sCueTblA[npc[0xB2]].f28, 15.0f, 0);
+        initAnimSubstructFromParams(arg1 + 0xB4, *(s32 *)(def + 0x108), *(s32 *)(def + 0x10C), *(s32 *)(def + 0x110), *(f32 *)(def + 0x114), playAttachmentCueWithSlotIter, sCueTblA[npc[0xB2]].f2C, 50.0f, 0);
+        npc[0xFC] = 3;
+        npc[0xFD] = 0;
+        D_mission_overlay_8010C0B4 = 0;
+        break;
+    case 1:
+        k = D_main_bss_80137CE4;
+        *(f32 *)(arg1 + 8) = *(f32 *)(k * 4 + *(s32 *)(npc + 0x34) + 0xD8);
+        t = k * 4 + *(s32 *)(npc + 0x34);
+        initActorMotionParams(*(s32 *)(npc + 0x38), *(s32 *)(t + 0xD0), *(s32 *)(t + 0xD4), *(s32 *)(t + 0xDC), *(f32 *)(t + 0xE0));
+        initObjectAnimSubstruct(*(s32 *)(npc + 0x38), *(s32 *)(def + 0xE4), *(s32 *)(def + 0xE8), *(s32 *)(def + 0xEC), *(f32 *)(def + 0xF0), playDualTextureAttachmentCueMode0, 0, sCueTblA[npc[0xB2]].f24, 15.0f, 0);
+        initObjectAnimSubstruct(*(s32 *)(npc + 0x38), *(s32 *)(def + 0xE4), *(s32 *)(def + 0xE8), *(s32 *)(def + 0xEC), *(f32 *)(def + 0xF0), playDualTextureAttachmentCueMode1, 1, sCueTblA[npc[0xB2]].f28, 15.0f, 0);
+        initAnimSubstructFromParams(arg1 + 0xB4, *(s32 *)(def + 0x108), *(s32 *)(def + 0x10C), *(s32 *)(def + 0x110), *(f32 *)(def + 0x114), playAttachmentMaterialSoundSimple, sCueTblA[npc[0xB2]].f2C, 50.0f, 0);
+        break;
+    case 3:
+        npc[0xFC] = 3;
+        npc[0xFD] = 0;
+        D_mission_overlay_8010C0B0 = 0;
+        break;
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7FB0);
 
