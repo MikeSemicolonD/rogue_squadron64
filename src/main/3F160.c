@@ -162,7 +162,75 @@ s32 slotDispatcherIter(u16 arg0, s32 arg1, void *arg2) {
 
 INCLUDE_ASM("asm/nonmatchings/main/3F160", slotDispatcherInner);
 
-INCLUDE_ASM("asm/nonmatchings/main/3F160", reinsertNpcIntoSortedFreeList);
+struct FreeBlk {
+    u8 cnt;
+    u8 idx[0x43];
+    struct FreeBlk *prev;
+    struct FreeBlk *next;
+};
+void reinsertNpcIntoSortedFreeList(struct D_80130BB8_type *arg0) {
+    struct FreeBlk **head;
+    struct FreeBlk *b;
+    struct FreeBlk *n;
+    struct FreeBlk *x;
+    void *base;
+    s32 off;
+    u8 t;
+
+    if (arg0->unk14 & 4) {
+        if (arg0->unk04 != NULL) {
+            rs_free(arg0->unk04);
+        }
+        return;
+    }
+    if (arg0->unk14 & 1) {
+        head = (struct FreeBlk **)&D_main_bss_80130BC0;
+    } else {
+        head = (struct FreeBlk **)&D_main_bss_80130BC4;
+    }
+    if (arg0->unk14 & 1) {
+        base = arg0->unk04 - 0x4C;
+        b = (struct FreeBlk *)(base - (arg0->unk18 << 7));
+    } else {
+        base = arg0->unk04 - 0x4C;
+        b = (struct FreeBlk *)(base - (arg0->unk18 << 8));
+    }
+    t = b->cnt + 1;
+    b->cnt = t;
+    b->idx[(s8)t] = arg0->unk18;
+    if (b->next == NULL) {
+        if (b->prev == NULL && (s8)b->cnt == 0) {
+            struct FreeBlk *h = *head;
+            b->next = h;
+            if (h != NULL) {
+                h->prev = b;
+            }
+            *head = b;
+        } else if (b->next != NULL) {
+            goto sw;
+        }
+    } else {
+sw:
+        n = b->next;
+        if ((s8)n->cnt < (s8)b->cnt) {
+            if (b->prev != NULL) {
+                b->prev->next = n;
+            } else {
+                *head = n;
+            }
+            b->next->prev = b->prev;
+            if (b->next->next != NULL) {
+                b->next->next->prev = b;
+            }
+            x = b->next;
+            b->prev = x;
+            b->next = x->next;
+            b->prev->next = b;
+        }
+    }
+    arg0->unk04 = NULL;
+    arg0->unk14 &= 0xFFFC;
+}
 
 void destroyNpcSlotByIndex(u16 arg0) {
     s32 var_a2;
