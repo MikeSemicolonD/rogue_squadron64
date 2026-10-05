@@ -38,7 +38,17 @@ void tickWrappingTimerAccumulatorList(f32 dt) {
 
 INCLUDE_ASM("asm/nonmatchings/main/55250", loadAssetIntoNewSlot);
 
-INCLUDE_ASM("asm/nonmatchings/main/55250", allocAnimationPhasePool);
+s32 rs_malloc(s32, s32);
+void allocAnimationPhasePool(s32 n) {
+    PoolEntryT *p;
+    s32 i;
+
+    D_main_bss_80137C80 = n;
+    D_main_bss_80137C84 = (s32)(p = (PoolEntryT *)rs_malloc(n * 28, 0));
+    for (i = 0; i < n; i++) {
+        p[i].flags = 0;
+    }
+}
 
 s32 rs_free(s32);
 extern s32 D_main_bss_80137C80;
