@@ -1068,7 +1068,24 @@ void cueMenuScreenAudioB(void) {
     syncMusyXIfActive(&D_menu_overlay_800CF020);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", cueMenuScreenAudioC);
+extern MenuScreenAudioCue D_menu_overlay_800CEFF0;
+void cueMenuScreenAudioC(void) {
+    D_menu_overlay_800CEFF0.unk0 = 0xA0;
+    D_menu_overlay_800CEFF0.unk1A = 1;
+    D_menu_overlay_800CEFF0.unk2 = 0xA0;
+    D_menu_overlay_800CEFF0.unk12 = 0x78;
+    D_menu_overlay_800CEFF0.unk1B = 0x32;
+    D_menu_overlay_800CEFF0.unk1E = 0x51E;
+    D_menu_overlay_800CEFF0.unk20 = 0xF5C;
+    D_menu_overlay_800CEFF0.unk22 = 0x1999;
+    D_menu_overlay_800CEFF0.unk1C = 1;
+    D_menu_overlay_800CEFF0.unk24 = 0x800;
+    syncMusyXIfActive(&D_menu_overlay_800CEFF0);
+    parseLoadedSndSection(0x20);
+    loadSongAssetByName(D_main_bss_80138920, 0x5E);
+    playSimpleAudioCmd(0x7F, 0x32, 0xFE);
+    playSimpleAudioCmd(0x78, 0x32, 0xFD);
+}
 
 void getControllerSettingsTitle(char *title) {
     if (gGameSettings.languageSelect == LANGUAGE_FR) {
