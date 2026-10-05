@@ -29,7 +29,49 @@ u16 *languageStringOffsets = NULL;
 // DO NOT DELETE ME I AM REQURIED FOR MATCHING
 u32 data_pad_562A0 = 0x00431021;
 
-INCLUDE_ASM("asm/nonmatchings/main/562A0", loadTxtFile);
+#include "game_settings.h"
+extern s32 D_main_bss_80138920;
+extern s32 D_main_bss_80137CFC;
+extern s32 findAssetAcrossSegments(s32, s32, s32, u8 *, s32);
+extern void setupAssetDma(s32, s32, s32, u32, s32, void *);
+extern s32 teardownAssetDma(s32, s32);
+extern void *rs_malloc(u32, u16);
+
+s32 loadTxtFile(u8 *arg0, u8 arg1) {
+    s32 handle;
+    s32 size;
+    u8 *p;
+    s32 key;
+    s32 c;
+
+    handle = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, arg0, 1);
+    setupAssetDma(D_main_bss_80138920, 0, handle, 0, 0x1C, &txtFileHeader);
+    languageStringcount = txtFileHeader.string_count;
+    if (gGameSettings.languageSelect >= txtFileHeader.language_count) {
+        gGameSettings.languageSelect = 0;
+    }
+    if (arg1 == 0) {
+        size = txtFileHeader.language_offsets[gGameSettings.languageSelect + 1] - txtFileHeader.language_offsets[gGameSettings.languageSelect];
+        setupAssetDma(D_main_bss_80138920, 0, handle, txtFileHeader.language_offsets[gGameSettings.languageSelect], size, *(void **)&languageData.offsets = rs_malloc(size, 0));
+        teardownAssetDma(D_main_bss_80138920, handle);
+        key = 0xF5;
+        size -= languageStringcount * 2;
+        p = (u8 *)languageData.offsets + languageStringcount * 2;
+        while (size != 0) {
+            size--;
+            c = *p ^ key;
+            key ^= c;
+            *p = c;
+            p++;
+        }
+    } else {
+        D_main_8009ECA4 = handle;
+        size = txtFileHeader.string_count * 2;
+        setupAssetDma(D_main_bss_80138920, 0, handle, txtFileHeader.language_offsets[gGameSettings.languageSelect], size, languageStringOffsets = rs_malloc(size, 0));
+        voiceTxtLanguageOffset = txtFileHeader.language_offsets[gGameSettings.languageSelect];
+    }
+    return 1;
+}
 
 void loadGameOrFrontTxtFile(u8 *arg0) {
     loadTxtFile(arg0, 0);
