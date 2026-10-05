@@ -49,7 +49,100 @@ void buildOrientationFromPosAndAngles(Mat4x3 m, Vec3f pos, Vec3f ang) {
     m[2][1] = p4 - p1 * sy;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AA780", stepAngleTowardTarget);
+extern f32 floatModulo(f32, f32);
+#define VABS(x) ({ f32 _x = (x); f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); _r; })
+void stepAngleTowardTarget(f32 *cur, f32 *tgt, f32 t, f32 *out) {
+    register f32 a asm("$f12");
+    register f32 b asm("$f4");
+    register f32 b1 asm("$f4");
+    register f32 q asm("$f0");
+    f32 a1, sum, r, d;
+
+    a = cur[0];
+    b = tgt[0];
+    if ((a >= 0.0f && b >= 0.0f) || (a <= 0.0f && b <= 0.0f)) {
+        a1 = a + 180.0f;
+        b1 = b + 180.0f;
+        q = (b1 - a1) * t;
+        r = (a1 + q) - 180.0f;
+    } else {
+        sum = VABS(a) + VABS(b);
+        if (sum < 180.0f) {
+            d = sum * t;
+        } else {
+            d = (360.0f - sum) * t;
+        }
+        if (a > 0.0f) {
+            if (sum <= 180.0f) {
+                r = a - d;
+            } else {
+                r = a + d;
+            }
+        } else if (sum <= 180.0f) {
+            r = a + d;
+        } else {
+            r = a - d;
+        }
+    }
+    floatModulo(r, 180.0f);
+    out[0] = r;
+    a = cur[1];
+    b = tgt[1];
+    if ((a >= 0.0f && b >= 0.0f) || (a <= 0.0f && b <= 0.0f)) {
+        a1 = a + 180.0f;
+        b1 = b + 180.0f;
+        q = (b1 - a1) * t;
+        r = (a1 + q) - 180.0f;
+    } else {
+        sum = VABS(a) + VABS(b);
+        if (sum < 180.0f) {
+            d = sum * t;
+        } else {
+            d = (360.0f - sum) * t;
+        }
+        if (a > 0.0f) {
+            if (sum <= 180.0f) {
+                r = a - d;
+            } else {
+                r = a + d;
+            }
+        } else if (sum <= 180.0f) {
+            r = a + d;
+        } else {
+            r = a - d;
+        }
+    }
+    floatModulo(r, 180.0f);
+    out[1] = r;
+    a = cur[2];
+    b = tgt[2];
+    if ((a >= 0.0f && b >= 0.0f) || (a <= 0.0f && b <= 0.0f)) {
+        a1 = a + 180.0f;
+        b1 = b + 180.0f;
+        q = (b1 - a1) * t;
+        r = (a1 + q) - 180.0f;
+    } else {
+        sum = VABS(a) + VABS(b);
+        if (sum < 180.0f) {
+            d = sum * t;
+        } else {
+            d = (360.0f - sum) * t;
+        }
+        if (a > 0.0f) {
+            if (sum <= 180.0f) {
+                r = a - d;
+            } else {
+                r = a + d;
+            }
+        } else if (sum <= 180.0f) {
+            r = a + d;
+        } else {
+            r = a - d;
+        }
+    }
+    floatModulo(r, 180.0f);
+    out[2] = r;
+}
 
 void clampVec3ToUnitIfLongerThan(Vec3f arg0) {
     f32 temp_fv0;
