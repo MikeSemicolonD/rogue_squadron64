@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Puts C for a function into its .c file and imports it into decomp-permuter.
 
-Usage (from the repo root): perm_import.py <func> [--snippet file.c]
+Usage (from the repo root): perm_import.py <func> [--snippet file.c] [--sed EXPR ...]
 Without --snippet the C comes from m2c (cleaned like auto_decomp); with it, from a hand-written attempt.
 Undeclared identifiers are declared the way auto_decomp does; the .c file is restored afterwards.
 """
@@ -12,6 +12,7 @@ import auto_decomp as a
 ap = argparse.ArgumentParser()
 ap.add_argument("func")
 ap.add_argument("--snippet")
+ap.add_argument("--sed", action="append", default=[], help="sed expression applied to the .c file first (repeatable)")
 args = ap.parse_args()
 func = args.func
 c_path = next(c for c in pathlib.Path("src").rglob("*.c") if f", {func});" in a.read(c))
@@ -19,6 +20,8 @@ s_path = next(pathlib.Path("asm/nonmatchings").rglob(f"{func}.s"))
 original = a.read(c_path)
 nl = "\r\n" if "\r\n" in original else "\n"
 base = a.with_types(original, nl)
+for e in args.sed:
+    base = subprocess.run(["sed", e], input=base, capture_output=True, text=True, check=True).stdout
 a.write(c_path, base)
 if args.snippet:
     code = a.read(args.snippet).replace("\r\n", "\n").strip("\n") + "\n"
