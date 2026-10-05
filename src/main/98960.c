@@ -552,7 +552,64 @@ void enqueueSoundInPriorityGroup(void *arg0, f32 arg1) {
     D_main_bss_80153290[k].pri = arg1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", enqueueSpatialSoundInPriorityGroup);
+typedef struct PNode {
+    struct PNode *next;
+    f32 f4;
+    f32 f8;
+    f32 fC;
+    f32 f10;
+    f32 f14;
+    u8 *voice;
+} PNode;
+extern PNode D_main_bss_80152F00[];
+extern u8 D_main_bss_80153280;
+
+s32 enqueueSpatialSoundInPriorityGroup(u8 *arg0, f32 arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5) {
+    s32 i;
+    PNode *cur;
+    s32 cnt;
+    s32 k;
+
+    for (i = 0; i < D_main_bss_80152EF0; i++) {
+        if (*(s32 *)(arg0 + 0x38) == D_main_bss_80152D70[i].id) {
+            break;
+        }
+    }
+    if (i == D_main_bss_80152EF0) {
+        if (i == 0x20) {
+            return 0;
+        }
+        D_main_bss_80152D70[i].unk4 = 0;
+        D_main_bss_80152D70[i].head = 0;
+        cnt = *(s32 *)(arg0 + 0x38);
+        D_main_bss_80152EF0++;
+        D_main_bss_80152D70[i].id = cnt;
+    }
+    if (D_main_bss_80153280 == 0x20) {
+        return 0;
+    }
+    cur = (PNode *)D_main_bss_80152D70[i].unk4;
+    if (cur != 0) {
+        while (cur->next != 0) {
+            if (cur->f4 < arg1) break;
+            cur = cur->next;
+        }
+        D_main_bss_80152F00[D_main_bss_80153280].next = cur->next;
+        cur->next = &D_main_bss_80152F00[D_main_bss_80153280];
+    } else {
+        D_main_bss_80152F00[D_main_bss_80153280].next = 0;
+        D_main_bss_80152D70[i].unk4 = (s32)&D_main_bss_80152F00[D_main_bss_80153280];
+    }
+    k = D_main_bss_80153280;
+    D_main_bss_80152F00[k].voice = arg0;
+    D_main_bss_80152F00[k].f14 = arg5;
+    D_main_bss_80152F00[k].f8 = arg2;
+    D_main_bss_80152F00[k].fC = arg3;
+    D_main_bss_80152F00[k].f10 = arg4;
+    D_main_bss_80153280 = k + 1;
+    D_main_bss_80152F00[k].f4 = arg1;
+    return 1;
+}
 
 typedef struct PendNode {
     struct PendNode *next;
