@@ -293,7 +293,72 @@ u8 data_pad_80038CED = 0xBF;
 u8 data_pad_80038CEE = 0x00;
 u8 data_pad_80038CEF = 0x18;
 
-INCLUDE_ASM("asm/nonmatchings/main/24570", emitMaterialRenderModeDL);
+extern u32 EmitRmTbl[][2] __asm__("D_main_800388E0");
+extern u8 D_main_bss_801143A8;
+extern u32 D_main_bss_801163D4;
+extern u8 D_main_bss_8011A861;
+extern u8 D_main_bss_8011A898;
+extern u8 D_main_bss_8011A908;
+
+typedef struct { u32 w0; u32 w1; } EmGfx;
+EmGfx *emitMaterialRenderModeDL(EmGfx *dlIn, u32 arg1, u32 arg2) {
+    EmGfx *dl = dlIn;
+    EmGfx *p, *q;
+    s32 s2;
+    s32 s0;
+    s32 t;
+
+    s2 = ~(-(D_main_bss_801143A8 != 0) & 0x2000);
+    s0 = 0;
+    if (!(arg1 & 0x10000)) {
+        s0 = (D_main_bss_8011A898 != 0) * 8;
+    }
+    if ((arg2 & 0x14) == 4) {
+        s0 |= 4;
+    }
+    switch (D_main_bss_8011A861) {
+    case 1:
+        s0 |= 0x20;
+        break;
+    case 2:
+        s0 |= 0x20;
+        s2 &= ~0x40;
+        break;
+    }
+    if (arg1 & 0x20000) {
+        s0 |= 1;
+    }
+    if (arg1 & 0x40000) {
+        s0 |= 2;
+    }
+    if ((u32)dl >= D_main_bss_801163D4) {
+        dl->w0 = 0xB5000000;
+        dl->w1 = 0;
+        dl = (EmGfx *)allocateDisplayListBuffer();
+    }
+    if ((D_main_bss_8011A908 & 0x7F) == 2) {
+        p = dl++;
+        p->w0 = 0xBA001402;
+        p->w1 = 0x100000;
+        t = s0 & 0xFF;
+        if ((arg1 & 0x10000) || (s0 = t | 0x18, D_main_bss_8011A898 == 0)) {
+            s0 = t | 0x10;
+        }
+    } else {
+        p = dl++;
+        p->w0 = 0xBA001402;
+        p->w1 = 0;
+    }
+    if ((u32)dl >= D_main_bss_801163D4) {
+        dl->w0 = 0xB5000000;
+        dl->w1 = 0;
+        dl = (EmGfx *)allocateDisplayListBuffer();
+    }
+    q = dl++;
+    q->w0 = 0xB900031D;
+    q->w1 = s2 & (EmitRmTbl[s0 & 0xFF][0] | EmitRmTbl[s0 & 0xFF][1]);
+    return dl;
+}
 
 typedef struct {
     u32 w0;
