@@ -98,7 +98,7 @@ SECTIONS
         main_RODATA_START = .;
         build/src/main/031B0.o(.rodata);
         build/src/main/03290.o(.rodata);
-        build/asm/data/main/01060.rodata.o(.rodata);
+        build/src/main/033C0.o(.rodata);
         build/asm/data/main/01070.rodata.o(.rodata);
         build/src/main/06560.o(.rodata);
         build/src/main/08510.o(.rodata);

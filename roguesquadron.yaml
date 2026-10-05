@@ -85,7 +85,7 @@ segments:
     subsegments:
       - [0x01040, .rodata,  "main/031B0"]
       - [0x01050, .rodata,  "main/03290"]
-      - [0x01060, rodata,  "main/01060"] # Should be tied to 033C0, but that isn't playing nice for some reason :(
+      - [0x01060, .rodata,  "main/033C0"] # Should be tied to 033C0, but that isn't playing nice for some reason :(
       - [0x01070, rodata,  "main/01070"]
       - [0x01080, .rodata,  "main/06560"]
       - [0x01120, .rodata,  "main/08510"]

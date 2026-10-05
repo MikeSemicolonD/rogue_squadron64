@@ -253,3 +253,5 @@ void initSiQueue(void) {
 }
 
 INCLUDE_ASM("asm/nonmatchings/main/033C0", fake_func_8000337C);
+__asm__(".section .rodata\n.globl D_main_80000460\nD_main_80000460:\n.word 0x3F800000\n.word 0x80003318\n.word 0x00000000\n.word 0x00000000\n.section .text");
+
