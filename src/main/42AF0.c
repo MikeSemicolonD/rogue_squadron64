@@ -279,7 +279,38 @@ void loadLevelAssets(s32 arg0) {
     D_main_bss_80138898 = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", computeGridLayerScrollOffset);
+extern f32 D_main_8009DEB4;
+extern void *D_main_bss_80138D1C;
+
+void computeGridLayerScrollOffset(void *arg0) {
+    f32 temp_ft0;
+    f32 temp_fv1;
+    f32 var_fv0;
+
+    temp_fv1 = (*(f32 *)((u8 *)(D_main_bss_80138D1C) + 0x50));
+    if ((D_main_bss_80130C5C < temp_fv1) || (D_main_bss_80130C5C <= D_main_bss_80130C60)) {
+        var_fv0 = D_main_bss_80130C54;
+        goto block_5;
+    }
+    if (temp_fv1 < D_main_bss_80130C60) {
+        var_fv0 = D_main_bss_80130C58;
+block_5:
+        D_main_8009DEAC = var_fv0;
+    } else {
+        D_main_8009DEAC = D_main_bss_80130C54 + (((D_main_bss_80130C58 - D_main_bss_80130C54) * (temp_fv1 - D_main_bss_80130C5C)) / (D_main_bss_80130C60 - D_main_bss_80130C5C));
+    }
+    if (gCurrentLevel == 0xA) {
+        D_main_8009DEAC = 22.0f;
+    }
+    if ((gCurrentLevel == 2) || (gCurrentLevel == 0x13)) {
+        D_main_8009DEB4 = 0.0f;
+    } else {
+        temp_ft0 = D_main_bss_80136FBC * 0.7f;
+        D_main_8009DEB4 = temp_ft0;
+        D_main_8009DEB4 = temp_ft0 * temp_ft0 * D_main_8009DEAC * D_main_8009DEAC;
+    }
+    (*(f32 *)((u8 *)(arg0) + 0x28)) = (f32) (2.0f * ((D_main_8009DEAC - (D_main_8009DEAC * 0.25f)) + 1.0f));
+}
 
 s32 rs_free(s32);
 void teardownGridLayerWorker(void);
