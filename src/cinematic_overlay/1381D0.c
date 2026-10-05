@@ -191,7 +191,66 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", applyCutsceneSlotMaterialOverrides);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", tickCutsceneActionSlots);
+typedef struct {
+    s32 unk0;
+    f32 unk4;
+    f32 unk8;
+    f32 unkC;
+    s16 unk10;
+    u8 active;
+} CutsceneActionSlot;
+
+extern CutsceneActionSlot D_cinematic_overlay_800B0BC0[];
+extern u8 D_cinematic_overlay_800A54A8[];
+extern u8 D_cinematic_overlay_800A54B4[];
+f32 quadraticEaseInOut(f32);
+extern s32 lookupHmtMaterialByName(s32, u8 *, s32 *);
+extern void composeInterpolatedNodeMatricesAlt(s32, s32, s32, s32, f32);
+
+void tickCutsceneActionSlots(f32 arg0) {
+    s32 sp18;
+    s32 sp1C;
+    CutsceneActionSlot *slot;
+    CutsceneActionSlot *cur;
+    f32 t;
+    f32 v;
+    s32 a;
+    s32 b;
+    u16 type;
+    u16 i;
+
+    for (i = 0; i < 0x10; i++) {
+        cur = &D_cinematic_overlay_800B0BC0[i];
+        if (cur->active != 0) {
+            slot = cur;
+            type = ((u8 *)D_cinematic_overlay_800B1900)[(u16)slot->unk10 * 0x13C + 2];
+            t = (arg0 - slot->unk8) / (slot->unkC - slot->unk8);
+            if (t > 1.0f) {
+                t = 1.0f;
+                slot->active = 0;
+                *(f32 *)&slot->unk0 = slot->unk4;
+            } else if (t < 0.0f) {
+                t = 0.0f;
+            }
+            t = quadraticEaseInOut(t);
+            switch (type) {
+            case 2:
+            case 0xF:
+            case 0x10:
+            {
+                v = (slot->unk4 - *(f32 *)&slot->unk0) * t + *(f32 *)&slot->unk0;
+                a = lookupHmtMaterialByName(*(s32 *)((u8 *)D_cinematic_overlay_800B1900 + (u16)slot->unk10 * 0x13C + 0x50), D_cinematic_overlay_800A54A8, &sp18);
+                b = lookupHmtMaterialByName(*(s32 *)((u8 *)D_cinematic_overlay_800B1900 + (u16)slot->unk10 * 0x13C + 0x50), D_cinematic_overlay_800A54B4, &sp1C);
+                composeInterpolatedNodeMatricesAlt(a, b, sp18, sp1C, v);
+            }
+            break;
+            default:
+                slot->active = 0;
+                break;
+            }
+        }
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A54CC);
 
@@ -455,16 +514,6 @@ void freeCutsceneResources(void) {
     zmemcpy(&gBootConfig, &D_cinematic_overlay_800B0960, 0x50U);
 }
 
-typedef struct {
-    s32 unk0;
-    f32 unk4;
-    f32 unk8;
-    f32 unkC;
-    s16 unk10;
-    u8 active;
-} CutsceneActionSlot;
-
-extern CutsceneActionSlot D_cinematic_overlay_800B0BC0[];
 
 void applyCutsceneSlotMaterialOverrides(void);
 
