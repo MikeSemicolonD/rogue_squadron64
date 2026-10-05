@@ -756,7 +756,23 @@ void tickCutsceneNpcSlots(void *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", despawnCutsceneNpcSlot);
+void destroyNpcSlotByIndexU16(s32);
+void despawnCutsceneNpcSlot(s32 arg0) {
+    u32 i;
+    register u16 slot asm("$17");
+    s32 next;
+
+    i = arg0 & 0xFF;
+    { register s32 b asm("$3") = (s32)D_cinematic_overlay_800B1900; register CutNpcSlotB *e asm("$2") = (CutNpcSlotB *)(i * sizeof(CutNpcSlotB) + b); slot = e->slot; }
+    if (slot != 0xFFFF) {
+        next = getNextSlotNpcTypeId(slot) & 0xFFFF;
+        if (next != 0xFFFF) {
+            destroyNpcSlotByIndexU16(next);
+        }
+        destroyNpcSlotChain(slot);
+        (&((CutNpcSlotB *)D_cinematic_overlay_800B1900)[i])->slot = 0xFFFF;
+    }
+}
 
 void initCutsceneSlotTable(void) {
     u32 var_a0;
