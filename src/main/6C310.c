@@ -241,7 +241,82 @@ u16 getPlayerField2(s32 arg0) {
     return gPlayers[arg0].unk002;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", attachDebrisModelVariant);
+extern u16 D_main_bss_80139574;
+void releaseMeshAsset(void *);
+void *walkMeshdef0List(char *);
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+void composeRotationMatrixSlot0(void *, s32);
+void composeRotationMatrixSlot1(void *, s32);
+void composeRotationMatrixSlot2(void *, s32);
+void addVec3At0x24(void *, s32, s32, s32);
+s32 popNpcSlotFromTail(u16, void *);
+
+s32 attachDebrisModelVariant(u8 *arg0, u8 *arg1) {
+    f32 fs0;
+    u8 *a;
+    u8 *t;
+    char *name;
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 f;
+    u8 *m;
+    u8 *mp;
+
+    a = *(u8 **)(arg1 + 0x30);
+    fs0 = *(f32 *)(*(u8 **)a + 0x34);
+    releaseMeshAsset(a);
+    t = *(u8 **)(arg1 + 0x34);
+    switch (*(s32 *)(t + 0x90)) {
+        default:
+            name = *(char **)(t + 0x5C);
+            break;
+        case 1:
+            name = "bld_a_dst";
+            break;
+        case 2:
+            name = "bld_b_dst";
+            break;
+        case 3:
+            name = "bld_c_dst";
+            break;
+        case 4:
+            name = "fueltnk_dst";
+            break;
+        case 5:
+            *(u8 **)(arg1 + 0x30) = NULL;
+            return 0;
+    }
+    *(s32 *)(arg0 + 0xC) = 0;
+    m = walkMeshdef0List(name);
+    *(void **)(arg1 + 0x30) = m;
+    mp = m + 0x28;
+    f = *(f32 *)(*(u8 **)(arg1 + 0x34) + 0x94);
+    if (f != 0.0f) {
+        x = f * 0.25f;
+    } else {
+        x = *(f32 *)(*(u8 **)(arg1 + 0x34) + 0x28) * fs0;
+    }
+    f = *(f32 *)(*(u8 **)(arg1 + 0x34) + 0x98);
+    if (f != 0.0f) {
+        y = f * 0.25f;
+    } else {
+        y = *(f32 *)(*(u8 **)(arg1 + 0x34) + 0x2C) * fs0;
+    }
+    f = *(f32 *)(*(u8 **)(arg1 + 0x34) + 0x9C);
+    if (f != 0.0f) {
+        z = f * 0.25f;
+    } else {
+        z = *(f32 *)(*(u8 **)(arg1 + 0x34) + 0x30) * fs0;
+    }
+    initVec4TripletFromArgs(mp, x, y, z);
+    composeRotationMatrixSlot0(*(u8 **)(arg1 + 0x30) + 0x28, *(s32 *)(*(u8 **)(arg1 + 0x34) + 0x1C));
+    composeRotationMatrixSlot1(*(u8 **)(arg1 + 0x30) + 0x28, *(s32 *)(*(u8 **)(arg1 + 0x34) + 0x20));
+    composeRotationMatrixSlot2(*(u8 **)(arg1 + 0x30) + 0x28, *(s32 *)(*(u8 **)(arg1 + 0x34) + 0x24));
+    addVec3At0x24(*(u8 **)(arg1 + 0x30) + 0x28, *(s32 *)(arg1 + 0), *(s32 *)(arg1 + 4), *(s32 *)(arg1 + 8));
+    popNpcSlotFromTail(D_main_bss_80139574, arg0);
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", updateDestructionDebrisNpc);
 __asm__(".section .rodata\n.globl D_main_8003CAE4\nD_main_8003CAE4:\n.word 0x3F4CCCCD\n.word 0x3C01003F\n.word 0x01415824\n.section .text");
