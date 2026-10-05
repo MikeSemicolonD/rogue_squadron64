@@ -657,7 +657,84 @@ void animateVwingThrusterMaterial(void **arg0, f32 arg1, f32 arg2, f32 arg3)
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateVwingTrailGeometry);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", playerVwingMainUpdate);
+typedef struct VwTrailSlot {
+    u8 pad0[4];
+    s16 x;
+    s16 y;
+    f32 scale;
+    u8 padC[9];
+    u8 active;
+    u8 pad16[2];
+    f32 f18;
+    f32 f1C;
+    u8 pad20[0x24];
+    f32 angle;
+} VwTrailSlot;
+typedef struct VwTrailNode {
+    struct VwTrailNode *next;
+    struct VwTrailNode *prev;
+} VwTrailNode;
+typedef struct VwTrailObj {
+    u8 pad0[0xC];
+    VwTrailNode link;
+} VwTrailObj;
+extern VwTrailObj *D_menu_overlay_800CF0F0[];
+extern VwTrailNode *D_menu_overlay_800CF174;
+f32 floatModulo(f32, f32);
+static __inline__ void linkNode(VwTrailObj *o, VwTrailNode *n) {
+    o->link.next = D_menu_overlay_800CF174;
+    if (D_menu_overlay_800CF174 != 0) {
+        D_menu_overlay_800CF174->prev = n;
+    }
+    n->prev = 0;
+    D_menu_overlay_800CF174 = n;
+}
+f32 fabsf(f32);
+void addVec3At0x24(void *, f32, f32, f32);
+void composeRotationMatrixSlot0(void *, f32);
+void composeRotationMatrixSlot1(void *, f32);
+void composeRotationMatrixSlot2(void *, f32);
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+void playerVwingMainUpdate(void *arg0, f32 arg1) {
+    u8 i;
+    VwTrailSlot *slot;
+    VwTrailObj *obj;
+    u8 *mat;
+    VwTrailNode *node;
+    f32 fx;
+    register f32 ang asm("$f20");
+    f32 fy;
+    f32 t;
+    f32 sc;
+    f32 av;
+    if (arg1 > 0.05f) {
+        i = 0;
+        do {
+            slot = &((VwTrailSlot *)D_menu_overlay_800CF180)[i];
+            if (slot->active != 0) {
+                sc = arg1 * 0.4f * slot->scale * slot->f18 * slot->f1C;
+                if (sc > 0.005f) {
+                    fx = ((f32)slot->x + 128.0f) * 0.0352f;
+                    fy = ((f32)slot->y + 160.0f) * 0.02842f - 2.3f;
+                    obj = D_menu_overlay_800CF0F0[i];
+                    mat = (u8 *)obj + 0x28;
+                    initVec4TripletFromArgs(mat, sc, sc, sc);
+                    composeRotationMatrixSlot0(mat, 180.0f);
+                    slot->angle = slot->angle + (slot->scale * 0.5f + 2.0f);
+                    ang = floatModulo(slot->angle, 180.0f) - 90.0f;
+                    node = &obj->link;
+                    __asm__ volatile("abs.s %0, %1" : "=f"(av) : "f"(ang));
+                    slot->angle = slot->angle + quadraticEaseInOut(av / 90.0f) * 3.5f;
+                    composeRotationMatrixSlot1(mat, ang);
+                    composeRotationMatrixSlot2(mat, 180.0f);
+                    addVec3At0x24(mat, fx, fy, 15.0f);
+                    linkNode(obj, node);
+                }
+            }
+            i++;
+        } while (i < 3);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setupMenuData);
 
