@@ -140,7 +140,41 @@ INCLUDE_ASM("asm/nonmatchings/main/94F50", stepSongModulationLanes);
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", advanceSongRegion);
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", updateSongTempoTickRate);
+extern s32 D_main_bss_80142038;
+extern s32 D_main_bss_801440C0;
+extern u8 D_main_bss_801529CB;
+void setTrackVoiceTickBudget(u32, u8, struct D_main_bss_80149A00_type *);
+
+void updateSongTempoTickRate(u32 arg0) {
+    struct SNG_unk0C_type *cur;
+    struct SNG_unk0C_type *prev;
+    u32 budget;
+    register u32 lo asm("$2");
+    register s32 neg asm("$16");
+
+    D_main_bss_801529C0->unkE6C = D_main_bss_801529C0->unkE68;
+    D_main_bss_801529C0->unkE74 = arg0;
+    D_main_bss_801529C0->unkE70 = 0;
+    if (D_main_bss_801529C0->unkE6C->unk0 != -1U) {
+        neg = -1;
+loop:
+        cur = D_main_bss_801529C0->unkE6C;
+        if (D_main_bss_801529C0->unkE74 + D_main_bss_801529C0->unk110[4] >= cur->unk0) {
+            budget = cur->unk4;
+            D_main_bss_801529C0->unk110[5] = budget;
+            setTrackVoiceTickBudget(budget, D_main_bss_801529CB, D_main_bss_801529C0);
+            prev = D_main_bss_801529C0->unkE6C;
+            D_main_bss_801529C0->unkE6C = prev + 1;
+            if (((s32 *)prev)[2] != neg) {
+                goto loop;
+            }
+        }
+    }
+    { register u32 pr asm("$3"); register u32 qq asm("$2"); register s32 dd asm("$4"); qq = (u32)(D_main_bss_801529C0->unk110[5] * 0x600) / 240; dd = (s32)(D_main_bss_80142038 << 16) / D_main_bss_801440C0; pr = qq * dd; lo = pr * D_main_bss_801529C0->unkEC2; }
+    D_main_bss_801529C0->unk110[2] = (lo >> 8) & 0xFFFF;
+    D_main_bss_801529C0->unk110[3] = lo >> 24;
+    D_main_bss_801529C0->unk110[4] = (s32)(lo >> 24) >> 1;
+}
 
 static inline s32 findSongSlotByHandle(u32 handle) {
     u32 i;
