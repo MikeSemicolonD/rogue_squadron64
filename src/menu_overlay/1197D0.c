@@ -50,7 +50,97 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5C7C);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", allocTextRenderTarget);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", tickFormatMessageWorker);
+typedef struct {
+    u8 pad0[0x10];
+    s32 idx;
+    u8 mat[0x16];
+    char name[0xE];
+    s32 tex0;
+    s32 tex1;
+    u8 pad40[0x1C];
+    char *label;
+    u8 pad60[0xC];
+    s32 jfif0;
+    s32 jfif1;
+    u8 pad74[4];
+} GlyphBuf;
+
+typedef struct {
+    u8 pad0[0x14];
+    s32 f14;
+} WorkerReply;
+
+typedef struct {
+    u8 pad0[8];
+    u32 count;
+    struct {
+        u8 pad0[0xC];
+        u16 *ids;
+    } *elem;
+    u8 pad10[4];
+    u16 *ids;
+    u8 pad18[4];
+    s32 flags;
+} FmtObj;
+
+typedef struct {
+    u8 pad0[0x14];
+    FmtObj *obj;
+    u8 text[0x40];
+    s32 replyTo;
+    s32 serial;
+} FmtRequest;
+
+extern char D_menu_overlay_800A5C40[];
+void sprintf(char *, const char *, ...);
+void buildDebrisMeshFromCells(s32, s32);
+s32 registerHmtTextureInTable(void *, void *, u8);
+s32 findMatchingTextureRecursive(u16, void *, void *, s32);
+s32 rs_free(s32);
+s32 freeJfifDecodeState(s32);
+s32 buildFormatMessageGlyphBuffer(void *, void *, s32, s32);
+s32 sendServiceMessage(s32, s32, void *, s32);
+
+void tickFormatMessageWorker(s32 *arg0) {
+    WorkerReply reply;
+    GlyphBuf buf;
+    FmtRequest *req;
+    FmtObj *obj;
+    u32 i;
+    u32 j;
+    u16 *p;
+
+    for (;;) {
+        i = 0;
+        req = (FmtRequest *)recvServiceMessage(*arg0);
+        buildFormatMessageGlyphBuffer(req->obj, &buf, (s32)req->text, *arg0);
+        for (; i < req->obj->count; i++) {
+            obj = req->obj;
+            for (j = 0; j < 1; j++) {
+                sprintf(buf.name, D_menu_overlay_800A5C40, buf.idx);
+                sprintf(buf.label + 2, D_menu_overlay_800A5C40, buf.idx);
+                buildDebrisMeshFromCells(buf.jfif0, buf.tex0);
+                if (obj->flags & 6) {
+                    buildDebrisMeshFromCells(buf.jfif1, buf.tex1);
+                }
+                p = (u16 *)(buf.idx * 2 + (s32)obj->ids);
+                *p = (*p == 0xFFFF) ? registerHmtTextureInTable(buf.mat, &buf.tex0, 0) : findMatchingTextureRecursive(*p, buf.mat, &buf.tex0, 0);
+                obj->elem->ids[buf.idx] = obj->ids[buf.idx];
+                buf.idx++;
+            }
+            yieldThreadRet1(*arg0);
+        }
+        if (req->obj->flags & 6) {
+            rs_free(buf.tex1);
+            freeJfifDecodeState(buf.jfif1);
+        }
+        rs_free(buf.tex0);
+        freeJfifDecodeState(buf.jfif0);
+        reply.f14 = req->serial;
+        sendServiceMessage(*arg0, req->replyTo, &reply, 0);
+        rs_free((s32)req);
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5CB4);
 
@@ -164,7 +254,7 @@ extern s32 D_menu_overlay_800CC858;
 s32 registerServiceWorker(s32, s32, s32, s32 *);
 s32 startServiceWorker(s32);
 extern s32 D_menu_overlay_800CC854;
-extern s32 tickFormatMessageWorker;
+void tickFormatMessageWorker(s32 *);
 
 void initFormatMessageWorker(s32 arg0) {
     s32 temp_v0;
