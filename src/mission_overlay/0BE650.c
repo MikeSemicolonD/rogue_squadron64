@@ -4,7 +4,85 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BE650", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BE650", D_mission_overlay_800A60D8);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BE650", playerNabooStarfighterInit);
+#include "common_types.h"
+extern u8 sCraftBytes[][0x2A0] __asm__("D_main_bss_80137DBC");
+extern s32 D_main_bss_80130B58;
+extern struct { u8 pad[0x18]; u16 unk18; u8 pad1A[0xA]; } sHudDefs[] __asm__("D_mission_overlay_8010BE18");
+s32 lookupHmtMaterialByName(s32, char *, void *);
+extern s32 D_mission_overlay_8010BEA8[][16];
+extern void initPlayerCraftMovementMode(void *);
+extern s32 countTrailingZeros16(u16);
+
+void playerNabooStarfighterInit(s32 *arg0, s32 arg1, s32 arg2) {
+    u8 *p = sCraftBytes[arg1];
+    f32 hp;
+    register f32 i asm("$f10");
+    f32 b, c, d, e, g, h, j, k, l, m, n, o, q;
+    *(s16 *)(p + 0x180) = arg2;
+    arg0[0] = arg1;
+    *(u16 *)(p + 0xB4) = 8;
+    initPlayerCraftMovementMode(p);
+    hp = 150.0f;
+    if (D_main_bss_80130B58 & 0x40) {
+        hp = 40.0f;
+    }
+    *(f32 *)(p + 0xF8) = 1.6f;
+    b = 3.0f;
+    c = 0.1f;
+    d = 15.0f;
+    e = 10.0f;
+    g = -40.0f;
+    h = -45.0f;
+    i = 40.0f;
+    j = 60.0f;
+    k = 180.0f;
+    l = 0.75f;
+    m = 2.0f;
+    n = 20.0f;
+    o = 5.0f;
+    q = 0.08f;
+    *(f32 *)(p + 0xC0) = hp;
+    *(f32 *)(p + 0xC4) = hp;
+    *(s32 *)(p + 0x13C) = 0;
+    *(s32 *)(p + 0x14C) = 0;
+    *(s32 *)(p + 0x11C) = 0;
+    *(s32 *)(p + 0xD8) = 0;
+    *(s32 *)(p + 0xDC) = 0;
+    *(s32 *)(p + 0xE0) = 0;
+    *(s16 *)(p + 0x158) = 0;
+    *(s32 *)(p + 0x160) = 0;
+    *(f32 *)(p + 0xE8) = b;
+    *(f32 *)(p + 0xEC) = b;
+    *(f32 *)(p + 0xF0) = c;
+    *(f32 *)(p + 0xF4) = c;
+    *(f32 *)(p + 0xFC) = b;
+    *(f32 *)(p + 0x104) = d;
+    *(f32 *)(p + 0x108) = e;
+    *(f32 *)(p + 0x110) = g;
+    *(f32 *)(p + 0x114) = h;
+    *(f32 *)(p + 0x118) = i;
+    *(f32 *)(p + 0x120) = j;
+    *(f32 *)(p + 0x124) = k;
+    *(f32 *)(p + 0x130) = l;
+    *(f32 *)(p + 0x134) = m;
+    *(f32 *)(p + 0x138) = n;
+    *(f32 *)(p + 0x140) = e;
+    *(f32 *)(p + 0x144) = j;
+    *(f32 *)(p + 0x148) = e;
+    *(f32 *)(p + 0x150) = o;
+    *(f32 *)(p + 0x154) = i;
+    *(f32 *)(p + 0x128) = c;
+    *(f32 *)(p + 0x168) = 0.32f;
+    *(f32 *)(p + 0x12C) = c;
+    *(f32 *)(p + 0x164) = q;
+    *(s32 *)(p + 0x170) = 0;
+    *(f32 *)(p + 0x174) = q;
+    D_mission_overlay_8010BEA8[arg0[0]][countTrailingZeros16(sHudDefs[arg0[0]].unk18)] = 0;
+    *(u8 *)((u8 *)arg0 + 4) = 0;
+    *(u16 *)((u8 *)arg0 + 6) = 0xFFFF;
+    arg0[7] = lookupHmtMaterialByName(*(s32 *)p, "f_trns_l", (u8 *)arg0 + 0x14);
+    arg0[8] = lookupHmtMaterialByName(*(s32 *)p, "f_trns_r", (u8 *)arg0 + 0x18);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BE650", buildNabooSubmodelTransform);
 
