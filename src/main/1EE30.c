@@ -45,7 +45,40 @@ void destroyTextureLUTs(void) {
     rs_free(D_main_bss_80128EFC);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", packTlutEntriesRgba5551);
+#define RGBA5551(r, g, b) ((((r) << 8) & 0xF800) | (((g) << 3) & 0x7C0) | (((b) >> 2) & 0x3E))
+
+u16 *packTlutEntriesRgba5551(u16 *dst, s32 flags, u8 *src, s16 count, u8 *key) {
+    s16 i;
+    u8 kr;
+    u8 kg;
+    u8 kb;
+
+    if (flags & 0x8000) {
+        for (i = 0; i < count; i++, dst++, src += 4) {
+            if (src[3] != 0) {
+                *dst = RGBA5551(src[0], src[1], src[2]) | 1;
+            } else {
+                *dst = RGBA5551(src[0], src[1], src[2]);
+            }
+        }
+    } else if (flags & 0x4000) {
+        kr = key[0];
+        kg = key[1];
+        kb = key[2];
+        for (i = 0; i < count; i++, dst++, src += 3) {
+            if (kr != src[0] || kg != src[1] || kb != src[2]) {
+                *dst = RGBA5551(src[0], src[1], src[2]) | 1;
+            } else {
+                *dst = RGBA5551(src[0], src[1], src[2]);
+            }
+        }
+    } else {
+        for (i = 0; i < count; i++, dst++, src += 3) {
+            *dst = RGBA5551(src[0], src[1], src[2]) | 1;
+        }
+    }
+    return dst;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", allocTextureTlutBlock);
 
