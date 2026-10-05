@@ -107,7 +107,77 @@ s32 splineWalkerCraftNpcHandler(u8 *arg0, u16 arg1, u8 *arg2) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", stubNpcHandler);
+typedef struct {
+    f32 x;
+    s32 pad04;
+    f32 y;
+    s32 pad0C;
+    s32 pad10;
+    f32 scaleX;
+    s32 pad18;
+    f32 scaleY;
+    s32 pad20;
+    s32 pad24;
+    s32 pad28;
+} StubPathPoint;
+
+extern u16 D_main_bss_80139574;
+
+s32 stubNpcHandler(u8 *arg0, u16 arg1, u8 *arg2) {
+    StubPathPoint pt;
+    u8 *npc;
+    u8 *ctx;
+    f32 one;
+    f32 f;
+
+    npc = *(u8 **)(arg0 + 4);
+    switch (arg1) {
+    case 1:
+        one = 1.0f;
+        *(f32 *)(npc + 0x10) = one;
+        ctx = allocateAndInitCraftNpcContext(*(f32 *)(arg2 + 8), *(f32 *)(arg2 + 0xC), *(u16 *)(arg2 + 0x10));
+        *(u8 **)(npc + 0xC) = ctx;
+        if (ctx == NULL) {
+            destroyNpcSlotByIndex(*(u16 *)(arg0 + 0x16));
+            return 1;
+        }
+        *(f32 *)(ctx + 0x18) = *(f32 *)(npc + 0x10);
+        *(s32 *)(ctx + 0x10) = 0;
+        *(f32 *)(ctx + 0x14) = 100.0f;
+        pt.x = *(f32 *)(arg2 + 0);
+        pt.pad04 = 0;
+        pt.y = *(f32 *)(arg2 + 4);
+        pt.pad0C = 0;
+        pt.pad10 = 0;
+        pt.scaleX = one;
+        pt.pad18 = 0;
+        pt.scaleY = one;
+        pt.pad20 = 0;
+        advanceNpcOnCurvedPath(0, 0, (s32)&pt, ctx);
+        *(s32 *)(ctx + 0x78) = (*(s32 *)(ctx + 0x78) & 0xF1FFFFFF) | 0x08000000;
+        *(f32 *)(npc + 0) = *(f32 *)(ctx + 0x60);
+        *(f32 *)(npc + 4) = *(f32 *)(ctx + 0x64);
+        *(f32 *)(npc + 8) = *(f32 *)(ctx + 0x68);
+        popNpcSlotFromTail(D_main_bss_80139574, arg0);
+        return 1;
+    case 2:
+        rs_free(*(s32 *)(npc + 0xC));
+        return 1;
+    case 3:
+        f = *(f32 *)(npc + 0x10) - *(f32 *)(arg2 + 0) * 0.5f;
+        *(f32 *)(npc + 0x10) = f;
+        if (f <= 0.0f) {
+            destroyNpcSlotByIndex(*(u16 *)(arg0 + 0x16));
+            return 1;
+        }
+        *(f32 *)(*(u8 **)(npc + 0xC) + 0x18) = f;
+        break;
+    case 4:
+        advanceNpcOnCurvedPath(*(s32 *)(arg2 + 8), *(s32 *)arg2, 0, *(u8 **)(npc + 0xC));
+        break;
+    }
+    return 1;
+}
 
 void clearTrackedNpcSlots(void) {
     s32 i;
@@ -136,7 +206,7 @@ void spawnSplineWalkerCraft(s32 arg0, s32 arg1, s32 arg2, s16 arg3) {
     spawnNpcOfType(splineWalkerCraftNpcHandler, &args, 1, 10);
 }
 
-void stubNpcHandler();
+s32 stubNpcHandler();
 typedef struct {
     f32 x;
     f32 y;
