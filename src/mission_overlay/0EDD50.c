@@ -48,7 +48,43 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", claimSongSlotForCurrentHa
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", tickActiveSongSlots);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", shouldSwitchToPendingSong);
+#include "level_objectives.h"
+extern u8 D_mission_overlay_8010C2F1;
+extern u8 D_mission_overlay_8010C2F5;
+extern u8 D_mission_overlay_8010C2F6;
+extern u8 D_mission_overlay_8010C2F7;
+extern s32 D_mission_overlay_8010C2F8;
+
+s32 shouldSwitchToPendingSong(void) {
+    s32 need;
+
+    if (D_mission_overlay_8010C2F1 == 1) {
+        if (D_mission_overlay_8010C2F5 != 0) {
+            if (gObjectiveBooleans[D_mission_overlay_8010C2F5 - 1] != D_mission_overlay_8010C2F6) {
+                return 0;
+            }
+        } else if (D_mission_overlay_8010C2F7 == 0) {
+            goto end;
+        }
+        if (D_mission_overlay_8010C2F7 == 0) {
+            goto one;
+        }
+        need = D_mission_overlay_8010C2F8;
+        if (need < 0) {
+            if (gObjectiveCounts[D_mission_overlay_8010C2F7 - 1] < -need) {
+                goto one;
+            }
+            return 0;
+        }
+        if (gObjectiveCounts[D_mission_overlay_8010C2F7 - 1] < need) {
+            return 0;
+        }
+one:
+        return 1;
+    }
+end:
+    return 0;
+}
 
 extern SoundDescriptor gSoundDesc0E0 __asm__("D_mission_overlay_8010C0E0");
 extern u16 D_mission_overlay_8010C252;
