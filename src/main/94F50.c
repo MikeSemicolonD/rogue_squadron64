@@ -110,7 +110,68 @@ void stopSongByHandleLocked(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", tickSongSequence);
+extern void stopVoicesByHandle(s32);
+
+void tickSongSequence(s32 handle) {
+    struct D_main_bss_80149A00_type *e;
+    struct D_main_bss_80149A00_type *e2;
+    struct D_main_bss_801511C0_type *n;
+    struct D_main_bss_801511C0_type *t;
+    struct D_main_bss_801511C0_type *m;
+
+    handle = findSongSlotByHandle(handle);
+    if (handle != -1) {
+        if (handle >= 0) {
+            if (D_main_bss_80149A00[handle].unkEC0 != 0 && D_main_bss_80149A00[handle].unkEC1 == 0) {
+                e = &D_main_bss_80149A00[handle];
+                D_main_bss_80149A00[handle].unkEC0 = 0;
+                n = e->unkE78[0];
+                while (n != 0) {
+                    stopVoicesByHandle(n->unk08);
+                    n = n->unk00;
+                }
+                n = e->unkE78[1];
+                while (n != 0) {
+                    stopVoicesByHandle(n->unk08);
+                    n = n->unk00;
+                }
+                e2 = &D_main_bss_80149A00[handle];
+                m = e2->unkE78[0];
+                if (m != 0) {
+                    while (m->unk00 != 0) {
+                        m = m->unk00;
+                    }
+                    if (D_main_bss_801529C4 != 0) {
+                        m->unk00 = D_main_bss_801529C4;
+                        D_main_bss_801529C4->unk04 = m;
+                    }
+                    t = e2->unkE78[0];
+                    e2->unkE78[0] = 0;
+                    D_main_bss_801529C4 = t;
+                }
+                m = e2->unkE78[1];
+                if (m != 0) {
+                    while (m->unk00 != 0) {
+                        m = m->unk00;
+                    }
+                    if (D_main_bss_801529C4 != 0) {
+                        m->unk00 = D_main_bss_801529C4;
+                        D_main_bss_801529C4->unk04 = m;
+                    }
+                    t = e2->unkE78[1];
+                    e2->unkE78[1] = 0;
+                    D_main_bss_801529C4 = t;
+                }
+            }
+            D_main_bss_80149A00[handle].unkEC1 = 1;
+        } else {
+            handle &= 0x7FFFFFFF;
+            if (D_main_bss_80149A00[handle].unkEC0 != 0 && D_main_bss_80149A00[handle].unkEC1 == 0) {
+                D_main_bss_80149A00[handle].unkEF0[0] = 0;
+            }
+        }
+    }
+}
 
 void tickSongSequenceLocked(s32 arg0) {
     if (gMusyXActiveFlag != 0) {
