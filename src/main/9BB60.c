@@ -71,7 +71,48 @@ s32 findVoiceSlotByAge(s32 index) {
     return D_main_bss_80154620[index].handle;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", allocAndConfigureNewVoice);
+extern u32 numSpeechSamples;
+extern s32 speechFile;
+extern u32 *gSpeechOffs __asm__("speechSampleOffsets");
+extern void *gSpeechBuf __asm__("D_main_bss_80154674");
+extern void dmaVoiceSampleAndSignal(s32, s32, s32, void *);
+extern void initMusyXVoiceSlot(u8 *voice, s32 arg1, s32 arg2, s32 arg3, s32 arg4);
+extern s32 findVoiceSlotByAge(s32);
+
+s32 allocAndConfigureNewVoice(u32 arg0, s32 arg1, u8 arg2, u8 arg3, u8 arg4, u8 arg5, u8 arg6) {
+    SpeechVoice *v;
+    s32 i;
+    if (speechFileLoaded != 0 && arg0 < numSpeechSamples) {
+        for (i = 0; i < 1; i++) {
+            if (D_main_bss_80154620[i].active == 0) break;
+        }
+        if (i != 1) {
+            v = &D_main_80153420[i];
+            osCreateMesgQueue(&v->data[0x11E0], &v->data[0x11F8], 2);
+            if (arg1 == 0) {
+                arg1 = 0x3E80;
+                if (*(u8 *)&gSpeechOffs[arg0] == 0) {
+                    arg1 = 0x1F40;
+                }
+            }
+            v->data[0x1204] = arg2;
+            v->data[0x1201] = arg3;
+            v->data[0x1202] = arg4;
+            v->data[0x1203] = arg5;
+            v->data[0x1219] = arg6;
+            *(void **)&v->data[0x1210] = gSpeechBuf;
+            *(s32 *)&v->data[0x1208] = arg1;
+            *(s32 *)&v->data[0x1214] = (((u32)arg1 * 8 / 30 + 0x9F) / 160) * 0xA0;
+            lockSpeechVoices();
+            initMusyXVoiceSlot(v->data, (gSpeechOffs[arg0] & 0xFFFFFF) + speechFile, *(s32 *)&v->data[0x1210], *(s32 *)&v->data[0x1214], (s32)dmaVoiceSampleAndSignal);
+            *(s32 *)&v->data[0x120C] = -1;
+            *(volatile u8 *)&v->data[0x1200] = 1;
+            unlockSpeechVoices();
+            return findVoiceSlotByAge(i);
+        }
+    }
+    return -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", stopVoiceSlotSynced);
 
