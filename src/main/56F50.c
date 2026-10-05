@@ -609,7 +609,69 @@ void meshdef0_offset_convert(struct meshdef0 *arg0, u32 arg1, u32 arg2, u32 arg3
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", applyMeshdef1AnimColors);
+typedef struct AmFaceGroup {
+    struct AmFaceGroup *next;
+    u32 pad4;
+    u32 *faces;
+    u32 count;
+} AmFaceGroup;
+
+#define AM_SCALE(c, s)                    {                                         f32 v_ = (c) * (s);                   u8 x_;                                if (v_ < 0.0f) {                          x_ = 0;                           } else if (v_ >= 256.0f) {                x_ = 255;                         } else {                                  x_ = (u32)v_;                     }                                     c = x_;                           }
+
+void applyMeshdef1AnimColors(struct meshdef1 *arg0, u32 arg1) {
+    f32 *scale = (f32 *)arg1;
+    AmFaceGroup *g;
+    u32 *f;
+    u8 *col;
+    u32 i;
+    AmFaceGroup *tg;
+    u32 *tf;
+
+    if (arg0 != NULL) {
+        do {
+            tg = (AmFaceGroup *)arg0->facegroup_pointer;
+            if (tg != NULL) {
+                g = tg;
+                do {
+                    tf = g->faces;
+                    if (tf != NULL) {
+                        f = tf;
+                        i = 0;
+                        if (g->count != 0) {
+                            do {
+                                col = (u8 *)f + ((f[1] >> 10) & 0xFC);
+                                if (f[0] & 0x10) {
+                                    AM_SCALE(col[0], scale[0]);
+                                    AM_SCALE(col[1], scale[1]);
+                                    AM_SCALE(col[2], scale[2]);
+                                    AM_SCALE(col[4], scale[0]);
+                                    AM_SCALE(col[5], scale[1]);
+                                    AM_SCALE(col[6], scale[2]);
+                                    AM_SCALE(col[8], scale[0]);
+                                    AM_SCALE(col[9], scale[1]);
+                                    AM_SCALE(col[10], scale[2]);
+                                    if (f[0] & 8) {
+                                        AM_SCALE(col[12], scale[0]);
+                                        AM_SCALE(col[13], scale[1]);
+                                        AM_SCALE(col[14], scale[2]);
+                                    }
+                                } else {
+                                    AM_SCALE(col[0], scale[0]);
+                                    AM_SCALE(col[1], scale[1]);
+                                    AM_SCALE(col[2], scale[2]);
+                                }
+                                i++;
+                                f = (u32 *)((u8 *)f + ((f[1] >> 22) & 0xFC));
+                            } while (i < g->count);
+                        }
+                    }
+                    g = g->next;
+                } while (g != NULL);
+            }
+            arg0 = arg0->next_meshdef1_pointer;
+        } while (arg0 != NULL);
+    }
+}
 
 #if 0
 // https://decomp.me/scratch/X81CI
