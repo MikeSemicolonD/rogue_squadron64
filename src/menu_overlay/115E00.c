@@ -59,37 +59,342 @@ struct xy_offset bridgeShipBlueprintScreenPositions[8][8] = {
 // DO NOT DELTE ME I AM REQUIRED FOR MATCHING
 u32 data_pad_115E00 = 0x27C30020;
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", initCraftSelectScreen);
-
+__asm__(".section .rodata
+.align 2
+D_menu_overlay_800A5870: .asciz \"frontend/bridge\"
+.align 2
+D_menu_overlay_800A5880: .asciz \"+bridge\"
+.align 2
+D_menu_overlay_800A5888: .asciz \"-console\"
+.align 2
+D_menu_overlay_800A5894: .asciz \"-steps\"
+.align 2
+D_menu_overlay_800A589C: .asciz \"-lights\"
+.align 2
+D_menu_overlay_800A58A4: .asciz \"frontend/bridge/bridge\"
+.align 2
+.section .text");
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58BC);
+extern char D_menu_overlay_800A5870[];
+extern char D_menu_overlay_800A5880[];
+extern char D_menu_overlay_800A5888[];
+extern char D_menu_overlay_800A5894[];
+extern char D_menu_overlay_800A589C[];
+extern char D_menu_overlay_800A58A4[];
+typedef struct {
+    s32 pad0;
+    void *f4;
+    s32 f8;
+    s32 fC;
+    s32 f10;
+    s32 f14;
+    s32 f18;
+    s32 f1C;
+    f32 f20;
+    f32 f24;
+    f32 f28;
+} CsMain;
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58C4);
+typedef struct {
+    void *next;
+    void *prev;
+    u8 f8;
+    u8 pad9[3];
+    s32 fC;
+    f32 f10;
+    s32 f14;
+    s32 f18;
+    f32 f1C;
+    s32 f20;
+    f32 f24;
+    f32 f28;
+    f32 f2C;
+    f32 f30;
+    f32 f34;
+    u8 pad38[0x20];
+} CsEntry;
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58C8);
+typedef struct {
+    char *name;
+    s32 mesh;
+    u8 *dat;
+    s32 fC;
+    s32 f10;
+    s32 f14;
+    u8 *f18;
+    f32 f1C;
+} CsModel;
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58CC);
+typedef struct {
+    s32 a;
+    s32 b;
+    s32 c;
+    s32 d;
+} CsQuad;
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58D0);
+typedef struct {
+    s32 a;
+    s32 b;
+    s32 c;
+} CsV3;
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58D4);
+extern char D_menu_overlay_800A58BC[];
+extern u8 D_menu_overlay_800CDABB;
+extern s8 D_menu_overlay_800CDABC;
+extern u8 D_menu_overlay_800CDABE;
+extern s8 D_menu_overlay_800CDAC0;
+extern u8 D_menu_overlay_800CDAC7;
+extern u8 D_menu_overlay_800CDAC8;
+extern s32 D_menu_overlay_800CDACC;
+extern s32 D_menu_overlay_800CDFA8;
+extern s32 D_menu_overlay_800CDFAC;
+extern s32 D_menu_overlay_800CE6A4;
+extern f32 D_menu_overlay_800CE6A8;
+extern u8 bridgeMenuState;
+extern u8 bridgeTransitionState;
+extern s32 D_menu_overlay_800CDFB0;
+extern u8 bridgeMenuDesiredLevel;
+extern u8 D_menu_overlay_800CDABF;
+extern f32 D_menu_overlay_800CDB0C;
+extern u8 bridgeMenuDisplayLevel;
+extern u8 bridgeMenuPreviousLevel;
+extern s32 D_menu_overlay_800CDAD0;
+extern u8 D_main_bss_80130B62;
+extern s32 D_main_bss_80138920;
+extern s32 D_main_bss_8013889C;
+extern f32 D_menu_overlay_800CDB04;
+extern f32 D_menu_overlay_800CDB14;
+extern f32 D_menu_overlay_800CDB18;
+extern s32 D_menu_overlay_800CDCE0;
+extern s32 D_menu_overlay_800CDCE4;
+extern s32 D_menu_overlay_800CDFA4;
+extern s32 D_menu_overlay_800CDD70;
+extern struct ui_element *D_menu_overlay_800CDD74;
+extern struct ui_element *D_menu_overlay_800CDD78;
+extern struct ui_element D_menu_overlay_800CDD80;
+extern s32 D_menu_overlay_800CDCDC;
+extern s32 bridgeDatFilePointer;
+extern CsMain csMain __asm__("D_menu_overlay_800CDC80");
+extern CsEntry D_menu_overlay_800CDB20[];
+extern CsModel csModels[] __asm__("D_menu_overlay_800CDCF0");
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58D8);
+void initSpeechSubsystem(s32, u8);
+void parseLoadedSndSection(s32);
+void loadSongAssetByName(s32, s32);
+void playSimpleAudioCmd(s32, s32, s32);
+s32 findAudioChannelById(s32);
+s32 playSongById(s32, s32, s32, s32);
+void clearVec4QuadStruct(void *);
+void setRenderStateFlagByteOne(s32);
+void setRenderStateFlagByteTwo(s32);
+void setRenderStateFlagByteThree(s32);
+s32 loadDatFile(char *);
+void initNpcBookkeepingTables(void);
+void load_hmt_and_hob(char *, s32, s32, s32);
+char *extractTextBeforeFmtChar(char *);
+void *walkMeshdef0List(char *);
+extern void applyFlagsToMeshTreeOrList(s32, s32, s32, s32);
+void *getDatItemByName(s32, char *);
+void loadFontAsset(s32);
+void loadCharTextureSet(struct some_ui_list_root *, s32, s32, s32);
+void setMenuOverlayHeaderState(s32, s32, s32);
+void resetPlayerSlotAllChannels(s32, s32);
+void printLevelSelectWeaponText2(u8, u8) __asm__("printLevelSelectWeaponText");
+s32 startPlayerSlotAnimationChannelExt(s32, char *, s32, s32, s32, s32);
+s32 initPlayerSlotAnimationChannelFull(s32, s32, s32, s32, s32, s32, f32);
+s32 buildScaledFormatTextElement(char *, s32, s32, s32, s32, s32);
+struct ui_element *getStructField0xC(s32);
+void initMenuWidgetArray(void);
+void setupPlayerCraftDisplayAnim();
+void initFormatMessageWorker(s32);
+extern s32 bsearchFactor5TableByU16Key(s32, s32, s32);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58DC);
+void initCraftSelectScreen(u8 arg0, s32 arg1, s32 arg2) {
+    char buf[0x28];
+    u32 i;
+    f32 fl;
+    CsEntry *e;
+    CsModel *m;
+    s32 mesh;
+    u8 *d;
+    s32 txt;
+    struct ui_element *src;
+    struct ui_element *dst;
+    struct ui_element *end;
+    s32 res;
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58E0);
+    D_menu_overlay_800CDAD0 = arg2;
+    if (!(arg1 & arg2)) {
+        arg1 = 1;
+    }
+    bridgeMenuDesiredLevel = 0xFF;
+    for (i = 0; i < 0x13; i++) {
+        if (arg1 & (1 << i)) {
+            bridgeMenuPreviousLevel = bridgeMenuDisplayLevel = bridgeMenuDesiredLevel = i;
+            break;
+        }
+    }
+    fl = 1.0f;
+    D_menu_overlay_800CDAC7 = 0;
+    D_menu_overlay_800CDACC = 0xFFFFFF;
+    D_menu_overlay_800CDABB = 0;
+    D_menu_overlay_800CDABC = 0;
+    D_menu_overlay_800CDAC0 = 0;
+    D_menu_overlay_800CDABE = 0;
+    D_menu_overlay_800CE6A4 = 0;
+    D_menu_overlay_800CE6A8 = 0;
+    D_menu_overlay_800CDB04 = fl;
+    D_menu_overlay_800CDB0C = 2.0f;
+    initSpeechSubsystem(0, D_main_bss_80130B62);
+    D_menu_overlay_800CDFB0 = 0;
+    D_menu_overlay_800CDABF = 0;
+    parseLoadedSndSection(3);
+    loadSongAssetByName(D_main_bss_80138920, 5);
+    playSimpleAudioCmd(0x74, 0, 0xFD);
+    playSimpleAudioCmd(0x7F, 0, 0xFE);
+    D_menu_overlay_800CDCE0 = playSongById(3, 5, findAudioChannelById(5), 0);
+    D_menu_overlay_800CDCE4 = bsearchFactor5TableByU16Key(0x2B, 0x3C, 0x40);
+    D_menu_overlay_800CDAC8 = arg0;
+    D_main_bss_8013889C = 0;
+    csMain.f4 = D_menu_overlay_800CDB20;
+    csMain.f8 = 0;
+    csMain.fC = 0;
+    D_menu_overlay_800CDB14 = D_menu_overlay_800CDB18 = 0.0f;
+    csMain.f20 = 45.0f;
+    csMain.f24 = 0.1171875f;
+    csMain.f28 = 97.65625f;
+    csMain.f10 = 0x200;
+    csMain.f14 = 0x154;
+    csMain.f18 = 0x100;
+    csMain.f1C = 0xAA;
+    clearVec4QuadStruct((u8 *)&csMain + 0x2C);
+    setRenderStateFlagByteOne(1);
+    setRenderStateFlagByteTwo(1);
+    setRenderStateFlagByteThree(0);
+    D_menu_overlay_800CDCDC = (s32)allocateSlotTable(0x40);
+    i = 0;
+    do {
+        e = &D_menu_overlay_800CDB20[i];
+        if (i != 0) {
+            e->prev = &D_menu_overlay_800CDB20[i - 1];
+        } else {
+            e->prev = 0;
+        }
+        if (i < 3) {
+            e->next = &D_menu_overlay_800CDB20[i + 1];
+        } else {
+            e->next = 0;
+        }
+        e->f8 = 1;
+        e->fC = 0;
+        e->f10 = 0;
+        e->f14 = 0;
+        e->f18 = 0;
+        e->f1C = fl;
+        e->f20 = 0;
+        e->f24 = 0.3f;
+        e->f28 = 0.3f;
+        e->f2C = 0.3f;
+        e->f30 = 0;
+        e->f34 = fl;
+        i++;
+    } while (i < 4);
+    D_menu_overlay_800CDB20[1].f8 = 0;
+    D_menu_overlay_800CDB20[2].f8 = 2;
+    D_menu_overlay_800CDB20[2].fC = 0;
+    D_menu_overlay_800CDB20[2].f14 = 0;
+    D_menu_overlay_800CDB20[3].f8 = 2;
+    D_menu_overlay_800CDB20[3].fC = 0;
+    D_menu_overlay_800CDB20[3].f10 = 0;
+    D_menu_overlay_800CDB20[3].f14 = 0;
+    D_menu_overlay_800CDB20[1].f24 = 0.1f;
+    D_menu_overlay_800CDB20[1].f28 = 0.1f;
+    D_menu_overlay_800CDB20[1].f2C = 0.1f;
+    D_menu_overlay_800CDB20[2].f24 = 1.0f;
+    D_menu_overlay_800CDB20[2].f28 = 1.0f;
+    D_menu_overlay_800CDB20[2].f2C = 1.8f;
+    D_menu_overlay_800CDB20[2].f10 = -8.0f;
+    D_menu_overlay_800CDB20[2].f30 = 55.0f;
+    D_menu_overlay_800CDB20[3].f24 = 0.8f;
+    D_menu_overlay_800CDB20[3].f28 = 0.8f;
+    D_menu_overlay_800CDB20[3].f2C = 0.8f;
+    D_menu_overlay_800CDB20[3].f30 = 250.0f;
+    bridgeDatFilePointer = loadDatFile(D_menu_overlay_800A5870);
+    i = 0;
+    csModels[0].name = D_menu_overlay_800A5880;
+    csModels[1].name = D_menu_overlay_800A5888;
+    csModels[2].name = D_menu_overlay_800A5894;
+    csModels[3].name = D_menu_overlay_800A589C;
+    initNpcBookkeepingTables();
+    load_hmt_and_hob(D_menu_overlay_800A58A4, 0, 0, 0);
+    do {
+        m = &csModels[i];
+        mesh = (s32)walkMeshdef0List(extractTextBeforeFmtChar(m->name));
+        m->mesh = mesh;
+        clearVec4QuadStruct((u8 *)mesh + 0x28);
+        applyFlagsToMeshTreeOrList(m->mesh, 0, 0x14800000, 0);
+        d = getDatItemByName(bridgeDatFilePointer, m->name + 1);
+        m->dat = d;
+        *(CsV3 *)&m->fC = *(CsV3 *)(d + 0x10);
+        m->f18 = d + 0x1C;
+        m->f1C = *(f32 *)(d + 0x28);
+        i++;
+    } while (i < 4);
+    applyFlagsToMeshTreeOrList(csModels[0].mesh, 0, 0x40000, 0);
+    loadFontAsset(0);
+    loadCharTextureSet((struct some_ui_list_root *)D_menu_overlay_800CDCDC, 0, 0xA, 0x80);
+    loadCharTextureSet((struct some_ui_list_root *)D_menu_overlay_800CDCDC, 2, 2, 0x80);
+    loadCharTextureSet((struct some_ui_list_root *)D_menu_overlay_800CDCDC, 6, 1, 0x200);
+    setMenuOverlayHeaderState(2, 0x200, 0);
+    resetPlayerSlotAllChannels(0, 0xA);
+    resetPlayerSlotAllChannels(2, 0xA);
+    resetPlayerSlotAllChannels(6, 0x14);
+    setPlayerSlotEntryRGB(0, 0, &bridgeWhiteColor);
+    setPlayerSlotEntryRGB(0, 1, &bridgeWhiteColor);
+    setPlayerSlotEntryRGB(0, 2, &bridgeYellowColor);
+    setPlayerSlotEntryRGB(0, 3, &bridgeYellowColor);
+    printLevelSelectWeaponText2(0, 0);
+    D_menu_overlay_800CDFA4 = startPlayerSlotAnimationChannelExt(0, getGameOrFrontText(bridgeMenuDesiredLevel), 0x10, 0, -0x100, 0x75);
+    D_menu_overlay_800CDFA8 = startPlayerSlotAnimationChannelExt(0, getGameOrFrontText(0x39), 0x10, 2, -0x100, -0xA3);
+    setPlayerSlotEntryRGB(2, 0, &bridgeWhiteColor);
+    setPlayerSlotAnimationFlag(2, getGameOrFrontText(0x36), 0, -0x100, 0x97);
+    setPlayerSlotEntryRGB(6, 0, &bridgeGreenColor);
+    D_menu_overlay_800CDFAC = initPlayerSlotAnimationChannelFull(6, 0x3C, 0, -0x94, -0x5F, 0x96, 1.35f);
+    sprintf(buf, D_menu_overlay_800A58BC, bridgeMenuDesiredLevel);
+    res = buildScaledFormatTextElement(buf, 2, 0x40, 0x14, 4, D_main_bss_80138920);
+    D_menu_overlay_800CDD70 = res;
+    src = getStructField0xC(res);
+    D_menu_overlay_800CDD74 = src;
+    D_menu_overlay_800CDD78 = &D_menu_overlay_800CDD80;
+    src->flags |= 0x09000003;
+    D_menu_overlay_800CDD80 = *src;
+    initMenuWidgetArray();
+    bridgeLoadShipBlueprints((struct some_ui_list_root *)D_menu_overlay_800CDCDC);
+    setupPlayerCraftDisplayAnim(bridgeMenuDesiredLevel);
+    insertLookupEntry((struct some_ui_list_root *)D_menu_overlay_800CDCDC, D_menu_overlay_800CDD74, 0xA);
+    insertLookupEntry((struct some_ui_list_root *)D_menu_overlay_800CDCDC, D_menu_overlay_800CDD78, 0xA);
+    setLookupEntryField5ByKey((struct some_ui_list_root *)D_menu_overlay_800CDCDC, D_menu_overlay_800CDD74, 1);
+    setLookupEntryField5ByKey((struct some_ui_list_root *)D_menu_overlay_800CDCDC, D_menu_overlay_800CDD78, 1);
+    layoutMenuTextRow((struct some_ui_list_root *)D_menu_overlay_800CDCDC, bridgeMenuDesiredLevel);
+    initFormatMessageWorker(5);
+    bridgeTransitionState = 0;
+    bridgeMenuState = 0;
+}
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58E4);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58E8);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58EC);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58F0);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58F4);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58F8);
+
+
+
+
+
+
+
+
+
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", tickCraftSelectScreen);
 
