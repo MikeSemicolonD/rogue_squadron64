@@ -74,7 +74,44 @@ s32 saveLoadDispatcher(s32 arg0, u32 arg1, s32 arg2, u8 *arg3, u8 *arg4, s32 arg
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/06560", loadOrSaveEepromRecord);
+s32 osEepromLongRead(s32, s32, u8 *, s32);
+s32 writeSaveDataBodyToEeprom(u32, s32, u8 *, s32);
+
+s32 loadOrSaveEepromRecord(s32 arg0, u32 arg1, s32 arg2, u8 *arg3, s32 arg4) {
+    s32 ret;
+    u8 *buf;
+    u8 *b18;
+
+    if (arg0 == 0) {
+        arg0 = D_main_bss_80112720;
+    }
+    waitForSerialIdle();
+    switch (arg0) {
+    case 1:
+        osEepromLongRead(D_main_bss_801126E0, ((u32)(arg2 * gSaveDataBodySize + 0x20) >> 3) & 0xFF, (u8 *)gSaveDataBuffer, gSaveDataBodySize);
+        buf = (u8 *)gSaveDataBuffer;
+        if (((SaveHdr *)buf)->unk4 == adler32(adler32(0, 0, 0), buf + 8, 0x10)) {
+            b18 = buf + 0x18;
+            if (((SaveHdr *)buf)->unk0 != adler32(adler32(0, 0, 0), b18, D_main_bss_801126C8)) {
+                ret = 4;
+            } else {
+                memcpy(arg3, b18, arg4);
+                ret = 0;
+            }
+        } else {
+            ret = 4;
+        }
+        break;
+    case 2:
+        if (arg1 >= 4) {
+            return 0xA;
+        }
+        ret = writeSaveDataBodyToEeprom(arg1, arg2, arg3, arg4);
+        break;
+    }
+    releaseSerialLock();
+    return ret;
+}
 
 extern struct {
     u8 pad[0xE];
