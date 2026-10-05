@@ -87,7 +87,53 @@ s32 spawnProbeDroidGroundImpactEffect(void *arg0) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CAE70", initProbeDroidScatterLaunch);
+typedef struct {
+    f32 x, y, z;
+    u8 pad0C[0x38];
+    f32 unk44;
+    u8 pad48[0x14];
+    f32 unk5C;
+    f32 unk60;
+    f32 unk64;
+    f32 unk68;
+    f32 unk6C;
+    f32 unk70;
+    f32 unk74;
+    f32 unk78;
+    u8 pad7C[0x66];
+    s16 unkE2;
+} ProbeScatter;
+extern s32 rand();
+extern f32 vec3Length(f32 *);
+
+void initProbeDroidScatterLaunch(ProbeScatter *arg0) {
+    f32 sp10[3];
+    f32 len;
+    f32 r;
+
+    if (arg0->unk68 > 0.0f) {
+        sp10[0] = ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / arg0->unk68);
+        sp10[1] = ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / arg0->unk68);
+        sp10[2] = ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / arg0->unk68);
+        len = vec3Length(sp10);
+        if ((arg0->unk68 - arg0->unk44) < len) {
+            normalize_vector(sp10);
+            sp10[0] *= arg0->unk68 - arg0->unk44;
+            sp10[1] *= arg0->unk68 - arg0->unk44;
+            sp10[2] *= arg0->unk68 - arg0->unk44;
+        }
+        arg0->unk6C = arg0->unk5C + sp10[0];
+        arg0->unk70 = arg0->unk60 + sp10[1];
+        arg0->unk74 = arg0->unk64 + sp10[2];
+    } else {
+        arg0->unk6C = arg0->x;
+        arg0->unk70 = arg0->y;
+        arg0->unk74 = arg0->z;
+    }
+    { f32 x = ((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f; f32 a; __asm__ volatile("abs.s %0, %1" : "=f"(a) : "f"(x)); r = a + 0.25f; }
+    arg0->unkE2 = 1;
+    arg0->unk78 = r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CAE70", updateProbeDroidHopState);
 
