@@ -98,7 +98,64 @@ s32 spawnObjectImpactEffectWithSound(u8 *arg0, s32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EA6E0", computeNpcOrientationFromAimVectors);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EA6E0", func_mission_overlay_800EA470);
+#include "common_types.h"
+extern void clearModelAnimChannelEntry(s32);
+extern void releaseModelAnimSlot(s32);
+extern s32 flattenAnimTreeAndAllocateSlot(s32, s32);
+extern s32 markModelAnimChannelEntryActive(s32, s32);
+extern void setModelAnimSlotCycleDuration(s32, f32);
+extern void playStateGatedDestroySound(u8 *, f32, u8);
+
+typedef struct {
+    u8 pad0[0x30];
+    s32 *p30;
+    u8 pad34[0x20];
+    f32 f54;
+    u8 pad58[0x2C];
+    s16 s84;
+    u8 pad86[2];
+    s32 a88[2];
+    u8 pad90[4];
+    s32 i94;
+    s32 i98;
+    s32 i9C;
+    f32 fA0;
+    f32 fA4;
+    u8 padA8[0xB];
+    u8 bB3;
+} AnimObj;
+
+void func_mission_overlay_800EA470(AnimObj *arg0) {
+    f32 t;
+    clearModelAnimChannelEntry(arg0->i98);
+    releaseModelAnimSlot(arg0->i94);
+    switch (arg0->bB3) {
+    case 1:
+        arg0->s84 = 2;
+        arg0->fA0 = 1.0f / (arg0->fA0 * arg0->fA4);
+        arg0->fA4 = 0.14400001f / arg0->f54;
+        break;
+    case 2:
+        arg0->i9C = 0;
+        arg0->s84 = 1;
+        arg0->fA0 = 1.0f / (arg0->fA0 * arg0->fA4);
+        arg0->fA4 = 0.074999996f / arg0->f54;
+        break;
+    case 3:
+        arg0->s84 = 0;
+        arg0->fA0 = 1.0f / (arg0->fA0 * arg0->fA4);
+        arg0->fA4 = 0.06f / arg0->f54;
+        break;
+    default:
+        return;
+    }
+    arg0->fA0 = 1.0f / (arg0->fA0 * arg0->fA4);
+    arg0->i94 = flattenAnimTreeAndAllocateSlot(arg0->p30[6], arg0->a88[arg0->s84]);
+    arg0->i98 = markModelAnimChannelEntryActive(arg0->i94, 0);
+    setModelAnimSlotCycleDuration(arg0->i94, arg0->fA0);
+    playStateGatedDestroySound((u8 *)arg0, 10.0f, 1);
+    arg0->bB3 = 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0EA6E0", D_mission_overlay_800A8748);
 
