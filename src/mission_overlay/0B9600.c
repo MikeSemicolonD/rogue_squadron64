@@ -10,7 +10,181 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B9600", updateVwingEngineEffect);
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B9600", orientVwingSubmodelByQuat);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B9600", tickVwingEngineAudio);
+#include "common_types.h"
+typedef struct {
+    s32 unk0;
+    u8 pad4[0xB6 - 4];
+    u16 unkB6;
+    s32 unkB8;
+    u8 padBC[0x158 - 0xBC];
+    u16 unk158;
+    u8 pad15A[2];
+    s32 unk15C;
+    f32 unk160;
+    f32 unk164;
+    f32 unk168;
+    u8 pad16C[0x178 - 0x16C];
+    s32 unk178;
+    u8 pad17C[4];
+    u16 unk180;
+    u8 pad182[0x2A0 - 0x182];
+} VwEngPlayer;
+
+typedef struct {
+    u8 pad0[0x1A];
+    u16 mask1A;
+    u8 pad1C;
+    u8 mask1D;
+    u16 mask1E;
+    u8 pad20[4];
+} VwHudDef;
+
+typedef struct {
+    s32 idx;
+    u8 pad4[0x10];
+    f32 f14;
+    f32 f18;
+    u8 b1C;
+    u8 b1D;
+    u8 b1E;
+    u8 pad1F;
+    u16 target;
+    u8 pad22[2];
+    u8 lockBuf[4];
+} VwEngine;
+
+extern VwEngPlayer sVwEng[] __asm__("D_main_bss_80137DBC");
+#define VWP sVwEng
+extern u16 D_main_bss_80130B88[][3];
+extern VwHudDef D_mission_overlay_8010BE18[];
+extern u8 gGameSettings;
+extern s32 gPlayersRaw[] __asm__("gPlayers");
+
+extern void tickCraftAnimationSlot(s32, f32);
+extern u8 tickHudInstanceTargetingAndSpawns(s32, f32, void *, s32, s32, void *, s32);
+extern void dispatchHudInstanceWeaponEffect(s32, s32, void *, s32, s32, s32, s32);
+extern void orientVwingSubmodelByQuat(VwEngine *, u16, f32, s32, void *);
+extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+extern void playSpeechClipOncePerLevel(s32, s32);
+extern void playSpeechClipOncePerChange(s32, s32);
+extern u16 findLockOnTarget(void *, void *, u16, f32, f32, f32);
+
+void tickVwingEngineAudio(VwEngine *e, f32 dt) {
+    f32 sp28[4];
+    u16 sp38;
+    VwEngPlayer *p;
+    s32 mode;
+    f32 f;
+    f32 f2;
+    f32 f3;
+    f32 f4;
+    f32 f5;
+    f32 f6;
+    f32 f7;
+    u16 r;
+    s32 a0v;
+    u8 *g;
+    s32 off;
+
+    p = &VWP[e->idx];
+    g = (u8 *)sVwEng - 4;
+    if (*(u16 *)(g + p->unkB8 * 0x2A0 + 0x184) & 1) {
+        if (0.0f < p->unk160) {
+            p->unk160 = p->unk160 - dt;
+        } else {
+            if (D_main_bss_80130B88[e->idx][0] & D_mission_overlay_8010BE18[e->idx].mask1A) {
+                mode = *(s32 *)(g + e->idx * 0x2A0 + 0x160);
+                if (mode == 1) {
+                    f = e->f18;
+                    if (f < 30.0f || e->b1C == 0) {
+                        e->b1C = 0;
+                        if (e->b1D == 0) {
+                            p->unk160 = p->unk160 + p->unk168;
+                            orientVwingSubmodelByQuat(e, 0, e->f14, (e->b1E % 6) == 0, sp28);
+                            e->b1E = e->b1E + 1;
+                            orientVwingSubmodelByQuat(e, 1, -e->f14, (e->b1E % 6) == 0, sp28);
+                            f2 = e->f14 + dt * 800.0f;
+                            e->b1E = e->b1E + 1;
+                            e->f14 = f2;
+                            if (f2 > 360.0f) {
+                                e->f14 = f2 - 360.0f;
+                            }
+                            f3 = e->f18 + dt * 100.0f;
+                            e->f18 = f3;
+                            if (f3 > 100.0f) {
+                                e->b1C = mode;
+                                playSpeechClipOncePerLevel(gGameSettings != 0xF ? 0x12E : 0x212, 1);
+                                playSpeechClipOncePerLevel(gGameSettings != 0xF ? 0x12F : 0x213, 1);
+                            }
+                            play3DSoundEvent(0, sp28, (u8 *)p + 0x28, 20.0f, 0.2f, 0, 2, 0x5A, 0x28);
+                        }
+                    } else {
+                        if (f > 0.0f) {
+                            f4 = f - dt * 20.0f;
+                            e->f18 = f4;
+                            if (f4 < 0.0f) {
+                                e->f18 = 0.0f;
+                            }
+                        }
+                        e->b1D = 1;
+                        playSpeechClipOncePerLevel(gGameSettings != 0xF ? 0x12D : 0x211, 1);
+                    }
+                } else {
+                    f = e->f18;
+                    if (f < 30.0f || e->b1C == 0) {
+                        e->b1C = 0;
+                        if (e->b1D == 0) {
+                            p->unk160 = p->unk160 + p->unk164;
+                            orientVwingSubmodelByQuat(e, p->unk158, 0.0f, 1, sp28);
+                            p->unk158 = p->unk158 ^ 1;
+                            play3DSoundEvent(0, sp28, (u8 *)p + 0x28, 20.0f, 0.2f, 0, 2, 0x5A, 0x28);
+                        }
+                    } else {
+                        if (f > 0.0f) {
+                            f5 = f - dt * 20.0f;
+                            e->f18 = f5;
+                            if (f5 < 0.0f) {
+                                e->f18 = 0.0f;
+                            }
+                        }
+                        e->b1D = 1;
+                    }
+                }
+            } else {
+                f6 = e->f18;
+                if (f6 > 0.0f) {
+                    f7 = f6 - dt * 20.0f;
+                    e->f18 = f7;
+                    if (f7 < 0.0f) {
+                        e->f18 = 0.0f;
+                    }
+                }
+                e->b1D = 0;
+            }
+            if (tickHudInstanceTargetingAndSpawns(0, dt, (u8 *)p + 4, p->unk0, (D_main_bss_80130B88[e->idx][0] & 0xFF) & D_mission_overlay_8010BE18[e->idx].mask1D, &sp38, p->unkB6)) {
+                dispatchHudInstanceWeaponEffect(0, p->unkB6, (u8 *)p + 4, p->unk0, p->unk178, p->unk158, sp38);
+            }
+            if (D_main_bss_80130B88[e->idx][0] & D_mission_overlay_8010BE18[e->idx].mask1E) {
+                p->unk158 = 0;
+                p->unk15C = p->unk15C ^ 1;
+                e->f14 = 0.0f;
+                e->b1E = 0;
+                if (gPlayersRaw[e->idx * 0xA8 + 0x58] == 1) {
+                    playSpeechClipOncePerChange(gGameSettings != 0xF ? 0x12C : 0x210, 9);
+                }
+            }
+        }
+    }
+    r = findLockOnTarget((u8 *)p + 4, (u8 *)e + 0x24, e->target, 10.0f, 0.987f, 12.5f);
+    a0v = r & 0xFFFF;
+    sp38 = r;
+    if (a0v != 0xFFFF) {
+        e->target = r;
+    } else {
+        e->target = a0v;
+    }
+    tickCraftAnimationSlot(0, dt);
+}
 
 #include "common_types.h"
 typedef struct {
@@ -57,7 +231,6 @@ extern void releaseMeshAsset(s32);
 extern void teardownHudInstancesAndUnbindNpcs(void);
 extern void freePlayerAuxBuffersIfActive(s32);
 extern void updateVwingEngineEffect(s32 *, s32);
-extern void tickVwingEngineAudio(s32 *, s32);
 extern void tryPlaySpatialSoundWithGates(void *, void *);
 extern void destroyNpcSlotByIndex(u16);
 extern void enqueueMeshTypeForCleanup(s32);
@@ -136,7 +309,7 @@ s32 playerVwingUpdate(u8 *npc, s32 msg, u8 *ctx) {
             return 1;
         case 3:
             updateVwingEngineEffect(s0, *(s32 *)ctx);
-            tickVwingEngineAudio(s0, *(s32 *)ctx);
+            tickVwingEngineAudio((VwEngine *)s0, *(f32 *)ctx);
             return 1;
         case 5:
             tryPlaySpatialSoundWithGates(&D_main_bss_80137DBC[*s0], ctx);
