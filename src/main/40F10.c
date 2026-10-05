@@ -4,7 +4,38 @@
 #include "main/3F160.h"
 #include "main/40F10.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", allocAndInitParticlePool);
+extern s32 D_main_bss_80130BD0;
+extern s16 D_main_bss_80130BD4;
+extern s32 D_main_bss_80130C04;
+extern s32 D_main_bss_80130C08;
+s32 loadAssetAndIterateSubchunks(char *, char *, u8 *, s32, s32);
+s32 load_asset(char *);
+
+typedef struct { s16 prev; s16 next; u8 pad[0x68]; } PartCell;
+
+void allocAndInitParticlePool(void) {
+    PartCell *p;
+    s32 i;
+    u8 *pal;
+
+    p = rs_malloc(0x3600, 0);
+    D_main_bss_80130BD0 = (s32)p;
+    i = 0;
+    do {
+        p[i].prev = i != 0 ? i - 1 : -1;
+        p[i].next = i != 0x7f ? i + 1 : -1;
+        i++;
+    } while (i < 0x80);
+    D_main_bss_80130BD4 = 0;
+    D_main_bss_80130C08 = loadAssetAndIterateSubchunks("part_spr", 0, 0, 0, 0);
+    D_main_bss_80130C04 = load_asset("part_pal");
+    i = 0;
+    do {
+        pal = (u8 *)(i * 4 + D_main_bss_80130C04);
+        i++;
+        pal[3] = pal[0x200];
+    } while (i < 0x80);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/40F10", randomBurstNpcHandlerVariant);
 
