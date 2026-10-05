@@ -331,7 +331,100 @@ void queueSpeechClipWithPriority(s32 id, u8 prio, f32 vol, s32 flags)
   }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", tickSpeechSubsystem);
+extern s8 D_main_bss_80139C8D;
+extern u16 voiceIdtoTextIdMap[];
+extern u16 D_main_bss_80139C74;
+s32 enqueueSpeechClip(u32, u8);
+void setActiveVoiceLine(s32, s32);
+void clearActiveVoiceLine(void);
+void setAudioFaderRampLocked(s32, s32, s32);
+
+void tickSpeechSubsystem(f32 arg0)
+{
+    register f32 t asm("$f0");
+    SubtitleSlot *s;
+    s32 n;
+    s32 m;
+
+    if (subtitleSlotTail != subtitleSlotHead || subtitleSlotsAvailable != 0x10) {
+        if (!speechSlotActiveInline(D_main_80139C73)) {
+            if (*(u8 *)&D_main_bss_80139C8D == 0 || (D_main_bss_80139C7C <= 0.0f && (subtitleSlots[subtitleSlotHead].flags & 0x80))) {
+                if (*(f32 *)&D_main_bss_80139C78 <= 0.0f) {
+                    *(volatile u8 *)&D_main_80139C73 = enqueueSpeechClip(subtitleSlots[subtitleSlotHead].id, subtitleSlots[subtitleSlotHead].prio);
+                    s = &subtitleSlots[subtitleSlotHead];
+                    D_main_bss_80139C74 = s->id;
+                    if ((s->flags & 1) && !(D_main_bss_80130B50 & 0x10)) {
+                        setActiveVoiceLine(voiceIdtoTextIdMap[s->id], D_main_80139B80[D_main_80139C73 - 1]);
+                    }
+                    n = subtitleSlotHead + 1;
+                    m = n;
+                    if (n < 0) {
+                        m = subtitleSlotHead + 0x10;
+                    }
+                    subtitleSlotHead = n - (m & 0x1F0);
+                    subtitleSlotsAvailable++;
+                    if (subtitleSlotTail != subtitleSlotHead) {
+                        *(f32 *)&D_main_bss_80139C78 = subtitleSlots[subtitleSlotHead].f0;
+                    } else {
+                        D_main_bss_80139C78 = 0;
+                    }
+                } else if (D_main_bss_80139C8F == 0 && (subtitleSlots[subtitleSlotHead].flags & 6)) {
+                    t = *(f32 *)&D_main_bss_80139C78 - arg0;
+                    *(f32 *)&D_main_bss_80139C78 = t;
+                    if (t < 0.5f) {
+                        setAudioFaderRampLocked(0x46, 0x258, 0xFD);
+                        setAudioFaderRampLocked(0x5A, 0x258, 0xFE);
+                        D_main_bss_80139C8F = 1;
+                    }
+                } else {
+                    t = *(f32 *)&D_main_bss_80139C78 - arg0;
+                    *(f32 *)&D_main_bss_80139C78 = t;
+                    if (t < 0.0f) {
+                        *(f32 *)&D_main_bss_80139C78 = 0.0f;
+                    }
+                }
+            }
+        }
+    } else if (D_main_bss_80139C8F != 0) {
+        if (!speechSlotActiveInline(D_main_80139C73)) {
+            t = *(f32 *)&D_main_bss_80139C78 + arg0;
+            *(f32 *)&D_main_bss_80139C78 = t;
+            if (t >= 0.25f) {
+                setAudioFaderRampLocked(0x7F, 0x12C, 0xFF);
+                D_main_bss_80139C8F = 0;
+            }
+        }
+    }
+    if (D_main_bss_80139C7C > 0.0f) {
+        t = D_main_bss_80139C7C - (arg0 + arg0);
+        D_main_bss_80139C7C = t;
+        if (t < 0.0f) {
+            s32 i = D_main_80139C73;
+            D_main_bss_80139C7C = 0.0f;
+            if ((u8)(i - 1) < 8) {
+                s32 *base = D_main_80139B80;
+                s32 *p = base + ((i - 1) & 0xFF);
+                if (*p != -1) {
+                    if ((u8)isVoiceHandleActive(*p)) {
+                        stopVoiceByHandle(*p);
+                    }
+                    *p = -1;
+                }
+            }
+            clearActiveVoiceLine();
+        }
+        if (speechSlotActiveInline(D_main_80139C73)) {
+            u8 vol = (u32)(D_main_80139BA0[D_main_80139C73 - 1] * D_main_bss_80139C84 * D_main_bss_80139C7C);
+            s32 c = D_main_80139C73;
+            s32 *b = D_main_80139B80;
+            s32 idx = c - 1;
+            s32 *q = b + idx;
+            if (*q != -1) {
+                setVoiceMixByKey(*q, vol, 0x40, 0, 0);
+            }
+        }
+    }
+}
 
 extern s32 D_main_80139B80[];
 s32 isVoiceHandleActive(s32);
