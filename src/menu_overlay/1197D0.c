@@ -236,7 +236,29 @@ s32 getStructField0xC(void *arg0) {
     return (*(s32 *)((u8 *)(arg0) + 0xC));
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", rasterizeFormatMessageGlyphs);
+extern char D_menu_overlay_800A5C40[];
+
+s32 rasterizeFormatMessageGlyphs(void *arg0, void *arg1, u16 arg2) {
+    u32 i;
+    u16 *slot;
+    s32 off;
+
+    for (i = 0; i < arg2; i++) {
+        {
+            sprintf((u8 *)arg1 + 0x2A, D_menu_overlay_800A5C40, *(s32 *)((u8 *)arg1 + 0x10));
+            sprintf(*(char **)((u8 *)arg1 + 0x5C) + 2, D_menu_overlay_800A5C40, *(s32 *)((u8 *)arg1 + 0x10));
+            buildDebrisMeshFromCells(*(s32 *)((u8 *)arg1 + 0x6C), *(s32 *)((u8 *)arg1 + 0x38));
+            if (*(s32 *)((u8 *)arg0 + 0x1C) & 6) {
+                buildDebrisMeshFromCells(*(s32 *)((u8 *)arg1 + 0x70), *(s32 *)((u8 *)arg1 + 0x3C));
+            }
+            slot = (u16 *)(*(s32 *)((u8 *)arg1 + 0x10) * 2 + *(s32 *)((u8 *)arg0 + 0x14));
+            *slot = (*slot == 0xFFFF) ? registerHmtTextureInTable((u8 *)arg1 + 0x14, (u8 *)arg1 + 0x38, 0) : findMatchingTextureRecursive(*slot, (u8 *)arg1 + 0x14, (u8 *)arg1 + 0x38, 0);
+            off = *(s32 *)((u8 *)arg1 + 0x10) * 2;
+            *(u16 *)(off + *(s32 *)(*(s32 *)((u8 *)arg0 + 0xC) + 0xC)) = *(u16 *)(off + *(s32 *)((u8 *)arg0 + 0x14));
+            *(s32 *)((u8 *)arg1 + 0x10) = *(s32 *)((u8 *)arg1 + 0x10) + 1;
+        }
+    }
+}
 
 s32 freeJfifDecodeState(s32);
 s32 rs_free(s32);
