@@ -625,7 +625,72 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", driveFalconAnimationKeyframe
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", applyTieInterceptorAnimState);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", copyTieInterceptorAnimBuffer);
+typedef struct {
+    s16 x;
+    s16 y;
+} TiePos;
+
+typedef struct {
+    u8 pad00[8];
+    char *text[8];
+    u8 unk28;
+    u8 unk29;
+    u8 unk2A;
+    u8 pad2B[5];
+    TiePos pos[9];
+    f32 scale[16];
+    u8 unk94;
+    u8 count;
+    u16 baseY;
+    s16 unk98;
+    u8 pad9A[2];
+    s32 unk9C;
+    u8 padA0[0x10];
+    f32 animX[8];
+    f32 animY[8];
+    u8 padF0[8];
+} TieAnimBuf;
+
+void activateAnimationKeyframe(s32, s32, u8);
+extern TieAnimBuf D_menu_overlay_800CE830;
+
+TieAnimBuf *copyTieInterceptorAnimBuffer(TieAnimBuf *arg0) {
+    u32 i;
+    s32 mask;
+    f32 *v;
+
+    zmemcpy((u8 *)&D_menu_overlay_800CE830, (u8 *)arg0, 0xF8);
+    arg0->text[0] = getGameOrFrontText(0xBA);
+    arg0->text[1] = getGameOrFrontText(0xBC);
+    arg0->text[2] = getGameOrFrontText(0xBD);
+    arg0->unk29 = 0x10;
+    arg0->unk2A = 0x11;
+    arg0->pos[1].x = -0x34;
+    arg0->pos[2].x = 0x34;
+    arg0->pos[0].y = 0x25;
+    arg0->pos[1].y = 0x2F;
+    arg0->pos[2].y = 0xB;
+    arg0->unk94 = 2;
+    arg0->unk28 = 0;
+    arg0->pos[0].x = 0;
+    arg0->unk98 = 7;
+    arg0->scale[0] = 1.1f;
+    arg0->scale[1] = 0.9f;
+    arg0->scale[2] = 0.9f;
+    mask = 7;
+    for (i = 0; i < arg0->count; i++) {
+        if (mask & (1 << i)) {
+            setPlayerSlotAnimationFlag(5, arg0->text[i], (u16)i, (s16)(arg0->pos[i].x - 0x100), (s16)(arg0->pos[i].y + (arg0->baseY + (i * 0x24 - arg0->count * 0x12))));
+            samplePlayerAnimChannel(5, (u16)i, arg0->scale[i]);
+            activateAnimationKeyframe(5, (u16)i, 0);
+            v = getPlayerSlotFieldAt34(5, (u16)i);
+            arg0->animX[i] = v[6];
+            arg0->animY[i] = v[7];
+        }
+    }
+    arg0->unk9C = 0;
+    return &D_menu_overlay_800CE830;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", applyTieInterceptorSlotAnim);
 
