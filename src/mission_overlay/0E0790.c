@@ -148,7 +148,58 @@ s32 playAttachmentCueWithSlotIter(u8 *arg0) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", playDualTextureAttachmentCue);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} V3FAtt0;
+
+s32 playDualTextureAttachmentCue(s32 arg0, s32 unused, s32 arg2) {
+    AttachMtxA mtx1;
+    AttachMtxA mtx2;
+    AttachMtxA scratch;
+    V3FAtt0 saved;
+    f32 prog1;
+    f32 prog2;
+    f32 scale;
+    u8 *npc;
+    u8 *sub;
+    u8 ok;
+    u8 *base;
+
+    npc = *(u8 **)(arg0 + 4);
+    sub = *(u8 **)(*(u8 **)(npc + 0x38) + 0x1A8);
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), arg2 == 0 ? D_mission_overlay_800A7FB0 : D_mission_overlay_800A7FB8, 0, &mtx1, (s32)&scratch, 0);
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), arg2 == 0 ? D_mission_overlay_800A7FB0 : D_mission_overlay_800A7FB8, 1, &mtx2, (s32)&scratch, 1);
+    scale = *(f32 *)(*(u8 **)(npc + 0x34) + D_main_bss_80137CE4 * 4 + 0xF4);
+    if (scale != 0.0f) {
+        resolveNpcAttachmentPos(*(s32 *)(npc + 0x38), &mtx1, ((AttachTblEntry *)((u8 *)D_mission_overlay_8010ABA0 + arg2 * 4 + npc[0xB2] * 0x30))->f24, scale);
+        resolveNpcAttachmentPos(*(s32 *)(npc + 0x38), &mtx2, ((AttachTblEntry *)((u8 *)D_mission_overlay_8010ABA0 + arg2 * 4 + npc[0xB2] * 0x30))->f24, scale);
+    }
+    ok = 0;
+    if (arg2 == 0) {
+        if (tickProgressChannel(*(s32 *)(npc + 0x38), &mtx1, 0, &prog1) == 1) {
+            ok = tickProgressChannel(*(s32 *)(npc + 0x38), &mtx2, 0, &prog2) == 1;
+        }
+    } else {
+        saved = *(V3FAtt0 *)(npc + 0xC);
+        *(f32 *)(npc + 0xC) = -*(f32 *)(npc + 0xC);
+        *(f32 *)(npc + 0x10) = -*(f32 *)(npc + 0x10);
+        *(f32 *)(npc + 0x14) = -*(f32 *)(npc + 0x14);
+        if (tickProgressChannel(*(s32 *)(npc + 0x38), &mtx1, 1, &prog1) == 1) {
+            ok = tickProgressChannel(*(s32 *)(npc + 0x38), &mtx2, 1, &prog2) == 1;
+        }
+        *(V3FAtt0 *)(npc + 0xC) = saved;
+    }
+    if (ok == 1) {
+        base = arg2 * 12 + (u8 *)D_mission_overlay_8010ABA0;
+        *(f32 *)(sub + (arg2 << 2) + 0x10) = 0.0f;
+        triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 2, &mtx1, npc[0xB2] * 0x30 + (u8 *)D_mission_overlay_8010ABA0 + arg2 * 12, 0, ((AttachTblEntry *)((u8 *)D_mission_overlay_8010ABA0 + arg2 * 4 + npc[0xB2] * 0x30))->f24, prog1);
+        triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 2, &mtx2, npc[0xB2] * 0x30 + (u8 *)D_mission_overlay_8010ABA0 + arg2 * 12, 0, ((AttachTblEntry *)((u8 *)D_mission_overlay_8010ABA0 + arg2 * 4 + npc[0xB2] * 0x30))->f24, prog2);
+        play3DSoundEvent(0, npc, npc + 0x24, 15.0f, 0.3f, 0, 0xD, 0x6E, 0x28);
+    }
+    return 0;
+}
 
 typedef struct {
     f32 x;
@@ -264,13 +315,13 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", tickWalkerCraftWithLimbsA
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", npcTrainCarUpdate);
 
-void playDualTextureAttachmentCue(s32, s32, s32);
+s32 playDualTextureAttachmentCue(s32, s32, s32);
 
 void playDualTextureAttachmentCueMode0(s32 arg0, s32 arg1) {
     playDualTextureAttachmentCue(arg0, arg1, 0);
 }
 
-void playDualTextureAttachmentCue(s32, s32, s32);
+s32 playDualTextureAttachmentCue(s32, s32, s32);
 
 void playDualTextureAttachmentCueMode1(s32 arg0, s32 arg1) {
     playDualTextureAttachmentCue(arg0, arg1, 1);
