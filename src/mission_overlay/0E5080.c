@@ -60,13 +60,57 @@ void resetCraftInstanceMotionState(void *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", playDualTextureAttachmentCueB);
+typedef struct {
+    u8 pad0[0x18];
+    s32 w18;
+    s32 w1C;
+} CueSlotI;
+
+typedef struct {
+    f32 m[12];
+} AttachMtxB;
+
+extern void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
+extern void resolveNpcAttachmentPos(s32, AttachMtxB *, s32, f32);
+extern u8 tickProgressChannel(s32, AttachMtxB *, s32, f32 *);
+extern void triggerCueWithSlotEffect(s32, s32, AttachMtxB *, void *, s32, f32, f32);
+extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+
+s32 playDualTextureAttachmentCueB(void *arg0) {
+    AttachMtxB mtx1;
+    AttachMtxB mtx2;
+    AttachMtxB scratch;
+    f32 prog1;
+    f32 prog2;
+    f32 rate;
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+    u8 r;
+
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), "b_c", 0, &mtx1, (s32)&scratch, 0);
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), "b_c", 1, &mtx2, (s32)&scratch, 1);
+    rate = ((f32 *)(*(u8 **)(npc + 0x34) + 0xDC))[D_main_bss_80137CE4];
+    if (rate != 0.0f) {
+        resolveNpcAttachmentPos(*(s32 *)(npc + 0x38), &mtx1, ((CueSlotI *)sCueSlotsF)[npc[0x99]].w18, rate);
+        resolveNpcAttachmentPos(*(s32 *)(npc + 0x38), &mtx2, ((CueSlotI *)sCueSlotsF)[npc[0x99]].w18, rate);
+    }
+    r = tickProgressChannel(*(s32 *)(npc + 0x38), &mtx1, 0, &prog1);
+    if (r == 1) {
+        r = tickProgressChannel(*(s32 *)(npc + 0x38), &mtx2, 0, &prog2);
+        if (r == 1) {
+            *(f32 *)(npc + 0xA4) = 0.0f;
+            triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 2, &mtx1, &sCueSlotsF[npc[0x99]], r, sCueSlotsF[npc[0x99]].f18, prog1);
+            triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 2, &mtx2, &sCueSlotsF[npc[0x99]], 0, sCueSlotsF[npc[0x99]].f18, prog2);
+            play3DSoundEvent(0, npc, npc + 0x24, 14.0f, 0.1f, 0, 0x1D, 0x78, 0x28);
+        }
+    }
+    return 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E5080", D_mission_overlay_800A82D4);
 
 typedef struct {
     f32 m[12];
-} AttachMtxB;
+} AttachMtxBDup;
 
 extern void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
 extern void resolveNpcAttachmentPos(s32, AttachMtxB *, s32, f32);
