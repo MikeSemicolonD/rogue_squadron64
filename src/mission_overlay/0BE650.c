@@ -88,7 +88,91 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BE650", buildNabooSubmodelTransfo
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BE650", triggerNabooEngineEffect);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BE650", tickPlayerCraftBlinkIndicator);
+#include "controller_settings.h"
+#include "main/bss_80130B10.h"
+
+typedef struct {
+    s32 idx;
+    u8 flip;
+    u8 pad5;
+    u16 lock;
+    u8 pos[0];
+} BlinkCtl;
+
+typedef struct {
+    s32 w0;
+    f32 pos[10];
+    u8 pad2C[0xB6 - 0x2C];
+    u16 hB6;
+    s32 wB8;
+    u8 padBC[0x158 - 0xBC];
+    u16 h158;
+    u8 pad15A[2];
+    s32 w15C;
+    f32 timer;
+    f32 f164;
+    f32 f168;
+    u8 pad16C[0x178 - 0x16C];
+    s32 w178;
+    u8 pad17C[0x2A0 - 0x17C];
+} BlinkPlayer;
+
+extern BlinkPlayer sBlinkPlayers[] __asm__("D_main_bss_80137DBC");
+extern union ControllerSettings D_mission_overlay_8010BE18[];
+extern void triggerNabooEngineEffect(void *, s32, void *);
+extern s32 play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+extern u8 tickHudInstanceTargetingAndSpawns(s32, f32, void *, s32, s32, u16 *, s32);
+extern void dispatchHudInstanceWeaponEffect(s32, u16, void *, s32, s32, s32, s32);
+extern s32 findLockOnTarget(void *, void *, u16, f32, f32, f32);
+extern void tickCraftAnimationSlot(s32, f32);
+
+void tickPlayerCraftBlinkIndicator(BlinkCtl *ctl, f32 dt) {
+    u8 sp28[16];
+    u16 sp38;
+    BlinkPlayer *c;
+    void *pos;
+    s32 r;
+    u16 t;
+    u8 *base;
+
+    c = &sBlinkPlayers[ctl->idx];
+    base = (u8 *)sBlinkPlayers - 4;
+    if (*(u16 *)(base + c->wB8 * 0x2A0 + 0x184) & 1) {
+        if (c->timer > 0.0f) {
+            c->timer = c->timer - dt;
+        } else if (D_main_bss_80130B88[ctl->idx].button & D_mission_overlay_8010BE18[ctl->idx].asStruct.fire_blasters) {
+            if (*(s32 *)(base + ctl->idx * 0x2A0 + 0x160) == 1) {
+                c->timer = c->timer + c->f168;
+                triggerNabooEngineEffect(ctl, c->h158, 0);
+                triggerNabooEngineEffect(ctl, c->h158 + 1, 0);
+                play3DSoundEvent(0, &c->pos[0], &c->pos[9], 20.0f, 0.2f, 0, 0x71, 0x5A, 0x28);
+            } else {
+                c->timer = c->timer + c->f164;
+                triggerNabooEngineEffect(ctl, c->h158, sp28);
+                c->h158 ^= 1;
+                play3DSoundEvent(0, sp28, &c->pos[9], 20.0f, 0.2f, 0, 0x71, 0x5A, 0x28);
+            }
+        }
+        pos = &c->pos[0];
+        if (tickHudInstanceTargetingAndSpawns(0, dt, pos, c->w0, (u8)(D_main_bss_80130B88[ctl->idx].button & D_mission_overlay_8010BE18[ctl->idx].asStruct.fire_secondary), &sp38, c->hB6)) {
+            dispatchHudInstanceWeaponEffect(0, c->hB6, pos, c->w0, c->w178, ctl->flip, sp38);
+            ctl->flip ^= 1;
+        }
+        if (D_main_bss_80130B88[ctl->idx].button & D_mission_overlay_8010BE18[ctl->idx].asStruct.fire_mode) {
+            c->h158 = 0;
+            c->w15C ^= 1;
+        }
+    }
+    r = findLockOnTarget(&c->pos[0], (u8 *)ctl + 8, ctl->lock, 8.0f, 0.992f, 15.0f);
+    t = r;
+    sp38 = r;
+    if (t != 0xFFFF) {
+        ctl->lock = r;
+    } else {
+        ctl->lock = 0xFFFF;
+    }
+    tickCraftAnimationSlot(0, dt);
+}
 
 #include "main/3F160.h"
 #include "main/02420.h"
@@ -146,7 +230,7 @@ void releaseMeshAsset(s32);
 void teardownHudInstancesAndUnbindNpcs(void);
 void freePlayerAuxBuffersIfActive(s32);
 void buildNabooSubmodelTransform(s32 *, s32);
-void tickPlayerCraftBlinkIndicator(s32 *, s32);
+void tickPlayerCraftBlinkIndicatorCall(s32 *, s32) __asm__("tickPlayerCraftBlinkIndicator");
 void tryPlaySpatialSoundWithGates(void *, void *);
 void enqueueMeshTypeForCleanup(s32);
 void addNpcToVisibilityBucket(s32, s32, void *, f32);
@@ -213,7 +297,7 @@ s32 playerNabooStarfighterUpdate(NbUpdNpc *arg0, s32 arg1, u32 *arg2) {
             return 1;
         case 3:
             buildNabooSubmodelTransform(s0, *arg2);
-            tickPlayerCraftBlinkIndicator(s0, *arg2);
+            tickPlayerCraftBlinkIndicatorCall(s0, *arg2);
             return 1;
         case 5:
             tryPlaySpatialSoundWithGates(&NUP[*s0], arg2);
