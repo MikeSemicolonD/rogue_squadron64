@@ -659,7 +659,72 @@ loop:
     gCue1D0.unk12 = (u32)(*(f32 *)(item + 0x50) * 1000.0f);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", triggerStageAmbientForNamedDatItem);
+void triggerStageAmbientForNamedDatItem(char *name, s32 which) {
+    u8 *item;
+    s32 idx;
+    s32 i;
+    u16 *t;
+    u16 ca;
+    u16 cb;
+    s32 xa;
+    s32 xb;
+
+    item = getLevelDatItemByName(name);
+    if (item == NULL) {
+        return;
+    }
+    switch (which) {
+    case 0:
+        idx = *(s32 *)(item + 0x3C);
+        break;
+    case 1:
+        idx = *(s32 *)(item + 0x40);
+        break;
+    case 2:
+        idx = *(s32 *)(item + 0x44);
+        break;
+    case 3:
+        idx = *(s32 *)(item + 0x48);
+        break;
+    default:
+        return;
+    }
+    idx -= 2;
+    if (idx < 0) {
+        return;
+    }
+    gCue1D0.unk0 = -1;
+    t = &D_mission_overlay_8010B1C0[0].a;
+    ca = t[idx * 3];
+    gCue1D0.unk4 = ca;
+    D_mission_overlay_8010C269 = 1;
+    cb = t[idx * 3 + 1];
+    gCue1D0.unk6 = cb;
+    gCue1D0.unk8 = ((u8 *)t)[idx * 6 + 4];
+    xb = cb;
+    i = 0;
+    if (t[1] != xb) {
+        u16 *p;
+        xa = ca;
+        p = t;
+loop:
+        if (*p != xa) {
+            p += 3;
+            i++;
+            if (p[1] != xb) {
+                goto loop;
+            }
+        }
+    }
+    gCue1D0.unkA = i + 2;
+    gCue1D0.unkC = 0;
+    gCue1D0.unkD = 0;
+    gCue1D0.unkE = 0;
+    gCue1D0.unkF = 0;
+    gCue1D0.unk10 = (u32)(*(f32 *)(item + 0x54) * 1000.0f);
+    gCue1D0.unk12 = (u32)(*(f32 *)(item + 0x50) * 1000.0f);
+    stopSongAndRebuildActiveCueList(1);
+}
 
 s32 freeAudioCacheEntry(s32);
 s32 resetMusicSubsystemState(s32);
@@ -745,4 +810,5 @@ void func_mission_overlay_800EFD6C(void) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", fake_func_800EFD74);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0EDD50", D_mission_overlay_800A8960);
+
+static u32 D_800A8964[] __attribute__((section(".rodata"))) = { 0x10600003, 0, 0x0802A263 };
