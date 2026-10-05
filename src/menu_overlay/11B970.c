@@ -560,7 +560,56 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6A1C);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", buildVwingRenderMatrices);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateVwingThrusterMaterial);
+typedef struct { f32 m[12]; } VwMat;
+extern char D_menu_overlay_800A6A1C[];
+extern s32 D_menu_overlay_800CF0EC;
+void *lookupHmtMaterialByName(s32, s32 *, s32);
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+f32 quadraticEaseInOut(f32);
+f32 sinf(f32);
+void applyScaleToMat3x4(void *, f32, f32, f32);
+void composeRotationMatrixSlot0(void *, f32);
+void composeRotationMatrixSlot1(void *, f32);
+void composeRotationMatrixSlot2(void *, f32);
+void addVec3At0x24(void *, f32, f32, f32);
+void sprintf(char *, const char *, ...);
+
+void animateVwingThrusterMaterial(void **arg0, f32 arg1, f32 arg2, f32 arg3)
+{
+  char buf[16];
+  VwMat mat;
+  f32 fv;
+  f32 ft;
+  s32 i;
+  u8 *m;
+  u8 *prev;
+  if (arg1 > 0.05f)
+  {
+    fv = arg1 * 0.75f;
+    initVec4TripletFromArgs(&mat, fv, fv, fv);
+    ft = quadraticEaseInOut(arg3);
+    if (ft > 0.5f)
+    {
+      ft = 1.0f - ft;
+    }
+    ft = 1.0f - (ft / 1.4f);
+    applyScaleToMat3x4(&mat, ft, ft, ft);
+    composeRotationMatrixSlot0(&mat, (sinf(arg2 / 29.0f) * 3.5f) + 90.0f);
+    composeRotationMatrixSlot1(&mat, sinf(arg2 / 37.0f) * 3.5f);
+    i = 0;
+    composeRotationMatrixSlot2(&mat, quadraticEaseInOut(arg1) * 360.0f);
+    composeRotationMatrixSlot2(&mat, quadraticEaseInOut(arg3) * 360.0f);
+    addVec3At0x24(&mat, 0, 0.5f, 15.0f);
+    do
+    {
+      sprintf(buf, D_menu_overlay_800A6A1C, 4 - (i & 0xFF));
+      m = lookupHmtMaterialByName(D_menu_overlay_800CF0EC, (s32 *) buf, 0);
+ do { *((VwMat *) (m + 0x1C)) = mat; prev = *arg0; *((u8 **) m) = prev; if (prev != 0) { *((u8 **) (prev + 4)) = m; } *((s32 *) (m + 4)) = 0; *arg0 = m; } while (0);
+      i += 1;
+    }
+    while (((u32) (i & 0xFF)) < 5U);
+  }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateVwingTrailGeometry);
 
