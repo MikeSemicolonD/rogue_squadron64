@@ -557,7 +557,7 @@ SECTIONS
         build/src/main/5D220.o(.rodata);
         build/src/main/5FA70.o(.rodata);
         build/src/main/61290.o(.rodata);
-        build/asm/data/main/3C010.rodata.o(.rodata);
+        build/src/main/61FC0.o(.rodata);
         build/src/main/65540.o(.rodata);
         build/src/main/66660.o(.rodata);
         build/src/main/66FB0.o(.rodata);
