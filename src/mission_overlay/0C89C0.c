@@ -1,7 +1,63 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C89C0", initNpcActorFromSpawnMessage);
+struct NiObj { u8 pad0[0x34]; u8 *f34; s32 f38; u8 pad3C[0x34]; s16 f70; s16 f72; s16 f74; u8 pad76[2]; f32 f78; f32 f7C; s32 f80; s32 f84; };
+typedef struct { u8 pad0[4]; struct NiObj *obj; } NiActor;
+extern s32 D_main_bss_80137CE4;
+s32 spawnNpcDestructionEffect();
+s32 playNpcAmbientEffect();
+s32 spawnNpcImpactEffectVariant();
+s32 playNpcStateChangeEffect();
+s32 setNpcHealth(s32, u8 *, u8 *);
+void setObjectDetailLevel(s32, s32);
+void initActorMotionParams(s32, f32, f32, f32, f32);
+void initObjectAnimSubstruct(s32, f32, f32, f32, f32, s32 (*)(), s32, f32, f32, f32);
+
+void initNpcActorFromSpawnMessage(NiActor *arg0)
+{
+  struct NiObj *o = arg0->obj;
+  u8 *e;
+  if (setNpcHealth(o->f38, o->f34 + 0x6C, o->f34) > 0)
+  {
+    o->f72 = 0;
+  }
+  else
+  {
+    o->f72 = 3;
+  }
+  o->f84 = 0;
+  o->f80 = 0;
+  o->f74 = 0;
+  o->f7C = 1.0f;
+  o->f78 = *((f32 *) (((D_main_bss_80137CE4 * 4) + o->f34) + 0x9C));
+  ;
+  initActorMotionParams(o->f38, *((f32 *) ((o->f34 + (D_main_bss_80137CE4 * 4)) + 0x98)), *((f32 *) ((o->f34 + (D_main_bss_80137CE4 * 4)) + 0xA0)), *((f32 *) ((o->f34 + (D_main_bss_80137CE4 * 4)) + 0xA4)), *((f32 *) ((o->f34 + (D_main_bss_80137CE4 * 4)) + 0xA8)));
+  setObjectDetailLevel(o->f38, *((s32 *) (o->f34 + 0x8C)));
+  switch (o->f70)
+  {
+    case 1:
+      e = o->f34;
+      initObjectAnimSubstruct(o->f38, *((f32 *) (e + 0xAC)), *((f32 *) (e + 0xB0)), *((f32 *) (e + 0xB4)), *((f32 *) (e + 0xB8)), spawnNpcDestructionEffect, 0, 5.0f, 50.0f, *((f32 *) (((D_main_bss_80137CE4 * 4) + e) + 0xBC)));
+      break;
+
+    case 3:
+      e = o->f34;
+      initObjectAnimSubstruct(o->f38, *((f32 *) (e + 0xAC)), *((f32 *) (e + 0xB0)), *((f32 *) (e + 0xB4)), *((f32 *) (e + 0xB8)), playNpcAmbientEffect, 0, 10.0f, 15.0f, *((f32 *) (((D_main_bss_80137CE4 * 4) + e) + 0xBC)));
+      break;
+
+    case 4:
+      e = o->f34;
+      initObjectAnimSubstruct(o->f38, *((f32 *) (e + 0xAC)), *((f32 *) (e + 0xB0)), *((f32 *) (e + 0xB4)), *((f32 *) (e + 0xB8)), spawnNpcImpactEffectVariant, 0, 10.0f, 50.0f, *((f32 *) (((D_main_bss_80137CE4 * 4) + e) + 0xBC)));
+      break;
+
+    default:
+      e = o->f34;
+      initObjectAnimSubstruct(o->f38, *((f32 *) (e + 0xAC)), *((f32 *) (e + 0xB0)), *((f32 *) (e + 0xB4)), *((f32 *) (e + 0xB8)), playNpcStateChangeEffect, 0, 10.0f, 15.0f, *((f32 *) (((D_main_bss_80137CE4 * 4) + e) + 0xBC)));
+      break;
+
+  }
+
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C89C0", D_mission_overlay_800A6994);
 
