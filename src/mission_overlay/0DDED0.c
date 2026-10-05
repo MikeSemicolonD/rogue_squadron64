@@ -11,20 +11,67 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", D_mission_overlay_800A7E0C);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0DDED0", npcInitFullModel);
-
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", D_mission_overlay_800A7E28);
-
+typedef struct { u8 pad0[4]; u8 *obj; } NiActor;
+typedef struct { u8 pad0[0x64]; s32 a64[2]; s32 a6C[2]; u8 pad74[0x68]; f32 aDC[2]; s32 aE4[2]; } NiVecs;
 struct EffectRow {
     s32 unk0;
     s32 unk4;
     s32 unk8;
     f32 unkC;
 };
+extern struct EffectRow D_mission_overlay_8010A9C4[];
+extern f32 D_mission_overlay_8010AA00;
+extern s32 D_main_bss_80137CE4;
+extern s32 npcTickEffectChannelC();
+extern s32 npcTickEffectChannelD();
+extern s32 npcTickEffectChannelE();
+extern s32 playAttachmentMaterialFadeSound();
+extern void setNpcHealth(s32, u8 *, u8 *);
+extern void setObjectDetailLevel(s32, s32);
+extern void initActorMotionParams(s32, s32, s32, s32, f32);
+extern void initObjectAnimSubstruct(s32, s32, s32, s32, f32, s32 (*)(), s32, f32, f32, s32);
+
+void npcInitFullModel(NiActor *arg0) {
+    u8 *o = arg0->obj;
+    u8 *e = *(u8 **)(o + 0x34);
+    s32 i;
+    u8 *p;
+    u8 *t;
+    f32 fs;
+
+    o[0xD1] = 0;
+    for (i = 0; i < 2; i++) {
+        ((NiVecs *)o)->a64[i] = 0;
+        ((NiVecs *)o)->a6C[i] = 0;
+        ((NiVecs *)o)->aDC[i] = 1.0f;
+        ((NiVecs *)o)->aE4[i] = 0;
+    }
+    *(u16 *)(o + 0xD2) = 0;
+    *(f32 *)(o + 0xD8) = *(f32 *)(*(u8 **)(o + 0x34) + 0x90);
+    setNpcHealth(*(s32 *)(o + 0x38), *(u8 **)(o + 0x34) + 0x6C, *(u8 **)(o + 0x34));
+    setObjectDetailLevel(*(s32 *)(o + 0x38), *(s32 *)(*(u8 **)(o + 0x34) + 0xA8));
+    *(f32 *)(o + 0xD4) = *(f32 *)((u8 *)(D_main_bss_80137CE4 * 4) + (s32)*(u8 **)(o + 0x34) + 0xC0);
+    t = (u8 *)(D_main_bss_80137CE4 * 4) + (s32)*(u8 **)(o + 0x34);
+    initActorMotionParams(*(s32 *)(o + 0x38), *(s32 *)(t + 0xB8), *(s32 *)(t + 0xBC), *(s32 *)(t + 0xC4), *(f32 *)(t + 0xC8));
+    switch (o[0xCF]) {
+    case 0:
+        initObjectAnimSubstruct(*(s32 *)(o + 0x38), *(s32 *)(e + 0xCC), *(s32 *)(e + 0xD0), *(s32 *)(e + 0xD4), *(f32 *)(e + 0xD8), npcTickEffectChannelC, 0, D_mission_overlay_8010A9C4[o[0xCF]].unkC, 15.0f, 0);
+        break;
+    case 1:
+        initObjectAnimSubstruct(*(s32 *)(o + 0x38), *(s32 *)(e + 0xCC), *(s32 *)(e + 0xD0), *(s32 *)(e + 0xD4), *(f32 *)(e + 0xD8), npcTickEffectChannelD, 0, D_mission_overlay_8010A9C4[o[0xCF]].unkC, 15.0f, 0);
+        break;
+    case 2:
+        fs = 15.0f;
+        initObjectAnimSubstruct(*(s32 *)(o + 0x38), *(s32 *)(e + 0xCC), *(s32 *)(e + 0xD0), *(s32 *)(e + 0xD4), *(f32 *)(e + 0xD8), playAttachmentMaterialFadeSound, 0, D_mission_overlay_8010A9C4[o[0xCF]].unkC, fs, 0);
+        initObjectAnimSubstruct(*(s32 *)(o + 0x38), *(s32 *)(e + 0xCC), *(s32 *)(e + 0xD0), *(s32 *)(e + 0xD4), *(f32 *)(e + 0xD8), npcTickEffectChannelE, 1, D_mission_overlay_8010AA00, fs, 0);
+        break;
+    }
+}
+
+INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0DDED0", D_mission_overlay_800A7E28);
+
 
 extern char D_mission_overlay_800A7E28[];
-extern struct EffectRow D_mission_overlay_8010A9C4[];
-extern s32 D_main_bss_80137CE4;
 extern void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
 extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
 extern void resolveNpcAttachmentPos(s32, void *, s32, f32);
