@@ -287,7 +287,218 @@ void loadPlayerStartPosition(StartPl *arg0, s32 arg1) {
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0AEFF0", D_mission_overlay_800A55C0);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", spawnSceneDebrisAndEffectCluster);
+#define VABS(x) ({ f32 _x = (x); f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); _r; })
+typedef struct { u8 b[4]; } Bytes4;
+typedef struct {
+    u16 f0;
+    u16 f2;
+    u16 f4;
+    u8 pad6[0xA];
+    f32 pos[3];
+    u8 pad1C[0xA4];
+    void *unkC0;
+} TargetRec;
+typedef struct {
+    u8 pad0[4];
+    TargetRec *rec;
+    u8 pad8[0x13C];
+} TargetSlot;
+typedef struct { u8 b[0x3E0]; } BigSlot;
+typedef struct {
+    u8 pad0[4];
+    f32 pos[3];
+    u8 pad10[0x1C];
+    s32 unk2C;
+    u8 pad30[0x80];
+    s32 unkB0;
+    u8 padB4[2];
+    u16 unkB6;
+    s32 unkB8;
+    u8 padBC[4];
+    s32 unkC0;
+    u8 padC4[0x7C];
+    s32 unk140;
+    u8 pad144[0x3C];
+    u16 unk180;
+    u8 pad182[2];
+    f32 unk184;
+    u8 pad188[0x44];
+    u16 unk1CC;
+    u8 pad1CE[0x7E];
+    u8 unk24C;
+} SceneObj;
+typedef struct {
+    s32 w58;
+    f32 f5C;
+    u8 rest[0x20];
+} WrapOut;
+typedef struct {
+    f32 v20[3];
+    u8 pad2C[4];
+    f32 v30[3];
+    u8 pad3C[4];
+    f32 m40[4];
+    Bytes4 c50;
+    u8 pad54[4];
+    WrapOut w;
+} SceneLocals;
+
+extern TargetSlot D_main_bss_80138D18[];
+extern BigSlot D_main_bss_80138A28[];
+extern s32 D_mission_overlay_8010CA1C;
+extern u16 getNextSlotNpcTypeId(u16);
+extern void destroyNpcSlotByIndex(u16);
+extern void destroyNpcSlotChain(u16);
+extern u16 allocateNpcSlot(s32);
+extern void *getNpcContextByIndex(u16);
+extern void setObjectFlagBit4(void *);
+extern void resetHudInstancesAndUnbindNpcs(void);
+extern void triggerPlayerVehicleSpecialSlotEffect(void);
+extern void factor5RemoveListNode(void *);
+extern f32 vec3Length(void *);
+extern void spawnRandomizedEffectBurst(void *);
+extern s32 isTerrainCellBlockedAtWorldXz(f32, f32, void *);
+extern void spawnWaterSprayDebrisAndBurst(void *, f32, f32, f32, f32, f32);
+extern void spawnEffectNpcWithRampedScale(void *, u16, f32, f32, f32);
+extern void spawnOrientedNpc(s32, void *, s32, void *, f32, f32, f32, f32);
+extern void spawnNpcType0xAFromTemplate(void *, f32);
+extern void composeRandomRotationMatrix(void *, void *, f32, s32, s32, s32);
+extern void scaleVec3ByRandomRange(void *, f32, f32);
+extern void spawnDebris1Npc(void *, void *, f32, f32, f32);
+extern u8 D_main_bss_80138058[];
+extern u16 rand(void);
+extern u8 D_mission_overlay_800A55C0[];
+extern s32 D_main_bss_80130B50;
+extern u32 D_mission_overlay_8010CA20;
+extern u8 D_mission_overlay_8010BBD0[][12];
+u8 isRumbleSlotActive(u8);
+s32 startRumbleEffect(u8, void *);
+s32 stopRumbleEffect(s32);
+static __inline__ void rumbleInlineA(u8 *arg0, s32 arg1) {
+    if (D_main_bss_80130B50 & 0x60) {
+        return;
+    }
+    if (D_mission_overlay_8010CA20 != 0) {
+        return;
+    }
+    if (arg1 < *(s32 *)(arg0 + 0x1C4) && isRumbleSlotActive(arg0[0xBB])) {
+        return;
+    }
+    if (*(s32 *)(arg0 + 0x1C0) != -1) {
+        stopRumbleEffect(*(s32 *)(arg0 + 0x1C0));
+    }
+    *(s32 *)(arg0 + 0x1C0) = startRumbleEffect(arg0[0xBB], D_mission_overlay_8010BBD0[arg1]);
+    if (*(s32 *)(arg0 + 0x1C0) != -1) {
+        *(s32 *)(arg0 + 0x1C4) = arg1;
+    }
+}
+
+
+void spawnSceneDebrisAndEffectCluster(SceneObj *arg0, s32 arg1) {
+    SceneLocals l;
+    u16 flags;
+    u16 id;
+    s32 i;
+    s32 n;
+    s16 t;
+    TargetRec *rec;
+    BigSlot *A;
+    u8 *wr;
+    s32 sel;
+    f32 x;
+    struct player_struct *pl;
+
+    l.c50 = *(Bytes4 *)D_mission_overlay_800A55C0;
+    pl = gPlayers;
+    flags = ((u16 *)&pl[arg0->unkB8].inner.unk178[2])[0];
+    if (flags & 0x10) {
+        return;
+    }
+    if (flags & 0x20) {
+        return;
+    }
+    resetHudInstancesAndUnbindNpcs();
+    triggerPlayerVehicleSpecialSlotEffect();
+    if (arg0->unk1CC != 0xFFFF) {
+        while ((id = getNextSlotNpcTypeId(arg0->unk1CC)) != 0xFFFF) {
+            destroyNpcSlotByIndex(id);
+        }
+        destroyNpcSlotChain(arg0->unk1CC);
+        arg0->unk1CC = 0xFFFF;
+    }
+    if (arg0->unk24C != 0) {
+        arg0->unk24C = 0;
+        factor5RemoveListNode((u8 *)arg0 + 0x208);
+    }
+    arg0->unk1CC = allocateNpcSlot(0);
+    wrapAngleToCyclicRange(arg0->pos[0], arg0->pos[2], D_main_bss_80138058, (u8 *)&l.w);
+    if (l.w.f5C <= arg0->pos[1]) {
+        arg0->pos[1] = l.w.f5C - 0.125f;
+    }
+    arg0->unk2C = 0;
+    D_mission_overlay_8010CA1C |= 0x100;
+    arg0->unk180 = (arg0->unk180 & 0xFFF6) | 0x190;
+    arg0->unk184 = 0.5f;
+    setObjectFlagBit4(getNpcContextByIndex(arg0->unkB6));
+    arg0->unk140 = 0;
+    rec = D_main_bss_80138D18[arg0->unkB8].rec;
+    l.v20[0] = arg0->pos[0] - rec->pos[0];
+    l.v20[1] = arg0->pos[1] - rec->pos[1];
+    l.v20[2] = arg0->pos[2] - rec->pos[2];
+    {
+        f32 len = vec3Length(l.v20);
+        if (D_main_bss_80138D18[arg0->unkB8].rec->f4 == 3
+            || (!(rec->f0 & 0x10) && rec->f4 == 2 && len < 0.75f)
+            || ((rec != (TargetRec *)&D_main_bss_80138A28[arg0->unkB8]) && (!(rec->f0 & 0x10) || *(u16 *)((u8 *)rec + 2) != 4 || rec->unkC0 != (void *)&D_main_bss_80138A28[arg0->unkB8]))) {
+            spawnRandomizedEffectBurst(arg0);
+        }
+    }
+    *(volatile s32 *)&arg0->unkC0 = 0;
+    rumbleInlineA((u8 *)arg0, 0xC);
+    wrapAngleToCyclicRange(arg0->pos[0], arg0->pos[2], D_main_bss_80138058, (u8 *)&l.w);
+    if (l.w.f5C <= arg0->pos[1]) {
+        arg0->pos[1] = l.w.f5C - 0.125f;
+    }
+    if (arg0->unk24C != 0) {
+        arg0->unk24C = 0;
+        factor5RemoveListNode((u8 *)arg0 + 0x208);
+    }
+    sel = arg1 & 0xFF;
+    if (sel == 1 && isTerrainCellBlockedAtWorldXz(arg0->pos[0], arg0->pos[2], D_main_bss_80138058) == 1) {
+        spawnWaterSprayDebrisAndBurst(arg0->pos, 0.2f, 2.0f, 2.0f, 4.0f, 1.0f);
+    } else {
+        spawnEffectNpcWithRampedScale(arg0->pos, arg0->unkB6, 1.875f, 5.625f, 0.2f);
+        spawnOrientedNpc(0x8002, arg0->pos, 0, NULL, 0.1875f, 1.875f, 1.0f, 0.6f);
+        spawnOrientedNpc(0x8001, arg0->pos, 0, &l.c50, 0.1875f, 1.875f, 1.0f, 0.4f);
+        i = 0;
+        t = (s16)rand() % 3;
+        n = t + 2;
+        if (n > 0) {
+            do {
+                spawnNpcType0xAFromTemplate(arg0->pos, VABS(((f32)(rand() & 0x7F) - 64.0f) / 21.333334f + 1.0f));
+                i++;
+            } while (i < n);
+        }
+    }
+    i = 0;
+    t = (s16)rand() % 5;
+    n = t + 10;
+    if (n > 0) {
+        do {
+            f32 a;
+            f32 b;
+            composeRandomRotationMatrix(l.m40, l.v30, 2.0f, 0x3C, 0, 0);
+            scaleVec3ByRandomRange(l.v30, 3.0f, 4.0f);
+            x = ((f32)(rand() & 0x7F) - 64.0f) / 12.8f;
+            a = VABS(x) + 12.0f;
+            x = ((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f;
+            b = VABS(x) + 0.5f;
+            x = ((f32)(rand() & 0x7F) - 64.0f) / 320.0f;
+            spawnDebris1Npc(arg0->pos, l.v30, a, b, VABS(x) + 0.2f);
+            i++;
+        } while (i < n);
+    }
+}
 
 typedef struct {
     u8 pad0[0xB6];
