@@ -513,7 +513,43 @@ s32 registerHmtTextureInTable(struct material_entry *materials, struct texture_e
     return parseHmtMaterials(i, materials, textures, flag, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", findMatchingTextureRecursive);
+typedef struct { s16 w; s16 h; } TexDimsTmp;
+extern s32 releaseTextureLutEntry(u16);
+
+s32 findMatchingTextureRecursive(u16 arg0, struct material_entry *arg1, struct texture_entry *arg2, u8 arg3) {
+    struct D_main_bss_8011A444 *e;
+    struct D_main_bss_80128F08 *ent;
+    TexDimsTmp dims;
+    s16 w, h;
+    s32 flags;
+
+    e = (struct D_main_bss_8011A444 *)(arg0 * 4 + (s32)D_main_bss_8011A444);
+    if (e->material_type != 0) {
+        if (e->material_type & 1) {
+            if (arg2 != NULL) {
+                ent = (struct D_main_bss_80128F08 *)(e->D_80128F08_index * 0x24 + (s32)D_main_bss_80128F08);
+                w = ent->width;
+                h = ent->height;
+                dims.w = w;
+                dims.h = h;
+                if (dims.w == (s16)arg2->width && dims.h == (s16)arg2->height) {
+                    flags = arg2->flags_type;
+                    if (flags == (decodeRdpFormatFlags(D_main_bss_80128F08[e->D_80128F08_index].unk00) & 0xFFFF)) {
+                        return parseHmtMaterials(arg0, arg1, arg2, arg3, 1) & 0xFFFF;
+                    }
+                }
+            }
+        } else {
+            if (arg2 == NULL) {
+                return parseHmtMaterials(arg0, arg1, NULL, arg3, 0) & 0xFFFF;
+            }
+        }
+        if (releaseTextureLutEntry(arg0) & 0xFF) {
+            return parseHmtMaterials(arg0, arg1, arg2, arg3, 0) & 0xFFFF;
+        }
+    }
+    return 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", findTextureByName);
 
