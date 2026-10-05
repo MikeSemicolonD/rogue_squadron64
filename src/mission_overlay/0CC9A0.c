@@ -3,7 +3,44 @@
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", findNearestNpcWithinRange);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", initActorFromSpawnTemplate);
+struct IaObj { u8 pad0[0x34]; u8 *f34; s32 f38; u8 pad3C[0xAA]; u8 fE6; u8 padE7[0x10]; f32 fF8; };
+typedef struct { u8 pad0[4]; struct IaObj *obj; } IaActor;
+extern s32 D_main_bss_80137CE4;
+s32 setNpcHealth(s32, u8 *, u8 *);
+void setObjectDetailLevel(s32, s32);
+void initActorMotionParams(s32, s32, s32, s32, f32);
+void initObjectAnimSubstruct(s32, s32, s32, s32, f32, s32 (*)(), s32, f32, f32, s32);
+void setEffectIntensity(s32, s32);
+s32 tickActorTexturedSoundEffect();
+
+void initActorFromSpawnTemplate(IaActor *arg0) {
+    struct IaObj *o = arg0->obj;
+    u8 *e = o->f34;
+    s32 h;
+    u8 *e2;
+    u8 *t;
+    s32 off;
+    s8 st;
+
+    h = setNpcHealth(o->f38, e + 0x6C, e);
+    setObjectDetailLevel(o->f38, *(s32 *)(o->f34 + 0xA0));
+    st = 4;
+    if (h > 0) {
+        e2 = o->f34;
+        if (*(s32 *)(e2 + 0x4C) >= 0) {
+            o->fE6 = 0;
+            off = D_main_bss_80137CE4 * 4;
+            o->fF8 = *(f32 *)((u8 *)(off + (s32)o->f34) + 0xB8) * 3.0f;
+            t = (u8 *)(off + (s32)e2);
+            initActorMotionParams(o->f38, *(s32 *)(t + 0xB0), *(s32 *)(t + 0xB4), *(s32 *)(t + 0xBC), *(f32 *)(t + 0xC0));
+            initObjectAnimSubstruct(o->f38, *(s32 *)(e2 + 0xC4), *(s32 *)(e2 + 0xC8), *(s32 *)(e2 + 0xCC), *(f32 *)(e2 + 0xD0), tickActorTexturedSoundEffect, 0, 10.0f, 15.0f, 0);
+            setEffectIntensity(o->f38, *(s32 *)(e2 + 0xD8));
+            return;
+        }
+        st = 3;
+    }
+    o->fE6 = st;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CC9A0", D_mission_overlay_800A6D60);
 
