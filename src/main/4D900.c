@@ -250,7 +250,89 @@ void deactivateEffectObject(s32 idx) {
     updateEffectObjectTransformPieces(D_main_8009EB98[gPlayers[idx].inner.unk0B4], idx, (s32)((u8 *)&gPlayers[0].inner.posX + idx * sizeof(struct player_struct)), 0.046875f, gPlayers[idx].inner.unk178[0x14]);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", refreshEffectObjectCamerasAndState);
+extern s32 gCurrentLevel;
+extern void setActiveRenderListPtr(void *);
+extern void setRenderStateFlagByteOne(s32);
+extern void setRenderStateFlagByteTwo(s32);
+extern void setRenderStateFlagByteThree(s32);
+extern void setupCameraMatrices(void *);
+extern void initRenderStateArrays(void);
+extern void getConfigFloatPair(f32 *, f32 *);
+
+void refreshEffectObjectCamerasAndState(void) {
+    RoBlob30 save;
+    SceneNode *e;
+    s32 i;
+    s32 *camp;
+    s32 cam;
+    s32 s10;
+    s32 s14;
+    void *p;
+    f32 a;
+    f32 b;
+
+    for (i = 0; i < 1; i++) {
+        e = &D_main_bss_80138D18[i];
+        if (e->unk0 == 0) {
+            continue;
+        }
+        p = NULL;
+        if (gCurrentLevel == 10) {
+            goto done;
+        }
+        if (*(s32 *)((u8 *)e + 0x74) == 0) {
+            if (gCurrentLevel != 7) {
+                goto done;
+            }
+        } else {
+            p = (u8 *)e + 0x74;
+        }
+        setActiveRenderListPtr(p);
+        p = (void *)1;
+    done:
+        setRenderStateFlagByteOne((s32)p);
+        camp = &e->unk8;
+        cam = e->unk8;
+        e->unk8 = e->unk64;
+        s10 = e->unk10;
+        s14 = e->unk14;
+        e->unk10 = e->unk14 = 0;
+        setupCameraMatrices(camp);
+        initRenderStateArrays();
+        setRenderStateFlagByteOne(0);
+        e->unk8 = e->unk68;
+        e->unk10 = e->unk14 = 0;
+        setupCameraMatrices(camp);
+        initRenderStateArrays();
+        setRenderStateFlagByteOne(0);
+        e->unk8 = cam;
+        setupCameraMatrices(camp);
+        e->unk8 = e->unk6C;
+        if (e->unk8 != 0) {
+            initRenderStateArrays();
+            a = *(f32 *)((u8 *)e + 0x2C);
+            b = *(f32 *)((u8 *)e + 0x30);
+            getConfigFloatPair((f32 *)((u8 *)e + 0x2C), (f32 *)((u8 *)e + 0x30));
+            setRenderStateFlagByteOne(1);
+            setRenderStateFlagByteThree(0);
+            setRenderStateFlagByteTwo(1);
+            setActiveRenderListPtr(NULL);
+            setupCameraMatrices(camp);
+            setRenderStateFlagByteThree(1);
+            setRenderStateFlagByteOne(0);
+            *(f32 *)((u8 *)e + 0x2C) = a;
+            *(f32 *)((u8 *)e + 0x30) = b;
+        }
+        initRenderStateArrays();
+        e->unk10 = s10;
+        e->unk14 = s14;
+        e->unk8 = e->unk70;
+        save = *(RoBlob30 *)((u8 *)e + 0x34);
+        clearVec4QuadStruct((void *)((u8 *)e + 0x34));
+        setupCameraMatrices(&e->unk8);
+        *(RoBlob30 *)((u8 *)e + 0x34) = save;
+    }
+}
 
 void dispatchEffectObjectBehavior(s32 idx, s32 kind, s32 arg2) {
     updateEffectObjectTransformPieces(D_main_8009EB98[kind], idx, arg2, 0.046875f, gPlayers[idx].inner.unk178[0x14]);
