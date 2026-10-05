@@ -128,7 +128,73 @@ next:
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", walkMeshdef0List);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", instantiateNamedMeshInstance);
+void clearStructPair2C30(void *);
+
+u8 *instantiateNamedMeshInstance(u8 *name) {
+    s32 sum = 0;
+    u8 *p = name;
+    s32 idx;
+    s32 i;
+    u8 *e;
+    struct hobObjectListItem *item;
+    u8 *src;
+    u8 *inst;
+    u8 *copy;
+    u8 *q;
+
+    while (*p != 0) {
+        sum += *p++;
+    }
+    idx = hobObjectHashMap[sum % 25];
+    while (idx != 0xFFFF) {
+        e = (u8 *)hobObjectListItems[idx].object_entry;
+        i = 0;
+        if (name[0] != 0) {
+            p = name;
+            do {
+                if (*p != e[i]) {
+                    goto next;
+                }
+                i++;
+                if (i >= 16) {
+                    break;
+                }
+                p++;
+            } while (*p != 0);
+        }
+        if (name[i] == e[i]) {
+            break;
+        }
+next:
+        idx = hobObjectListItems[idx].nextIndex;
+    }
+    if (idx != 0xFFFF) {
+    src = *(u8 **)(*(u8 **)((u8 *)hobObjectListItems[idx].object_entry + 0x18) + 4);
+    inst = rs_malloc(((s32 *)src)[-1] + 0x58, 0);
+    copy = inst + 0x58;
+    zmemcpy(copy, src, ((s32 *)src)[-1]);
+    *(struct object_entry **)(inst + 0) = hobObjectListItems[idx].object_entry;
+    *(u16 *)(inst + 8) = 0x1001;
+    *(s32 *)(inst + 4) = 0;
+    inst[0xA] = 0;
+    inst[0xB] = 0;
+    *(s32 *)(inst + 0x18) = 0;
+    *(s32 *)(inst + 0x14) = 0;
+    *(s32 *)(inst + 0xC) = 0;
+    *(s32 *)(inst + 0x10) = 0;
+    *(u8 **)(inst + 0x1C) = copy;
+    *(s32 *)(inst + 0x20) = 0;
+    *(s32 *)(inst + 0x5C) = 0;
+    *(s32 *)(inst + 0x58) = 0;
+    *(s32 *)(inst + 0x64) &= ~8;
+    q = &inst[(*(u8 **)(inst + 0x78) - src) + 0x58];
+    *(u8 **)(inst + 0x78) = q;
+    *(u8 **)(q + 8) = &inst[(*(u8 **)(q + 8) - src) + 0x58];
+    clearStructPair2C30(copy);
+    return inst;
+    }
+    return NULL;
+}
 
 void applyRgbaTintToMeshVertices(u8 *arg0, u8 *arg1) {
     u8 *t0;
