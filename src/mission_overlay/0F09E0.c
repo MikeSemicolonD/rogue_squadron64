@@ -249,7 +249,70 @@ s32 evaluateTargetTrackingVisibility(u8 *obj, f32 arg1, f32 arg2) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", tickObjectAnimSubstruct);
+typedef struct {
+    f32 unk0;
+    f32 unk4;
+    f32 unk8;
+    f32 unkC;
+    f32 unk10;
+    f32 unk14;
+    s32 (*fn)(void *, s32);
+    s16 unk1C;
+    s16 unk1E;
+    s32 unk20;
+    s16 unk24;
+    s16 unk26;
+    u8 unk28;
+    u8 unk29;
+    s8 unk2A;
+    u8 unk2B;
+} TickSub;
+extern s32 rand(void);
+void tickObjectAnimSubstruct(u8 *obj, TickSub *sub, f32 arg2, f32 arg3) {
+
+    if (sub->fn == NULL) return;
+    sub->unkC = sub->unkC - arg2;
+    if (!(sub->unkC <= 0.0f) && !(0.0f < sub->unk10)) return;
+    if (0.0f < sub->unk10) {
+        sub->unk10 = sub->unk10 - arg2;
+        if (sub->unk10 <= 0.0f && sub->unk2B != 0) {
+            sub->unk10 = 0.0f;
+            sub->unk28 = sub->unk28 + 1;
+            if (sub->fn(getNpcContextByIndex(*(u16 *)(obj + 0x198)), (s8)sub->unk28) != 0) {
+                sub->fn = NULL;
+            }
+        }
+    } else if (sub->unk2B != 0) {
+        sub->unk10 = 0.0f;
+        sub->unk28 = 0;
+        if (sub->fn(getNpcContextByIndex(*(u16 *)(obj + 0x198)), 0) != 0) {
+            sub->fn = NULL;
+        }
+        sub->unk1E++;
+        if (sub->unk1E >= sub->unk1C) {
+            if (sub->unk4 == 0.0f) {
+                sub->unk1E = 0;
+            } else {
+                sub->unk2B = 0;
+                sub->unkC = sub->unk4;
+                return;
+            }
+        }
+        sub->unkC = sub->unk0 / (f32)sub->unk1C;
+        if (sub->unk8 != 0.0f) {
+            f32 r;
+            f32 x = ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / sub->unk8);
+            __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+            sub->unkC = sub->unkC + r;
+        }
+    } else {
+        sub->unkC = 0.0f;
+        sub->unk2B = 1;
+        sub->unk1E = 0;
+        sub->unk10 = 0.0f;
+        sub->unk28 = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", resolveNpcAttachmentPos);
 
@@ -742,7 +805,7 @@ void initAnimSubstructFromParams(AnimSubstruct *sub, s32 arg1, s32 arg2, f32 arg
     sub->unk2A = arg8 * 2.8222222f;
 }
 
-void tickObjectAnimSubstruct(u8 *obj, u8 *sub, f32 arg2, f32 arg3);
+void tickObjectAnimSubstruct(u8 *obj, TickSub *sub, f32 arg2, f32 arg3);
 
 void applyToObjectSubstructByFlag(u8 *obj, f32 arg1, f32 arg2, s32 useAlt) {
     u8 *sub;
