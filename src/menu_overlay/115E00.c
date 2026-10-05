@@ -164,7 +164,105 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", tickMenuTransitionState);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", runScriptedCraftCinematicEvent);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", initMenuWidgetArray);
+struct HobBlk { u8 b[0xFC]; };
+extern struct HobBlk bridgeBlueLightHobs[7];
+extern void clearStructPair2C30(u8 *);
+
+void initMenuWidgetArray(void) {
+    u32 i;
+    u32 j;
+    u8 *p;
+    u8 *q;
+    u8 v;
+    f32 *vtx;
+
+    for (i = 0; i < 7; i++) {
+        p = bridgeBlueLightHobs[i].b;
+        q = p + 0x4C;
+        *(s32 *)(p + 0x58) = 0x09000009;
+        *(s32 *)(p + 0xC) = 0;
+        *(s32 *)(p + 0x8) = 0;
+        *(s32 *)(p + 0x4) = 0;
+        *(s32 *)(p + 0x0) = 0;
+        *(u8 **)(p + 0x10) = q;
+        *(s32 *)(p + 0x60) = 3;
+        *(u8 **)(p + 0x6C) = p + 0xA8;
+        *(s32 *)(p + 0x14) = 0;
+        *(s32 *)(p + 0x50) = 0;
+        *(s32 *)(p + 0x4C) = 0;
+        *(s32 *)(p + 0x54) = 0;
+        *(s32 *)(p + 0x68) = 0;
+        *(s32 *)(p + 0x5C) = 0;
+        *(s32 *)(p + 0x64) = 0;
+        *(u8 **)(p + 0x70) = p + 0xD8;
+        *(s32 *)(p + 0x74) = 0;
+        clearStructPair2C30(q);
+        *(u8 **)(p + 0xB0) = p + 0xB8;
+        *(s32 *)(p + 0xB8) = 0x10;
+        *(s32 *)(p + 0xAC) = 0;
+        *(s32 *)(p + 0xA8) = 0;
+        *(s32 *)(p + 0xB4) = 1;
+        *(s32 *)(p + 0xBC) = 0x080C5000;
+        *(s32 *)(p + 0xC0) = 0;
+        *(f32 *)(p + 0xC0) = 0;
+        *(s32 *)(p + 0xB8) |= 0x82;
+        for (j = 0; j < 3; j++) {
+            *(u16 *)(p + 0xC4 + j * 2) = j;
+        }
+        if (i == 0) {
+            p[0xCC] = 0xB4;
+            p[0xCD] = 0xB4;
+            p[0xCE] = 0xF5;
+            p[0xCF] = 0;
+            p[0xD0] = 0xB4;
+            p[0xD1] = 0xB4;
+            p[0xD2] = 0xF5;
+            p[0xD3] = 0;
+            p[0xD4] = 0;
+            p[0xD5] = 0;
+            p[0xD6] = 0xA0;
+            p[0xD7] = 0;
+        } else {
+            if (i < 4) {
+                p[0xD4] = 0x50;
+                p[0xD5] = 0x50;
+                p[0xCC] = 0xFF;
+                p[0xCD] = 0xFF;
+                p[0xCE] = 0xFF;
+                p[0xCF] = 0;
+                p[0xD0] = 0xFF;
+                p[0xD1] = 0xFF;
+                p[0xD2] = 0xFF;
+                p[0xD3] = 0;
+                p[0xD6] = 0xFF;
+                p[0xD7] = 0xC8;
+            } else {
+                p[0xD4] = 0x1E;
+                p[0xD5] = 0x1E;
+                p[0xD6] = 0xE1;
+                p[0xCC] = 0;
+                p[0xCD] = 0;
+                p[0xCE] = 0x37;
+                p[0xCF] = 0;
+                p[0xD0] = 0;
+                p[0xD1] = 0;
+                p[0xD2] = 0x37;
+                p[0xD3] = 0;
+                p[0xD7] = 0x9B;
+            }
+        }
+        vtx = *(f32 **)(p + 0x70);
+        vtx[0] = 1.0f;
+        vtx[1] = -2.0f;
+        vtx[2] = 0;
+        vtx[3] = -1.0f;
+        vtx[4] = -2.0f;
+        vtx[5] = 0;
+        vtx[6] = 0;
+        vtx[7] = 0;
+        vtx[8] = 0;
+    }
+}
 
 void bridgeLoadShipBlueprints(struct some_ui_list_root *arg0) {
     char sp10[0x20];
