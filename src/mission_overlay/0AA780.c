@@ -10,7 +10,44 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0AA780", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AA780", computeAngleToTargetFromTransform);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AA780", buildOrientationFromPosAndAngles);
+void buildOrientationFromPosAndAngles(Mat4x3 m, Vec3f pos, Vec3f ang) {
+    f32 t[6];
+    register f32 k asm("$f24") = 0.017453292f;
+    f32 a, b, c;
+    f32 p1, p2, p3, p4;
+    f32 sx, cx, sy, cy, sz, cz;
+    m[3][0] = pos[0];
+    m[3][1] = pos[1];
+    m[3][2] = pos[2];
+    a = ang[0] * k;
+    b = ang[1] * k;
+    c = ang[2];
+    t[1] = cosf(a);
+    t[0] = sinf(a);
+    t[3] = cosf(b);
+    t[2] = sinf(b);
+    t[5] = cosf(c * k);
+    t[4] = sinf(c * k);
+    cx = t[1];
+    cz = t[5];
+    p1 = cx * cz;
+    sz = t[4];
+    p2 = cx * sz;
+    cy = t[3];
+    sx = t[0];
+    p3 = sx * cz;
+    sy = t[2];
+    p4 = sx * sz;
+    m[0][0] = p1 - p4 * sy;
+    m[1][0] = -sz * cy;
+    m[2][0] = p3 + p2 * sy;
+    m[1][2] = sy;
+    m[0][2] = -sx * cy;
+    m[2][2] = cx * cy;
+    m[0][1] = p2 + p3 * sy;
+    m[1][1] = cz * cy;
+    m[2][1] = p4 - p1 * sy;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AA780", stepAngleTowardTarget);
 
