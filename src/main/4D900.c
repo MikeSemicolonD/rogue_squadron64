@@ -27,7 +27,62 @@ extern SceneNode D_main_bss_80138D18[];
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", applyPlayerVehicleStateUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", rotateObjectMatrixAboutStoredAxis);
+typedef struct { s32 b[12]; } RoBlob30;
+typedef struct { s32 a, b, c; } RoV3;
+extern void floatModulo(f32, f32);
+
+void rotateObjectMatrixAboutStoredAxis(u8 *arg0, f32 dt) {
+    f32 m[12];
+    f32 w[4];
+    f32 v[4];
+    f32 pos[4];
+    f32 t0, t1, t2, n0, n2;
+    f32 q2[4];
+    f32 q3[4];
+    f32 q1[4];
+    *(RoBlob30 *)m = **(RoBlob30 **)(arg0 + 0x74);
+    *(RoV3 *)v = *(RoV3 *)(arg0 + 0x58);
+    if (v[0] != 0.0f || v[1] != 0.0f || v[2] != 0.0f) {
+        transformVec3ByMat34(m, v, w);
+        m[9] = w[0];
+        m[10] = w[1];
+        m[11] = w[2];
+    } else {
+        w[0] = m[9];
+        w[1] = m[10];
+        w[2] = m[11];
+    }
+    quatFromCardinalAxis(q2, 1, *(f32 *)(arg0 + 0xD0));
+    quatFromCardinalAxis(q3, 0, *(f32 *)(arg0 + 0xE0));
+    quatMultiply(q2, q3, q1);
+    quatToRotationMatrix(q1, m);
+    *(f32 *)(arg0 + 0x94) = *(f32 *)(arg0 + 0x94) + *(f32 *)(arg0 + 0xDC) * dt;
+    if (*(f32 *)(arg0 + 0x94) < 1.5f) {
+        *(f32 *)(arg0 + 0x94) = 1.5f;
+        *(f32 *)(arg0 + 0xDC) = 0.0f;
+    }
+    v[0] = 0.0f;
+    v[1] = 0.0f;
+    v[2] = *(f32 *)(arg0 + 0x94);
+    rotateVec3ByMat3x3(m, v, v);
+    t0 = *(f32 *)(*(u8 **)(arg0 + 0x74) + 0x24);
+    n0 = v[0] + t0;
+    pos[0] = t0;
+    t1 = *(f32 *)(*(u8 **)(arg0 + 0x74) + 0x28);
+    pos[1] = t1;
+    t2 = *(f32 *)(*(u8 **)(arg0 + 0x74) + 0x2C);
+    v[0] = n0;
+    n2 = v[2] + t2;
+    pos[2] = t2;
+    v[1] += t1;
+    v[2] = n2;
+    *(f32 *)(arg0 + 0x4C) = v[0];
+    *(f32 *)(arg0 + 0x50) = v[1];
+    *(f32 *)(arg0 + 0x54) = v[2];
+    *(RoV3 *)(arg0 + 0x10) = *(RoV3 *)v;
+    *(f32 *)(arg0 + 0xD0) = *(f32 *)(arg0 + 0xD0) + *(f32 *)(arg0 + 0xD8) * dt;
+    floatModulo(*(f32 *)(arg0 + 0xD0), 180.0f);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", updatePlayerVehicleByControlMode);
 
