@@ -970,11 +970,39 @@ void initMenuScreenCameraViewport(void) {
     resetPlayerSlotAllChannels(9, 0x14);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateMenuItemAnimationState);
+extern u8 D_main_bss_80130B63;
+extern u8 D_menu_overlay_800CCDC8[];
+s32 isViModeTypePal();
+void setMenuOverlayHeaderState(s32, s32, s32);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A7354);
+void updateMenuItemAnimationState(void) {
+    f32 sp18[10] = {0.84f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.475f, 0.375f, 0.5f};
+    s16 sp40[10] = {-32, 25, 42, 59, 89, 106, 123, 155, 151, 292};
+    s32 x;
+    u8 pal;
+    u8 i;
+    s32 a3;
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A737C);
+    x = 0x14;
+    if (D_main_bss_80130B63 != 0) {
+        x = 0x64;
+    }
+    i = 0;
+    pal = (u32)(isViModeTypePal() & 0xFF) > 0U;
+    setMenuOverlayHeaderState(2, 0x280, 0);
+    do {
+        a3 = 0;
+        if (i == 8) {
+            a3 = 0x25;
+        }
+        setPlayerSlotAnimationFlag(9, *(void **)(D_menu_overlay_800CCDC8 + (pal * 0x28 + i * 4)), i, a3 - 0x140, (s16)(sp40[i] - (s16)(x + 0x14)));
+        setPlayerSlotEntryRGB(9, i, mainMenuGreyColor);
+        samplePlayerAnimChannel(9, i, sp18[i]);
+        i++;
+    } while (i < 10);
+}
+
+
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", menuSubtype02Handler);
 
