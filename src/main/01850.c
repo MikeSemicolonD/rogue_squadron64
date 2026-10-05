@@ -221,7 +221,110 @@ s32 partitionFramebufferMemory(s32 *range, s32 *outTop, s16 w, s16 h, s16 bpp, u
 
 INCLUDE_ASM("asm/nonmatchings/main/01850", thread3_video_handle);
 
-INCLUDE_ASM("asm/nonmatchings/main/01850", runVideoFrameTick);
+typedef struct {
+    u16 f0;
+    u16 w;
+    u16 h;
+    s16 bpp;
+    u8 vi;
+    u8 pad9;
+} VidMode;
+
+typedef struct {
+    s32 mode;
+    u8 a;
+    u8 b;
+    u8 c;
+    u8 pad7;
+    u16 d;
+    u8 padA[2];
+    s32 e;
+} VidParams;
+
+typedef struct {
+    u32 dlBlocks;
+    u32 s30;
+    u32 s34;
+    u32 s38;
+    u16 f10;
+    u16 f12;
+    u16 f14;
+    u16 f16;
+    u32 flags;
+} VidMem;
+
+typedef struct {
+    u8 pad0[0x10];
+    VidMode mode;
+    VidParams params;
+    VidMem mem;
+} VidBootCfg;
+
+typedef struct {
+    s32 fb[3];
+    s32 z;
+    s32 e8;
+    s32 ec;
+    s32 dl[2];
+    s32 f8;
+} VidMemMap;
+
+extern VidMemMap sVidMemMap __asm__("D_main_bss_801163D8");
+extern VidBootCfg *sVidBootCfg __asm__("D_main_bss_8010FCB0");
+extern u8 sHeapBase208[] __asm__("D_main_bss_8010D208");
+extern u8 D_47490[];
+extern void musyxNoopStub(void);
+extern void coalesceFreeHeapBlocks(s32, void *, void *, s32);
+extern u8 advanceVideoFrame(s16, s16, u16, u16, s16, s32 *, s32, s32, u32, s32 *, s32, u32, s32, u32, u32, u8, u16, u16);
+extern s32 reapplyDisplayMode(s32, u8, u8, u8, u16, s32);
+
+s32 runVideoFrameTick(VidMode *mode, VidMem *mem, VidParams *params) {
+    s32 top;
+    u16 w;
+    u16 h;
+    u16 bpp;
+    u16 a;
+    u16 b;
+    s32 n;
+    u8 *base;
+    s32 heapTop;
+    musyxNoopStub();
+    bpp = mode->bpp;
+    w = mode->w;
+    h = mode->h;
+    a = mem->f14;
+    b = mem->f16;
+    if (mode->bpp == 24) {
+        bpp = 32;
+    }
+    if ((u8)partitionFramebufferMemory((s32 *)sHeapBase208, &top, w, h, bpp, !(mem->flags & 0x200))) {
+        n = 1;
+        base = sHeapBase208;
+        heapTop = sVidMemMap.z;
+    } else {
+        n = 0;
+        base = NULL;
+        heapTop = top;
+    }
+    coalesceFreeHeapBlocks(n, base, (u8 *)((s32)D_main_bss_8010D200 + (s32)D_47490), heapTop);
+    if (!advanceVideoFrame(w, h, a, b, bpp, sVidMemMap.fb, sVidMemMap.z, sVidMemMap.e8, (mem->s30 + 0xF) & ~0xF, sVidMemMap.dl, sVidMemMap.f8,
+                           (mem->s38 + 0xF) & ~0xF, sVidMemMap.ec, (mem->s34 + 0xF) & ~0xF, mem->flags, mode->vi, mem->f10, mem->f12)) {
+        return 0;
+    }
+    if (D_main_bss_8010D211s == 0) {
+        return 1;
+    }
+    if (params->a == 0) {
+        return 1;
+    }
+    if (reapplyDisplayMode(params->mode, params->a, params->b, params->c, params->d, params->e) != 0) {
+        return 0;
+    }
+    sVidBootCfg->mode = *mode;
+    sVidBootCfg->mem = *mem;
+    sVidBootCfg->params = *params;
+    return 1;
+}
 
 extern void func_entry_8000040C(void *, void *);
 extern u8 D_main_bss_8010D200[];
