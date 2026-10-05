@@ -602,7 +602,68 @@ extern s32 D_main_bss_8011A460;
 extern s32 D_main_bss_8011A4A8;
 extern s32 D_main_bss_80117C00;
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", frameStartReset);
+extern s8 D_main_80037650;
+extern s16 D_main_bss_8010D59C;
+extern s16 D_main_bss_8010DFD4;
+extern s16 D_main_bss_8010DFD6;
+extern s32 D_main_bss_8011A838;
+extern s32 D_main_bss_8011A83C;
+extern u8 D_main_bss_8011A899;
+extern s32 D_main_bss_8011A8C0[];
+extern s16 D_main_bss_8011A90A;
+extern s16 D_main_bss_8011A90C;
+extern s16 D_main_bss_8011A90E;
+extern s16 D_main_bss_8011A910;
+extern s32 D_main_bss_8011DC50;
+extern s32 D_main_bss_8011DC5C;
+extern u8 D_main_bss_80128EAD;
+void heapWalker(void);
+void tickTextureMaterialExpiry(void);
+
+s32 frameStartReset(void) {
+    s32 i;
+    s32 j;
+    u8 t;
+
+    D_main_bss_8011A90A = 0;
+    D_main_bss_8011A90C = 0;
+    D_main_bss_8011DC50 = 0;
+    D_main_bss_8011A90E = D_main_bss_8011A838 - 1;
+    D_main_bss_8011A910 = D_main_bss_8011A83C - 1;
+    heapWalker();
+    D_main_bss_80128C6C = 0;
+    D_main_bss_801143A0 = 0;
+    D_main_bss_8011DC5C = D_main_bss_8011A8C0[D_main_bss_8011A899];
+    for (i = 0; i < 4; i++) {
+        for (j = 63; j >= 0; j--) {
+            D_main_bss_8011D498[i].a[j] = 0;
+        }
+        for (j = 31; j >= 0; j--) {
+            D_main_bss_8011D498[i].b[j] = 0;
+        }
+    }
+    D_main_bss_8011A460 = 0;
+    D_main_bss_8011A4A8 = 0;
+    D_main_bss_80117C00 = 0;
+    D_main_bss_8010DFD4 = 0;
+    D_main_bss_8010DFD6 = 0;
+    D_main_bss_8010D59C = 0;
+    if (*(u8 *)&D_main_bss_8011A88C != 0) {
+        if (*(u8 *)&D_main_bss_8011A88D == 1) {
+            t = *(u8 *)&D_main_bss_8011A88E;
+            if (t < D_main_bss_80128EAD) {
+                D_main_80037650 = 1;
+                D_main_bss_8011A88E = ++t;
+            } else {
+                D_main_80037650 = 0;
+            }
+        } else {
+            D_main_80037650 = 1;
+        }
+    }
+    tickTextureMaterialExpiry();
+    return 1;
+}
 
 s32 clearStructPair2C30(void *arg0) {
     (*(s32 *)((u8 *)(arg0) + 0x2C)) = 0;
