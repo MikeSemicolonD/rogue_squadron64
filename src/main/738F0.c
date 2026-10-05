@@ -264,7 +264,179 @@ INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D170);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnScaledOrientedEffectTriple);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", heavyRandomBurstNpcHandler);
+typedef struct { u8 p0[4]; struct HBNode *unk04; u8 p8[0xE]; u16 unk16; } HBSelf;
+typedef struct HBNode {
+    struct HBNode *next;
+    struct HBNode *prev;
+    s16 s8;
+    s16 sA;
+    s16 sC;
+    u8 pE[2];
+    u16 h10;
+    u16 h12;
+    u8 p14[8];
+    s32 w1C;
+    f32 f20;
+    f32 f24;
+    s16 h28;
+    s16 h2A;
+    u8 b2C;
+    u8 b2D;
+    u8 b2E;
+    u8 b2F;
+    f32 f30;
+    f32 f34;
+    f32 f38;
+    f32 f3C;
+    f32 f40;
+    f32 f44;
+    f32 f48;
+    f32 f4C;
+    f32 f50;
+    f32 f54;
+    f32 f58;
+    f32 f5C;
+    f32 f60;
+    f32 f64;
+} HBNode;
+typedef struct { f32 x, y, z; } HBVec;
+typedef struct {
+    HBVec *pos;
+    f32 f4;
+    f32 f8;
+    f32 fC;
+    f32 f10;
+    f32 f14;
+    f32 f18;
+    f32 f1C;
+    f32 f20;
+} HBSpawn;
+typedef struct {
+    f32 dt;
+    u8 p4[0x14];
+    f32 f18;
+    f32 f1C;
+    f32 f20;
+    u8 p24[0x24];
+    struct { u8 p[0x20]; HBNode *head; } *unk48;
+} HBTick;
+extern f32 cosf(f32);
+extern u8 transformVec3ToNpcLocalWithScale(void *, s32, void *, f32, s32);
+extern u16 D_main_bss_80139574;
+extern u8 *D_main_bss_80138D1C;
+extern struct { u8 p[0x20]; u16 h20; } *D_main_bss_80130C08;
+extern void popNpcSlotFromTail(u16, void *);
+extern void destroyNpcSlotByIndex(u16);
+
+s32 heavyRandomBurstNpcHandler(void *selfp, u16 action, void *arg2) {
+    HBSelf *self = selfp;
+    HBNode *n = self->unk04;
+    register HBTick *a2 asm("$17");
+    HBSpawn *sp = arg2;
+    HBTick *tk = arg2;
+    f32 dt;
+    f32 one;
+    f32 pi;
+    f32 half;
+    f32 v[3];
+    f32 *cam;
+    f32 *pos;
+    f32 m;
+    f32 d;
+
+    switch (action) {
+    case 1:
+        n->h10 = 0x301;
+        n->b2C = 0xFF;
+        n->b2D = 0xFF;
+        n->b2E = 0xFF;
+        n->b2F = 0xFF;
+        n->sC = 0;
+        n->sA = 0;
+        n->s8 = 0;
+        n->h2A = 0;
+        n->h28 = 0;
+        n->w1C = 0;
+        n->f3C = sp->f4;
+        n->f44 = sp->f10;
+        n->h12 = D_main_bss_80130C08->h20;
+        n->f24 = n->f20 = 0.001f;
+        *(HBVec *)&n->f30 = *sp->pos;
+        n->f60 = 0.0f;
+        n->f40 = sp->fC;
+        n->f58 = 1.0f;
+        n->f5C = 1.0f;
+        n->f54 = sp->f8 - sp->f4;
+        n->f50 = sp->f1C;
+        n->f48 = sp->f14;
+        n->f4C = sp->f18;
+        d = sp->f20;
+        n->f64 = d;
+        if (d == 0.0f) {
+            n->f64 = 0.033333335f;
+        }
+        popNpcSlotFromTail(D_main_bss_80139574, self);
+        return 1;
+    case 2:
+        break;
+    case 3:
+        dt = tk->dt;
+        n->f60 = n->f60 + n->f40 * dt;
+        one = 1.0f;
+        if (n->f60 < one) {
+            pi = 3.1415927f;
+            half = 0.5f;
+            n->f58 = n->f3C + (one - cosf(n->f60 * pi * half)) * n->f54 * (n->f44 * 3.0f) * n->f48;
+            n->f5C = n->f3C + (one - cosf(n->f60 * pi * half)) * n->f54 * (n->f44 * 0.25f) * n->f4C;
+            n->f20 = n->f58;
+            if (n->f20 < 0.001f) n->f20 = 0.001f;
+            n->f24 = n->f5C;
+            if (n->f24 < 0.001f) n->f24 = 0.001f;
+            m = n->f60;
+            d = n->f64;
+            if (d < m) {
+                n->b2F = (u32)((one - m) * (one / d) * 255.0f);
+            }
+            if (n->f50 > 0.0f) {
+                cam = (f32 *)(D_main_bss_80138D1C + 0x28);
+                v[0] = cam[9] - n->f30;
+                v[1] = cam[10] - n->f34;
+                v[2] = cam[11] - n->f38;
+                n->f30 = n->f30 + v[0] * n->f50 * dt;
+                n->f34 = n->f34 + v[1] * n->f50 * dt;
+                n->f38 = n->f38 + v[2] * n->f50 * dt;
+            }
+        } else {
+            destroyNpcSlotByIndex(self->unk16);
+            return 1;
+        }
+        break;
+    case 4:
+        a2 = arg2;
+        __asm__("" : "+r"(a2));
+        pos = &n->f30;
+        m = n->f5C;
+        if (m < n->f58) m = n->f58;
+        if (!transformVec3ToNpcLocalWithScale(*(void **)a2, 0, pos, m, 0)) {
+            return 1;
+        }
+        {
+            HBNode *head;
+            n->s8 = (s32)((n->f30 - a2->f18) * 256.0f);
+            n->sA = (s32)((n->f34 - a2->f1C) * 256.0f);
+            n->sC = (s32)((n->f38 - a2->f20) * 256.0f);
+            head = a2->unk48->head;
+            n->next = head;
+            if (head != NULL) head->prev = n;
+            n->prev = NULL;
+            tk->unk48->head = n;
+        }
+        break;
+    default:
+        return 1;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", buildNpcAnchoredCameraEffectTransform);
 
