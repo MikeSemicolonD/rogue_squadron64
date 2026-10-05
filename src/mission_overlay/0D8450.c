@@ -329,7 +329,68 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcTieVariantTickEffects)
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcTieVariantSteerToward);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcTieVariantTickAttachmentEffect);
+extern u8 validateActorTargetLOS(s32);
+extern void applyToObjectSubstructByFlag(s32, f32, s32, f32);
+extern f32 getEffectIntensity(s32);
+extern void setEffectIntensity(s32, f32);
+extern s32 triggerCueWithSlotEffect(s32, s32, void *, void *, s32, f32, f32);
+extern s32 slotDispatcherIter(u16, s32, void *);
+
+typedef struct {
+    u16 kind;
+    u8 pad[0x16];
+    f32 val;
+} TieSlotMsg;
+
+void npcTieVariantTickAttachmentEffect(u8 *arg0, f32 dt) {
+    u8 tex[0x30];
+    TieSlotMsg msg;
+    f32 zero;
+    f32 inten;
+    s32 h;
+    s32 *cnt;
+    s32 *base;
+    u8 *def;
+
+    if (validateActorTargetLOS(*(s32 *)(arg0 + 0x38)) == 1) {
+        applyToObjectSubstructByFlag(*(s32 *)(arg0 + 0x38), dt, 0, 0.0f);
+    }
+    if (arg0[0xBA] != 0) {
+        f32 t = *(f32 *)(arg0 + 0xA8) - dt;
+        zero = 0.0f;
+        *(f32 *)(arg0 + 0xA8) = t;
+        if (t <= zero) {
+            base = (s32 *)(*(u8 **)(arg0 + 0x34) + 0xE4);
+            cnt = (s32 *)(D_main_bss_80137CE4 * 4 + (s32)base);
+            if (*cnt > 0) {
+                (*cnt)--;
+                *(f32 *)(arg0 + 0xA8) = *(f32 *)(arg0 + 0xAC);
+                lookupHmtTextureByName(*(s32 *)(arg0 + 0x30), "c", 0, tex, 0, 0);
+                if (arg0[0xBB] == 1) {
+                    *(f32 *)(tex + 0x24) = zero;
+                    *(f32 *)(tex + 0x28) = 4.0f;
+                    *(f32 *)(tex + 0x2C) = zero;
+                } else {
+                    *(f32 *)(tex + 0x24) = *(f32 *)(arg0 + 0x24);
+                    *(f32 *)(tex + 0x28) = *(f32 *)(arg0 + 0x28) + 4.0f;
+                    *(f32 *)(tex + 0x2C) = *(f32 *)(arg0 + 0x2C);
+                }
+                inten = getEffectIntensity(*(s32 *)(arg0 + 0x38));
+                setEffectIntensity(*(s32 *)(arg0 + 0x38), *(f32 *)(arg0 + 0xB0));
+                h = triggerCueWithSlotEffect(*(s32 *)(arg0 + 0x38), 9, tex, 0, 0, 0, -1.0f);
+                setEffectIntensity(*(s32 *)(arg0 + 0x38), inten);
+                msg.kind = 6;
+                msg.val = *(f32 *)(arg0 + 0xB4);
+                slotDispatcherIter(h, 0xA, &msg);
+                play3DSoundEvent(0, arg0, arg0 + 0x24, 14.0f, 0.8f, 0, 0x30, 0x6E, 0x3C);
+                if (--*(s16 *)(arg0 + 0xB8) > 0) {
+                    return;
+                }
+            }
+            arg0[0xBA] = 0;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcTieVariantHandleDestruction);
 
