@@ -461,7 +461,51 @@ void resetMaterialTextureEffectSlots(void) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMaterialTextureByName);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", easeAnimationKeyframe);
+extern u8 D_menu_overlay_800CF160;
+extern f32 D_menu_overlay_800CF164;
+extern f32 D_menu_overlay_800CF168;
+extern f32 D_menu_overlay_800CF16C;
+extern s8 D_menu_overlay_800CF162;
+f32 quadraticEaseInOut(f32);
+void activateAnimationKeyframe(s32, s32, u8);
+s32 cycleAccountLabelText(void *);
+void animateCraftSelectFlags(u8 *, u32, u8);
+
+void easeAnimationKeyframe(u8 *arg0, f32 arg1) {
+    f32 temp_fs0;
+    f32 temp_ft0;
+    f32 var_fa0;
+    f32 var_fs2;
+    u8 i;
+
+    var_fs2 = 1.0f;
+    if (D_menu_overlay_800CF168 != 0.0f) {
+        temp_ft0 = D_menu_overlay_800CF164 + ((D_menu_overlay_800CF168 * arg1) / 1.2717f);
+        D_menu_overlay_800CF164 = temp_ft0;
+        if ((temp_ft0 <= 0.0f) || (temp_ft0 >= 1.0f)) {
+            D_menu_overlay_800CF168 = 0.0f;
+            D_menu_overlay_800CF164 = 0.0f;
+        }
+        if (D_menu_overlay_800CF164 > 0.5f) {
+            var_fa0 = 1.0f - (2.0f * (1.0f - D_menu_overlay_800CF164));
+        } else {
+            var_fa0 = 1.0f - (2.0f * D_menu_overlay_800CF164);
+        }
+        i = 0;
+        var_fs2 = quadraticEaseInOut(var_fa0);
+        temp_fs0 = var_fs2 * 254.0f;
+        do {
+            activateAnimationKeyframe(5, i, (u8)temp_fs0);
+            i++;
+        } while (i < 4);
+        if ((((D_menu_overlay_800CF164 > 0.5f) && (D_menu_overlay_800CF168 > 0.0f)) || ((D_menu_overlay_800CF164 < 0.5f) && (D_menu_overlay_800CF168 < 0.0f))) && (D_menu_overlay_800CF160 == 0)) {
+            D_menu_overlay_800CF162 = cycleAccountLabelText(arg0);
+            animateCraftSelectFlags(arg0, 0xF, 0);
+            D_menu_overlay_800CF160 = 1;
+        }
+    }
+    D_menu_overlay_800CF16C = var_fs2;
+}
 
 extern s8 D_menu_overlay_800CF161;
 extern u8 D_menu_overlay_800CF190[];
