@@ -189,7 +189,61 @@ s32 playDualTextureAttachmentCueC(void *arg0)
   return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", transformCraftAnchorsApplySubFx2);
+typedef struct {
+    f32 v[12];
+} NpcXform30;
+
+typedef struct {
+    u8 pad0[0x30];
+    f32 yaw[2];
+    u8 pad38[0x28];
+} AnchorYawRow;
+
+extern AnchorYawRow D_mission_overlay_8010AFF0[];
+extern u8 isPendingChildNpcActive(s32);
+extern u8 validateActorTargetLOS(s32);
+extern void applyToObjectSubstructByFlag(s32, f32, f32, s32);
+extern void buildRotationMatrixSlot0(void *, f32);
+extern void composeRotationMatrixSlot1(void *, f32);
+extern void transformVec3ByMat34(void *, void *, void *);
+
+void transformCraftAnchorsApplySubFx2(u8 *npc, f32 dt) {
+    NpcXform30 save;
+    f32 mtx[12];
+    s32 i;
+    u8 r;
+
+    for (i = 0; i < 2; i++) {
+        if (isPendingChildNpcActive(*(s32 *)(npc + 0x38)) != 1) {
+            continue;
+        }
+        save = *(NpcXform30 *)npc;
+        buildRotationMatrixSlot0(mtx, ((f32 *)(npc + 0x7C))[i] + D_mission_overlay_8010AFF0[npc[0x99]].yaw[i]);
+        composeRotationMatrixSlot1(mtx, ((f32 *)(npc + 0x74))[i]);
+        transformVec3ByMat34(mtx, &save.v[3], npc + 0xC);
+        transformVec3ByMat34(mtx, &save.v[6], npc + 0x18);
+        switch (npc[0x99]) {
+        case 0:
+        case 1:
+            r = validateActorTargetLOS(*(s32 *)(npc + 0x38));
+            break;
+        default:
+            *(NpcXform30 *)npc = save;
+            continue;
+        }
+        if (r == 1) {
+            switch (i) {
+            case 0:
+                applyToObjectSubstructByFlag(*(s32 *)(npc + 0x38), dt, 0.0f, 0);
+                break;
+            case 1:
+                applyToObjectSubstructByFlag(*(s32 *)(npc + 0x38), dt, 0.0f, 1);
+                break;
+            }
+        }
+        *(NpcXform30 *)npc = save;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", tickCraftSplineOrientationVariant);
 
