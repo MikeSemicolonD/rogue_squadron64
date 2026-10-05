@@ -219,7 +219,112 @@ s32 partitionFramebufferMemory(s32 *range, s32 *outTop, s16 w, s16 h, s16 bpp, u
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/01850", thread3_video_handle);
+typedef struct {
+    s32 unk0;
+    u8 pad4[0xE];
+    u16 width;
+    u16 height;
+    u16 bpp;
+    u8 viFlag;
+    u8 pad19[0x17];
+    u32 unk30;
+    u32 unk34;
+    u32 unk38;
+    u16 unk3C;
+    u16 unk3E;
+    u16 unk40;
+    u16 unk42;
+    u32 flags;
+} VideoBootConfig;
+
+typedef struct {
+    s32 fb[3];
+    s32 z;
+    s32 e8;
+    s32 ec;
+    s32 dl[2];
+    s32 f8;
+} VideoMem;
+
+extern VideoMem gVideoMem __asm__("D_main_bss_801163D8");
+extern OSMesgQueue D_main_8010D580;
+extern OSMesg D_main_8010DFD0;
+extern OSThread D_main_8010DDA0;
+extern u8 sNmiThreadStackEnd[] __asm__("D_main_8010DDA0");
+extern u8 D_47490[];
+extern void preNmiResetThread(void *);
+extern VideoBootConfig *getGameConfig(s32);
+extern void initMainHeap(s32, void *, void *, s32);
+extern u8 initServiceRegistry(void);
+extern u8 initDmaSlots(s32, s32 (*)(void));
+extern u8 setVideoReadyFlag(void);
+extern void setViModeType(void);
+extern void initVideoBootWrapper(s16, s16, u16, u16, s16, s32 *, s32, s32, u32, s32 *, s32, u32, s32, u32, u32, u8, u16, u16);
+extern s32 registerServiceWorker(s32, s32, s32, void (*)(s32 *));
+extern void startServiceWorker(s32);
+
+void thread3_video_handle(void *arg) {
+    VideoBootConfig *cfg;
+    s32 top;
+    u16 w;
+    u16 h;
+    s16 bpp;
+    u16 a;
+    u16 b;
+    s32 n;
+    u8 *base;
+    s32 heapTop;
+
+    osCreateMesgQueue(&D_main_8010D580, &D_main_8010DFD0, 1);
+    osCreateThread(&D_main_8010DDA0, 0, preNmiResetThread, NULL, sNmiThreadStackEnd, 0x7F);
+    osStartThread(&D_main_8010DDA0);
+    cfg = getGameConfig(0);
+    *(VideoBootConfig **)&D_main_bss_8010FCB0 = cfg;
+    if (cfg->unk0 == 0) {
+        w = cfg->width;
+        h = cfg->height;
+        bpp = cfg->bpp;
+        a = cfg->unk40;
+        b = cfg->unk42;
+    }
+    if (bpp == 24) {
+        bpp = 32;
+    }
+    if ((u8)partitionFramebufferMemory((s32 *)D_main_bss_8010D200, &top, w, h, bpp, !(cfg->flags & 0x200))) {
+        n = 1;
+        base = D_main_bss_8010D200;
+        heapTop = gVideoMem.z;
+    } else {
+        n = 0;
+        base = NULL;
+        heapTop = top;
+    }
+    { register u8 *e asm("$2") = D_main_bss_8010D200; initMainHeap(n, base, e + (s32)D_47490, heapTop); }
+    if (!initServiceRegistry()) {
+        while (1) {
+        }
+    }
+    if (!initDmaSlots(0, returnZeroStub)) {
+        while (1) {
+        }
+    }
+    if (!setVideoReadyFlag()) {
+        while (1) {
+        }
+    }
+    setViModeType();
+    initVideoBootWrapper(w, h, a, b, bpp, gVideoMem.fb, gVideoMem.z, gVideoMem.e8,
+                         (((VideoBootConfig *)D_main_bss_8010FCB0)->unk30 + 0xF) & ~0xF, gVideoMem.dl, gVideoMem.f8,
+                         (((VideoBootConfig *)D_main_bss_8010FCB0)->unk38 + 0xF) & ~0xF, gVideoMem.ec,
+                         (((VideoBootConfig *)D_main_bss_8010FCB0)->unk34 + 0xF) & ~0xF,
+                         ((VideoBootConfig *)D_main_bss_8010FCB0)->flags, ((VideoBootConfig *)D_main_bss_8010FCB0)->viFlag,
+                         ((VideoBootConfig *)D_main_bss_8010FCB0)->unk3C, ((VideoBootConfig *)D_main_bss_8010FCB0)->unk3E);
+    if (D_main_bss_8010FCB0->unk4 != NULL) {
+        startServiceWorker(registerServiceWorker(8, 0x2000, 0xA, mainBootstrapWorker));
+    }
+    while (1) {
+    }
+}
 
 typedef struct {
     u16 f0;
