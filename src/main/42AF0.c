@@ -86,7 +86,60 @@ s32 rasterizeEdgeXSpansAscending(f32 *a, f32 *b, s32 n) {
     return n;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", rasterizeEdgeXSpansDescending);
+extern s16 D_main_bss_80130D10[];
+
+s32 rasterizeEdgeXSpansDescending(f32 *a, f32 *b, s32 n)
+{
+  f32 slope;
+  s32 y0;
+  s32 y1;
+  s32 t;
+  s32 ret;
+  ret = n;
+  if (b[2] > a[2])
+  {
+    y0 = (s32) a[2];
+    y1 = (s32) b[2];
+    slope = (b[0] - a[0]) / (b[2] - a[2]);
+    if (slope < 0.0f)
+    {
+      if ((n == 0) || (((f32) D_main_bss_80130D10[n]) < a[0]))
+      {
+        D_main_bss_80130D10[n] = (s32) a[0];
+      }
+      y0++;
+      ret = n;
+      if (y1 >= y0)
+      {
+        do
+        {
+          n++;
+          D_main_bss_80130D10[n] = (s32) (a[0] + ((((f32) y0) - a[2]) * slope));
+          y0++;
+        }
+        while (y1 >= y0);
+      }
+    }
+    else
+    {
+      if (y0 < y1)
+      {
+        do
+        {
+          t = y0 + 1;
+          D_main_bss_80130D10[n] = (s32) (a[0] + ((((f32) t) - a[2]) * slope));
+          n++;
+          y0 = t;
+        }
+        while (y0 < y1);
+      }
+      D_main_bss_80130D10[n] = (s32) b[0];
+      ret = n;
+    }
+  }
+  return n;
+  return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", scanConvertTriangleToSpanTable);
 
