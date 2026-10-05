@@ -99,6 +99,12 @@ def m2c(func, s_path, c_path, extra):
     declared = set(re.findall(r"\b(D_\w+|[a-z]\w*)\b(?=\s*(?:\[.*\])?;)", "\n".join(l for l in code.splitlines() if l.startswith("extern"))))
     context = pathlib.Path("/tmp/auto_ctx.c").read_text()
     missing = sorted({d for d in re.findall(r"\bD_\w+_[0-9A-F]{8}\b", code) if d not in declared and not re.search(r"\b" + d + r"\b", context)})
+    if "lits" in extra:
+        vals = rodata_literals(s_path)
+        if not vals:
+            return None, "no rodata"
+        code = apply_literals(code, vals)
+        missing = [d for d in missing if d not in vals]
     if missing:
         code = "".join(f"extern s32 {d};\n" for d in missing) + code
     return code.strip("\n") + "\n", None
@@ -144,6 +150,36 @@ def declaration_for(name):
     if m:
         return m.group(0) + "\n"
     return f"extern s32 {name};\n"
+
+def rodata_literals(s_path):
+    """Float, double and string rodata symbols in the function's own .s, as C literal text."""
+    import struct
+    st = read(s_path)
+    vals = {}
+    for m in re.finditer(r"^dlabel (\w+)\n\s*/\* [0-9A-F]+ [0-9A-F]{8} ([0-9A-F]+) \*/ \.(float|double)", st, re.M):
+        name, hx, kind = m.groups()
+        if kind == "float":
+            v = struct.unpack(">f", bytes.fromhex(hx))[0]
+            s = next(("%.*g" % (q, v) for q in range(1, 18) if struct.unpack(">f", struct.pack(">f", float("%.*g" % (q, v))))[0] == v), repr(v))
+            if "e" in s and float(s) == int(float(s)):
+                s = "%d" % int(float(s))
+            vals[name] = (s if ("." in s or "e" in s) else s + ".0") + "f"
+        else:
+            v = struct.unpack(">d", bytes.fromhex(hx))[0]
+            s = repr(v)
+            vals[name] = s if ("." in s or "e" in s) else s + ".0"
+    for m in re.finditer(r'^dlabel (\w+)\n\s*/\* [0-9A-F]+ [0-9A-F]{8} \*/ \.asciz (".*")$', st, re.M):
+        vals[m.group(1)] = m.group(2)
+    return vals
+
+def apply_literals(code, vals):
+    lines = [l for l in code.splitlines() if not (l.startswith("extern") and any(re.search(r"\b" + n + r"\b", l) for n in vals))]
+    code = "\n".join(lines) + "\n"
+    for n, lit in vals.items():
+        code = re.sub(r"\*\s*\(\s*(f32|f64|float|double)\s*\*\s*\)\s*&\s*" + n + r"\b", lit, code)
+        code = re.sub(r"&\s*" + n + r"\b", lit, code) if lit.startswith('"') else code
+        code = re.sub(r"\b" + n + r"\b", lit, code)
+    return code
 
 def try_func(func, c_path, s_path, variants):
     original = read(c_path)
@@ -192,12 +228,17 @@ def main():
     ap.add_argument("--max-insns", type=int, default=10**9)
     ap.add_argument("--limit", type=int, default=10**9)
     ap.add_argument("--commit-every", type=int, default=25)
+    ap.add_argument("--files", help="comma-separated src .c files to restrict candidates to")
+    ap.add_argument("--retry", action="store_true", help="ignore functions already in the log")
     ap.add_argument("--variants", help="comma-separated variants, flags joined by '+', e.g. 'synth,gcc272+--no-andor'")
     a = ap.parse_args()
     skip = set(pathlib.Path(a.skip).read_text().split()) if pathlib.Path(a.skip).exists() else set()
     done = set()
     if pathlib.Path(a.log).exists():
         done = {line.split("\t")[0] for line in pathlib.Path(a.log).read_text().splitlines() if line}
+    if a.retry:
+        done = set()
+    only = set(a.files.split(",")) if a.files else None
     ok, _ = rom_matches()
     if not ok:
         sys.exit("auto_decomp: baseline ROM does not match; fix that first")
@@ -207,6 +248,8 @@ def main():
     matched_since_commit, tried = [], 0
     with open(a.log, "a") as log:
         for n, func, c_path, s_path in candidates(skip):
+            if only and str(c_path) not in only:
+                continue
             if n > a.max_insns or tried >= a.limit:
                 break
             if func in done:
