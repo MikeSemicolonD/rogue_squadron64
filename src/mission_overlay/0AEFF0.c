@@ -419,7 +419,147 @@ void applyCraftCapabilityFlags(u8 *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", initPlayerCraftMovementMode);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", tryPlaySpatialSoundWithGates);
+typedef struct {
+    u8 pad0[4];
+    f32 pos[3];
+    f32 vec10[3];
+    u8 pad1C[4];
+    f32 unk20;
+    u8 pad24[0x90];
+    u16 unkB4;
+    u8 padB6[2];
+    s32 unkB8;
+    u8 padBC[0x7C];
+    f32 unk138;
+    f32 unk13C;
+    u8 pad140[8];
+    f32 unk148;
+    f32 unk14C;
+    u8 pad150[0x70];
+    s32 unk1C0;
+    s32 unk1C4;
+} SpatialSoundNpc;
+
+typedef struct {
+    u8 pad0[4];
+    u16 unk4;
+    u16 unk6;
+    f32 *unk8;
+} SpatialSoundArg;
+
+extern void play3DSoundEvent(void *, void *, void *, f32, f32, s32, s32, s32, s32);
+extern void vec3ExtrapolateFirstOrder(void *, s32, void *, f32);
+extern void spawnNpcType0xAFromTemplate(void *, f32);
+extern void spawnRandomParticleWithParent(void *, s32, f32, s32);
+extern void distanceAndDopplerNpcHelper(void *, f32, f32);
+extern void tickCinematicObjectStateMachine(void *, f32);
+extern void clampVec3ToUnitIfLongerThan(void *);
+extern f32 vec3Dot(void *, void *);
+extern void applyNpcPositionDrift(void *, void *, f32);
+extern void func_mission_overlay_800EFD64(s32, s32);
+extern s32 slotDispatcherIter(u16, s32, void *);
+extern u8 D_main_bss_80138838;
+extern u8 D_main_bss_80138926;
+extern u16 D_main_bss_8013957E;
+
+void tryPlaySpatialSoundWithGates(SpatialSoundNpc *arg0, SpatialSoundArg *arg1) {
+    struct {
+        f32 v28[3];
+        u8 pad34[4];
+        u8 b38[0x18];
+        s8 c50;
+        u8 pad51[7];
+        f32 v58[3];
+    } l;
+    f32 *s2 = arg1->unk8;
+    f32 fs0;
+    f32 t;
+    struct player_struct *pl;
+    s32 *gs;
+
+    if (D_main_bss_80138838 != 0) {
+        return;
+    }
+    if (D_main_bss_80138926 != 0) {
+        return;
+    }
+    gs = (s32 *)&gGameSettings;
+    if ((gs + arg0->unkB8)[3] & 0x800000) {
+        return;
+    }
+    pl = gPlayers;
+    if (((u16 *)&pl[arg0->unkB8].inner.unk178[2])[0] & 0x78) {
+        return;
+    }
+    if (s2 != NULL) {
+        play3DSoundEvent(NULL, arg0->pos, (u8 *)arg0 + 0x28, 24.0f, 0.6f, 0, 0x1B, 0x7F, 0x5A);
+        switch (arg0->unkB4) {
+        case 0:
+        case 2:
+        case 8:
+            fs0 = 0.2f;
+            break;
+        case 3:
+        case 4:
+        case 6:
+            fs0 = 0.3f;
+            break;
+        case 1:
+        case 7:
+            fs0 = 0.55f;
+            break;
+        case 5:
+            fs0 = 0.8f;
+            break;
+        }
+        switch (arg1->unk4) {
+        case 0xA:
+        case 0xB:
+        case 0xD:
+            vec3ExtrapolateFirstOrder(s2, 0, l.v58, -0.1f);
+            spawnNpcType0xAFromTemplate(l.v58, fs0 * 0.6f);
+            break;
+        case 0xC:
+            vec3ExtrapolateFirstOrder(s2, 0, l.v58, -0.1f);
+            spawnRandomParticleWithParent(l.v58, 0xFFFF, fs0 * 0.5f, 0);
+            break;
+        default:
+            vec3ExtrapolateFirstOrder(s2, 0, l.v58, -0.1f);
+            distanceAndDopplerNpcHelper(l.v58, fs0 * 0.04f, 0.02f);
+            break;
+        }
+    }
+    rumbleInline((u8 *)arg0, 0);
+    tickCinematicObjectStateMachine(arg0, (f32)arg1->unk6);
+    fs0 = (f32)arg1->unk6 / 20.0f;
+    if (fs0 > 1.0f) {
+        fs0 = 1.0f;
+    }
+    if (fs0 < 0.0f) {
+        fs0 = 0.0f;
+    }
+    if (s2 != NULL) {
+        l.v28[0] = arg0->pos[0] - s2[0];
+        t = arg0->pos[1] - s2[1];
+        l.v28[1] = t;
+        l.v28[2] = arg0->pos[2] - s2[2];
+        if ((t > 0.0f && arg0->unk20 > 0.0f) || (t < 0.0f && arg0->unk20 < 0.0f)) {
+            arg0->unk14C = arg0->unk14C + arg0->unk148 * fs0;
+        } else {
+            arg0->unk14C = arg0->unk14C - arg0->unk148 * fs0;
+        }
+        clampVec3ToUnitIfLongerThan(l.v28);
+        if (vec3Dot(l.v28, arg0->vec10) > 0.0f) {
+            arg0->unk13C = arg0->unk13C + arg0->unk138 * fs0;
+        } else {
+            arg0->unk13C = arg0->unk13C - arg0->unk138 * fs0;
+        }
+        applyNpcPositionDrift(arg0, l.v28, fs0);
+    }
+    func_mission_overlay_800EFD64(0, 0);
+    l.c50 = 0xB;
+    slotDispatcherIter(D_main_bss_8013957E, 9, l.b38);
+}
 
 u8 isRumbleSlotActive(u8);
 s32 startRumbleEffect(u8, void *);
