@@ -93,9 +93,59 @@ INCLUDE_ASM("asm/nonmatchings/main/4D900", applyObjectLocalToWorldTransform);
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", updateEffectObjectOrientationQuat);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", releaseEffectObjectNpcSlots);
-
 typedef struct { s32 b[12]; } Blob30;
+extern u8 D_main_bss_80138268[][6][0xF8];
+extern void destroyNpcSlotChain(u16);
+extern void updatePlayerVehicleByControlMode(void *, f32);
+extern void updateEffectObjectOrientationQuat(void *, void *, f32);
+extern void updateAudioListenerPosFromPlayer(void);
+
+void releaseEffectObjectNpcSlots(s32 idx, s32 view, u8 copy) {
+    u8 *cur;
+    u8 *nw;
+    u8 *t;
+    f32 dt;
+
+    cur = D_main_bss_80138D18[idx].unk4;
+    nw = D_main_bss_80138268[idx][view];
+    if (cur != nw) {
+        *(u16 *)cur &= ~1;
+        if (*(u16 *)(cur + 2) == 4) {
+            t = *(u8 **)(cur + 0xBC);
+            if (*(u16 *)(t + 0xF4) != 0xFFFF) {
+                destroyNpcSlotChain(*(u16 *)(t + 0xF4));
+                *(u16 *)(t + 0xF4) = 0xFFFF;
+            }
+            *(u16 *)(*(u8 **)(cur + 0xBC)) &= ~1;
+            t = *(u8 **)(cur + 0xC0);
+            if (*(u16 *)(t + 0xF4) != 0xFFFF) {
+                destroyNpcSlotChain(*(u16 *)(t + 0xF4));
+                *(u16 *)(t + 0xF4) = 0xFFFF;
+            }
+            *(u16 *)(*(u8 **)(cur + 0xC0)) &= ~1;
+        }
+        if (*(u16 *)(cur + 0xF4) != 0xFFFF) {
+            destroyNpcSlotChain(*(u16 *)(cur + 0xF4));
+            *(u16 *)(cur + 0xF4) = 0xFFFF;
+        }
+        D_main_bss_80138D18[idx].unk4 = nw;
+        *(u16 *)nw |= 1;
+        if (copy) {
+            *(Blob30 *)(nw + 0x28) = *(Blob30 *)(cur + 0x28);
+            *(f32 *)(nw + 0x10) = *(f32 *)(nw + 0x4C);
+            *(f32 *)(nw + 0x14) = *(f32 *)(nw + 0x50);
+            *(f32 *)(nw + 0x18) = *(f32 *)(nw + 0x54);
+        }
+        *(f32 *)(nw + 0x98) = *(f32 *)(nw + 0xA0);
+        *(f32 *)(nw + 0x9C) = *(f32 *)(nw + 0xA0);
+        dt = 0.033333335f;
+        updatePlayerVehicleByControlMode(nw, dt);
+        updateEffectObjectOrientationQuat(&D_main_bss_80138D18[*(s32 *)(nw + 0xC)], nw, dt);
+        updateAudioListenerPosFromPlayer();
+    }
+}
+
+typedef struct { s32 b[12]; } Blob30Dup;
 extern u8 D_main_bss_80138930[][4][0xF8];
 extern void destroyNpcSlotChain(u16);
 extern void updatePlayerVehicleByControlMode(void *, f32);
