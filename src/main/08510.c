@@ -365,7 +365,24 @@ Gfx *allocDLBlockToListD(void) {
     return chunk->displayList;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", drainMeshReleaseQueue);
+static __inline__ void freeListInsert(struct DisplayListBuffer *arg0) {
+    struct DisplayListBuffer *var_v1;
+
+    if (arg0 != NULL) {
+        var_v1 = arg0;
+        if (arg0->next != NULL) {
+            do {
+                var_v1 = var_v1->next;
+            } while (var_v1->next != NULL);
+        }
+        var_v1->next = D_main_bss_801163B0;
+        if (D_main_bss_801163B0 != NULL) {
+            D_main_bss_801163B0->prev = var_v1;
+        }
+        D_main_bss_801163B0 = arg0;
+        arg0->prev = NULL;
+    }
+}
 
 typedef struct {
     s32 v[7];
@@ -373,6 +390,26 @@ typedef struct {
 
 extern u16 D_main_bss_80113230;
 extern MeshReleaseEntry D_main_bss_80112B30[];
+
+void drainMeshReleaseQueue(void) {
+    s32 i;
+    s32 j;
+    s32 *pb;
+    s32 *pc;
+
+    for (i = 0; i < D_main_bss_80113230; i++) {
+        freeListInsert((struct DisplayListBuffer *)D_main_bss_80112B30[i].v[0]);
+        pb = &D_main_bss_80112B30[i].v[1];
+        pc = &D_main_bss_80112B30[i].v[3];
+        for (j = 0; j < 2; j++) {
+            freeListInsert((struct DisplayListBuffer *)pb[j]);
+            freeListInsert((struct DisplayListBuffer *)pc[j]);
+        }
+        freeListInsert((struct DisplayListBuffer *)D_main_bss_80112B30[i].v[6]);
+        freeListInsert((struct DisplayListBuffer *)D_main_bss_80112B30[i].v[5]);
+    }
+    D_main_bss_80113230 = 0;
+}
 
 s32 enqueueMeshForDeferredRelease(struct meshdef1 *arg0) {
     struct meshdef1 *mesh = arg0;
