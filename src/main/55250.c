@@ -36,7 +36,79 @@ void tickWrappingTimerAccumulatorList(f32 dt) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/55250", loadAssetIntoNewSlot);
+extern s32 D_main_bss_80137CFC;
+extern s32 D_main_bss_80138920;
+s32 findTextureByName(s32);
+u8 fillTextureDescriptorNoCopy(u16, void *);
+s32 get_asset_size_extra(s32, s32);
+s32 get_asset_size_simple(s32, s32);
+s32 findAssetAcrossSegments(s32, s32, s32, s32, s32);
+void setupAssetDma(s32, s32, s32, s32, s32, void *);
+void teardownAssetDma(s32, s32);
+void zmemcpy(u8 *, u8 *, u32);
+void full_header_image_offset_convert(void *, void *);
+s32 loadAndDecodeTexture(void *, void **, void *, u32);
+
+u16 loadAssetIntoNewSlot(s32 name, s32 assetId) {
+    struct {
+        u8 pad0[0xC];
+        s32 frameSize;
+        u8 pad10[8];
+    } desc;
+    void *dst;
+    u16 idx;
+    u16 slot;
+    PoolEntryT *e;
+    u8 *file;
+    u8 *p;
+    s32 size;
+    s32 h;
+    s32 i;
+    u32 w;
+
+    idx = findTextureByName(name);
+    if (idx == 0xFFFF) {
+        return 0xFFFF;
+    }
+    if (!fillTextureDescriptorNoCopy(idx, &desc)) {
+        return 0xFFFF;
+    }
+    for (slot = 0; slot < D_main_bss_80137C80; slot++) {
+        if (!(((PoolEntryT *)D_main_bss_80137C84)[slot].flags & 0x8000)) {
+            break;
+        }
+    }
+    if (slot >= D_main_bss_80137C80) {
+        return 0xFFFF;
+    }
+    e = &((PoolEntryT *)D_main_bss_80137C84)[slot];
+    e->flags = 0x8000;
+    e->phase = 0;
+    e->frame = 0;
+    file = (u8 *)rs_malloc(get_asset_size_extra(D_main_bss_80137CFC, assetId), 0);
+    size = get_asset_size_simple(D_main_bss_80137CFC, assetId);
+    p = file;
+    h = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, assetId, 0);
+    setupAssetDma(D_main_bss_80138920, 0, h, 0, size, file);
+    teardownAssetDma(D_main_bss_80138920, h);
+    e->frameCount = 0;
+    while ((u32)(file + size - p) > 0x10) {
+        p = (u8 *)(((s32)p + *(s32 *)p + 7) & ~3);
+        e->frameCount++;
+    }
+    e->mat = (u8 *)rs_malloc(e->frameCount * desc.frameSize + 0x14, 0);
+    p = file;
+    zmemcpy(e->mat, (u8 *)&desc, 0x14);
+    for (i = 0; i < e->frameCount; i++) {
+        full_header_image_offset_convert(p + 4, p + 4);
+        w = *(u32 *)(p + 0x24);
+        dst = &e->mat[desc.frameSize * i + 0x14];
+        loadAndDecodeTexture(e->mat, &dst, p + 4, w);
+        p = (u8 *)(((s32)p + *(s32 *)p + 7) & ~3);
+    }
+    rs_free((s32)file);
+    return slot;
+}
 
 s32 rs_malloc(s32, s32);
 void allocAnimationPhasePool(s32 n) {
