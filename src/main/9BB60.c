@@ -114,7 +114,22 @@ s32 allocAndConfigureNewVoice(u32 arg0, s32 arg1, u8 arg2, u8 arg3, u8 arg4, u8 
     return -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", stopVoiceSlotSynced);
+extern volatile SpeechVoiceSlot gVSlots[] __asm__("D_main_bss_80154620");
+
+void stopVoiceSlotSynced(s32 index) {
+    switch (gVSlots[index].active) {
+    case 1:
+        gVSlots[index].active = 0;
+        break;
+    case 2:
+        lockSpeechVoices();
+        stopVoice(D_main_80153420[index].data);
+        gVSlots[index].active = 3;
+        gVSlots[index].unk18 = 4;
+        unlockSpeechVoices();
+        break;
+    }
+}
 
 static inline s32 findVoiceSlotByHandle(s32 handle) {
     u32 i;
