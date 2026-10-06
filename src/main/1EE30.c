@@ -84,7 +84,48 @@ INCLUDE_ASM("asm/nonmatchings/main/1EE30", allocTextureTlutBlock);
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", freeTextureTlutBlock);
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", freeTextureDataSlot);
+void freeTextureDataSlot(u16 arg0) {
+    u8 *data;
+    u8 *end;
+    u8 *dst;
+    s32 n;
+    s32 i;
+    u16 tlut;
+
+    unlinkTextureMaterialList(arg0);
+    end = D_main_bss_80128F08[arg0].texture_size + D_main_bss_80128F08[arg0].texture_data;
+    data = D_main_bss_80128F08[arg0].texture_data;
+    n = D_main_bss_8011A7D8 - (s32)end;
+    D_main_bss_80128F08[arg0].unk00 = 0;
+    if (n != 0) {
+        dst = data;
+        i = n;
+        while (i > 0) {
+            *(u32 *)dst = *(u32 *)end;
+            end += 4;
+            dst += 4;
+            i -= 4;
+        }
+    }
+    D_main_bss_8011A7D8 = (s32)(D_main_bss_80128F08[arg0].texture_data + n);
+    for (i = 0; i < D_main_bss_80128EF0; i++) {
+        if (D_main_bss_80128F08[i].unk00 != 0) {
+            u8 *d2 = D_main_bss_80128F08[i].texture_data;
+            if (D_main_bss_80128F08[arg0].texture_data < d2) {
+                D_main_bss_80128F08[i].texture_data = d2 - D_main_bss_80128F08[arg0].texture_size;
+            }
+        }
+    }
+    tlut = D_main_bss_80128F08[arg0].unk0E;
+    if (tlut != 0xFFFF) {
+        for (i = 0; i < D_main_bss_80128EF0; i++) {
+            if (D_main_bss_80128F08[i].unk00 != 0 && D_main_bss_80128F08[i].unk0E == tlut) {
+                return;
+            }
+        }
+        freeTextureTlutBlock(tlut, D_main_bss_80128F08[i].unk00);
+    }
+}
 
 u16 decodeRdpFormatFlags(u16 arg0) {
     u32 ret;
