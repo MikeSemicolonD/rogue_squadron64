@@ -165,7 +165,112 @@ s32 dispatchDatSubtypeByRandomIndex(u8 *arg0, DatSubObj **arg1) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", walkDatTreeAndVisitChildren);
+typedef struct DatWalkNode {
+    u8 unk0;
+    u8 unk1;
+    s16 unk2;
+    u8 unk4;
+    u8 unk5;
+    u8 unk6;
+    u8 unk7;
+    struct DatWalkNode *unk8;
+    struct DatWalkNode *unkC;
+    s16 h10, h12, h14;
+    u8 pad16[0x24 - 0x16];
+    f32 f24;
+    u8 pad28[0x37 - 0x28];
+    u8 b37;
+} DatWalkNode;
+typedef struct { f32 px, py, pz, dx, dy, dz; f32 pad[6]; } AttachPt;
+typedef struct DatWalkLink { void *unk0; struct DatWalkLink *unk4; } DatWalkLink;
+typedef struct { u8 pad0[0x18]; f32 f18, f1C, f20, f24, f28, f2C; u8 pad30[0x48 - 0x30]; struct { u8 pad[0x20]; DatWalkNode *head; } *p48; } DatWalkCtx;
+extern u8 D_main_bss_8013A898;
+extern u8 *D_main_bss_8013A89C;
+extern AttachPt *D_main_bss_8013A8A0;
+extern u8 D_main_800A0B38[][4];
+extern f32 D_main_800A0BD0[];
+void vec3NormalizeInto(f32 *, f32 *);
+void computeNamedAttachPointTransform(void *, s32, s32, s32 *, void *, s32, s32);
+
+void walkDatTreeAndVisitChildren(DatWalkNode *n, u8 *arg1, DatWalkCtx *ctx) {
+    s32 i;
+    AttachPt tmp;
+    f32 dir[4];
+    f32 d[3];
+    AttachPt *p;
+    f32 t;
+    f32 k;
+    s32 v;
+
+    i = n->unk4;
+    if (n->unk0 & 0x80) {
+        i = 0;
+        if (n->unk4 != 0) {
+            do {
+                walkDatTreeAndVisitChildren(&n->unk8[i], arg1, ctx);
+                i++;
+            } while (i < n->unk4);
+        }
+    } else {
+        if (n->unk6 != 0) {
+            p = &D_main_bss_8013A8A0[n->unk6];
+        } else {
+            if ((*(u16 *)(arg1 + 8) & 0x20) && D_main_bss_8013A898 != 0) {
+                u8 c = D_main_bss_8013A898 - 1;
+                D_main_bss_8013A898 = c;
+                n->unk6 = D_main_bss_8013A89C[c];
+                p = &D_main_bss_8013A8A0[n->unk6];
+                computeNamedAttachPointTransform(arg1, 0, n->unk5, &i, p, 0, 0);
+            } else {
+                p = &tmp;
+                computeNamedAttachPointTransform(arg1, 0, n->unk5, &i, p, 0, 0);
+            }
+        }
+        d[0] = p->px - ctx->f18;
+        d[1] = p->py - ctx->f1C;
+        d[2] = p->pz - ctx->f20;
+        vec3NormalizeInto(dir, d);
+        t = -(p->dx * dir[0] + p->dy * dir[1] + p->dz * dir[2]);
+        if (!(n->unk0 & 0x40)) {
+            t += 0.6f;
+        } else {
+            t += 0.95f;
+        }
+        if (t < 0.0f) {
+            t = 0.0f;
+        } else if (t > 1.0f) {
+            t = 1.0f;
+        }
+        switch (n->unk1) {
+        case 0:
+            break;
+        case 1:
+            t *= (f32)(0x100 - n->unk2) * 0.00390625f;
+            break;
+        case 2:
+            t = 0.0f;
+            break;
+        case 3:
+            t *= (f32)n->unk2 * 0.00390625f;
+            break;
+        }
+        n->b37 = (f32)D_main_800A0B38[n->unk0 & 0x1F][3] * t;
+        if (n->b37 >= 4) {
+            t = dir[0] * ctx->f24 + dir[1] * ctx->f28 + dir[2] * ctx->f2C;
+            n->f24 = t * 180.0f;
+            k = D_main_800A0BD0[n->unk0 & 0x1F];
+            n->h10 = (d[0] - dir[0] * k) * 256.0f;
+            n->h12 = (d[1] - dir[1] * k) * 256.0f;
+            n->h14 = (d[2] - dir[2] * k) * 256.0f;
+            n->unk8 = ctx->p48->head;
+            if (n->unk8 != NULL) {
+                ((DatWalkLink *)n->unk8)->unk4 = (DatWalkLink *)((u8 *)n + 8);
+            }
+            n->unkC = 0;
+            ctx->p48->head = (DatWalkNode *)((u8 *)n + 8);
+        }
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/700B0", strVYa4Hi);
 
