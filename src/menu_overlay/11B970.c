@@ -536,7 +536,38 @@ s32 cycleAccountLabelText(void *arg0) {
     return k & 0xFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateBannerOscillation);
+#include "hud.h"
+extern f32 D_menu_overlay_800CF168;
+f32 cosf(f32);
+f32 sinf(f32);
+void *getStructField0xC(s32);
+
+void animateBannerOscillation(f32 arg0) {
+    MaterialTexEffectSlot *s0;
+    f32 fs0;
+    f32 fs1;
+    u32 i;
+    struct ui_element *e;
+
+    fs1 = arg0;
+    if (D_menu_overlay_800CF168 > 0.0f) {
+        fs1 -= 0.33333334f;
+    }
+    i = 0;
+    do {
+        s0 = &D_menu_overlay_800CF180[i];
+        e = (struct ui_element *)getStructField0xC(s0->unk0);
+        fs0 = 2.0f * (fs1 + 0.5f) * 3.1415927f;
+        s0->unk4 = (s16)(s32)(sinf(fs0 + (f32)i * 2.0944057f) * 180.0f - 128.0f);
+        s0->unk6 = (s16)(s32)(cosf(fs0 + (f32)i * 2.0944057f) * 140.0f - 20.0f);
+        s0->unk8 = (cosf(2.0f * fs1 * 3.1415927f + (f32)i * 2.0944057f) * 0.37f + 1.0f) - 0.37f;
+        e->xpos = (f32)s0->unk4 + (1.0f - s0->unk8 * 512.0f / 640.0f) * 0.5f * 256.0f;
+        e->ypos = (f32)s0->unk6 + (1.0f - s0->unk8) * 0.5f * 160.0f;
+        e->width_scale = s0->unk8 * 512.0f / 640.0f;
+        e->height_scale = s0->unk8;
+        i++;
+    } while (i < 3U);
+}
 
 void sprintf(char *, const char *, ...);
 void setPlayerSlotAnimationFlag(s32, void *, s32, s32, s32);
