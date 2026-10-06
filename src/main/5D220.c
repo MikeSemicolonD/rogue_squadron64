@@ -200,7 +200,271 @@ void collectNearbyNpcsForEffect(u8 *arg0, u16 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", sprayEffectEmitterNpcHandler);
+typedef struct SpBlk {
+    struct SpBlk *next;
+    struct SpBlk *prev;
+    s16 x, y, z;
+    u8 padE[0x22];
+} SpBlk;
+
+typedef struct {
+    SpBlk blk[3];
+    PxV3 pos;
+    PxV3 pt[2];
+    PxV3 vel;
+    f32 C0;
+    f32 C4;
+    f32 C8;
+    f32 CC;
+    f32 D0;
+    u16 D4;
+    u16 D6;
+    u8 D8;
+    u8 D9;
+} SpObj;
+
+typedef struct {
+    u16 a;
+    u16 b;
+    s16 c;
+    u16 d;
+    void *e;
+} SpEv;
+
+s32 rs_malloc(s32, s32);
+void rs_memset(void *, s32, s32);
+u16 popNpcSlotFromTail(u16, void *);
+void destroyNpcSlotByIndex(u16);
+void spawnScaledOrientedEffectTriple(void *, f32);
+void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+s32 findSegmentObjectSphereHit(s32, void *, void *, void *);
+s32 getPlayerField2(s32);
+f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+s32 isTerrainCellBlockedAtWorldXz(f32, f32, void *);
+void spawnWaterSprayDebrisAndBurst(void *, f32, f32, f32, f32, f32);
+u8 transformVec3ToNpcLocalWithScale(s32, s32, void *, f32, s32);
+extern s16 D_main_bss_80139738;
+extern u16 D_main_bss_80139568;
+extern u8 D_main_bss_80130B39;
+extern u8 D_main_bss_80138058[];
+extern s32 missionStats[];
+
+s32 sprayEffectEmitterNpcHandler(u8 *arg0, s32 action, u8 *arg2) {
+    f32 hit[10];
+    f32 v[3];
+    f32 seg[12];
+    union {
+        struct {
+            u8 it[8];
+            f32 d[3];
+        } s;
+        SpEv ev;
+    } u;
+    SpObj *o = *(SpObj **)(arg0 + 4);
+
+    switch ((u16)action) {
+    case 1:
+        {
+        u8 *rec = arg2;
+        o = (SpObj *)rs_malloc(0xDC, 0);
+        *(SpObj **)(arg0 + 4) = o;
+        *(u16 *)((u8 *)o + 0x10) = 0x300;
+        *((u8 *)o + 0x2C) = 0xFF;
+        *((u8 *)o + 0x2D) = 0xFF;
+        *((u8 *)o + 0x2E) = 0xFF;
+        *((u8 *)o + 0x2F) = 0xFF;
+        *(s16 *)((u8 *)o + 0x8) = *(s16 *)((u8 *)o + 0xA) = *(s16 *)((u8 *)o + 0xC) = 0;
+        *(s16 *)((u8 *)o + 0x28) = *(s16 *)((u8 *)o + 0x2A) = 0;
+        *(u16 *)((u8 *)o + 0x12) = D_main_bss_80139738;
+        *(f32 *)((u8 *)o + 0x20) = *(f32 *)((u8 *)o + 0x24) = *(f32 *)rec;
+        o->vel = *(PxV3 *)(*(u8 **)(rec + 0xC) + 0x24);
+        o->C0 = *(f32 *)rec;
+        o->pos.x = *(f32 *)(*(u8 **)(rec + 0xC) + 0) + o->vel.x / 30.0f;
+        o->pos.y = *(f32 *)(*(u8 **)(rec + 0xC) + 4) + o->vel.y / 30.0f;
+        o->pos.z = *(f32 *)(*(u8 **)(rec + 0xC) + 8) + o->vel.z / 30.0f;
+        o->blk[1] = o->blk[0];
+        o->blk[2] = o->blk[0];
+        o->pt[0] = o->pos;
+        o->pt[1] = o->pos;
+        *(f32 *)((u8 *)o + 0x50) = *(f32 *)((u8 *)o + 0x20) * 1.1f;
+        *(f32 *)((u8 *)o + 0x54) = *(f32 *)((u8 *)o + 0x24) * 1.1f;
+        *((u8 *)o + 0x5F) = 0xC0;
+        o->C4 = o->C0;
+        *(f32 *)((u8 *)o + 0x80) = *(f32 *)((u8 *)o + 0x20) * 1.2f;
+        *(f32 *)((u8 *)o + 0x84) = *(f32 *)((u8 *)o + 0x24) * 1.2f;
+        *((u8 *)o + 0x8F) = 0x60;
+        o->C8 = o->C0;
+        o->D6 = *(u16 *)(rec + 0x1C);
+        o->D4 = *(u16 *)(rec + 0x18);
+        o->CC = 0.0f;
+        o->D8 = rec[0x17];
+        *(volatile f32 *)&o->D0 = 2.5f;
+        o->D9 = 0;
+        popNpcSlotFromTail(D_main_bss_80139568, arg0);
+        return 1;
+        }
+    case 2:
+        if (o->D9 != 0) {
+            rs_memset(v, 0, 0xC);
+            spawnScaledOrientedEffectTriple(&o->pos, 1.0f);
+            if (o->D8 == 8) {
+                play3DSoundEvent(0, &o->pos, v, 24.0f, 0.4f, 0, 0x21, 0x78, 0x50);
+            } else {
+                play3DSoundEvent(0, &o->pos, v, 24.0f, 0.4f, 0, 0x6E, 0x78, 0x50);
+            }
+            return 1;
+        }
+        break;
+    case 3:
+        {
+        f32 dt = *(f32 *)arg2;
+        s16 ex;
+        u16 best;
+        u16 ch;
+        u16 idx;
+        f32 bestd;
+        f32 *hp;
+        o->pos.x += o->vel.x * dt;
+        o->pos.y += o->vel.y * dt;
+        o->pos.z += o->vel.z * dt;
+        v[0] = o->pt[0].x - o->pos.x;
+        v[1] = o->pt[0].y - o->pos.y;
+        v[2] = o->pt[0].z - o->pos.z;
+        o->pt[0].x = o->pos.x + v[0] * 0.1f;
+        o->pt[0].y = o->pos.y + v[1] * 0.1f;
+        o->pt[0].z = o->pos.z + v[2] * 0.1f;
+        v[0] = o->pt[1].x - o->pt[0].x;
+        v[1] = o->pt[1].y - o->pt[0].y;
+        v[2] = o->pt[1].z - o->pt[0].z;
+        o->pt[1].x = o->pt[0].x + v[0] * 0.1f;
+        o->pt[1].y = o->pt[0].y + v[1] * 0.1f;
+        o->pt[1].z = o->pt[0].z + v[2] * 0.1f;
+        o->vel.y += dt * 12.0f;
+        *(PxV3 *)&seg[0] = o->pos;
+        *(PxV3 *)&seg[9] = o->vel;
+        seg[6] = 0.0f;
+        seg[7] = 0.0f;
+        seg[8] = 0.0f;
+        seg[3] = 0.0f;
+        seg[4] = 0.0f;
+        seg[5] = 1.0f;
+        ex = -1;
+        if (o->CC < 1.0f) {
+            ex = o->D4;
+        }
+        best = 0xFFFF;
+        bestd = 2.0f;
+        hp = hit;
+        ch = D_main_bss_8013957C;
+        {
+        f32 dt2 = *(f32 *)arg2;
+        u.s.d[0] = seg[9] * dt2;
+        u.s.d[1] = seg[10] * dt2;
+        u.s.d[2] = seg[11] * dt2;
+        }
+        idx = findActiveNpcInSlotChain(ch, u.s.it);
+        if ((idx & 0xFFFF) != 0xFFFF) {
+            do {
+                if ((u16)ex == 0xFFFF || (u16)ex != idx) {
+                    s32 mesh = *(s32 *)(getNpcContextByIndex(idx & 0xFFFF) + 0xC);
+                    if (mesh != 0 && findSegmentObjectSphereHit(mesh, seg, u.s.d, hp) != 0) {
+                        if (hp[6] < bestd) {
+                            bestd = hp[6];
+                            best = idx;
+                        }
+                    }
+                }
+                idx = revalidateNpcSlotIterator(u.s.it);
+            } while ((idx & 0xFFFF) != 0xFFFF);
+        }
+        idx = best;
+        if ((idx & 0xFFFF) != 0xFFFF) {
+            if (D_main_bss_80130B39 == 0 && o->D4 == (u16)getPlayerField2(0)) {
+                missionStats[2]++;
+            }
+            u.ev.a = *(u16 *)(arg0 + 0x16);
+            u.ev.b = o->D4;
+            u.ev.c = o->D8;
+            u.ev.d = o->D6;
+            u.ev.e = hit;
+            slotDispatcherIter(idx & 0xFFFF, 5, &u.ev);
+            o->D9 = 1;
+            goto tail;
+        }
+        {
+            f32 h = wrapAngleToCyclicRange(o->pos.x, o->pos.z, D_main_bss_80138058, 0);
+            if (h <= o->pos.y) {
+                o->pos.y = h;
+                if (isTerrainCellBlockedAtWorldXz(o->pos.x, o->pos.z, D_main_bss_80138058) == 1) {
+                    spawnWaterSprayDebrisAndBurst(&o->pos, 0.6f, 1.2f, 1.0f, 2.0f, 0.5f);
+                }
+            tail:
+                if (o->D0 > 0.0f) {
+                    collectNearbyNpcsForEffect((u8 *)o, idx);
+                }
+                o->D9 = 1;
+                destroyNpcSlotByIndex(*(u16 *)(arg0 + 0x16));
+                return 1;
+            }
+        }
+        }
+        break;
+    case 4:
+        {
+        u8 *rec = arg2;
+        s32 j;
+        if (transformVec3ToNpcLocalWithScale(*(s32 *)arg2, 0, &o->pos, 0.5f, 0)) {
+            *(s16 *)((u8 *)o + 0x8) = (o->pos.x - *(f32 *)(rec + 0x18)) * 256.0f;
+            *(s16 *)((u8 *)o + 0xA) = (o->pos.y - *(f32 *)(rec + 0x1C)) * 256.0f;
+            *(s16 *)((u8 *)o + 0xC) = (o->pos.z - *(f32 *)(rec + 0x20)) * 256.0f;
+            *(u8 **)o = *(u8 **)(*(u8 **)(rec + 0x48) + 0x20);
+            if (*(u8 **)o != NULL) {
+                *(SpObj **)(*(u8 **)o + 4) = o;
+            }
+            *(s32 *)((u8 *)o + 4) = 0;
+            *(SpObj **)(*(u8 **)(rec + 0x48) + 0x20) = o;
+            for (j = 0; j < 2; j++) {
+                SpBlk *nx;
+                SpBlk *b = &o->blk[j];
+                SpObj *p = (SpObj *)((u8 *)o + j * 12);
+                b[1].x = (p->pt[0].x - *(f32 *)(rec + 0x18)) * 256.0f;
+                b[1].y = (p->pt[0].y - *(f32 *)(rec + 0x1C)) * 256.0f;
+                b[1].z = (p->pt[0].z - *(f32 *)(rec + 0x20)) * 256.0f;
+                nx = *(SpBlk **)(*(u8 **)(rec + 0x48) + 0x20);
+                b[1].next = nx;
+                if (nx != NULL) {
+                    nx->prev = (SpBlk *)((u8 *)o + (j * 0x30 + 0x30));
+                }
+                b[1].prev = NULL;
+                *(SpBlk **)(*(u8 **)(rec + 0x48) + 0x20) = (SpBlk *)((u8 *)o + (j * 0x30 + 0x30));
+            }
+        }
+        return 1;
+        }
+    case 10:
+        switch (*(s16 *)arg2) {
+        case 1:
+            {
+            f32 f = (f32)o->D6 * *(f32 *)(arg2 + 0x18);
+            if (f > 65535.0f) {
+                f = 65535.0f;
+            }
+            o->D6 = (u32)f;
+            }
+            break;
+        case 6:
+            o->D0 = *(f32 *)(arg2 + 0x18);
+            break;
+        default:
+            return 1;
+        }
+        break;
+    case 11:
+        *(u16 *)(arg2 + 2) = 0x1005;
+        break;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/5D220", dispatchCueByCategory);
 
