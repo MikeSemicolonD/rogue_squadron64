@@ -252,7 +252,152 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5C40);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", allocFormatTextElement);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", loadNamedTextureDescriptor);
+typedef struct {
+    u8 *p0;
+    u8 pad4[0x1C];
+    u8 *p20;
+    char *p24;
+    u16 h28;
+    u16 h2A;
+    u8 b2C;
+    u8 pad2D;
+    u16 h2E;
+    u8 pad30[4];
+} HmtA;
+
+typedef struct {
+    u8 pad0[0x14];
+    char name[0x10];
+} HmtB;
+
+typedef union {
+    struct {
+        char a[8];
+        char b[8];
+    } s;
+    s32 align;
+} HmtHdr;
+
+extern char D_menu_overlay_800A5C40[];
+void *load_asset(char *);
+s32 rs_free(s32);
+void zmemcpy(u8 *, u8 *, u32);
+s32 registerHmtTextureInTable(void *, void *, u8);
+
+BgObj *loadNamedTextureDescriptor(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
+    HmtHdr hdr;
+    char name[0x40];
+    HmtA a;
+    HmtB b;
+    BgObj *obj;
+    u8 fl = arg3;
+    BgElem *e;
+    s32 scale;
+    u32 i;
+    u32 j;
+    u32 cols;
+    u32 off;
+    u8 *src;
+    s32 ty;
+    u16 t;
+    s16 v;
+
+    obj = (BgObj *)rs_malloc(0x38, 0);
+    rs_memset((u8 *)obj, 0, 0x38);
+    sprintf(name, D_menu_overlay_800A5C20, arg0);
+    obj->info = load_asset(name);
+    obj->flags = 0;
+    obj->w = arg1;
+    obj->h = arg2;
+    obj->depth = 2;
+    obj->b18 = D_menu_overlay_800CC850++;
+    scale = 0x100;
+    if ((obj->info->type & 0xF) == 0) {
+        obj->depth = 1;
+        scale = 0x10;
+    }
+    if ((obj->info->type & 0xF) == 2) {
+        obj->depth = 4;
+    }
+    if ((obj->info->type & 0xF) == 3) {
+        obj->depth = 8;
+    }
+    obj->count = (obj->info->w + obj->w - 1) / obj->w;
+    obj->count = obj->count * ((obj->info->h + obj->h - 1) / obj->h);
+    obj->ids = (u16 *)rs_malloc(obj->count * 2, 0);
+    for (i = 0; i < obj->count; i++) {
+        obj->ids[i] = 0xFFFF;
+    }
+    e = (BgElem *)rs_malloc(0x30, 0);
+    obj->elem = e;
+    rs_memset((u8 *)e, 0, 0x30);
+    obj->elem->wC = (u16 *)rs_malloc(obj->count * 2, 0);
+    __builtin_memcpy(hdr.s.a, D_menu_overlay_800A5C2C, 6);
+    __builtin_memcpy(hdr.s.b, D_menu_overlay_800A5C34, 7);
+    hdr.s.a[1] = obj->b18 + 0x41;
+    hdr.s.b[1] = obj->b18 + 0x41;
+    rs_memset((u8 *)&b, 0, 0x24);
+    rs_memset((u8 *)&a, 0, 0x34);
+    rs_strcpy((u8 *)b.name, (u8 *)hdr.s.a);
+    a.p24 = hdr.s.b;
+    a.h28 = obj->w;
+    a.h2A = obj->h;
+    a.b2C = 1;
+    t = obj->info->type;
+    if (fl) {
+        t |= 0x2000;
+    }
+    a.h2E = t;
+    a.p20 = (u8 *)obj->info + 0xC;
+    a.p0 = rs_malloc(obj->w * obj->h * obj->depth / 2, 0);
+    src = (u8 *)obj->info + 0xC + ((obj->info->type & 0x8000) ? scale * 4 : scale * 3);
+    ty = obj->info->type & 0xF;
+    if ((u32)(ty - 4) < 2 || (u16)ty == 2 || (u16)ty == 3) {
+        src = (u8 *)obj->info + 0xC;
+    }
+    for (i = 0; i < obj->count; i++) {
+        sprintf(b.name + 2, D_menu_overlay_800A5C40, i);
+        sprintf(a.p24 + 2, D_menu_overlay_800A5C40, i);
+        {
+            u32 iw = obj->info->w;
+            register u32 ow asm("$2");
+            __asm__("" :: "r"(iw));
+            ow = obj->w;
+            cols = iw / ow;
+            {
+                u32 r = i % cols;
+                register u32 q asm("$4") = i / cols;
+                off = r * ow;
+                off += q * obj->h * iw;
+                off *= obj->depth;
+                off >>= 1;
+            }
+        }
+        for (j = 0; j < obj->h; j++) {
+            zmemcpy(a.p0 + ((j * obj->w * obj->depth) >> 1), src + (off + ((j * obj->info->w * obj->depth) >> 1)), (obj->w * obj->depth) / 2);
+        }
+        v = registerHmtTextureInTable(&b, &a, 1);
+        {
+            u16 *p = e->wC;
+            u16 *q = obj->ids;
+            p[i] = v;
+            q[i] = v;
+        }
+    }
+    rs_free((s32)a.p0);
+    e->h8 = obj->info->w / obj->w;
+    v = obj->info->h / obj->h;
+    e->f24 = 1.0f;
+    e->f28 = 1.0f;
+    e->b2C = 0xFF;
+    e->b2D = 0xFF;
+    e->b2E = 0xFF;
+    e->b2F = 0xFF;
+    e->hA = v;
+    rs_free((s32)obj->info);
+    obj->info = NULL;
+    return obj;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", strMenuAlpha);
 
