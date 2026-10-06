@@ -111,7 +111,173 @@ void linkHudNodeAndComputeScreenPos(HudOwner *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56630", tickVoiceSubtitleDisplay);
+typedef struct {
+    u16 x;
+    s16 y;
+} VsGlyph;
+
+typedef struct {
+    /* 0x00 */ u16 id;
+    /* 0x02 */ u8 b2;
+    /* 0x03 */ u8 b3;
+    /* 0x04 */ u8 b4;
+    /* 0x05 */ u8 b5;
+    /* 0x06 */ u8 pad6[2];
+    /* 0x08 */ s32 key;
+    /* 0x0C */ s16 hC;
+    /* 0x0E */ u16 cur;
+    /* 0x10 */ u16 count;
+    /* 0x12 */ u8 pad12[4];
+    /* 0x16 */ s16 h16;
+    /* 0x18 */ f32 f18;
+    /* 0x1C */ f32 f1C;
+} VsHud;
+
+typedef struct {
+    /* 0x00 */ u8 pad0[8];
+    /* 0x08 */ u16 h8;
+    /* 0x0A */ u8 padA[2];
+    /* 0x0C */ s32 wC;
+    /* 0x10 */ VsGlyph *glyphs;
+} VsSlot;
+
+typedef struct {
+    u8 pad0[0x10];
+    u32 w10;
+    u8 pad14[2];
+    u8 b16;
+} VsSettings;
+
+extern s32 D_main_bss_80139010;
+extern u16 D_main_bss_80139014;
+extern VsSettings gGameSettings;
+#define VH ((VsHud *)D_main_bss_80139010)
+s32 getBootConfigField12();
+s32 getVoiceText(u16);
+u8 *getVoiceTxtStringPtr(u16);
+void setPlayerSlotAnimationFlag(u16, char *, s32, s32, s32);
+u8 *getPlayerSlotLookupBase(u8);
+f32 getVoicePlaybackProgressByKey(s32, f32 *);
+
+#define SETV(K) { u16 vid = K; if (VH->id != vid) { VH->id = vid; getVoiceText(vid); { VsHud *h = VH; h->b3 = 0; h->key = -1; } VH->b2 = 0; } }
+
+void tickVoiceSubtitleDisplay(f32 dt) {
+    f32 sp18;
+    s32 lim;
+    u8 *str;
+    VsSlot *slot;
+    VsGlyph *gl2;
+    VsGlyph *glyphs;
+    s32 line;
+    s32 i;
+    s32 k;
+    s32 brk;
+    s32 sub;
+    s32 j;
+    s32 n;
+    s32 cnt;
+    s32 best;
+
+    lim = VH->h16;
+    if (gGameSettings.b16 != 0) {
+        SETV(0x222)
+    } else if (gGameSettings.w10 & 0x20) {
+        SETV(0x223)
+    }
+    if (VH->id == 0xFFFF) return;
+    str = getVoiceTxtStringPtr(VH->id);
+    if (str == NULL) return;
+    if (VH->b2 == 0) {
+        setPlayerSlotAnimationFlag(D_main_bss_80139014, (char *)str, 0, (s16)(-((getBootConfigField12() & 0xFFFF) * 100) / 320), 10);
+        slot = (VsSlot *)getPlayerSlotFieldAt34(D_main_bss_80139014, 0);
+        if (slot->h8 == 0) {
+            VH->id = 0xFFFF;
+            return;
+        }
+        sub = 0;
+        line = sub;
+        brk = sub;
+        VH->b2 = 1;
+        VH->cur = 0;
+        glyphs = slot->glyphs;
+        i = sub;
+        for (k = 0; str[k] != 0; k++) {
+            if (str[k] == ' ') brk = i;
+            if (getPlayerSlotLookupBase(D_main_bss_80139014)[str[k]] != 0xFF) {
+                glyphs[i].x = glyphs[i].x - sub;
+                if (lim < (s16)glyphs[i].x) {
+                    line += VH->b5;
+                    sub += (s16)glyphs[brk].x;
+                    for (j = i; j >= brk; j--) {
+                        glyphs[j].x = glyphs[j].x - glyphs[brk].x;
+                        glyphs[j].y = line;
+                    }
+                }
+                glyphs[i].y = line;
+                i++;
+
+            }
+        }
+        VH->b4 = line / VH->b5 + 1;
+        {
+            VsHud *h = VH;
+            h->count = slot->h8;
+            h->b3 = 0;
+        }
+    }
+    {
+        VsHud *h = VH;
+        if (h->b3 == 0) {
+            if ((u16)(h->id - 0x222) < 2) {
+                h->f18 = 0.0f;
+                h->b3 = 1;
+                h->f1C = 2000000.0f;
+            } else if (getVoicePlaybackProgressByKey(h->key, &sp18) > 0.0f) {
+                VsHud *h2 = VH;
+                h2->f18 = 0.0f;
+                h2->f1C = sp18;
+                h2->b3 = 1;
+            }
+            if (VH->b3 == 0) return;
+        }
+    }
+    VH->f18 = VH->f18 - dt;
+    if (VH->f18 <= 0.0f) {
+        slot = (VsSlot *)getPlayerSlotFieldAt34(D_main_bss_80139014, 0);
+        if (VH->cur >= VH->count) {
+            VH->id = 0xFFFF;
+            getPlayerSlotFieldAt34(D_main_bss_80139014, 0);
+            return;
+        }
+        if (VH->b3 >= 2) {
+            slot->wC = slot->wC + slot->h8 * 2;
+            slot->glyphs = (VsGlyph *)((u8 *)slot->glyphs + slot->h8 * 4);
+        }
+        n = 1;
+        gl2 = slot->glyphs;
+        line = gl2[0].y;
+        cnt = 1;
+        for (; n + VH->cur < VH->count; n++) {
+            if (line < gl2[n].y) {
+                if (cnt >= 3) break;
+                line = gl2[n].y;
+                cnt++;
+            }
+        }
+        {
+            VsHud *h = VH;
+            h->cur = h->cur + n;
+            slot->h8 = n;
+            h->hC = -(h->b5 + line);
+            if (h->cur >= h->count) {
+                h->f18 = h->f18 + 0.5f;
+            } else {
+                h->b3 = h->b3 + 1;
+            }
+        }
+        VH->f18 = (VH->f1C * (f32)cnt) / (f32)VH->b4;
+    }
+}
 
 extern s32 D_main_bss_80139010;
 s32 getBootConfigField12();
