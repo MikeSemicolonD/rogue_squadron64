@@ -245,7 +245,216 @@ void transformCraftAnchorsApplySubFx2(u8 *npc, f32 dt) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", tickCraftSplineOrientationVariant);
+typedef struct { f32 x, y, z; } TcV3;
+typedef union { TcV3 v; f32 w[4]; } TcV4;
+
+typedef struct {
+    u8 pad0[0x18];
+    TcV3 off[2];
+    f32 yaw[2];
+    f32 lo74[2];
+    f32 hi74[2];
+    f32 lo7C[2];
+    f32 hi7C[2];
+    u8 pad58[8];
+} TcRow;
+
+extern TcRow tcRows[] __asm__("D_mission_overlay_8010AFF0");
+typedef struct {
+    u8 pad0[0x18];
+    s32 w[2];
+} TcCue;
+extern TcCue tcCues[] __asm__("D_mission_overlay_8010AFB0");
+extern TcV3 D_mission_overlay_8010AF6C;
+void tcMat34(void *, void *, f32) __asm__("mat34CrossRowsAndCopyPos");
+extern void mat3x3InverseInto(void *, void *);
+extern u8 computeActorAnchorDeltaAfterLOS(s32);
+extern f32 *getObjectMeshTransformOrLocal(s32, void *);
+extern void computeAnchorRelativePositionByDistanceRatio(void *, f32 *, s32, void *);
+extern void vec3NormalizeInto(void *, void *);
+extern void buildRotationMatrixSlot1(void *, f32);
+extern f32 vec3Dot(void *, void *);
+extern f32 vec3Length(void *);
+extern f32 constMinusSinfApprox(f32);
+extern void vec3Cross(void *, void *, void *);
+extern void normalize_vector(void *);
+extern void quatFromAxisAngle(void *, void *, f32);
+extern void rotateVec3ByQuat(void *, void *, void *);
+
+static __inline__ void tcRot(void *q, void *a, void *b) {
+    rotateVec3ByQuat(q, a, b);
+}
+
+static __inline__ void tcXf(void *m, void *a, void *b) {
+    transformVec3ByMat34(m, a, b);
+}
+
+void tickCraftSplineOrientationVariant(u8 *npc, f32 dt) {
+    f32 m1[12];
+    f32 m2[12];
+    TcV3 tgt;
+    TcV3 dir;
+    TcV3 rel;
+    f32 buf[12];
+    f32 ang;
+    f32 ang2;
+    f32 lim;
+    u8 r;
+    s32 i;
+
+    for (i = 0; i < 2; i++) {
+        tcMat34(m1, npc, 1.0f);
+        mat3x3InverseInto(m2, m1);
+        if (npc[0x99] != 0) {
+            r = 0;
+            if (isPendingChildNpcActive(*(s32 *)(npc + 0x38)) == 1) {
+                r = computeActorAnchorDeltaAfterLOS(*(s32 *)(npc + 0x38)) == 1;
+            }
+        } else {
+            switch (i) {
+            case 0:
+                r = 0;
+                if (isPendingChildNpcActive(*(s32 *)(npc + 0x38)) == 1) {
+                    r = computeActorAnchorDeltaAfterLOS(*(s32 *)(npc + 0x38)) == 1;
+                }
+                break;
+            case 1:
+                r = 0;
+                tgt = *(TcV3 *)(npc + 0xC);
+                *(f32 *)(npc + 0xC) = -*(f32 *)(npc + 0xC);
+                *(f32 *)(npc + 0x10) = -*(f32 *)(npc + 0x10);
+                *(f32 *)(npc + 0x14) = -*(f32 *)(npc + 0x14);
+                if (isPendingChildNpcActive(*(s32 *)(npc + 0x38)) == 1) {
+                    r = computeActorAnchorDeltaAfterLOS(*(s32 *)(npc + 0x38)) == 1;
+                }
+                *(TcV3 *)(npc + 0xC) = tgt;
+                break;
+            default:
+                continue;
+            }
+        }
+        if (r == 1) {
+            computeAnchorRelativePositionByDistanceRatio(npc, getObjectMeshTransformOrLocal(*(s32 *)(npc + 0x38), buf), tcCues[npc[0x99]].w[i], &rel);
+            transformVec3ByMat34(m2, &rel, &dir);
+            dir.x += tcRows[npc[0x99]].off[i].x * *(f32 *)(npc + 0x70);
+            dir.y += tcRows[npc[0x99]].off[i].y * *(f32 *)(npc + 0x70);
+            dir.z += tcRows[npc[0x99]].off[i].z * *(f32 *)(npc + 0x70);
+            vec3NormalizeInto(&tgt, &dir);
+            buildRotationMatrixSlot0(m1, ((f32 *)(npc + 0x7C))[i] + tcRows[npc[0x99]].yaw[i]);
+            composeRotationMatrixSlot1(m1, ((f32 *)(npc + 0x74))[i]);
+            transformVec3ByMat34(m1, &D_mission_overlay_8010AF6C, &dir);
+            ang = constMinusSinfApprox(vec3Dot(&dir, &tgt)) * 57.29578f;
+            if (ang > 0.001f) {
+                TcV3 axis;
+                f32 q[4];
+                TcV4 c;
+                TcV4 a;
+                TcV4 b;
+                lim = *(f32 *)(npc + 0x9C) * (dt * 30.0f);
+                if (lim < ang) {
+                    ang = lim;
+                }
+                vec3Cross(&axis, &dir, &tgt);
+                normalize_vector(&axis);
+                quatFromAxisAngle(q, &axis, ang);
+                rotateVec3ByQuat(q, &dir, &tgt);
+                axis.x = tgt.x;
+                axis.y = 0.0f;
+                axis.z = tgt.z;
+                ang = constMinusSinfApprox(vec3Dot(&D_mission_overlay_8010AF6C, &axis) / (vec3Length(&D_mission_overlay_8010AF6C) * vec3Length(&axis))) * 57.29578f;
+                a.v = D_mission_overlay_8010AF6C;
+                a.v.y = 0.0f;
+                b.v = axis;
+                b.v.y = 0.0f;
+                vec3Cross(&c, &a, &b);
+                if (!(c.v.y >= 0.0f)) {
+                    ang = -ang;
+                }
+                buildRotationMatrixSlot1(m1, -ang + tcRows[npc[0x99]].yaw[i]);
+                transformVec3ByMat34(m1, &tgt, &axis);
+                *(s32 *)&axis.x = 0;
+                ((f32 *)(npc + 0x74))[i] = ang + tcRows[npc[0x99]].yaw[i];
+                ang2 = constMinusSinfApprox(vec3Dot(&D_mission_overlay_8010AF6C, &axis) / (vec3Length(&D_mission_overlay_8010AF6C) * vec3Length(&axis))) * 57.29578f;
+                if (!(axis.y <= 0.0f)) {
+                    ang2 = -ang2;
+                }
+                ((f32 *)(npc + 0x7C))[i] = ang2 + tcRows[npc[0x99]].yaw[i];
+                if (tcRows[npc[0x99]].yaw[i] == 0.0f) {
+                    if (((f32 *)(npc + 0x74))[i] > tcRows[npc[0x99]].lo74[i]) {
+                        ((f32 *)(npc + 0x74))[i] = tcRows[npc[0x99]].lo74[i];
+                    } else if (((f32 *)(npc + 0x74))[i] < tcRows[npc[0x99]].hi74[i]) {
+                        ((f32 *)(npc + 0x74))[i] = tcRows[npc[0x99]].hi74[i];
+                    }
+                    if (tcRows[npc[0x99]].lo7C[i] < ((f32 *)(npc + 0x7C))[i]) {
+                        ((f32 *)(npc + 0x7C))[i] = tcRows[npc[0x99]].lo7C[i];
+                    } else if (((f32 *)(npc + 0x7C))[i] < tcRows[npc[0x99]].hi7C[i]) {
+                        ((f32 *)(npc + 0x7C))[i] = tcRows[npc[0x99]].hi7C[i];
+                    }
+                } else {
+                    if (((f32 *)(npc + 0x74))[i] > 180.0f) {
+                        if (tcRows[npc[0x99]].lo74[i] < 360.0f - ((f32 *)(npc + 0x74))[i]) {
+                            ((f32 *)(npc + 0x74))[i] = 360.0f - tcRows[npc[0x99]].lo74[i];
+                        }
+                    } else if (tcRows[npc[0x99]].lo74[i] < ((f32 *)(npc + 0x74))[i]) {
+                        ((f32 *)(npc + 0x74))[i] = tcRows[npc[0x99]].lo74[i];
+                    }
+                    if (((f32 *)(npc + 0x7C))[i] > 180.0f) {
+                        if (tcRows[npc[0x99]].lo7C[i] < 360.0f - ((f32 *)(npc + 0x7C))[i]) {
+                            ((f32 *)(npc + 0x7C))[i] = 360.0f - tcRows[npc[0x99]].lo7C[i];
+                        }
+                    } else if (-((f32 *)(npc + 0x7C))[i] < tcRows[npc[0x99]].hi7C[i]) {
+                        ((f32 *)(npc + 0x7C))[i] = -tcRows[npc[0x99]].hi7C[i];
+                    }
+                }
+            }
+        } else {
+            f32 m[12];
+            TcV3 tgt2;
+            TcV3 dir2;
+
+            buildRotationMatrixSlot0(m, ((f32 *)(npc + 0x7C))[i]);
+            composeRotationMatrixSlot1(m, ((f32 *)(npc + 0x74))[i]);
+            transformVec3ByMat34(m, &D_mission_overlay_8010AF6C, &dir2);
+            ang = constMinusSinfApprox(vec3Dot(&D_mission_overlay_8010AF6C, &dir2)) * 57.29578f;
+            if (ang > 0.001f) {
+                TcV3 axis;
+                f32 q[4];
+                TcV3 c;
+                TcV3 a;
+                TcV3 b;
+                lim = *(f32 *)(npc + 0x9C) * (dt * 30.0f);
+                if (lim < ang) {
+                    ang = lim;
+                }
+                vec3Cross(&axis, &dir2, &D_mission_overlay_8010AF6C);
+                normalize_vector(&axis);
+                quatFromAxisAngle(q, &axis, ang);
+                tcRot(q, &dir2, &tgt2);
+                axis.x = tgt2.x;
+                axis.y = 0.0f;
+                axis.z = tgt2.z;
+                ang = constMinusSinfApprox(vec3Dot(&D_mission_overlay_8010AF6C, &axis) / (vec3Length(&D_mission_overlay_8010AF6C) * vec3Length(&axis))) * 57.29578f;
+                a = D_mission_overlay_8010AF6C;
+                a.y = 0.0f;
+                b = axis;
+                b.y = 0.0f;
+                vec3Cross(&c, &a, &b);
+                if (!(c.y >= 0.0f)) {
+                    ang = -ang;
+                }
+                buildRotationMatrixSlot1(m, -ang);
+                transformVec3ByMat34(m, &tgt2, &axis);
+                *(s32 *)&axis.x = 0;
+                ((f32 *)(npc + 0x74))[i] = ang;
+                ang2 = constMinusSinfApprox(vec3Dot(&D_mission_overlay_8010AF6C, &axis) / (vec3Length(&D_mission_overlay_8010AF6C) * vec3Length(&axis))) * 57.29578f;
+                if (!(axis.y <= 0.0f)) {
+                    ang2 = -ang2;
+                }
+                ((f32 *)(npc + 0x7C))[i] = ang2;
+            }
+        }
+    }
+}
 
 typedef struct {
     /* 0x00 */ u8 pad0[0x4C];
