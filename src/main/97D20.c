@@ -125,7 +125,104 @@ void releaseSndMidiSetupRecords(SndMidiSetup *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/97D20", parseSndFiles);
+extern u8 gMusyXActiveFlag;
+extern u8 *D_main_bss_801529D0[];
+extern void factor5BucketedTableInsertEntry(u16, void *);
+
+static __inline__ void insBucketed(u16 *ids, u8 *base) {
+    u8 *e;
+
+    while (*ids != 0xFFFF) {
+        e = findSndChunkEntry(base + *(s32 *)(base + 0), *ids);
+        if (e != NULL) {
+            factor5BucketedTableInsertEntry(*ids, e + 8);
+        }
+        ids++;
+    }
+}
+
+static __inline__ void insSecond(u16 *ids, u8 *base) {
+    u8 *e;
+
+    while (*ids != 0xFFFF) {
+        e = findSndChunkEntry(base + *(s32 *)(base + 4), *ids);
+        if (e != NULL) {
+            factor5SecondSortedTableInsertValue(*ids, e + 8);
+        }
+        ids++;
+    }
+}
+
+static __inline__ void insSorted(u16 *ids, u8 *base) {
+    u8 *e;
+
+    while (*ids != 0xFFFF) {
+        e = findSndChunkEntry(base + *(s32 *)(base + 8), *ids);
+        if (e != NULL) {
+            factor5SortedTableInsertValue(*ids, e + 8);
+        }
+        ids++;
+    }
+}
+
+static __inline__ void insTagged(u16 *ids, u8 *base) {
+    u8 *e;
+
+    while (*ids != 0xFFFF) {
+        e = findSndChunkEntry(base + *(s32 *)(base + 0xC), *ids);
+        if (e != NULL) {
+            factor5SortedTableInsertTaggedValue(*ids, e + 0xC, *(u16 *)(e + 0xA));
+        }
+        ids++;
+    }
+}
+
+static __inline__ void insSamples(u16 *ids, u8 *a1, u8 *a2) {
+    u32 v;
+    u8 *e;
+
+    a1 = relocateSndPointer(a1);
+    while (*ids != 0xFFFF) {
+        e = findSample(a2, *ids, a1, &v);
+        if (e != NULL) {
+            factor5SortedTableInsertWidePair(*ids, e, v);
+        }
+        ids++;
+    }
+}
+
+static __inline__ void applyRecs(SndMidiSetup *arg0) {
+    s32 i;
+
+    for (i = 0; i < arg0->count; i++) {
+        factor5SortedTableInsertVoiceRecord(arg0->entries[i].unk0, arg0->entries[i].unk2, arg0->entries[i].unk7, arg0->entries[i].unk6, arg0->entries[i].unk5, arg0->entries[i].unk4, arg0->entries[i].unk8);
+    }
+}
+
+s32 parseSndFiles(u8 *arg0, u16 id, u8 *a2, u8 *a3, u8 *base) {
+    u8 *p;
+
+    if (gMusyXActiveFlag) {
+        p = arg0;
+        while (*(s32 *)p != -1) {
+            if (*(u16 *)(p + 4) == id) {
+                D_main_bss_801529D0[(s16)D_main_bss_80152A10] = p;
+                insBucketed((u16 *)(*(s32 *)(p + 8) + (s32)p + 8), base);
+                insSamples((u16 *)(*(s32 *)(p + 0xC) + (s32)p + 8), a2, a3);
+                insSecond((u16 *)(*(s32 *)(p + 0x10) + (s32)p + 8), base);
+                insSorted((u16 *)(*(s32 *)(p + 0x14) + (s32)p + 8), base);
+                insTagged((u16 *)(*(s32 *)(p + 0x18) + (s32)p + 8), base);
+                if (*(u16 *)(p + 6) == 1) {
+                    applyRecs((SndMidiSetup *)(*(s32 *)(p + 0x1C) + (s32)p + 8));
+                }
+                D_main_bss_80152A10++;
+                return 1;
+            }
+            p += *(s32 *)p;
+        }
+    }
+    return 0;
+}
 
 extern u8 gMusyXActiveFlag;
 extern u8 *D_main_bss_801529D0[];
