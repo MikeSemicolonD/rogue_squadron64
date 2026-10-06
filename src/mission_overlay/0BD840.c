@@ -4,7 +4,66 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BD840", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BD840", D_mission_overlay_800A5FE8);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BD840", playerT16Init);
+#include "common_types.h"
+extern u8 D_main_bss_80137DBC[][0x2A0];
+extern s32 D_main_bss_80130B58;
+extern struct { u8 pad[0x18]; u16 unk18; u8 pad1A[0xA]; } D_mission_overlay_8010BE18[];
+extern s32 D_mission_overlay_8010BEA8[][16];
+extern void initPlayerCraftMovementMode(void *);
+extern s32 countTrailingZeros16(u16);
+
+void playerT16Init(void *argv, s32 arg1, s32 arg2) {
+    s32 *arg0 = argv;
+    u8 *p = D_main_bss_80137DBC[arg1];
+    f32 hp;
+    *(s16 *)(p + 0x180) = arg2;
+    arg0[0] = arg1;
+    *(u16 *)(p + 0xB4) = 7;
+    initPlayerCraftMovementMode(p);
+    hp = 80.0f;
+    if (D_main_bss_80130B58 & 0x40) {
+        hp = 40.0f;
+    }
+    *(f32 *)(p + 0xC0) = hp;
+    *(f32 *)(p + 0xE8) = 3.0f;
+    *(f32 *)(p + 0xC4) = hp;
+    *(f32 *)(p + 0xEC) = 3.0f;
+    ((f32 *)arg0)[1] = 1.0f;
+    *(f32 *)(p + 0xF0) = 0.2f;
+    *(f32 *)(p + 0xF4) = 0.1f;
+    *(f32 *)(p + 0xF8) = 1.8f;
+    *(f32 *)(p + 0xFC) = 2.0f;
+    *(f32 *)(p + 0x104) = 15.0f;
+    *(f32 *)(p + 0x108) = 10.0f;
+    *(s32 *)(p + 0x13C) = 0;
+    *(s32 *)(p + 0x14C) = 0;
+    *(f32 *)(p + 0x110) = -30.0f;
+    *(f32 *)(p + 0x114) = -35.0f;
+    *(f32 *)(p + 0x118) = 30.0f;
+    *(f32 *)(p + 0x120) = 60.0f;
+    *(f32 *)(p + 0x124) = 180.0f;
+    *(f32 *)(p + 0x130) = 0.75f;
+    *(f32 *)(p + 0x134) = 2.0f;
+    *(f32 *)(p + 0x138) = 20.0f;
+    *(f32 *)(p + 0x140) = 10.0f;
+    *(f32 *)(p + 0x144) = 60.0f;
+    *(f32 *)(p + 0x148) = 10.0f;
+    *(f32 *)(p + 0x150) = 5.0f;
+    *(s32 *)(p + 0x11C) = 0;
+    *(f32 *)(p + 0x128) = 0.1f;
+    *(f32 *)(p + 0x12C) = 0.1f;
+    *(s32 *)(p + 0xD8) = 0;
+    *(s32 *)(p + 0xDC) = 0;
+    *(s32 *)(p + 0xE0) = 0;
+    *(u16 *)(p + 0x158) = 0;
+    *(f32 *)(p + 0x154) = 40.0f;
+    *(s32 *)(p + 0x160) = 0;
+    *(f32 *)(p + 0x164) = 0.3f;
+    *(s32 *)(p + 0x170) = 0;
+    *(f32 *)(p + 0x168) = 0.5f;
+    *(f32 *)(p + 0x174) = 0.3f;
+    D_mission_overlay_8010BEA8[arg0[0]][countTrailingZeros16(D_mission_overlay_8010BE18[arg0[0]].unk18)] = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BD840", computeT16Transform);
 
