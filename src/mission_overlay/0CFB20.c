@@ -1157,7 +1157,326 @@ s32 advancePlayerAtStLocomotion(f32 *p) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", updatePlayerAtStBehavior);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", playerAtStUpdate);
+typedef struct { f32 m[12]; } PaMat;
+typedef struct {
+    f32 a0;
+    f32 a4;
+    f32 v[3];
+    f32 f4C;
+    f32 f50;
+    f32 f54;
+    f32 f58;
+    f32 f5C;
+    f32 f60;
+    f32 f64;
+} PaFx;
+typedef struct {
+    u8 pad0[0x30];
+    u8 *mesh;
+    u8 *node0;
+    u8 *node1;
+    s32 w3C;
+    u8 *mat1;
+    f32 f44;
+    f32 f48;
+    f32 f4C;
+    f32 f50;
+    f32 f54;
+    s32 w58;
+    u8 b5C;
+    u8 pad5D[3];
+    f32 f60;
+    s32 w64;
+    s32 w68;
+    s32 w6C;
+    u16 pad70;
+    u16 h72;
+    s32 anim[3];
+    s32 animSlot;
+    s32 chan;
+    s32 w88;
+    f32 f8C;
+    f32 f90;
+    u8 pad94[0xB];
+    u8 b9F;
+    s16 hA0;
+    u8 bA2;
+    u8 bA3;
+    void *save;
+    u16 hA8;
+    u8 bAA;
+    u8 bAB;
+    u16 hAC;
+    u8 bAE;
+    u8 bAF;
+    s32 wB0;
+} PaSt;
+typedef struct {
+    u8 pad0[4];
+    f32 f4;
+    u8 pad8[8];
+    s32 w10;
+    f32 f14;
+    f32 f18;
+} PaCtx;
+extern u32 D_mission_overlay_8010CA1C;
+extern u16 D_main_bss_80130B88[];
+extern u32 D_mission_overlay_8010C9E0;
+typedef struct { u8 pad[6]; u16 h6; } PaBe;
+extern PaBe D_mission_overlay_8010BE18;
+typedef struct { u8 pad[0xC]; u32 hi:24; u32 b7:1; u32 lo:7; } PaGs;
+extern u8 D_main_8009E5F8[];
+extern u8 D_mission_overlay_8010A6DC[];
+extern u8 D_main_bss_8013800C[];
+extern u8 D_main_bss_80138D18[];
+void *rs_malloc(s32, s32);
+void loadPlayerStartPosition(void *, void *);
+void clearObjectFlagBit4(void *);
+void resetTransientPlayerStateFlags(void);
+void teardownHudInstancesAndUnbindNpcs(void);
+void updatePlayerAtStBehavior(void *, s32);
+void computeBootConfigScaledVec4(s32, s32, s32, void *, f32, f32);
+void cbsvF(s32, f32, f32, void *, f32, f32) __asm__("computeBootConfigScaledVec4");
+void vec3ExtrapolateFirstOrder(void *, s32, void *, f32);
+void distanceAndDopplerNpcHelper(void *, f32, f32);
+void buildRandomCameraFacingOrientation(s32, void *, f32, s32, s32, s32);
+u16 spawnHeavyMechSubEffect(void *, void *, char *);
+void slotDispatcherIter(u16, s32, void *);
+void updatePlayerHudFrame(s32, void *, void *);
+void paStInit(void *, s32) __asm__("playerAtStInit");
+void paTransformMeshPart(void *, void *) __asm__("transformMeshPartIntoWorld");
+
+typedef struct { u8 pad0[4]; u8 *p; u8 pad8[0x13C]; } PasEnt;
+s32 playerAtStUpdate(u8 *arg0, s32 action, u8 *arg2) {
+    PaSt *s2 = *(PaSt **)(arg0 + 4);
+    f32 sp28[4];
+    union { PaMat m; PaFx fx; } sp38;
+    f32 sp68[4];
+    PaMat sp78;
+    u8 *s4;
+
+    if ((u16)action != 2 && (D_mission_overlay_8010CA1C & 4)) {
+        return 1;
+    }
+    s4 = (u8 *)&D_main_bss_80137DBC;
+    switch ((u16)action) {
+    case 1: {
+        void *p;
+        PaCtx *ctx;
+        f32 one;
+        f32 half;
+        f32 t;
+
+        p = rs_malloc(0x168, 0);
+        s2->save = p;
+        zmemcpy(p, D_main_8009E5F8, 0x168);
+        zmemcpy(D_main_8009E5F8, D_mission_overlay_8010A6DC, 0x168);
+        s2->hA8 = D_mission_overlay_8010BE18.h6;
+        s4 = (u8 *)&D_main_bss_80137DBC;
+        D_mission_overlay_8010BE18.h6 = 0;
+        s2->bAF = ((PaGs *)&gGameSettings)->b7;
+        gGameSettings.unlockAndSettingsFlags[0] &= ~0x80;
+        p = walkMeshdef0List(D_mission_overlay_800A70E0);
+        *(void **)&D_main_bss_80137DBC = p;
+        s2->mesh = p;
+        *(u8 **)(*(u8 **)&D_main_bss_80137DBC + 4) = D_mission_overlay_8010A680;
+        *(u16 *)(s4 + 0xB6) = *(u16 *)(arg0 + 0x16);
+        *(void **)(arg0 + 0xC) = *(void **)&D_main_bss_80137DBC;
+        *(u8 **)(arg0 + 8) = s4 + 4;
+        *(u16 *)(s4 - 2) = *(u16 *)(arg0 + 0x16);
+        *(s32 *)(s4 + 0xB8) = 0;
+        loadPlayerStartPosition(s4, 0);
+        paStInit(s2, 1);
+        popNpcSlotFromTail(D_main_bss_80139560[1], arg0);
+        popNpcSlotFromTail(D_main_bss_80139560[0xE], arg0);
+        one = 1.0f;
+        s2->f44 = one / *(f32 *)(*(u8 **)s2->mesh + 0x34) * 0.2f;
+        { f32 r = 0.18f; ctx = allocateAndInitCraftNpcContext(r, r, 10); }
+        { f32 m = -0.08f;
+        half = 0.5f;
+        ctx->f14 = one;
+        ctx->w10 = 0;
+        ctx->f18 = half;
+        ctx->f4 = m; }
+        *(PaCtx **)(s4 + 0xBC) = ctx;
+        s2->node0 = (u8 *)lookupHmtMaterialByName(s2->mesh, D_mission_overlay_800A70E8, &s2->w3C);
+        s2->node1 = (u8 *)lookupHmtMaterialByName(s2->mesh, D_mission_overlay_800A70F4, &s2->mat1);
+        *(s32 *)&s2->f48 = 0;
+        *(s32 *)&s2->f4C = 0;
+        s2->f60 = 0.1f;
+        s2->h72 = *(u16 *)(arg0 + 0x16);
+        s2->bAA = 1;
+        s2->wB0 = 0x28;
+        s2->f50 = one;
+        *(s32 *)&s2->f54 = 0;
+        s2->w58 = 0;
+        s2->b5C = 0;
+        s2->w68 = 0;
+        s2->w6C = 0;
+        s2->w64 = 0;
+        s2->bA3 = 0;
+        s2->bA2 = 0;
+        s2->bAB = 0;
+        s2->hAC = 0xFFFF;
+        s2->bAE = 0;
+        s2->b9F = 0;
+        s2->hA0 = 0;
+        s2->f90 = half / s2->f44;
+        s2->anim[0] = load_model_animation(D_mission_overlay_800A7100);
+        s2->anim[1] = 0;
+        s2->anim[2] = 0;
+        s2->animSlot = flattenAnimTreeAndAllocateSlot(*(s32 *)(s2->mesh + 0x18), s2->anim[s2->hA0]);
+        s2->chan = markModelAnimChannelEntryActive(s2->animSlot, 0);
+        t = one / (s2->f60 * s2->f90);
+        s2->w88 = 0;
+        s2->f8C = t;
+        setModelAnimSlotCycleDuration(s2->animSlot, t);
+        seekAllModelAnimChannelsInSlotToTime(s2->animSlot, 0);
+        clearObjectFlagBit4(arg0);
+        *(u16 *)(arg0 + 0x14) |= 0xC0;
+        *(PaMat *)s2 = *(PaMat *)(s4 + 4);
+        return 1;
+    }
+    case 0xC:
+        loadPlayerStartPosition(s4, s4 + 4);
+        paStInit(s2, 0x40);
+        resetTransientPlayerStateFlags();
+        return 1;
+    case 2:
+        zmemcpy(D_main_8009E5F8, s2->save, 0x168);
+        rs_free(s2->save);
+        D_mission_overlay_8010BE18.h6 = s2->hA8;
+        if (s2->bAF != 0) {
+            gGameSettings.unlockAndSettingsFlags[0] |= 0x80;
+        }
+        rs_free(*(void **)(s4 + 0xBC));
+        releaseMeshAsset(*(void **)s4);
+        teardownHudInstancesAndUnbindNpcs();
+        return 1;
+    case 3: {
+        u8 *a3 = arg2;
+        D_main_bss_80130B88[0] &= 0xF0FF;
+        gGameSettings.unlockAndSettingsFlags[0] &= ~0x80;
+        if (s2->wB0 > 0) {
+            updatePlayerAtStBehavior(s2, *(s32 *)arg2);
+        }
+        *(PaMat *)(s4 + 4) = *(PaMat *)s2;
+        {
+            union { s32 i; f32 f; } u;
+            register f32 d asm("$f2");
+            u.i = 0x3D400000;
+            d = *(f32 *)a3;
+            __asm__("" :: "f"(d));
+            cbsvF(0, u.f, u.f, D_main_bss_8013800C, 1.0f, d);
+        }
+        return 1;
+    }
+    case 5: {
+        u8 *a5 = arg2;
+        f32 k;
+        f32 h;
+        f32 z;
+        s32 v;
+
+        if (*(void **)(arg2 + 8) != NULL) {
+            vec3ExtrapolateFirstOrder(*(void **)(arg2 + 8), 0, sp28, -0.1f);
+            k = 0.2f;
+            distanceAndDopplerNpcHelper(sp28, 0.05f, k);
+            spawnNpcType0xAFromTemplate(sp28, k);
+        }
+        if (s2->wB0 > 0) {
+            v = s2->wB0 - *(u16 *)(arg2 + 6);
+            s2->wB0 = v;
+            if (v <= 0) {
+                paTransformMeshPart(s2->mesh, sp68);
+                sp68[1] -= 0.12f;
+                spawnByteAnimDebrisDefault(s2);
+                h = 0.5f;
+                spawnDestructionEffectBurst(sp68, 0xFFFF, 1.2f, h, 0.6f, 10.0f);
+                spawnNpcType0xAFromTemplate(sp68, 3.0f);
+                play3DSoundEvent(0, s2, (u8 *)s2 + 0x24, 24.0f, 0.7f, 0, 0x21, 0x7D, 0x50);
+                z = 0.0f;
+                buildRandomCameraFacingOrientation(0, sp38.fx.v, z, 5, -0xF, 1);
+                sp38.fx.v[0] *= -2.0f;
+                sp38.fx.v[1] *= -2.0f;
+                sp38.fx.v[2] *= -2.0f;
+                sp38.fx.f64 = 180.0f;
+                sp38.fx.f5C = -0.05f;
+                sp38.fx.f54 = h;
+                sp38.fx.f58 = z;
+                sp38.fx.f60 = z;
+                sp38.fx.f4C = 4.0f;
+                sp38.fx.f50 = -3.0f;
+                s2->hAC = spawnHeavyMechSubEffect(&sp38, arg0, D_mission_overlay_800A70E8);
+                D_mission_overlay_8010C9E0 |= 2;
+            }
+        }
+        if (*(u16 *)a5 != 0xFFFF) {
+            destroyNpcSlotByIndex(*(u16 *)a5);
+        }
+        return 1;
+    }
+    case 0xF:
+        *(u16 *)arg2 = 0xFFFF;
+        break;
+    case 4: {
+        u8 *a4 = arg2;
+        u8 *m;
+        u8 *mp;
+        f32 one;
+        u8 *pos;
+
+        if (s2->wB0 > 0) {
+            parseModelAnimType2Entry(s2->animSlot);
+            m = s2->node0 + 0x1C;
+            buildRotationMatrixSlot0(&sp38, -s2->f4C);
+            composeRotationMatrixSlot1(&sp38, s2->f48);
+            zmemcpy(&sp78, m, 0x30);
+            mat3x4Multiply(&sp78, &sp38, m);
+            mp = s2->mat1;
+            m = s2->node1 + 0x1C;
+            clearVec4QuadStruct(m);
+            if (*(s32 *)(mp + 0x4C) & 1) {
+                addVec3At0x24(m, -*(f32 *)(mp + 0x50), -*(f32 *)(mp + 0x54), -*(f32 *)(mp + 0x58));
+            }
+            if (*(s32 *)(mp + 0x4C) & 2) {
+                applyScaleToMat3x4(m, *(f32 *)(mp + 0x5C), *(f32 *)(mp + 0x60), *(f32 *)(mp + 0x64));
+            }
+            if (*(s32 *)(mp + 0x4C) & 4) {
+                composeQuatToMat3x4(m, mp + 0x68);
+            }
+            addVec3At0x24(m, 0.0f, 0.0f, s2->f54 * 8.0f);
+            if ((*(s32 *)(mp + 0x4C) & 9) == 9) {
+                addVec3At0x24(m, *(f32 *)(mp + 0x78) + *(f32 *)(mp + 0x50), *(f32 *)(mp + 0x7C) + *(f32 *)(mp + 0x54), *(f32 *)(mp + 0x80) + *(f32 *)(mp + 0x58));
+            } else if ((*(s32 *)(mp + 0x4C) & 9) == 8) {
+                addVec3At0x24(m, *(f32 *)(mp + 0x78), *(f32 *)(mp + 0x7C), *(f32 *)(mp + 0x80));
+            } else if (*(s32 *)(mp + 0x4C) & 1) {
+                addVec3At0x24(m, *(f32 *)(mp + 0x50), *(f32 *)(mp + 0x54), *(f32 *)(mp + 0x58));
+            }
+        }
+        pos = s4 + 4;
+        mat34CrossRowsAndCopyPos(*(u8 **)s4 + 0x28, pos, 0.2f);
+        one = 1.0f;
+        mat34CrossRowsAndCopyPos(D_main_bss_8013800C, pos, one);
+        enqueueMeshTypeForCleanup(*(void **)s4);
+        if (*(u16 *)(s4 + 0x180) & 0x100) {
+            return 1;
+        }
+        if (*(u16 *)(((PasEnt *)D_main_bss_80138D18)[*(s32 *)(s4 + 0xB8)].p + 4) != 3) {
+            addNpcToVisibilityBucket(*(s32 *)a4, *(void **)s4, pos, one);
+            if (s2->hAC != 0xFFFF) {
+                slotDispatcherIter(s2->hAC, 0xE, arg2);
+            }
+            if (!(*(u16 *)(s4 + 0x180) & 0x80)) {
+                advanceNpcOnCurvedPath(*(s32 *)(a4 + 8), *(s32 *)a4, pos, *(void **)(s4 + 0xBC));
+            }
+        }
+        updatePlayerHudFrame(0, a4, s4 + 4);
+        break;
+    }
+    }
+    return 1;
+}
 
 s32 setNpcHealth(s32, void *, void *);
 void initActorMotionParams(s32, s32, s32, s32, f32);
