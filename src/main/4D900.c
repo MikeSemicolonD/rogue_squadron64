@@ -894,7 +894,65 @@ void computeAimAnglesFromObjectPositions(Mat4x3 arg0, Mat4x3 arg1, Vec3f arg2, f
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", setupSceneNodeTransitionBetweenNodes);
+typedef struct SNode2 {
+    u16 flags;
+    u16 type;
+    void *p4;
+    u8 pad8[8];
+    struct { s32 w[3]; } wa;
+    struct { s32 w[3]; } wb;
+    union {
+        Blob30 blk;
+        struct { u8 pad[0x24]; f32 f4C, f50, f54; } fl;
+    } m28;
+    u8 pad58[0x1C];
+    void *unk74;
+    u8 pad78[0x20];
+    f32 f98, f9C, fA0;
+    u8 padA4[0x18];
+    struct SNode2 *pBC;
+    struct SNode2 *pC0;
+    s32 wC4;
+    f32 fC8;
+    f32 fCC;
+    u8 padD0[0x3E0 - 0xD0];
+} SNode2;
+extern s32 D_main_bss_80138260;
+extern void updateAudioListenerPosFromPlayer(void);
+
+void setupSceneNodeTransitionBetweenNodes(s32 idx, SNode2 *a, SNode2 *b, s32 arg3, f32 arg4, f32 arg5) {
+    SNode2 *t;
+    if (a != b) {
+        t = &((SNode2 *)D_main_bss_80138930)[idx];
+        t->type = 4;
+        t->pBC = a;
+        t->pC0 = b;
+        t->wC4 = 0;
+        t->fC8 = arg4;
+        t->flags |= 1;
+        t->fCC = arg5;
+        t->unk74 = (void *)arg3;
+        if (D_main_bss_80138260 == 1) {
+            D_main_bss_80138894->unk4 = t;
+            D_main_bss_80138D18[idx].unk4 = t;
+        } else {
+            D_main_bss_80138D18[idx].unk4 = t;
+        }
+        t->m28.blk = a->m28.blk;
+        t->wa = a->wa;
+        t->wb = a->wb;
+        a->flags |= 1;
+        b->flags |= 1;
+        b->m28.blk = a->m28.blk;
+        ((f32 *)&b->wa)[0] = b->m28.fl.f4C;
+        ((f32 *)&b->wa)[1] = b->m28.fl.f50;
+        ((f32 *)&b->wa)[2] = b->m28.fl.f54;
+        b->f98 = b->fA0;
+        b->f9C = b->fA0;
+        D_main_bss_80138D18[idx].unk4 = t;
+        updateAudioListenerPosFromPlayer();
+    }
+}
 
 extern s32 D_8010CA20;
 extern u8 D_main_8009EBBC;
