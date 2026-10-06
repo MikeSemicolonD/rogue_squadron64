@@ -865,7 +865,90 @@ INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D224);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", npcPowerGeneratorHandleDestruction);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnDirectionalDebrisBurstAnchored);
+typedef struct {
+    f32 f10;
+    ExtrapVec3 p;
+    s32 w20;
+    f32 f24;
+    s32 w28, w2C, w30, w34;
+    f32 f38, f3C;
+    s32 w40, w44;
+    f32 f48;
+    s16 h4C, h4E;
+    f32 f50;
+    s32 w54, w58;
+    f32 f5C;
+    s32 w60;
+    f32 f64, f68;
+    s32 w6C, w70, w74, w78;
+    s8 b7C, b7D;
+    s16 h7E;
+    s16 h80, h82, h84;
+    s32 w88;
+    s16 h8C;
+    s16 pad8E;
+} DebrisBurstParams;
+extern s32 D_main_bss_80130C04;
+extern u8 *D_main_bss_80130C08;
+extern s32 gCurrentLevel;
+extern WaterSprayRec D_main_bss_8013A8C0;
+extern s32 spawnRandomBurstNpcVariantWrapper(void *);
+extern void attachChildNpcByIndex_l(u16, void *) __asm__("attachChildNpcByIndex");
+extern void assignNpcTargetAndPosition(u16, u16, void *, f32);
+
+u16 spawnDirectionalDebrisBurstAnchored(u16 id, f32 *pos, void *target, f32 scale, f32 dir, s32 pal) {
+    DebrisBurstParams d;
+    u16 npc;
+    f32 a, b;
+
+    a = scale * 0.5f;
+    b = scale * 3.0f * 0.5f;
+    d.f10 = 5.0f;
+    d.p = *(ExtrapVec3 *)pos;
+    d.w20 = 0;
+    d.f24 = -dir;
+    d.w28 = 0;
+    d.w2C = 0;
+    d.w30 = 0;
+    d.w34 = 0;
+    d.f38 = 1.0f;
+    d.f3C = 1.0f;
+    d.w40 = 0;
+    d.w44 = 0;
+    d.f48 = 0.025f;
+    d.h4C = 30;
+    d.h4E = 30;
+    d.f50 = 10.0f;
+    d.w54 = 0;
+    d.w58 = 0;
+    d.f5C = 0.5f;
+    d.w60 = 0;
+    d.f64 = 0.05f;
+    d.f68 = 1.0f;
+    d.w6C = 0;
+    d.w74 = (s32)D_main_bss_80130C08 + 0x1C;
+    d.b7C = 1;
+    if (pal == 0) {
+        if (gCurrentLevel == 4) {
+            d.w78 = D_main_bss_80130C04 + 0xC0;
+        } else {
+            d.w78 = D_main_bss_80130C04 + 0x80;
+        }
+        d.b7D = 16;
+    } else {
+        d.w78 = pal;
+        d.b7D = 16;
+    }
+    d.h80 = (u32)(a * 256.0f + 1.0f);
+    d.h82 = (u32)(b * 256.0f + 1.0f);
+    d.h84 = 5;
+    d.w88 = 0x09000000;
+    d.h8C = 3;
+    npc = spawnRandomBurstNpcVariantWrapper(&d);
+    attachChildNpcByIndex_l(npc, &D_main_bss_8013A8C0);
+    assignNpcTargetAndPosition(npc, id, target, 0.0f);
+    return npc;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", npcWakeUpdate);
 
