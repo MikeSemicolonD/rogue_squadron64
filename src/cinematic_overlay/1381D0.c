@@ -379,7 +379,7 @@ extern u8 D_cinematic_overlay_800A54A8[];
 extern u8 D_cinematic_overlay_800A54B4[];
 f32 quadraticEaseInOut(f32);
 extern s32 lookupHmtMaterialByName(s32, u8 *, s32 *);
-extern void composeInterpolatedNodeMatricesAlt(s32, s32, s32, s32, f32);
+extern void composeInterpolatedNodeMatricesAltCall(s32, s32, s32, s32, f32) __asm__("composeInterpolatedNodeMatricesAlt");
 
 void tickCutsceneActionSlots(f32 arg0) {
     s32 sp18;
@@ -415,7 +415,7 @@ void tickCutsceneActionSlots(f32 arg0) {
                 v = (slot->unk4 - *(f32 *)&slot->unk0) * t + *(f32 *)&slot->unk0;
                 a = lookupHmtMaterialByName(*(s32 *)((u8 *)D_cinematic_overlay_800B1900 + (u16)slot->unk10 * 0x13C + 0x50), D_cinematic_overlay_800A54A8, &sp18);
                 b = lookupHmtMaterialByName(*(s32 *)((u8 *)D_cinematic_overlay_800B1900 + (u16)slot->unk10 * 0x13C + 0x50), D_cinematic_overlay_800A54B4, &sp1C);
-                composeInterpolatedNodeMatricesAlt(a, b, sp18, sp1C, v);
+                composeInterpolatedNodeMatricesAltCall(a, b, sp18, sp1C, v);
             }
             break;
             default:
@@ -811,7 +811,50 @@ void scheduleCutsceneActionSlot(s16 id, f32 arg1, f32 arg2, f32 arg3) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", composeInterpolatedNodeMatricesAlt);
+void clearVec4QuadStruct(void *);
+void addVec3At0x24(void *, f32, f32, f32);
+void applyScaleToMat3x4(void *, f32, f32, f32);
+void composeQuatToMat3x4(void *, void *);
+void composeRotationMatrixSlot2(void *, f32);
+
+void composeInterpolatedNodeMatricesAlt(u8 *arg0, u8 *arg1, u8 *arg2, u8 *arg3, f32 arg4) {
+    u16 i;
+    u16 sel;
+    s32 v;
+    u8 *mat;
+    u8 *n;
+
+    if (arg0 != 0) {
+        if (arg1 != 0) {
+            for (i = 0; i < 2; i++) {
+                mat = (i == 0) ? arg0 + 0x1C : arg1 + 0x1C;
+                sel = i;
+                n = arg3;
+                if (sel == 0) {
+                    n = arg2;
+                }
+                clearVec4QuadStruct(mat);
+                if (*(u32 *)(n + 0x4C) & 1) {
+                    addVec3At0x24(mat, -*(f32 *)(n + 0x50), -*(f32 *)(n + 0x54), -*(f32 *)(n + 0x58));
+                }
+                if (*(u32 *)(n + 0x4C) & 2) {
+                    applyScaleToMat3x4(mat, *(f32 *)(n + 0x5C), *(f32 *)(n + 0x60), *(f32 *)(n + 0x64));
+                }
+                if (*(u32 *)(n + 0x4C) & 4) {
+                    composeQuatToMat3x4(mat, n + 0x68);
+                }
+                composeRotationMatrixSlot2(mat, (sel != 0) ? -arg4 : arg4);
+                if ((*(u32 *)(n + 0x4C) & 9) == 9) {
+                    addVec3At0x24(mat, *(f32 *)(n + 0x78) + *(f32 *)(n + 0x50), *(f32 *)(n + 0x7C) + *(f32 *)(n + 0x54), *(f32 *)(n + 0x80) + *(f32 *)(n + 0x58));
+                } else if ((*(u32 *)(n + 0x4C) & 9) == 8) {
+                    addVec3At0x24(mat, *(f32 *)(n + 0x78), *(f32 *)(n + 0x7C), *(f32 *)(n + 0x80));
+                } else if (*(u32 *)(n + 0x4C) & 1) {
+                    addVec3At0x24(mat, *(f32 *)(n + 0x50), *(f32 *)(n + 0x54), *(f32 *)(n + 0x58));
+                }
+            }
+        }
+    }
+}
 
 void setNpcForwardVectorByIndex(u16, f32 *);
 
