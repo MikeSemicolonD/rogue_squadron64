@@ -206,7 +206,51 @@ s32 returnZeroAudioStub(void) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/97D20", playSongByIdLockCtl);
+extern u8 gMusyXActiveFlag;
+extern u8 *D_main_bss_801529D0[];
+extern s32 startSongSequence(void *, void *, void *, s32, s32);
+extern void factor5MutexAcquire(void);
+extern void factor5MutexRelease(void);
+
+s32 playSongByIdLockCtl(u16 id, u16 id2, s32 a2, s32 a3, u8 noLock) {
+    s32 i; s32 o; u32 ID; u32 NL;
+    u8 *e;
+    u16 *p;
+    u8 *s1;
+    u8 *s2;
+    s32 r;
+
+    if (gMusyXActiveFlag != 0) {
+        for (i = 0; i < D_main_bss_80152A10; i++) {
+            ID = id;
+            o = i * 4;
+            e = *(u8 **)((u8 *)D_main_bss_801529D0 + o);
+            if (*(u16 *)(e + 4) == ID) {
+                if (*(u16 *)(e + 6) != 0) {
+                    return -1;
+                }
+                p = (u16 *)(e + (*(s32 *)(e + 0x24) + 8));
+                s1 = e + (*(s32 *)(e + 0x1C) + 8);
+                s2 = e + (*(s32 *)(e + 0x20) + 8);
+                while (*p != 0xFFFF) {
+                    if (*p == id2) {
+                        if (noLock) {
+                            r = startSongSequence(s1, s2, p, a2, a3);
+                        } else {
+                            factor5MutexAcquire();
+                            r = startSongSequence(s1, s2, p, a2, a3);
+                            factor5MutexRelease();
+                        }
+                        return r;
+                    }
+                    p += 0x42;
+                }
+                return -1;
+            }
+        }
+    }
+    return -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/97D20", playSongById);
 
