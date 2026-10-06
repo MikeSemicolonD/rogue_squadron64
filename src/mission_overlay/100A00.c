@@ -17,9 +17,158 @@ extern CraftAnimSlot D_mission_overlay_8010CF20[];
 void despawnCraftAnimationSlotNpcs(u8);
 void rs_free(void *);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", resolveCraftAnimationNodeHandles);
+typedef struct {
+    s16 x, y, z, w;
+} CaPt;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", applyCraftAnimationKeyframePose);
+typedef struct {
+    u8 **nodes[2];
+    u8 pad8[8];
+    u8 count;
+    u8 idx;
+    u8 pad12[2];
+    CaPt *pts[4][4];
+    CaPt copies[4][4];
+    s16 avg[4][4];
+    f32 unkF4;
+    f32 unkF8;
+} CraftAnimState;
+
+extern CraftAnimState gCraftAnimState __asm__("D_mission_overlay_8010CF38");
+u8 **caFindNode(u8 *, char *) __asm__("findModelChildNodeByName");
+
+void resolveCraftAnimationNodeHandles(u8 *arg0) {
+    u8 i;
+    u32 j;
+    u8 *n;
+    u8 *rec;
+    u16 *ix;
+
+    switch (*(u16 *)(arg0 + 0xB4)) {
+    case 0:
+        gCraftAnimState.nodes[0] = caFindNode(*(u8 **)arg0, "glw_a");
+        gCraftAnimState.nodes[1] = caFindNode(*(u8 **)arg0, "glw_b");
+        gCraftAnimState.count = 2;
+        break;
+    case 1:
+    case 2:
+    case 3:
+    case 7:
+        gCraftAnimState.nodes[0] = caFindNode(*(u8 **)arg0, "glw_a");
+        gCraftAnimState.count = 1;
+        break;
+    default:
+        gCraftAnimState.count = 0;
+        break;
+    }
+    gCraftAnimState.idx = 0;
+    for (i = 0; i < gCraftAnimState.count; i++) {
+        n = *gCraftAnimState.nodes[i];
+        *(s32 *)(n + 0xC) &= ~8;
+        rec = *(u8 **)(*(u8 **)(n + 0x20) + 8);
+        for (j = 0; j < *(u32 *)(*(u8 **)(n + 0x20) + 0xC); j++) {
+            ix = (u16 *)(rec + (*(u16 *)(rec + 4) & 0xFC));
+            gCraftAnimState.pts[gCraftAnimState.idx][0] = (CaPt *)*(u8 **)(n + 0x24) + ix[0];
+            gCraftAnimState.copies[gCraftAnimState.idx][0] = ((CaPt *)*(u8 **)(n + 0x24))[ix[0]];
+            gCraftAnimState.pts[gCraftAnimState.idx][1] = (CaPt *)*(u8 **)(n + 0x24) + ix[1];
+            gCraftAnimState.copies[gCraftAnimState.idx][1] = ((CaPt *)*(u8 **)(n + 0x24))[ix[1]];
+            gCraftAnimState.pts[gCraftAnimState.idx][2] = (CaPt *)*(u8 **)(n + 0x24) + ix[2];
+            gCraftAnimState.copies[gCraftAnimState.idx][2] = ((CaPt *)*(u8 **)(n + 0x24))[ix[2]];
+            gCraftAnimState.pts[gCraftAnimState.idx][3] = (CaPt *)*(u8 **)(n + 0x24) + ix[3];
+            gCraftAnimState.copies[gCraftAnimState.idx][3] = ((CaPt *)*(u8 **)(n + 0x24))[ix[3]];
+            gCraftAnimState.avg[gCraftAnimState.idx][0] = (u32)(gCraftAnimState.pts[gCraftAnimState.idx][0]->x + gCraftAnimState.pts[gCraftAnimState.idx][1]->x + gCraftAnimState.pts[gCraftAnimState.idx][2]->x + gCraftAnimState.pts[gCraftAnimState.idx][3]->x) >> 2;
+            gCraftAnimState.avg[gCraftAnimState.idx][1] = (u32)(gCraftAnimState.pts[gCraftAnimState.idx][0]->y + gCraftAnimState.pts[gCraftAnimState.idx][1]->y + gCraftAnimState.pts[gCraftAnimState.idx][2]->y + gCraftAnimState.pts[gCraftAnimState.idx][3]->y) >> 2;
+            gCraftAnimState.avg[gCraftAnimState.idx][2] = (u32)(gCraftAnimState.pts[gCraftAnimState.idx][0]->z + gCraftAnimState.pts[gCraftAnimState.idx][1]->z + gCraftAnimState.pts[gCraftAnimState.idx][2]->z + gCraftAnimState.pts[gCraftAnimState.idx][3]->z) >> 2;
+            rec += (rec[4] & 0x3F) * 4;
+            gCraftAnimState.idx++;
+        }
+    }
+    gCraftAnimState.unkF4 = *(f32 *)(arg0 + 0xE8);
+    gCraftAnimState.unkF8 = 1.0f;
+}
+
+typedef struct {
+    f32 f0, f4, f8, fC, f10, f14, f18, f1C, f20;
+} CaKey;
+
+extern CaKey D_mission_overlay_8010B534[];
+extern f32 D_mission_overlay_8010B678[];
+extern f32 D_mission_overlay_8010D02C;
+f32 vec3Dot(void *, void *);
+void vec3Cross(void *, void *, void *);
+void quatFromAxisAngleSafe(void *, void *, f32);
+void rotateVec3ByQuat(void *, void *, void *);
+
+void applyCraftAnimationKeyframePose(u8 *arg0, f32 dt) {
+    f32 q[4];
+    f32 v[4][3];
+    f32 out[3];
+    CaKey *k;
+    f32 cur;
+    f32 t;
+    f32 prev;
+    f32 r;
+    f32 w;
+    f32 base;
+    f32 ang;
+    s16 *a;
+    u32 i;
+    u32 j;
+
+    if (gCraftAnimState.idx == 0) {
+        return;
+    }
+    cur = *(f32 *)(arg0 + 0xE8);
+    k = &D_mission_overlay_8010B534[*(u16 *)(arg0 + 0xB4)];
+    base = k->f8 + k->fC * (cur - k->f0) / (k->f4 - k->f0);
+    prev = gCraftAnimState.unkF4;
+    if (prev < cur) {
+        r = (cur - prev) / dt;
+        if (k->f20 < r) {
+            r = k->f20;
+        }
+        t = base + r * (k->f10 / k->f20);
+    } else if (cur < prev) {
+        r = (prev - cur) / dt;
+        if (k->f20 < r) {
+            r = k->f20;
+        }
+        t = base - r * (k->f14 / k->f20);
+    } else {
+        t = base;
+    }
+    w = gCraftAnimState.unkF8;
+    if (w < t) {
+        gCraftAnimState.unkF8 = w + k->f18 * dt;
+        if (t < gCraftAnimState.unkF8) {
+            gCraftAnimState.unkF8 = t;
+        }
+    } else {
+        gCraftAnimState.unkF8 = w - k->f1C * dt;
+        if (gCraftAnimState.unkF8 < t) {
+            gCraftAnimState.unkF8 = t;
+        }
+    }
+    t = (gCraftAnimState.unkF8 < 2.2f) ? gCraftAnimState.unkF8 : 2.2f;
+    for (i = 0; i < gCraftAnimState.idx; i++) {
+        a = gCraftAnimState.avg[i];
+        for (j = 0; j < 4; j++) {
+            v[j][0] = (gCraftAnimState.copies[i][j].x - a[0]) * t;
+            v[j][1] = (gCraftAnimState.copies[i][j].y - a[1]) * t;
+            v[j][2] = (gCraftAnimState.copies[i][j].z - a[2]) * t;
+        }
+        ang = vec3Dot(D_mission_overlay_8010B678, arg0 + 0x1C) * 90.0f;
+        vec3Cross(out, v[0], v[1]);
+        quatFromAxisAngleSafe(q, out, ang);
+        for (j = 0; j < 4; j++) {
+            rotateVec3ByQuat(q, v[j], out);
+            gCraftAnimState.pts[i][j]->x = a[0] + (u32)out[0];
+            gCraftAnimState.pts[i][j]->y = a[1] + (u32)out[1];
+            gCraftAnimState.pts[i][j]->z = a[2] + (u32)out[2];
+        }
+    }
+    D_mission_overlay_8010D02C = *(f32 *)(arg0 + 0xE8);
+}
 
 void destroyNpcSlotByIndex(u16);
 
