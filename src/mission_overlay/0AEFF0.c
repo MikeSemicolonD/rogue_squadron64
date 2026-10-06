@@ -601,7 +601,172 @@ void spawnNpcDestructionDebris(NpcDebrisObj *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", updateSplineCraftTransform);
+typedef struct {
+    f32 q[4];
+    s32 ang[4];
+    f32 m[12];
+    u8 flag;
+} SplineLocals;
+
+typedef struct {
+    u8 *unk0;
+    f32 pos[3];
+    f32 dir[3];
+    u8 pad1C[0xC];
+    f32 vel[3];
+    u8 pad34[0x80];
+    u16 unkB4;
+    u8 padB6[2];
+    s32 unkB8;
+    u8 padBC[0x10];
+    s32 unkCC[3];
+    u8 padD8[0x10];
+    f32 unkE8;
+    u8 padEC[0x54];
+    f32 unk140;
+    u8 pad144[0x48];
+    f32 unk18C;
+} SplineCraft;
+
+typedef struct { s32 a, b, c; u8 pad[0x294]; } AngleSlot;
+extern AngleSlot D_main_bss_8013803C_l[] __asm__("D_main_bss_8013803C");
+
+extern void play3DSoundEvent(void *, void *, void *, f32, f32, s32, s32, s32, s32);
+
+extern void quatFromAxisAngleSafe_l(void *, void *, f32) __asm__("quatFromAxisAngleSafe");
+extern void rotateVec3ByQuat_l(void *, void *, void *) __asm__("rotateVec3ByQuat");
+extern void orthonormalizeFrame_l(void *) __asm__("orthonormalizeFrame");
+extern void mat34CrossRowsAndCopyPos_l(void *, void *, f32) __asm__("mat34CrossRowsAndCopyPos");
+extern void addScaledVec3ToVec3(void *, void *, f32, void *);
+void spawnSceneDebrisAndEffectClusterU(void *, u8) __asm__("spawnSceneDebrisAndEffectCluster");
+extern void integrateCraftVelocityAndCollide(void *, f32);
+extern u8 stepObjectOrientationTowardTarget(void *, f32, void *, void *, void *, u8 *);
+extern void normalize_vector(void *);
+extern void spawnSplineWalkerCraft(void *, f32, f32, s32);
+extern void initVec4TripletFromArgs_l(void *, s32, s32, s32) __asm__("initVec4TripletFromArgs");
+extern void mat3x4Multiply_l(void *, void *, void *) __asm__("mat3x4Multiply");
+
+void initVec4F(f32 *, f32, f32, f32) __asm__("initVec4TripletFromArgs");
+static __inline__ void usScale(f32 *m, s32 type) {
+    register f32 c asm("$5") = 0.0125f;
+    if (type == 5) {
+        c = 0.021875f;
+    }
+    initVec4F(m, c, c, c);
+}
+void updateSplineCraftTransform(SplineCraft *arg0, f32 arg1) {
+    f32 q[4];
+    s32 ang[4];
+    f32 m[12];
+    u8 flag;
+    Tf *s2;
+    Tf *t;
+    f32 v;
+    f32 w;
+    s32 c;
+    u16 ty;
+
+    s2 = &D_main_bss_8013800C[arg0->unkB8];
+    if (arg0->dir[1] < 0.0f) {
+        arg0->dir[1] = arg0->dir[1] + arg1 * 0.5f;
+    } else {
+        arg0->dir[1] = arg0->dir[1] + arg1 * 0.25f;
+    }
+    if (arg0->dir[1] > 0.5f) {
+        arg0->dir[1] = 0.5f;
+    }
+    clampVec3ToUnitIfLongerThan(arg0->dir);
+    quatFromAxisAngleSafe_l(q, arg0->dir, arg0->unk140 * arg1);
+    rotateVec3ByQuat_l(q, (u8 *)arg0 + 0x1C, (u8 *)arg0 + 0x1C);
+    clampVec3ToUnitIfLongerThan((u8 *)arg0 + 0x1C);
+    orthonormalizeFrame_l(arg0->pos);
+    mat34CrossRowsAndCopyPos_l(s2, arg0->pos, 1.0f);
+    arg0->vel[0] = arg0->unkE8 * arg0->dir[0];
+    arg0->vel[1] = arg0->unkE8 * arg0->dir[1];
+    arg0->vel[2] = arg0->unkE8 * arg0->dir[2];
+    arg0->unkE8 = arg0->unkE8 * 1.01f;
+    addScaledVec3ToVec3(arg0->pos, arg0->pos, arg1, arg0->vel);
+    s2->x = arg0->pos[0];
+    s2->y = arg0->pos[1];
+    s2->z = arg0->pos[2];
+    computeAngleToTargetFromTransform(s2, ang, arg0->unkCC);
+    extractOrthonormalFrameFromStruct(arg0->pos, s2);
+    if (arg0->unk18C > 0.0f) {
+        arg0->unk18C -= arg1;
+        if (arg0->unk18C < 0.0f) {
+            arg0->unk18C = 0.0f;
+            spawnSceneDebrisAndEffectClusterU(arg0, 0);
+        }
+    }
+    integrateCraftVelocityAndCollide(arg0, arg1);
+    switch (stepObjectOrientationTowardTarget(arg0, arg1, &arg0->unkCC[0], &arg0->unkCC[1], &arg0->unkCC[2], &flag)) {
+    case 1:
+        if (flag == 0) {
+            play3DSoundEvent(NULL, arg0->pos, arg0->vel, 20.0f, 0.2f, 0, 0x3E, 0x7A, 0x28);
+        } else {
+            play3DSoundEvent(NULL, arg0->pos, arg0->vel, 24.0f, 0.2f, 0, 0xC, 0x73, 0x28);
+            if (isTerrainCellBlockedAtWorldXz(arg0->pos[0], arg0->pos[2], D_main_bss_80138058) != 1) {
+                *(s32 *)&arg0->dir[1] = 0;
+                normalize_vector(arg0->dir);
+                *(s32 *)((u8 *)arg0 + 0x1C) = 0;
+                *(s32 *)((u8 *)arg0 + 0x24) = 0;
+                *(f32 *)((u8 *)arg0 + 0x20) = 1.0f;
+                orthonormalizeFrame_l(arg0->pos);
+                mat34CrossRowsAndCopyPos_l(&D_main_bss_8013800C[arg0->unkB8], arg0->pos, 1.0f);
+                spawnSplineWalkerCraft(arg0->pos, 0.375f, 0.46875f, 0xC);
+            }
+        }
+        spawnSceneDebrisAndEffectClusterU(arg0, flag);
+        break;
+    case 2:
+        if (flag == 0) {
+            play3DSoundEvent(NULL, arg0->pos, arg0->vel, 20.0f, 0.2f, 0, 0x3E, 0x7A, 0x28);
+        } else {
+            play3DSoundEvent(NULL, arg0->pos, arg0->vel, 24.0f, 0.2f, 0, 0xC, 0x73, 0x28);
+            if (isTerrainCellBlockedAtWorldXz(arg0->pos[0], arg0->pos[2], D_main_bss_80138058) != 1) {
+                *(s32 *)&arg0->dir[1] = 0;
+                normalize_vector(arg0->dir);
+                *(s32 *)((u8 *)arg0 + 0x1C) = 0;
+                *(s32 *)((u8 *)arg0 + 0x24) = 0;
+                *(f32 *)((u8 *)arg0 + 0x20) = 1.0f;
+                orthonormalizeFrame_l(arg0->pos);
+                mat34CrossRowsAndCopyPos_l(&D_main_bss_8013800C[arg0->unkB8], arg0->pos, 1.0f);
+                spawnSplineWalkerCraft(arg0->pos, 0.375f, 0.46875f, 0xC);
+            }
+        }
+        spawnSceneDebrisAndEffectClusterU(arg0, flag);
+        orthonormalizeFrame_l(arg0->pos);
+        break;
+    default:
+        v = arg0->unk140;
+        if (v > 0.0f) {
+            w = v + 2.0f;
+            arg0->unk140 = w;
+            if (w > 180.0f) {
+                arg0->unk140 = 180.0f;
+            }
+        } else {
+            w = v - 2.0f;
+            arg0->unk140 = w;
+            if (w < -180.0f) {
+                arg0->unk140 = -180.0f;
+            }
+        }
+        break;
+    }
+    orthonormalizeFrame_l(arg0->pos);
+    do {
+    mat34CrossRowsAndCopyPos_l(s2, arg0->pos, 1.0f);
+    t = &D_main_bss_8013800C[arg0->unkB8];
+    t->x = arg0->pos[0];
+    t->y = arg0->pos[1];
+    t->z = arg0->pos[2];
+    ty = arg0->unkB4;
+    } while (0);
+    usScale(m, ty);
+    mat3x4Multiply_l(t, m, arg0->unk0 + 0x28);
+    *(V3 *)&D_main_bss_8013803C_l[arg0->unkB8] = *(V3 *)arg0->unkCC;
+}
 
 extern u8 Cot800C[][0x2A0] __asm__("D_main_bss_8013800C");
 extern u8 D_main_bss_8013803C[][0x2A0];
