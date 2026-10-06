@@ -135,7 +135,218 @@ void playerVwingInit(s32 *a0, s32 arg1, s32 arg2)
   arg0->f20 = 0xFFFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B9600", updateVwingEngineEffect);
+typedef struct {
+    u8 p0[0xB8];
+    s32 idx;
+    u8 pBC[0xE8 - 0xBC];
+    f32 fE8;
+    f32 fEC;
+    f32 fF0;
+    f32 fF4;
+    u8 pF8[0x118 - 0xF8];
+    f32 f118;
+    u8 p11C[0x180 - 0x11C];
+    u16 f180;
+    u8 p182[0x190 - 0x182];
+    f32 f190;
+    u8 p194[0x2A0 - 0x194];
+} VwEP;
+
+typedef struct {
+    u8 p0[0x12];
+    u16 f12;
+    u8 p14[4];
+    u16 f18;
+    u8 p1A[8];
+    u16 f22;
+} VwHud2;
+
+typedef struct {
+    u8 pad0[0x4C];
+    u32 flags;
+    f32 pos[3];
+    f32 scale[3];
+    f32 quat[4];
+    f32 off[3];
+} VwCfg;
+
+typedef struct {
+    s32 idx;
+    VwCfg *cfgL;
+    VwCfg *cfgR;
+    u8 *matL;
+    u8 *matR;
+} VwEngFx;
+
+extern VwEP sVwEP[] __asm__("D_main_bss_80137DBC");
+extern u8 gVwB800C[] __asm__("D_main_bss_8013800C");
+extern u16 D_main_bss_80130B88[][3];
+extern VwHud2 sVwHud2[] __asm__("D_mission_overlay_8010BE18");
+extern u8 gGameSettings;
+extern f32 D_mission_overlay_8010BDD8[][2];
+extern f32 vec3Dot(void *, void *);
+extern u8 getCraftAnimationSlotFlag(u8);
+extern f32 getCraftAnimationSlotValue(u8);
+extern void setCraftAnimationSlotParams(u8, u8, f32);
+extern void transformVec3ByMat34(void *, void *, void *);
+extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+extern void playSpeechClipOncePerLevel(s32, s32);
+extern void scheduleSceneFormatMessageTimed(void *, s32);
+extern void updatePlayerCraftPhysics(void *, f32);
+extern void computeBootConfigScaledVec4F(s32, f32, f32, void *, f32, f32) __asm__("computeBootConfigScaledVec4");
+extern void clearVec4QuadStruct(void *);
+extern void addVec3At0x24(void *, f32, f32, f32);
+extern void applyScaleToMat3x4(void *, f32, f32, f32);
+extern void composeQuatToMat3x4(void *, void *);
+extern void composeRotationMatrixSlot0(void *, f32);
+
+#define VWM(f) (D_main_bss_80130B88[e->idx][0] & sVwHud2[e->idx].f)
+
+static __inline__ void vwComposeEngineMat(u8 *mat, VwCfg *cfg, f32 ang) {
+    u32 fl;
+    clearVec4QuadStruct(mat);
+    if (cfg->flags & 1) {
+        addVec3At0x24(mat, -cfg->pos[0], -cfg->pos[1], -cfg->pos[2]);
+    }
+    if (cfg->flags & 2) {
+        applyScaleToMat3x4(mat, cfg->scale[0], cfg->scale[1], cfg->scale[2]);
+    }
+    if (cfg->flags & 4) {
+        composeQuatToMat3x4(mat, cfg->quat);
+    }
+    composeRotationMatrixSlot0(mat, ang);
+    fl = cfg->flags;
+    if ((fl & 9) == 9) {
+        addVec3At0x24(mat, cfg->off[0] + cfg->pos[0], cfg->off[1] + cfg->pos[1], cfg->off[2] + cfg->pos[2]);
+    } else if ((fl & 9) == 8) {
+        addVec3At0x24(mat, cfg->off[0], cfg->off[1], cfg->off[2]);
+    } else if (fl & 1) {
+        addVec3At0x24(mat, cfg->pos[0], cfg->pos[1], cfg->pos[2]);
+    }
+}
+
+void updateVwingEngineEffect(s32 *arg0, f32 dt) {
+    VwEngFx *e = (VwEngFx *)arg0;
+    VwEP *p;
+    VwEP *base;
+    u8 *b250;
+    u8 sp28[0x10];
+    f32 sp38[3];
+    f32 sp48[3];
+    f32 sp58[3];
+    f32 target;
+    u8 *s4;
+
+    p = &sVwEP[e->idx];
+    if (*(u16 *)((u8 *)sVwEP + p->idx * 0x2A0 + 0x180) & 1) {
+        b250 = &sVwEP[0].p0[0x250];
+        target = p->fEC;
+        sp48[0] = *(f32 *)(p->idx * 0x2A0 + b250);
+        sp48[1] = *(f32 *)(p->idx * 0x2A0 + b250 + 0xC);
+        sp48[2] = *(f32 *)(p->idx * 0x2A0 + b250 + 0x18);
+        sp58[0] = 0;
+        sp58[1] = -1.0f;
+        sp58[2] = 0;
+        vec3Dot(sp48, sp58);
+        if ((VWM(f12)) && !(VWM(f18)) && p->f190 == 0.0f) {
+            target -= 1.0f;
+            p->f118 = 90.0f;
+        } else {
+            p->f118 = 50.0f;
+        }
+        if (p->f190 > 0.0f) {
+            p->f118 = 30.0f;
+        }
+        if (target < 2.25f) {
+            target = 2.25f;
+        }
+        if (VWM(f18)) {
+            if (!(VWM(f12))) {
+                if (p->f190 == 0.0f) {
+                    target += 0.45f;
+                }
+            }
+            if (VWM(f18) && p->f190 == 0.0f) {
+                if (!(getCraftAnimationSlotFlag(0))) {
+                    setCraftAnimationSlotParams(0, 1, 0.0f);
+                }
+                goto after19;
+            }
+        }
+        if (getCraftAnimationSlotFlag(0) == 1) {
+            if (getCraftAnimationSlotValue(0) == 0.0f) {
+                setCraftAnimationSlotParams(0, 1, 0.5f);
+            }
+        }
+    after19:
+        if (!(VWM(f12)) && !(VWM(f18)) && p->fE8 < 3.0f && p->f190 == 0.0f) {
+            target += 1.0f;
+            if (target > 3.0f) {
+                target = 3.0f;
+            }
+        }
+        if (target > 4.5f) {
+            target = 4.5f;
+        }
+        if (p->f190 > 0.0f) {
+            if (p->f190 > 6.0f) {
+                target = 6.0f;
+            } else if (target > 3.0f) {
+                target = 3.0f;
+            }
+            p->f190 = p->f190 - dt;
+            if (p->f190 < 0.0f) {
+                p->f190 = 0.0f;
+            }
+            if (VWM(f22)) {
+                playSpeechClipOncePerLevel(gGameSettings != 0xF ? 0x130 : 0x214, 9);
+            }
+        } else if (VWM(f22)) {
+            p->f190 = 12.0f;
+            s4 = gVwB800C + e->idx * 0x2A0;
+            sp38[0] = 0.0f;
+            sp38[1] = 0.0f;
+            sp38[2] = -1.0f;
+            transformVec3ByMat34(s4, sp38, sp28);
+            sp38[0] = *(f32 *)(s4 + 8);
+            sp38[1] = *(f32 *)(s4 + 0x14);
+            sp38[2] = *(f32 *)(s4 + 0x20);
+            play3DSoundEvent(0, sp28, sp38, 20.0f, 0.0f, 0, 0x25, 0x78, 0);
+            s4 = gVwB800C + e->idx * 0x2A0;
+            sp38[0] = 0.0f;
+            sp38[1] = 0.0f;
+            sp38[2] = -1.0f;
+            transformVec3ByMat34(s4, sp38, sp28);
+            sp38[0] = *(f32 *)(s4 + 8);
+            sp38[1] = *(f32 *)(s4 + 0x14);
+            sp38[2] = *(f32 *)(s4 + 0x20);
+            play3DSoundEvent(0, sp28, sp38, 20.0f, 0.0f, 0, 0x25, 0x78, 0);
+            playSpeechClipOncePerLevel(gGameSettings != 0xF ? 0x12B : 0x20F, 9);
+            scheduleSceneFormatMessageTimed(p, 8);
+            setCraftAnimationSlotParams(0, 2, 10.799999f);
+        }
+        p->fEC = target;
+        if (p->fF0 < target - p->fE8) {
+            p->fE8 = p->fE8 + p->fF0;
+        } else {
+            p->fE8 = target;
+        }
+        if ((target - p->fE8) < -p->fF4) {
+            p->fE8 = p->fE8 - p->fF4;
+        } else {
+            p->fE8 = target;
+        }
+    }
+    {
+        union { s32 i; f32 f; } u;
+        f32 one = 1.0f;
+        u.i = 0x3EC00000;
+        updatePlayerCraftPhysics(p, dt);
+        computeBootConfigScaledVec4F(e->idx, u.f, u.f, (u8 *)gVwB800C + e->idx * 0x2A0, one, dt);
+    }
+    vwComposeEngineMat(e->matL + 0x1C, e->cfgL, D_mission_overlay_8010BDD8[p->idx][0] * 45.0f);
+    vwComposeEngineMat(e->matR + 0x1C, e->cfgR, D_mission_overlay_8010BDD8[p->idx][0] * -45.0f);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B9600", orientVwingSubmodelByQuat);
 
@@ -359,7 +570,7 @@ extern void destroySceneNpcsAndUnlink(void *);
 extern void releaseMeshAsset(s32);
 extern void teardownHudInstancesAndUnbindNpcs(void);
 extern void freePlayerAuxBuffersIfActive(s32);
-extern void updateVwingEngineEffect(s32 *, s32);
+extern void updateVwingEngineEffectCall(s32 *, s32) __asm__("updateVwingEngineEffect");
 extern void tryPlaySpatialSoundWithGates(void *, void *);
 extern void destroyNpcSlotByIndex(u16);
 extern void enqueueMeshTypeForCleanup(s32);
@@ -437,7 +648,7 @@ s32 playerVwingUpdate(u8 *npc, s32 msg, u8 *ctx) {
             freePlayerAuxBuffersIfActive(0);
             return 1;
         case 3:
-            updateVwingEngineEffect(s0, *(s32 *)ctx);
+            updateVwingEngineEffectCall(s0, *(s32 *)ctx);
             tickVwingEngineAudio((VwEngine *)s0, *(f32 *)ctx);
             return 1;
         case 5:
