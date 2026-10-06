@@ -106,7 +106,68 @@ void plotRadarBlipRow(u8 *arg0, s32 y) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", initializeRadar);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", updateCraftSelectAnimState);
+typedef struct { u8 pad[0x14]; s16 x0; s16 y0; s16 x1; s16 y1; s16 x2; s16 y2; u8 pad20[3]; s8 a; } Seg;
+extern f32 sinf(f32);
+extern f32 cosf(f32);
+
+void updateCraftSelectAnimState(u8 *arg0, f32 *arg1, f32 arg2, f32 arg3, f32 arg4)
+{
+  f32 t;
+  f32 d;
+  f32 fr;
+  f32 sn;
+  f32 cs;
+  f32 ang;
+  s16 px;
+  s16 py;
+  s32 i;
+  s32 s4;
+  s32 s2;
+  u8 *p;
+  Seg *e;
+  u32 u0;
+  u32 u1;
+  p = arg0 + 0xB18;
+  t = arg1[0] * 0.5f;
+  fr = t - (f32)(s32)t;
+  d = fr + fr;
+  u0 = (u32)(d * 4096.0f * 0.015625f);
+  s4 = ((u0 + ((s16)(*(s16 *)(arg0 + 0x85C) % 32) << 7)) & 0xFFF) | 0x1000;
+  t = arg1[2] * 0.5f;
+  fr = t - (f32)(s32)t;
+  d = fr + fr;
+  u1 = (u32)(d * 4096.0f * 0.015625f);
+  s2 = ((u1 + ((s16)(*(s16 *)(arg0 + 0x85E) % 32) << 7)) & 0xFFF) | 0x1000;
+  ang = -0.3926991f;
+  sn = sinf(ang);
+  cs = cosf(ang);
+  px = (u32)((f32)s4 + (sn * arg3 + cs * arg2) * 0.45f * 4096.0f);
+  py = (u32)((f32)s2 - -(cs * arg3 - sn * arg2) * 0.45f * 4096.0f);
+  e = (Seg *)p;
+  i = 0;
+  do
+  {
+    e->x0 = s4;
+    e->y0 = s2;
+    ang = (f32)(i + 1);
+    ang = ang * 3.1415927f;
+    ang = ang + ang;
+    ang = ang * 0.125f;
+    ang = ang - 0.3926991f;
+    e->x1 = px;
+    e->y1 = py;
+    sn = sinf(ang);
+    cs = cosf(ang);
+    px = (u32)((f32)s4 + (sn * arg3 + cs * arg2) * 0.45f * 4096.0f);
+    e->x2 = px;
+    py = (u32)((f32)s2 - -(cs * arg3 - sn * arg2) * 0.45f * 4096.0f);
+    e->y2 = py;
+    e->a = (u32)(arg4 * 210.0f);
+    i++;
+    e++;
+  }
+  while (i < 8);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", placeRadarDots);
 
