@@ -2,9 +2,6 @@
 
 #include "PR/ultratypes.h"
 
-#if 0
-// This will not match when compiled locally if it isn't compiles with asn64.exe for SN GCC 2.7.2
-// But I cannot for the life of me get that assembler to play nice with the project on the whole.
 #define BASE 65521L /* largest prime smaller than 65536 */
 #define NMAX 5552
 /* NMAX is the largest n such that 255n(n+1)/2 + (n+1)(BASE-1) <= 2^32-1 */
@@ -39,8 +36,5 @@ u32 adler32(u32 adler, u8* buf, u32 len) {
     }
     return (s2 << 16) | s1;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/zlib/adler32", adler32);
-#endif
 
 INCLUDE_ASM("asm/nonmatchings/zlib/adler32", fake_func_80026B98);

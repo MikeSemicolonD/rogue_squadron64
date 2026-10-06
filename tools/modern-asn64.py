@@ -339,7 +339,7 @@ with open(input_filename, mode="r") as input_file:
             elif identifier in ["mflo", "mfhi"]:
                 mfhilo_delay_count = 3 # Set to 3 so it becomes 2 after the decrement
                 mfhilo_delay_location = len(preprocessed) + 1
-            elif identifier == "mult":
+            elif identifier in ["mult", "multu"]:
                 # SN64 reorders delay slot mult instructions in noreorder to prevent mulmul bugs if the branch target starts with a multiply
                 # However, it doesn't do it needs to insert nops after a mfhi/mflo
                 if delay_slot and not is_reorder and mfhilo_delay_count <= 0:
