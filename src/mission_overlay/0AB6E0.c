@@ -3,7 +3,249 @@
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AB6E0", playerSnowSpeederInit);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AB6E0", composeEffectObjectTransformMatrix);
+typedef struct {
+    union { u8 pad0[0xB8]; f32 mat0[4][3]; } u0;
+    s32 tgt;
+    u8 padBC[0xE8 - 0xBC];
+    f32 fE8;
+    f32 fEC;
+    f32 fF0;
+    f32 fF4;
+    u8 padF8[0x118 - 0xF8];
+    f32 f118;
+    u8 pad11C[0x180 - 0x11C];
+    u16 h180;
+    u8 pad182[0x250 - 0x182];
+    f32 mat[4][3];
+    u8 pad280[0x2A0 - 0x280];
+} CePl;
+typedef struct {
+    u8 pad0[6];
+    u16 h6;
+    u8 pad8[0xC];
+    u16 h14;
+    u16 h16;
+    u16 h18;
+    u8 pad1A[0xA];
+} CeBtn;
+typedef struct {
+    s32 idx;
+    f32 f4;
+    f32 f8;
+    u8 *n[4];
+    u8 *m[4];
+    u8 pad2C;
+    u8 small;
+} CeObj;
+extern u16 D_main_bss_80130B88[][3];
+extern CeBtn D_mission_overlay_8010BE18[];
+extern f32 D_mission_overlay_8010BDD8[][2];
+f32 vec3Dot(f32 *, f32 *);
+void clearVec4QuadStruct(void *);
+void addVec3At0x24(void *, f32, f32, f32);
+void applyScaleToMat3x4(void *, f32, f32, f32);
+void composeRotationMatrixSlot0(void *, f32);
+void composeQuatToMat3x4(void *, void *);
+f32 cosf(f32);
+void updatePlayerCraftPhysics(void *, f32);
+void computeBootConfigScaledVec4(s32, s32, s32, void *, f32, f32);
+extern CePl cePlayers[] __asm__("D_main_bss_80137DBC");
+#define CEP cePlayers
+#define CEM(j) ((CePl *)((u8 *)cePlayers + 0x250))[j].u0.mat0
+#define CE_BTN(o, f) (D_main_bss_80130B88[(o)->idx][0] & D_mission_overlay_8010BE18[(o)->idx].f)
+#define CE_MAX(o) (!(o)->small ? 2.625f : 1.3125f)
+#define CE_MIN(o) (!(o)->small ? 1.875f : 0.9375f)
+#define CE_BOOST(o) (!(o)->small ? 3.5625f : 1.78125f)
+#define CE_JOINT(k, r) \
+    { u8 *m; u8 *n; \
+    n = arg0->n[k] + 0x1C; \
+    m = arg0->m[k]; \
+    clearVec4QuadStruct((void *)n); \
+    if (*(s32 *)(m + 0x4C) & 1) { \
+        addVec3At0x24((void *)n, -*(f32 *)(m + 0x50), -*(f32 *)(m + 0x54), -*(f32 *)(m + 0x58)); \
+    } \
+    if (*(s32 *)(m + 0x4C) & 2) { \
+        applyScaleToMat3x4((void *)n, *(f32 *)(m + 0x5C), *(f32 *)(m + 0x60), *(f32 *)(m + 0x64)); \
+    } \
+    composeRotationMatrixSlot0((void *)n, r); \
+    if (*(s32 *)(m + 0x4C) & 4) { \
+        composeQuatToMat3x4((void *)n, (void *)(m + 0x68)); \
+    } \
+    { s32 fl = *(s32 *)(m + 0x4C); \
+    if ((fl & 9) == 9) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x78) + *(f32 *)(m + 0x50), *(f32 *)(m + 0x7C) + *(f32 *)(m + 0x54), *(f32 *)(m + 0x80) + *(f32 *)(m + 0x58)); \
+    } else if ((fl & 9) == 8) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x78), *(f32 *)(m + 0x7C), *(f32 *)(m + 0x80)); \
+    } else if (fl & 1) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x50), *(f32 *)(m + 0x54), *(f32 *)(m + 0x58)); \
+    } } }
+#define CE_JOINTP(k, pre, r) \
+    { u8 *m; u8 *n; \
+    n = arg0->n[k] + 0x1C; \
+    m = arg0->m[k]; \
+    pre; \
+    clearVec4QuadStruct((void *)n); \
+    if (*(s32 *)(m + 0x4C) & 1) { \
+        addVec3At0x24((void *)n, -*(f32 *)(m + 0x50), -*(f32 *)(m + 0x54), -*(f32 *)(m + 0x58)); \
+    } \
+    if (*(s32 *)(m + 0x4C) & 2) { \
+        applyScaleToMat3x4((void *)n, *(f32 *)(m + 0x5C), *(f32 *)(m + 0x60), *(f32 *)(m + 0x64)); \
+    } \
+    composeRotationMatrixSlot0((void *)n, r); \
+    if (*(s32 *)(m + 0x4C) & 4) { \
+        composeQuatToMat3x4((void *)n, (void *)(m + 0x68)); \
+    } \
+    { s32 fl = *(s32 *)(m + 0x4C); \
+    if ((fl & 9) == 9) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x78) + *(f32 *)(m + 0x50), *(f32 *)(m + 0x7C) + *(f32 *)(m + 0x54), *(f32 *)(m + 0x80) + *(f32 *)(m + 0x58)); \
+    } else if ((fl & 9) == 8) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x78), *(f32 *)(m + 0x7C), *(f32 *)(m + 0x80)); \
+    } else if (fl & 1) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x50), *(f32 *)(m + 0x54), *(f32 *)(m + 0x58)); \
+    } } }
+#define CE_JOINTQ(k, pre, r) \
+    { u8 *m; u8 *n; \
+    n = arg0->n[k] + 0x1C; \
+    pre; \
+    m = arg0->m[k]; \
+    clearVec4QuadStruct((void *)n); \
+    if (*(s32 *)(m + 0x4C) & 1) { \
+        addVec3At0x24((void *)n, -*(f32 *)(m + 0x50), -*(f32 *)(m + 0x54), -*(f32 *)(m + 0x58)); \
+    } \
+    if (*(s32 *)(m + 0x4C) & 2) { \
+        applyScaleToMat3x4((void *)n, *(f32 *)(m + 0x5C), *(f32 *)(m + 0x60), *(f32 *)(m + 0x64)); \
+    } \
+    composeRotationMatrixSlot0((void *)n, r); \
+    if (*(s32 *)(m + 0x4C) & 4) { \
+        composeQuatToMat3x4((void *)n, (void *)(m + 0x68)); \
+    } \
+    { s32 fl = *(s32 *)(m + 0x4C); \
+    if ((fl & 9) == 9) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x78) + *(f32 *)(m + 0x50), *(f32 *)(m + 0x7C) + *(f32 *)(m + 0x54), *(f32 *)(m + 0x80) + *(f32 *)(m + 0x58)); \
+    } else if ((fl & 9) == 8) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x78), *(f32 *)(m + 0x7C), *(f32 *)(m + 0x80)); \
+    } else if (fl & 1) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x50), *(f32 *)(m + 0x54), *(f32 *)(m + 0x58)); \
+    } } }
+
+void cbsvF(s32, f32, f32, void *, f32, f32) __asm__("computeBootConfigScaledVec4");
+void composeEffectObjectTransformMatrix(CeObj *arg0, f32 dt) {
+    CePl *s3 = &CEP[arg0->idx];
+    u8 down = 0;
+    f32 v[3];
+    f32 up[3];
+    f32 spd;
+    f32 rot;
+
+    if (*(u16 *)((s32)cePlayers + s3->tgt * sizeof(CePl) + 0x180) & 1) {
+        spd = s3->fEC;
+        v[0] = CEM(s3->tgt)[0][0];
+        v[1] = CEM(s3->tgt)[1][0];
+        v[2] = CEM(s3->tgt)[2][0];
+        up[0] = 0.0f;
+        up[1] = -1.0f;
+        up[2] = 0.0f;
+        if (vec3Dot(v, up) > 0.0f) {
+            down = 1;
+        }
+        s3->f118 = 35.0f;
+        if (CE_BTN(arg0, h14)) {
+            spd = CE_MIN(arg0) + (CE_MAX(arg0) - CE_MIN(arg0)) / 3.0f;
+            arg0->f4 += dt;
+            if (arg0->f4 > 0.5f) {
+                arg0->f4 = 0.5f;
+            }
+            if (down && !CE_BTN(arg0, h16)) {
+                s3->f118 = 60.0f;
+            }
+        } else {
+            arg0->f4 -= dt;
+            if (arg0->f4 < 0.0f) {
+                arg0->f4 = 0.0f;
+            }
+            s3->f118 = 35.0f;
+        }
+        if (CE_BTN(arg0, h16)) {
+            spd = CE_MIN(arg0) + (CE_MAX(arg0) - CE_MIN(arg0)) / 3.0f;
+            arg0->f8 += dt;
+            if (arg0->f8 > 0.5f) {
+                arg0->f8 = 0.5f;
+            }
+            if (!down && !CE_BTN(arg0, h14)) {
+                s3->f118 = 60.0f;
+            }
+        } else {
+            arg0->f8 -= dt;
+            if (arg0->f8 < 0.0f) {
+                arg0->f8 = 0.0f;
+            }
+        }
+        if (CE_BTN(arg0, h14) && CE_BTN(arg0, h16)) {
+            spd = CE_MIN(arg0);
+        }
+        CE_JOINTP(0, rot = arg0->f4 * 2.0f * -90.0f, rot)
+        CE_JOINTP(1, rot = arg0->f8 * 2.0f * -90.0f, rot)
+        if (!CE_BTN(arg0, h6)) {
+            rot = D_mission_overlay_8010BDD8[arg0->idx][0];
+            if (rot < 0.0f) {
+                rot = cosf(-rot * 1.5707964f);
+                CE_JOINTP(2, { register f32 one asm("$f2") = 1.0f; register f32 t asm("$f20") = one - rot; rot = t * 45.0f; }, rot)
+                CE_JOINT(3, 0.0f)
+            } else {
+                rot = 1.0f - cosf(rot * 1.5707964f);
+                CE_JOINT(2, 0.0f)
+                rot = rot * 45.0f;
+                CE_JOINT(3, rot)
+            }
+        } else {
+            CE_JOINT(2, 0.0f)
+            CE_JOINT(3, 0.0f)
+        }
+        if (CE_BTN(arg0, h18)) {
+            spd = CE_BOOST(arg0);
+        }
+        if (!CE_BTN(arg0, h16) && !CE_BTN(arg0, h14) && !CE_BTN(arg0, h18)) {
+            if (s3->fE8 < CE_MAX(arg0)) {
+                spd = CE_MAX(arg0);
+            }
+        }
+        if (spd < CE_MIN(arg0)) {
+            spd = CE_MIN(arg0);
+        }
+        if (spd > CE_BOOST(arg0)) {
+            spd = CE_BOOST(arg0);
+        }
+        s3->fEC = spd;
+        if (s3->fF0 < spd - s3->fE8) {
+            s3->fE8 = s3->fE8 + s3->fF0;
+        } else {
+            s3->fE8 = spd;
+        }
+        if (spd - s3->fE8 < -s3->fF4) {
+            s3->fE8 = s3->fE8 - s3->fF4;
+        } else {
+            s3->fE8 = spd;
+        }
+    } else {
+        CE_JOINT(0, 0.0f)
+        CE_JOINT(1, 0.0f)
+        CE_JOINT(2, 0.0f)
+        CE_JOINT(3, 0.0f)
+    }
+    updatePlayerCraftPhysics(s3, dt);
+    {
+        register f32 a asm("$f2") = CE_BOOST(arg0);
+        register f32 b asm("$f4") = CE_MIN(arg0);
+        register f32 c asm("$f6") = s3->fE8;
+        __asm__ volatile("" :: "f"(a), "f"(b), "f"(c) : "memory");
+    }
+    {
+        f32 sc = arg0->small ? 0.75f : 1.0f;
+        s32 id = arg0->idx;
+        __asm__ volatile("");
+        { register f32 c asm("$5") = 0.046875f; cbsvF(arg0->idx, c, c, CEP[id].mat, sc, dt); }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AB6E0", tickEffectObjectMotionAndOrientation);
 
@@ -93,7 +335,7 @@ extern void freeEffectModelInstancePool(void);
 extern void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
 extern void updateCinematicCameraStateMachine(void *, void *, s32);
 extern void tickCraftAnimationSlot(s32, s32);
-extern void composeEffectObjectTransformMatrix(void *, s32);
+extern void ceCall(void *, s32) __asm__("composeEffectObjectTransformMatrix");
 extern void tickCinematicEffectObject(void *, s32);
 extern void advanceCameraTransitionOnCue(s32);
 extern void submitCameraTrackedObjectToRender(void *);
@@ -184,7 +426,7 @@ destroy:
         freeEffectModelInstancePool();
         return 1;
     case 3:
-        composeEffectObjectTransformMatrix(anim, arg[0]);
+        ceCall(anim, arg[0]);
         tickCinematicEffectObject(anim, arg[0]);
         return 1;
     case 9:
