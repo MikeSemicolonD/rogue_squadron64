@@ -155,7 +155,207 @@ INCLUDE_ASM("asm/nonmatchings/main/4A300", scaleObjectPosToGridUnits);
 
 INCLUDE_ASM("asm/nonmatchings/main/4A300", unpackGridVertexBytes);
 
-INCLUDE_ASM("asm/nonmatchings/main/4A300", buildGridCellMesh);
+#include "common_types.h"
+typedef struct {
+    u8 pad0[8];
+    u16 i8;
+    u16 iA;
+    u16 iC;
+    u16 iE;
+    u16 i10;
+    u16 i12;
+    u16 flags;
+    u8 pad16[2];
+    s16 x18;
+    s16 y1A;
+    u8 pad1C[2];
+    u16 i1E;
+    u8 pad20[0x10];
+    u8 f30;
+    u8 pad31[0x13];
+    s8 *p44;
+    u8 *p48;
+    u8 pad4C[8];
+    u8 body54[4];
+} GCell;
+
+typedef struct {
+    u8 pad0[0x14];
+    u16 flags;
+    u8 pad16[0x1A];
+    u8 f30;
+    u8 pad31[0x87];
+} GCellEntry;
+
+typedef struct {
+    u8 pad0[2];
+    u16 next;
+    u16 kind;
+    u8 pad6[2];
+    u32 val;
+} GNode;
+
+extern GCellEntry *gCellArr __asm__("D_main_bss_80137A5C");
+extern u8 D_main_bss_80136DC0[];
+extern s32 D_main_bss_80137A74;
+extern u8 *D_main_bss_80137A50;
+extern f32 D_main_bss_80136DD0;
+u8 *buildGridCellLabel(void *);
+void emitGridCellTileStrip(void *, void *);
+void emitGridCellTileStripAdjacent(void *, void *);
+void emitGridCellTileStripDiagonal(void *, void *);
+extern void unpackGridVertexBytes(u8 *, u8 *, u32 *, u8 *, f32, f32, f32);
+
+typedef struct { u8 b[12]; } V12;
+void buildGridCellMesh(GCell *c) {
+    u32 list[9];
+    f32 fy;
+    f32 sp48;
+    f32 sp4C;
+    f32 sp50;
+    f32 sp54;
+    f32 sp58;
+    f32 sp5C;
+    GCellEntry *cell;
+    u8 *dst;
+    u8 *lbl;
+    V12 *src;
+    s8 *vt;
+    f32 fx;
+    f32 sc;
+    f32 xh;
+    f32 yh;
+    f32 xq;
+    f32 yq;
+    f32 xt;
+    f32 yt;
+    u16 flags;
+    s32 idx;
+    GNode *pool;
+    GNode *p2;
+    s32 n;
+    u32 *lp;
+    s32 cnt;
+
+    flags = c->flags;
+    if (flags & 0x20) {
+        if (flags & 0x40) {
+            c->p48 = buildGridCellLabel(c);
+            return;
+        } else {
+            cell = &gCellArr[c->i8];
+            flags = cell->flags;
+            if (!(flags & 0x40)) {
+                if ((flags & 3) == 0) {
+                    c->p48 = (u8 *)cell + 0x54;
+                    return;
+                }
+                if (cell->f30 < 3 && (flags & 3) == 3) {
+                    emitGridCellTileStrip(cell, D_main_bss_80136DC0);
+                }
+                if (cell->f30 < 2 && (cell->flags & 3) == 2) {
+                    emitGridCellTileStripAdjacent(cell, D_main_bss_80136DC0);
+                }
+                if (cell->f30 == 0) {
+                    emitGridCellTileStripDiagonal(cell, D_main_bss_80136DC0);
+                }
+                mapCellGeometryToGridSpace((void*)cell);
+            }
+            c->p48 = (u8 *)cell + 0x54;
+            return;
+        }
+    }
+    if (!(flags & 0x40)) {
+        if (c->f30 < (flags & 3)) {
+            if (c->f30 < 3 && (flags & 3) == 3) {
+                emitGridCellTileStrip(c, D_main_bss_80136DC0);
+            }
+            if (c->f30 < 2 && (c->flags & 3) == 2) {
+                emitGridCellTileStripAdjacent(c, D_main_bss_80136DC0);
+            }
+            if (c->f30 == 0) {
+                emitGridCellTileStripDiagonal(c, D_main_bss_80136DC0);
+            }
+            mapCellGeometryToGridSpace(c);
+            ((u8 *)c)[0x57] = 1;
+        }
+    }
+    lbl = (u8 *)c + 0x54;
+    if (c->flags & 0xC0) {
+        lbl = buildGridCellLabel(c);
+    }
+    pool = (GNode *)gDoublyLinkedNodePool12;
+    idx = pool[c->i1E].next;
+    if (idx == 0xFFFF || pool[idx].kind != 1) {
+        c->p48 = lbl;
+        return;
+    }
+    n = 0;
+    if (D_main_bss_80137A74 <= 0) {
+        c->p48 = (u8 *)c + 0x54;
+        return;
+    }
+    p2 = pool;
+    D_main_bss_80137A74 = D_main_bss_80137A74 - 1;
+    dst = D_main_bss_80137A50 + D_main_bss_80137A74 * 0x64;
+    c->p48 = dst;
+    do {
+        list[n] = p2[idx].val;
+        n++;
+        idx = p2[idx].next;
+    } while (idx != 0xFFFF && p2[idx].kind == 1 && n < 8);
+    list[n] = 0;
+    fx = (f32)c->x18;
+    sp4C = fx + 0.0f;
+    vt = c->p44;
+    sc = D_main_bss_80136DD0 * 0.00390625f * 0.5f;
+    fy = (f32)c->y1A;
+    sp48 = fy;
+    sp50 = fy + 0.0f;
+    sp54 = fx + 1.0f;
+    src = (V12 *)D_main_bss_80137A54 + c->iA;
+    unpackGridVertexBytes(dst, (u8 *)src++, list, lbl, sp4C, (f32)vt[0] * sc, sp50);
+    unpackGridVertexBytes(dst + 0x10, (u8 *)src++, list, lbl + 0x10, sp54, (f32)vt[4] * sc, sp50);
+    sp58 = sp48 + 1.0f;
+    unpackGridVertexBytes(dst + 0x50, (u8 *)src++, list, lbl + 0x50, sp4C, (f32)vt[0x14] * sc, sp58);
+    unpackGridVertexBytes(dst + 0x60, (u8 *)src++, list, lbl + 0x60, sp54, (f32)vt[0x18] * sc, sp58);
+    if (c->f30 < 2) {
+        xh = fx + 0.5f;
+        src = (V12 *)D_main_bss_80137A54 + c->iC;
+        unpackGridVertexBytes(dst + 8, (u8 *)src++, list, lbl + 8, xh, (f32)vt[2] * sc, sp50);
+        sp5C = sp48 + 0.5f;
+        unpackGridVertexBytes(dst + 0x28, (u8 *)src++, list, lbl + 0x28, sp4C, (f32)vt[0xA] * sc, sp5C);
+        unpackGridVertexBytes(dst + 0x30, (u8 *)src++, list, lbl + 0x30, xh, (f32)vt[0xC] * sc, sp5C);
+        unpackGridVertexBytes(dst + 0x38, (u8 *)src++, list, lbl + 0x38, sp54, (f32)vt[0xE] * sc, sp5C);
+        unpackGridVertexBytes(dst + 0x58, (u8 *)src++, list, lbl + 0x58, xh, (f32)vt[0x16] * sc, sp58);
+        if (c->f30 == 0) {
+            yq = sp48 + 0.25f;
+            src = (V12 *)D_main_bss_80137A54 + c->iE;
+            unpackGridVertexBytes(dst + 0x14, (u8 *)src++, list, lbl + 0x14, sp4C, (f32)vt[5] * sc, yq);
+            xq = fx + 0.25f;
+            unpackGridVertexBytes(dst + 0x18, (u8 *)src++, list, lbl + 0x18, xq, (f32)vt[6] * sc, yq);
+            unpackGridVertexBytes(dst + 0x1C, (u8 *)src++, list, lbl + 0x1C, xh, (f32)vt[7] * sc, yq);
+            xt = fx + 0.75f;
+            unpackGridVertexBytes(dst + 0x20, (u8 *)src++, list, lbl + 0x20, xt, (f32)vt[8] * sc, yq);
+            unpackGridVertexBytes(dst + 0x24, (u8 *)src++, list, lbl + 0x24, sp54, (f32)vt[9] * sc, yq);
+            src = (V12 *)D_main_bss_80137A54 + c->i10;
+            yt = sp48 + 0.75f;
+            unpackGridVertexBytes(dst + 0x3C, (u8 *)src++, list, lbl + 0x3C, sp4C, (f32)vt[0xF] * sc, yt);
+            unpackGridVertexBytes(dst + 0x40, (u8 *)src++, list, lbl + 0x40, xq, (f32)vt[0x10] * sc, yt);
+            unpackGridVertexBytes(dst + 0x44, (u8 *)src++, list, lbl + 0x44, xh, (f32)vt[0x11] * sc, yt);
+            unpackGridVertexBytes(dst + 0x48, (u8 *)src++, list, lbl + 0x48, xt, (f32)vt[0x12] * sc, yt);
+            unpackGridVertexBytes(dst + 0x4C, (u8 *)src++, list, lbl + 0x4C, sp54, (f32)vt[0x13] * sc, yt);
+            src = (V12 *)D_main_bss_80137A54 + c->i12;
+            unpackGridVertexBytes(dst + 4, (u8 *)src++, list, lbl + 4, xq, (f32)vt[1] * sc, sp50);
+            unpackGridVertexBytes(dst + 0xC, (u8 *)src++, list, lbl + 0xC, xt, (f32)vt[3] * sc, sp50);
+            unpackGridVertexBytes(dst + 0x2C, (u8 *)src++, list, lbl + 0x2C, xq, (f32)vt[0xB] * sc, sp5C);
+            unpackGridVertexBytes(dst + 0x34, (u8 *)src++, list, lbl + 0x34, xt, (f32)vt[0xD] * sc, sp5C);
+            unpackGridVertexBytes(dst + 0x54, (u8 *)src++, list, lbl + 0x54, xq, (f32)vt[0x15] * sc, sp58);
+            src = (V12 *)D_main_bss_80137A54 + c->iA;
+            unpackGridVertexBytes(dst + 0x5C, (u8 *)(src + 4), list, lbl + 0x5C, xt, (f32)vt[0x17] * sc, sp58);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4A300", getGridCellFromWorldPos);
 
