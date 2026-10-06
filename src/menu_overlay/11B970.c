@@ -2033,7 +2033,130 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A70F4);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", tickMenuSelectionEnterState);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", tickMenuSelectionActiveState);
+typedef struct {
+    u8 *text;
+    u8 pad4[0xC];
+    s32 unk10;
+    u8 pad14;
+    u8 unk15;
+    u8 pad16[2];
+    u8 *unk18;
+    u8 *unk1C;
+    u8 *unk20[14];
+    f32 unk58;
+    f32 unk5C;
+} MsaState;
+
+typedef struct {
+    u8 pad[0x24];
+    f32 unk24;
+    f32 unk28;
+} MsaElem;
+
+void msaFree(MsaState *) __asm__("freeMenuScreenState");
+s16 getPlayerSlotSpanShort(u16);
+
+s32 tickMenuSelectionActiveState(MsaState *arg0, f32 dt) {
+    u8 *bufs[16];
+    u16 lens[16];
+    f32 xs[16];
+    u8 *p;
+    f32 x;
+    f32 top;
+    MsaElem *e;
+    u8 i;
+    u8 line;
+    u8 nl;
+    u8 cnt;
+    u8 st;
+    u8 done;
+    u8 found;
+    s16 y;
+
+    top = 0.0f;
+    bufs[0] = arg0->unk18;
+    bufs[1] = arg0->unk1C;
+    for (i = 2; i < 16; i++) {
+        bufs[i] = arg0->unk20[i - 2];
+    }
+    for (i = 0; i < 16; i++) {
+        setLookupEntryField5ByKey((s32)D_menu_overlay_800CF078, getPlayerSlotFieldAt34(9, i), 0);
+        bufs[i][0] = 0;
+        lens[i] = 0;
+    }
+    line = 0;
+    cnt = 2;
+    nl = 2;
+    st = 0;
+    found = 0;
+    done = 0;
+    p = arg0->text;
+    x = -arg0->unk58 - 170.0f;
+    do {
+        u8 c;
+
+        c = *p++;
+        if (c == 0) {
+            break;
+        }
+        if (c == '~') {
+            arg0->unk15 = 0;
+            msaFree(arg0);
+            return 1;
+        } else if (c == '\t') {
+            line = 1;
+        } else if (c == '#') {
+            line = nl;
+            if (st == 1) {
+                cnt = ++nl;
+            }
+            xs[line] = x;
+        } else if (c == '\n') {
+            if (st == 1) {
+                for (i = 0; i < 2; i++) {
+                    bufs[i][lens[i]++] = '\n';
+                    bufs[i][lens[i]] = 0;
+                }
+            }
+            line = 0;
+            x += getPlayerSlotSpanShort(9) * 0.5f;
+            if (x >= -170.0f && x <= 170.0f) {
+                if (!found) {
+                    top = x;
+                    found = 1;
+                }
+                st = 1;
+            } else {
+                st = 0;
+                if (x > 170.0f) {
+                    done = 1;
+                }
+            }
+        } else {
+            if (st == 1) {
+                bufs[line][lens[line]++] = c;
+                bufs[line][lens[line]] = 0;
+            }
+        }
+    } while (done == 0);
+    setMenuOverlayHeaderState(0x10, 0, 0);
+    y = top;
+    setPlayerSlotAnimationFlag(9, arg0->unk18, 0, -7, y);
+    e = getPlayerSlotFieldAt34(9, 0);
+    e->unk24 = e->unk28 = 0.5f;
+    setMenuOverlayHeaderState(1, 0, 0);
+    setPlayerSlotAnimationFlag(9, arg0->unk1C, 1, 7, y);
+    e = getPlayerSlotFieldAt34(9, 1);
+    e->unk24 = e->unk28 = 0.5f;
+    setMenuOverlayHeaderState(2, 0x280, 0);
+    for (i = 2; i < nl; i++) {
+        setPlayerSlotAnimationFlag(9, arg0->unk20[i - 2], i, -0x140, (s16)xs[i]);
+        samplePlayerAnimChannel(9, i, 0.6f);
+    }
+    arg0->unk58 = arg0->unk58 + dt * arg0->unk5C * 1.007812977f;
+    arg0->unk10 = (1 << cnt) - 1;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", transformSceneMeshVertices);
 
