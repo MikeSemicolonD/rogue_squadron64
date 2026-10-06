@@ -791,7 +791,56 @@ s32 decodeDeltaCellCounts(DdSt *s, u8 tbl, u8 *counts) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", allocDebrisCellTable);
+typedef struct {
+    s8 *sizes;
+    s32 *codes;
+    u8 pad8[0x98];
+    s32 n;
+    u8 padA4[4];
+} AdTbl;
+typedef struct {
+    u8 pad0[0xE];
+    u16 hE;
+    u8 pad10[0x4C];
+    AdTbl t[4];
+} AdSt;
+
+s32 allocDebrisCellTable(AdSt *s, u8 tbl) {
+    s32 p;
+    s32 code;
+    s32 si;
+
+    p = 0;
+    code = 0;
+    si = s->t[tbl].sizes[0];
+    while (s->t[tbl].sizes[p] != 0) {
+        while (s->t[tbl].sizes[p] == si) {
+            p++;
+            code++;
+        }
+        if (code >= (1 << si)) {
+            return 16;
+        }
+        code <<= 1;
+        si++;
+    }
+    s->t[tbl].codes = rs_malloc(p * 4, s->hE);
+    if (s->t[tbl].codes == NULL) {
+        return 6;
+    }
+    p = 0;
+    code = 0;
+    si = s->t[tbl].sizes[0];
+    while (s->t[tbl].sizes[p] != 0) {
+        while (s->t[tbl].sizes[p] == si) {
+            s->t[tbl].codes[p++] = code;
+            code++;
+        }
+        code <<= 1;
+        si++;
+    }
+    return 0;
+}
 
 typedef struct {
     u8 *bits;
