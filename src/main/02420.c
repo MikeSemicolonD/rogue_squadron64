@@ -157,7 +157,80 @@ why:
 
 INCLUDE_ASM("asm/nonmatchings/main/02420", rs_free);
 
-INCLUDE_ASM("asm/nonmatchings/main/02420", buildHeapFreeList);
+static __inline__ void hfInit(void) {
+    OSMesg pad[2];
+    osCreateMesgQueue(&D_main_8010FEE0, &D_main_bss_8010FEF8, 1);
+    osSendMesg(&D_main_8010FEE0, NULL, 0);
+}
+void buildHeapFreeList(struct heapBlockHeader **arg0, u32 arg1, struct D_main_bss_8010FF08_type *arg2, struct heapBlockHeader *arg3, struct heapBlockHeader *arg4, u8 arg5) {
+    struct heapBlockHeader *a3;
+    struct heapBlockHeader *a1;
+    struct heapBlockHeader *a0;
+    struct heapBlockHeader *t0;
+    struct D_main_bss_8010FF08_type *a2;
+    u32 pa1;
+    s32 t1;
+    s32 v1;
+    u32 diff;
+    u32 t2;
+
+    hfInit();
+    if (arg5 != 0) {
+        *arg0 = arg3;
+        arg3->unk00 = 1;
+        (*arg0)->flags = 0;
+        (*arg0)->size = (u32)arg4 - (u32)arg3 - 0x20;
+    } else {
+        a3 = arg3;
+        do {
+            a1 = a3;
+            a3 = (struct heapBlockHeader *)((u8 *)a3 + a3->size + 0x10);
+        } while (!(a3->unk00 & 8));
+        a1->size = (u32)arg4 - (u32)a1 - 0x20;
+    }
+    t2 = 0;
+    arg4[-1].unk00 = 8;
+    arg4[-1].flags = 0;
+    arg4[-1].size = 0;
+    if (arg1 != 0) {
+        do {
+            a2 = &arg2[t2];
+            a3 = *arg0;
+            a1 = (struct heapBlockHeader *)(a2->dataAddress - 0x10);
+            t1 = (a2->dataSize + 0xF) & ~0xF;
+            if (!(a3->unk00 & 8)) {
+                do {
+                    a0 = (struct heapBlockHeader *)((u8 *)a3 + a3->size);
+                    t0 = a0 + 1;
+                    __asm__("" :: "r"(a0));
+                    if (((u32)a1 >= (u32)a3) & ((u32)a1 < (u32)t0)) {
+                        a1->unk00 = 6;
+                        a1->flags = 0;
+                        if (a1 != a3) {
+                            a3->size = (u32)a1 - (u32)a3 - 0x10;
+                        }
+                        v1 = (u32)t0 - (u32)a1 - 0x10;
+                        diff = v1 - t1;
+                        if (v1 != t1) {
+                            if (diff >= 0x21) {
+                                struct heapBlockHeader *n = (struct heapBlockHeader *)((u8 *)a1 + t1);
+                                n[1].unk00 = 1;
+                                n[1].flags = 0;
+                                n[1].size = diff - 0x10;
+                            } else {
+                                t1 = v1;
+                            }
+                        }
+                        a1->size = t1;
+                        break;
+                    }
+                    a3 = t0;
+                } while (!(a0[1].unk00 & 8));
+            }
+            t2++;
+        } while (t2 < arg1);
+    }
+}
 
 #if 0
 void initMainHeap(u32 arg0, struct D_main_bss_8010FF08_type *arg1, struct heapBlockHeader *arg2, struct heapBlockHeader *arg3) {
