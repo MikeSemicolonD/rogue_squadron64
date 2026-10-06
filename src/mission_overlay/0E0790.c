@@ -315,7 +315,126 @@ s32 playAttachmentMaterialSoundSimple(u8 *arg0) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", transformCraftAnchorsAndApplySubFx);
+typedef struct { f32 x, y, z; } FV3;
+void initActorMotionParamsF(s32, f32, s32, s32, f32) __asm__("initActorMotionParams");
+void setPoolEntryPhaseAndMarkActiveF(u16, f32, s32) __asm__("setPoolEntryPhaseAndMarkActive");
+extern u8 isPendingChildNpcActive(s32);
+extern u8 validateActorTargetLOS(s32);
+extern u8 evaluateTargetTrackingVisibility(s32, s32, s32);
+extern void applyToObjectSubstructByFlag(s32, f32, f32, s32);
+extern void tickObjectAnimSubstruct(s32, void *, f32, s32);
+extern void buildRotationMatrixSlot0(void *, s32);
+extern void composeRotationMatrixSlot1(void *, s32);
+extern void transformVec3ByMat34(void *, void *, void *);
+extern void setPoolEntryPhaseAndMarkActive(u16, s32, s32);
+extern void setPoolEntryPhase(u16, s32);
+extern s32 gObjectiveCounts[];
+extern u8 gObjectiveBooleans[];
+
+typedef struct {
+    s32 a, b, c;
+} V3I;
+
+typedef struct {
+    f32 v[12];
+} NpcXform30B;
+
+void transformCraftAnchorsAndApplySubFx(void *npcv, f32 dt) {
+    u8 *npc = npcv;
+    NpcXform30B save;
+    f32 mtx[12];
+    V3I pos;
+    u8 r;
+    s32 i;
+    u8 *s5;
+    u8 *t;
+    u8 *t2;
+    s32 st;
+    u8 *p;
+    s32 ty;
+
+    ty = npc[0xB2];
+    if (ty < 5) {
+        if (ty >= 2) return;
+    }
+    {
+        s5 = *(u8 **)(*(u8 **)(npc + 0x38) + 0x1A8);
+        for (i = 0; npc[0xB2] == 0 ? i < 2 : i < 3; i++) {
+        {
+            if (isPendingChildNpcActive(*(s32 *)(npc + 0x38)) != 1) {
+                goto next;
+            }
+            r = 0;
+            save = *(NpcXform30B *)npc;
+            p = npc + i * 4;
+            buildRotationMatrixSlot0(mtx, *(s32 *)(p + 0x98));
+            composeRotationMatrixSlot1(mtx, *(s32 *)(p + 0x8C));
+            transformVec3ByMat34(mtx, &save.v[3], npc + 0xC);
+            transformVec3ByMat34(mtx, &save.v[6], npc + 0x18);
+            switch (npc[0xB2]) {
+            case 0:
+                if (i == 0) {
+                    r = validateActorTargetLOS(*(s32 *)(npc + 0x38));
+                } else if (i == 1) {
+                    {
+                        u8 *q = (u8 *)(D_main_bss_80137CE4 * 4 + *(s32 *)(npc + 0x34));
+                        r = evaluateTargetTrackingVisibility(*(s32 *)(npc + 0x38), *(s32 *)(q + 0x104), *(s32 *)(q + 0x100));
+                    }
+                }
+                break;
+            case 1:
+                if (i == 0) {
+                    r = validateActorTargetLOS(*(s32 *)(npc + 0x38));
+                } else {
+                    pos = *(V3I *)(npc + 0xC);
+                    ((FV3 *)(npc + 0xC))->x = -((FV3 *)(npc + 0xC))->x;
+                    ((FV3 *)(npc + 0xC))->y = -((FV3 *)(npc + 0xC))->y;
+                    ((FV3 *)(npc + 0xC))->z = -((FV3 *)(npc + 0xC))->z;
+                    r = evaluateTargetTrackingVisibility(*(s32 *)(npc + 0x38), *(s32 *)((u8 *)(D_main_bss_80137CE4 * 4 + *(s32 *)(npc + 0x34)) + 0x104), *(s32 *)((u8 *)(D_main_bss_80137CE4 * 4 + *(s32 *)(npc + 0x34)) + 0x100));
+                    *(V3I *)(npc + 0xC) = pos;
+                }
+                break;
+            default:
+                goto next;
+            }
+            if (r == 1) {
+                switch (i) {
+                case 0:
+                    applyToObjectSubstructByFlag(*(s32 *)(npc + 0x38), dt, 0.0f, 0);
+                    break;
+                case 1:
+                    applyToObjectSubstructByFlag(*(s32 *)(npc + 0x38), dt, 0.0f, 1);
+                    break;
+                case 2:
+                    tickObjectAnimSubstruct(*(s32 *)(npc + 0x38), s5 + 0xB4, dt, 0);
+                    break;
+                }
+            }
+            *(NpcXform30B *)npc = save;
+        }
+next:;
+        }
+        if (npc[0xB2] != 0) return;
+        t = *(u8 **)(npc + 0x34);
+        if (*(s32 *)(t + 0x128) != 0 && gObjectiveBooleans[*(s32 *)(t + 0x128) - 1] == 0) return;
+        if (*(s32 *)(t + 0x12C) != 0 && gObjectiveCounts[*(s32 *)(t + 0x12C) - 1] < *(s32 *)(t + 0x130)) return;
+        if (s5[0xB3] == 0) {
+            s5[0xB3] = 1;
+            t2 = (u8 *)(D_main_bss_80137CE4 * 4 + *(s32 *)(npc + 0x34));
+            initActorMotionParamsF(*(s32 *)(npc + 0x38), 180.0f, *(s32 *)(t2 + 0xD4), *(s32 *)(t2 + 0xDC), *(f32 *)(t2 + 0xE0));
+            setPoolEntryPhaseAndMarkActiveF(*(u16 *)(npc + 0xC8), 5000.0f, 0);
+            npc[0xC7] = 0;
+        }
+        st = npc[0xC7];
+        if (st == 3) {
+            setPoolEntryPhase(*(u16 *)(npc + 0xC8), 0);
+            npc[0xC7] = npc[0xC7] + 1;
+        } else if (st != 4) {
+            npc[0xC7] = st + 1;
+        }
+        tickObjectAnimSubstruct(*(s32 *)(npc + 0x38), s5 + 0xB4, dt, 0);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", tickCraftSplineOrientation);
 
