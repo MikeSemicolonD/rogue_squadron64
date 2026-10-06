@@ -202,7 +202,112 @@ INCLUDE_ASM("asm/nonmatchings/main/1EE30", loadTextureToMemory);
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", loadTextureTile);
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", emitMaterialRenderStateDL);
+extern u8 D_main_bss_8011A908;
+extern u8 D_main_bss_801143A8;
+extern u32 D_main_bss_801163D4;
+extern u8 D_main_80038860[];
+extern u32 D_main_80037860[][2];
+extern Gfx *loadTextureTile(Gfx *, struct D_main_bss_80128F08 *, s32, s32, s32, u16 *, s32 *);
+
+#define EMR_CHECK(d) \
+    if ((u32)(d) >= D_main_bss_801163D4) { \
+        (d)->words.w0 = 0xB5000000; \
+        (d)->words.w1 = 0; \
+        (d) = allocateDisplayListBuffer(); \
+    }
+
+Gfx *emitMaterialRenderStateDL(Gfx *dl, u16 idx, u32 arg2, u8 *out) {
+    struct D_main_bss_80128F08 *e;
+    u16 sp20;
+    s32 sp24;
+    u32 flags;
+    Gfx *g;
+    Gfx *g2;
+    u8 v;
+
+    e = &D_main_bss_80128F08[idx];
+    sp20 = 0;
+    sp24 = (s32)e->texture_data;
+    dl = loadTextureTile(dl, e, 0, 0, 1, &sp20, &sp24);
+    if (e->unk00 & 0x1C00) {
+        dl = loadTextureTile(dl, e, e->unk03, 1, 0, &sp20, &sp24);
+    }
+    EMR_CHECK(dl);
+    if (e->unk02 >= 2) {
+        g = dl++;
+        g->words.w0 = 0xBA001001;
+        flags = 4;
+        g->words.w1 = 0x10000;
+    } else {
+        g = dl++;
+        g->words.w0 = 0xBA001001;
+        flags = 0;
+        g->words.w1 = 0;
+    }
+    if (arg2 & 1) {
+        flags |= 1;
+    }
+    if (e->unk00 & 0xA000) {
+        flags |= 2;
+    }
+    if (e->unk00 & 0xC00) {
+        flags |= 0x12;
+    }
+    if (arg2 & 2) {
+        flags |= 8;
+    }
+    if (arg2 & 4) {
+        flags |= 0x100;
+    }
+    EMR_CHECK(dl);
+    if (e->unk00 & 0x4000) {
+        g = dl++;
+        g->words.w0 = 0xB9000002;
+        g->words.w1 = 1;
+        D_main_bss_801143A8 = 1;
+        flags |= 0x40;
+    } else {
+        g = dl++;
+        g->words.w0 = 0xB9000002;
+        g->words.w1 = 0;
+        D_main_bss_801143A8 = 0;
+    }
+    v = D_main_80038860[flags & 0x7F];
+    *out = v;
+    if (D_main_bss_8011A908 & 0x80) {
+        flags |= 0x80;
+    } else {
+        D_main_bss_8011A908 = v;
+        if ((v & 0x7F) != 2) {
+            if (e->unk00 & 0x1C00) {
+                flags |= 0x80;
+                D_main_bss_8011A908 = 2;
+                *out = 2;
+            }
+        } else {
+            flags |= 0x80;
+        }
+    }
+    EMR_CHECK(dl);
+    *dl = ((Gfx *)D_main_80037860)[(u16)flags];
+    dl++;
+    EMR_CHECK(dl);
+    g2 = dl++;
+    g2->words.w0 = (((e->unk02 - 1) & 7) << 11) | 0xBB000001;
+    g2->words.w1 = 0;
+    if ((u32)(dl + 2) >= D_main_bss_801163D4) {
+        dl->words.w0 = 0xB5000000;
+        dl->words.w1 = 0;
+        dl = allocateDisplayListBuffer();
+    }
+    dl->words.w0 = 0x03820000;
+    dl->words.w1 = 0;
+    (dl + 1)->words.w0 = ((u32)((e->width - 1) << 9) >> 16 << 16) | ((u32)((e->height - 1) << 9) >> 16);
+    (dl + 1)->words.w1 = ((u32)((e->width - 1) << 9) >> 16 << 16) | ((u32)((e->height - 1) << 9) >> 16);
+    (dl + 2)->words.w0 = ((e->width - 1) << 25) | (((e->height - 1) << 9) & 0xFFFF);
+    (dl + 2)->words.w1 = ((e->width - 1) << 25) | (((e->height - 1) << 9) & 0xFFFF);
+    return dl + 3;
+}
 
 void resetMaterialPool(void) {
     u32 var_a0;
