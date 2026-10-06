@@ -118,7 +118,239 @@ void initWaterSprayParticles(void) {
     D_main_bss_8013A8B8 = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", npcWaterSprayUpdate);
+typedef struct { f32 x, y, z; } WsV3;
+typedef struct { u8 r, g, b, a; } WsCol;
+typedef struct { s32 w[12]; } WsMat;
+typedef struct {
+    f32 x, y, z;
+    f32 fC, f10, f14;
+    f32 f18, f1C, f20;
+    f32 f24, f28, f2C;
+    u8 *mesh;
+    f32 vx, vy, vz;
+    WsCol col;
+    f32 f44, f48, f4C, f50, f54, f58, f5C, f60;
+    u16 h64, h66;
+    u8 b68, b69;
+} WsObj;
+typedef struct {
+    WsV3 *vec;
+    WsV3 *parent;
+    WsCol *col;
+    f32 fC;
+    f32 f10;
+    f32 f14;
+    f32 f18;
+    u16 h1C;
+    u8 b1E;
+    u8 b1F;
+} WsArg;
+extern u8 D_main_bss_80130B63;
+extern u16 D_main_bss_80139574;
+extern u8 D_main_bss_80138058[];
+extern f32 D_main_bss_80136FA8;
+u32 findLargestFreeHeapChunk(void);
+s32 countDisplayListChunks(void);
+extern s16 rand(void);
+f32 sinf(f32);
+f32 sinfApprox(f32);
+static __inline__ f32 wsAbs(f32 v) {
+    f32 r;
+    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(v));
+    return r;
+}
+void wsDestroy(u16) __asm__("destroyNpcSlotByIndex");
+void wsPop(u16, void *) __asm__("popNpcSlotFromTail");
+void wsChain(u16) __asm__("destroyNpcSlotChain");
+u8 *wsWalk(char *) __asm__("walkMeshdef0List");
+u8 *wsInst(char *) __asm__("instantiateNamedMeshInstance");
+void wsFlags(void *, s32, s32, s32) __asm__("applyFlagsToMeshTreeOrList");
+void *wsCtx(u16) __asm__("getNpcContextField8");
+f32 wsWrap(f32, f32, void *, s32) __asm__("wrapAngleToCyclicRange");
+u16 wsFree(s32, u16) __asm__("findFreeNpcSlotByKey");
+u16 wsNext(u16) __asm__("getNextSlotNpcTypeId");
+s32 wsBlocked(f32, f32, void *) __asm__("isTerrainCellBlockedAtWorldXz");
+void wsTint(u8 *, WsCol *) __asm__("applyRgbaTintToMeshVertices");
+void wsRel(void *) __asm__("releaseMeshAsset");
+void wsMat34(void *, void *, f32 *) __asm__("mat34CrossRowsAndCopyPosPtr");
+s32 wsVis(s32, void *, void *, f32) __asm__("addNpcToVisibilityBucket");
+void wsSpawn(f32 *, f32 *, s32, f32, f32, f32) __asm__("spawnOrientedEffectIfBudgetOkAlt");
+
+s32 wsImpl(u8 *npc, u16 action, void *arg2) __asm__("npcWaterSprayUpdate");
+s32 wsImpl(u8 *npc, u16 action, void *arg2) {
+    WsObj *d = *(WsObj **)(npc + 4);
+    f32 mx;
+    f32 v[3];
+
+    switch (action) {
+    case 1: {
+        WsArg *a = arg2;
+        if (D_main_bss_80130B63 == 0) {
+            u16 id = a->h1C;
+            if (id == 0xFFFF) {
+                if (findLargestFreeHeapChunk() < 20000 || countDisplayListChunks() < 30000) {
+                    d->h66 = id;
+                    d->mesh = NULL;
+                destroy:
+                    wsDestroy(*(u16 *)(npc + 0x16));
+                    return 1;
+                }
+            }
+        }
+        d->h64 = a->h1C;
+        *(WsV3 *)&d->vx = *a->vec;
+        mx = (d->vy < d->vx) ? d->vx : d->vy;
+        if (mx < d->vz) mx = d->vz;
+        switch (d->b68 = a->b1F) {
+        case 0:
+            d->mesh = wsWalk(D_main_8003CF04);
+            wsFlags(d->mesh, 0, 0x09010000, 0);
+            *(WsMat *)d = *(WsMat *)wsCtx(d->h64);
+            d->y = wsWrap(d->x, d->z, D_main_bss_80138058, 0);
+            d->f24 = d->f28 = d->f2C = 0.0f;
+            d->h66 = wsFree(0xFFFF, d->h64);
+            if (d->h66 == 0xFFFF) goto destroy;
+            d->f44 = *(f32 *)(*(u8 **)d->mesh + 0x44) * mx;
+            d->f50 = wsAbs(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f);
+            d->f54 = d->vy;
+            d->f4C = wsAbs(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f);
+            d->b69 = 1;
+            d->f58 = 1.0f;
+            break;
+        case 1:
+        case 2:
+        case 3:
+            d->mesh = wsInst(D_main_8003CF04);
+            wsFlags(d->mesh, 0, 0x09010000, 0);
+            *(WsV3 *)d = *a->parent;
+            d->fC = 0.0f;
+            d->f10 = 0.0f;
+            d->f14 = 1.0f;
+            d->f18 = 0.0f;
+            d->f1C = 1.0f;
+            *(s32 *)&d->f20 = 0;
+            { f32 z = d->f20; d->f24 = d->f28 = d->f2C = z;
+            d->f5C = a->fC;
+            d->f60 = a->f10;
+            d->f48 = z; }
+            if (d->b68 == 3) {
+                d->col = *a->col;
+            } else {
+                d->col.r = 0xFF;
+                d->col.g = 0xFF;
+                d->col.b = 0xFF;
+                d->col.a = 0xFF;
+            }
+            wsTint(d->mesh, &d->col);
+            d->h66 = 0xFFFF;
+            d->f44 = *(f32 *)(*(u8 **)d->mesh + 0x44) * mx;
+            if (d->b68 == 2 || d->b68 == 3) {
+                d->f4C = a->f18;
+                d->f50 = sinfApprox(d->vy / d->f4C);
+                d->f54 = 3.1415927f - d->f50;
+                d->f58 = d->vx + d->f5C;
+                d->b69 = 0;
+            }
+            break;
+        }
+        wsPop(D_main_bss_80139574, npc);
+        return 1;
+    }
+    case 2:
+        if (d->h66 != 0xFFFF) wsChain(d->h66);
+        if (d->mesh != NULL) {
+            switch (d->b68) {
+            case 0:
+                wsRel(d->mesh);
+                break;
+            case 1:
+            case 2:
+            case 3:
+                wsRel(d->mesh);
+                break;
+            }
+        }
+        return 1;
+    case 3: {
+        f32 dt = *(f32 *)arg2;
+        switch (d->b68) {
+        case 0: {
+            f32 sa;
+            f32 sb;
+            if (wsNext(d->h66) == 0xFFFF) goto destroy;
+            *(WsMat *)d = *(WsMat *)wsCtx(d->h64);
+            d->fC = 0.0f;
+            d->f10 = 0.0f;
+            d->f18 = 0.0f;
+            d->f20 = 0.0f;
+            d->f14 = 1.0f;
+            d->f1C = 1.0f;
+            d->y = wsWrap(d->x, d->z, D_main_bss_80138058, 0);
+            d->b69 = wsBlocked(d->x, d->z, D_main_bss_80138058) != 0;
+            if (d->b69 == 0) {
+                d->f58 -= dt + dt;
+                if (d->f58 <= 0.0f) d->f58 = 0.0f;
+            } else {
+                d->f58 += dt;
+                if (1.0f < d->f58) d->f58 = 1.0f;
+            }
+            d->f50 += dt;
+            if (1.0f <= d->f50) d->f50 -= 1.0f;
+            d->f4C += dt * 1.6f;
+            if (1.0f <= d->f4C) d->f4C -= 1.0f;
+            sa = sinf(d->f50 * 3.1415927f * 2.0f);
+            sb = sinf(d->f4C * 3.1415927f * 2.0f);
+            d->vy = d->f54 + (sa + 1.0f) * 0.5f * ((sb + 1.0f) * 0.5f * 2.0f);
+            if (d->vy <= 0.0f) d->vy = 0.0001f;
+            break;
+        }
+        case 1:
+        case 2:
+        case 3:
+            d->f48 += d->f60 * dt;
+            if (!(d->f48 < 1.0f)) goto destroy;
+            d->vx += d->f5C * d->f60 * dt;
+            d->vz += d->f5C * d->f60 * dt;
+            d->col.a = (u32)(255.0f - d->f48 * 255.0f);
+            wsTint(d->mesh, &d->col);
+            if (d->b68 == 2 || d->b68 == 3) {
+                d->f50 += d->f54 * d->f60 * dt;
+                d->vy = sinf(d->f50) * d->f4C;
+                if (d->vy <= 0.0f) d->vy = 0.01f;
+            }
+            if (d->b68 == 2) if (d->b69 == 0) if (0.4f < d->f48) {
+                d->b69 = 1;
+                v[0] = d->x;
+                v[1] = d->y - D_main_bss_80136FA8 - 0.05f;
+                v[2] = d->z;
+                wsSpawn(v, 0, 0, 0.01f, d->f58 * 0.6f, 1.0f / d->f60 * 2.2f);
+            }
+            break;
+        }
+        break;
+    }
+    case 4:
+        switch (d->b68) {
+        case 0:
+            v[0] = d->vx;
+            v[1] = d->vy * d->f58;
+            v[2] = d->vz;
+            if (0.0f < d->f58) {
+                wsMat34(d->mesh + 0x28, d, v);
+                wsVis(*(s32 *)arg2, d->mesh, d, d->f44);
+            }
+            break;
+        case 1:
+        case 2:
+        case 3:
+            wsMat34(d->mesh + 0x28, d, &d->vx);
+            wsVis(*(s32 *)arg2, d->mesh, d, d->f44);
+            break;
+        }
+        break;
+    }
+    return 1;
+}
 
 typedef struct { f32 x, y, z; } DbVec3;
 typedef struct {
