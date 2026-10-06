@@ -480,7 +480,58 @@ INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", spawnCutsceneDebrisFiel
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", npcIncomingMissileUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", buildCutsceneGradientBuffers);
+extern void *rs_malloc(u32, u16);
+extern u8 *D_cinematic_overlay_800B1AE0[];
+
+void buildCutsceneGradientBuffers(void) {
+    s8 i;
+    s8 j;
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
+
+    for (i = 0; i < 3; i++) {
+        D_cinematic_overlay_800B1AE0[i] = rs_malloc(0x80, 0x10);
+        for (j = 0; j < 0x20; j++) {
+            b = 0;
+            g = 0;
+            r = 0;
+            a = 0xFF;
+            if (j & 1) {
+                switch (i) {
+                case 0:
+                    r = g = b = a = ~(j * 7);
+                    break;
+                case 1:
+                    g = ~(j * 7);
+                    break;
+                case 2:
+                    r = ~(j * 7);
+                    g = r / 3;
+                    break;
+                }
+            } else {
+                switch (i) {
+                case 1:
+                    r = g = b = a = 0;
+                    break;
+                case 0:
+                    r = g = b = a = 0;
+                    break;
+                case 2:
+                    b = a = 0xC8;
+                    r = g = 0x50;
+                    break;
+                }
+            }
+            D_cinematic_overlay_800B1AE0[i][j * 4] = r;
+            D_cinematic_overlay_800B1AE0[i][j * 4 + 1] = g;
+            D_cinematic_overlay_800B1AE0[i][j * 4 + 2] = b;
+            D_cinematic_overlay_800B1AE0[i][j * 4 + 3] = a;
+        }
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5820);
 
