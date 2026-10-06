@@ -314,7 +314,61 @@ void tickObjectAnimSubstruct(u8 *obj, TickSub *sub, f32 arg2, f32 arg3) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", resolveNpcAttachmentPos);
+s32 transformMeshPartIntoWorld(s32, s32);
+s32 zmemcpy(s32, s32, s32);
+void vec3Cross(f32 *, f32 *, f32 *);
+
+static __inline__ s32 rnapMeshInl(void *arg0, s32 arg1) {
+    void *temp_s0;
+
+    temp_s0 = getNpcContextByIndex(findActiveNpcInSlotChain((*(u16 *)((u8 *)(arg0) + 0x130)), 0) & 0xFFFF);
+    if ((arg1 == 0) || ((*(s32 *)((u8 *)(temp_s0) + 0xC)) == 0)) {
+        return (*(s32 *)((u8 *)(temp_s0) + 8));
+    }
+    zmemcpy(arg1, (*(s32 *)((u8 *)(temp_s0) + 8)), 0x30);
+    transformMeshPartIntoWorld((*(s32 *)((u8 *)(temp_s0) + 0xC)), arg1);
+    return arg1;
+}
+
+static __inline__ f32 rnapTurnInl(Mat4x3 arg0, Vec3f arg1, struct Struct3f *arg2) {
+    Vec3f sp10;
+    struct Struct3f sp20;
+    f32 temp_fs0;
+
+    sp10[0] = arg1[0] - arg0[0][0];
+    sp10[1] = arg1[1] - arg0[0][1];
+    sp10[2] = arg1[2] - arg0[0][2];
+    temp_fs0 = constMinusSinfApprox(vec3Dot(arg0[1], sp10) / (vec3Length(arg0[1]) * vec3Length(sp10))) * 57.29578f;
+    vec3Cross((f32 *)&sp20, arg0[1], sp10);
+    if (vec3Length((f32 *)&sp20) != 0.0f) {
+        normalize_vector((f32 *)&sp20);
+    }
+    *arg2 = sp20;
+    return temp_fs0;
+}
+
+void resolveNpcAttachmentPos(u8 *arg0, f32 *arg1, f32 arg2, f32 arg3) {
+    Mat4x3 sp10;
+    Vec3f sp40;
+    f32 ang;
+    f32 r;
+
+    computeAnchorRelativePositionByDistanceRatio(arg1, (void *)rnapMeshInl(arg0, (s32)sp10), arg2, sp40);
+    *(struct Struct3f *)sp10 = *(struct Struct3f *)sp40;
+    ang = rnapTurnInl((void *)arg1, sp10[0], (struct Struct3f *)sp40);
+    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(ang));
+    if (r > 0.1f) {
+        Vec4f q;
+        if (arg3 < ang) {
+            ang = arg3;
+        } else if (ang < -arg3) {
+            ang = -arg3;
+        }
+        quatFromAxisAngleSafe(q, sp40, ang);
+        rotateVec3ByQuat(q, arg1 + 3, arg1 + 3);
+        rotateVec3ByQuat(q, arg1 + 6, arg1 + 6);
+    }
+}
 
 static __inline__ void swapKV(f32 *keys, u16 *vals, s32 a, s32 b) {
     f32 tf = keys[a];
