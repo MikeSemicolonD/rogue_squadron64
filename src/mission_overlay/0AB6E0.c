@@ -247,7 +247,116 @@ void composeEffectObjectTransformMatrix(CeObj *arg0, f32 dt) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AB6E0", tickEffectObjectMotionAndOrientation);
+typedef struct {
+    f32 x, y, z;
+} TeV3;
+
+typedef struct {
+    TeV3 p;
+    TeV3 a;
+    TeV3 b;
+    f32 pad[3];
+} TeTf;
+
+typedef struct {
+    TeV3 v;
+    f32 pad;
+} TeV4;
+
+typedef struct {
+    u8 pad0[0x10C];
+    u16 h10C;
+    u8 pad10E[2];
+    TeV3 tgt;
+} TeTarget;
+
+typedef struct {
+    s32 object;
+    u8 pad4[0xB2];
+    u16 hB6;
+    s32 wB8;
+    u8 padBC[0x16C - 0xBC];
+    f32 f16C;
+} TeObj;
+
+typedef struct {
+    u8 pad0[4];
+    struct {
+        u8 pad0[4];
+        u16 type;
+    } *p4;
+    u8 pad8[0x144 - 8];
+} TeMeta;
+
+extern TeMeta D_main_bss_80138D18[] __asm__("D_main_bss_80138D18");
+extern u8 D_mission_overlay_80109640[];
+extern u8 D_mission_overlay_80109654[];
+extern void teLookupHmt(s32, char *, s32, void *, void *, s32) __asm__("lookupHmtTextureByName");
+extern void accumulateVectorInObjectFrame(void *, void *, void *);
+extern f32 normalize_vector(void *);
+extern f32 constMinusSinfApprox(f32);
+extern void vec3Cross(void *, void *, void *);
+extern void quatFromAxisAngleSafe(void *, void *, f32);
+extern void rotateVec3ByQuat(void *, void *, void *);
+extern void dispatchCueByCategory(s32, u16, void *, void *, s32, f32, f32);
+extern void play3DSoundEvent(s32, void *, void *, s32, f32, s32, s32, s32, s32);
+
+static __inline__ void teAim(TeTarget *tgt, TeTf *t) {
+    TeV4 dir;
+    TeV4 axis;
+    f32 quat[4];
+    f32 ang;
+    TeV3 *a;
+
+    dir.v.x = tgt->tgt.x - t->p.x;
+    dir.v.y = tgt->tgt.y - t->p.y;
+    dir.v.z = tgt->tgt.z - t->p.z;
+    normalize_vector(&dir);
+    a = &t->a;
+    ang = constMinusSinfApprox(vec3Dot((f32 *)a, (f32 *)&dir)) * 57.295776f;
+    vec3Cross(&axis, a, &dir);
+    quatFromAxisAngleSafe(quat, &axis, ang * 0.6f);
+    dir.v = t->a;
+    rotateVec3ByQuat(quat, &dir, a);
+    dir.v = t->b;
+    rotateVec3ByQuat(quat, &dir, &t->b);
+}
+
+void tickEffectObjectMotionAndOrientation(TeTarget *tgt, TeObj *obj) {
+    TeTf tf;
+    u8 aux[0x30];
+    TeV4 avg;
+
+    if (D_main_bss_80138D18[obj->wB8].p4->type == 3) {
+        TeTf *t;
+        f32 sc;
+
+        teLookupHmt(obj->object, "ab", 0, &tf, aux, 0);
+        accumulateVectorInObjectFrame(&tf, D_mission_overlay_80109654, obj);
+        t = &tf;
+        if (tgt->h10C != 0xFFFF) {
+            teAim(tgt, t);
+        }
+        dispatchCueByCategory(0, obj->hB6, t, D_mission_overlay_80109640, 1, sc = 12.5f, obj->f16C);
+        avg.v = tf.p;
+        teLookupHmt(obj->object, "ab", 1, t, aux, 1);
+        accumulateVectorInObjectFrame(t, D_mission_overlay_80109654 + 0xC, obj);
+        if (tgt->h10C != 0xFFFF) {
+            teAim(tgt, t);
+        }
+        dispatchCueByCategory(0, obj->hB6, t, D_mission_overlay_80109640, 1, sc, obj->f16C);
+    } else {
+        teLookupHmt(obj->object, "ab", 0, &tf, aux, 0);
+        dispatchCueByCategory(0, obj->hB6, &tf, D_mission_overlay_80109640, 1, 12.5f, obj->f16C);
+        avg.v = tf.p;
+        teLookupHmt(obj->object, "ab", 1, &tf, aux, 1);
+        dispatchCueByCategory(0, obj->hB6, &tf, D_mission_overlay_80109640, 1, 12.5f, obj->f16C);
+    }
+    avg.v.x = (tf.p.x + avg.v.x) * 0.5f;
+    avg.v.y = (tf.p.y + avg.v.y) * 0.5f;
+    avg.v.z = (tf.p.z + avg.v.z) * 0.5f;
+    play3DSoundEvent(0, &avg, (u8 *)obj + 0x28, 0x41A00000, 0.2f, 0, 2, 0x5A, 0x28);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0AB6E0", D_mission_overlay_800A536C);
 
