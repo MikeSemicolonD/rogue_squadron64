@@ -99,7 +99,88 @@ void submitCameraTrackedObjectToRender(s32 *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ADF80", emitEffectParticlesAlongPath);
+extern f32 vec3Length(f32 *);
+
+s32 emitEffectParticlesAlongPath(f32 *origin, u8 *state, f32 *pts, f32 maxDist, u8 *lapCount)
+{
+  f32 d[3];
+  f32 best = 1000.0f;
+  f32 len;
+  char i;
+  u8 idx;
+  u8 mode;
+  for (i = 0; ((u8) i) < 4; i++)
+  {
+    d[0] = pts[((u8) i) * 12] - origin[0];
+    d[1] = pts[(((u8) i) * 12) + 1] - origin[1];
+    d[2] = pts[(((u8) i) * 12) + 2] - origin[2];
+    len = vec3Length(d);
+    if (len < best)
+    {
+      best = len;
+      idx = i;
+    }
+  }
+
+  if (maxDist < best)
+  {
+    return 0;
+  }
+  if (idx == state[1])
+  {
+    return 1;
+  }
+  switch (state[0])
+  {
+    case 0:
+      if (state[1] != 3) i = state[1] + 1; else i = 0;
+      if (idx == ((u8) i))
+      {
+        state[1] = idx;
+        state[0] = 1;
+        return 1;
+      }
+      if (state[1] != 0) i = state[1] - 1; else i = 3;
+      if (idx != ((u8) i))
+      {
+        return 0;
+      }
+      state[1] = idx;
+      state[0] = 2;
+      return 1;
+
+    case 1:
+      if (state[1] != 3) i = state[1] + 1; else i = 0;
+      if (idx != ((u8) i))
+    {
+      return 0;
+    }
+      if (idx == 0)
+    {
+      (*lapCount)++;
+    }
+      state[1] = i;
+      return 1;
+
+    case 2:
+      if (state[1] != 0) i = state[1] - 1; else i = 3;
+      if (idx != ((u8) i))
+    {
+      return 0;
+    }
+      if (idx == 3)
+    {
+      (*lapCount)++;
+    }
+      state[1] = i;
+      return 1;
+
+    default:
+      return 0;
+
+  }
+
+}
 
 extern u8 D_mission_overlay_800A53E0[];
 extern u8 D_mission_overlay_800A53F8[];
