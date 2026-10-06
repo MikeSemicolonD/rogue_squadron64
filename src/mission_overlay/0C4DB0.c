@@ -104,7 +104,239 @@ void plotRadarBlipRow(u8 *arg0, s32 y) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", initializeRadar);
+typedef struct { s16 x, y, z, w; } RdPt;
+typedef RdPt RdPt8[8];
+typedef struct { u8 pad[8]; u32 *p8; u32 nC; } RdHdr;
+typedef struct { u8 pad[0x20]; RdHdr *hdr; RdPt *pts; } RdNode;
+typedef struct {
+    u32 w0;
+    s32 w4;
+    s32 w8;
+    s16 hC;
+    s16 hE;
+    s16 h10;
+    s16 h12;
+    s16 h14;
+    s16 h16;
+    s16 h18;
+    s16 h1A;
+    s16 h1C;
+    s16 h1E;
+    u8 b20, b21, b22, b23;
+} RdEnt;
+typedef struct { u8 pad[0x9F8]; RdEnt ents[16]; } RdState;
+extern void *D_mission_overlay_8010BFE0;
+extern u32 D_mission_overlay_8010CA1C;
+extern s32 rdLevel __asm__("gCurrentLevel");
+extern u8 D_mission_overlay_80109FF8[];
+extern u8 D_mission_overlay_8010A028[];
+extern u8 D_mission_overlay_8010A058[];
+u8 *rdMalloc(u32, u16) __asm__("rs_malloc");
+s32 plotRadarBlipColumn(void *, s32);
+u16 rdRegTex(void *, void *, s32) __asm__("registerHmtTextureInTable");
+u16 rdLoad(char *, s32, s32) __asm__("loadAndRelocateAsset");
+void rdClear(void *) __asm__("clearStructPair2C30");
+RdNode **rdFind(char *) __asm__("findNamedEntryInCurrentObject");
+void rdNorm(f32 *) __asm__("normalize_vector");
+f32 rdAtan2(f32, f32) __asm__("atan2Approx");
+f32 sinf(f32);
+f32 cosf(f32);
+void rdInit4(void *, f32, f32, f32) __asm__("initVec4TripletFromArgs");
+void rdAdd24(void *, f32, f32, f32) __asm__("addVec3At0x24");
+
+#define RF(T, o) (((struct { u8 p[o]; T v; } *)r)->v)
+typedef struct { s32 w[2]; s16 h; s8 b; } RdStr;
+u8 *initializeRadar(void **out, void **out2) {
+    f32 v[3];
+    f32 c[3];
+    f32 d[3];
+    RdPt tmp;
+    f32 angs[8];
+    u8 *r;
+    s32 i;
+    RdEnt *e;
+    RdNode **obj;
+    u32 k;
+    u32 sel;
+    u32 cnt;
+    u32 m2;
+    u32 j;
+    f32 best;
+    f32 dist;
+    f32 a;
+    f32 ang;
+    u8 *m;
+
+    D_mission_overlay_8010BFE0 = r = rdMalloc(0xDD4, 0);
+    RF(s16, 0x85E) = 0;
+    RF(s16, 0x85C) = 0;
+    for (i = 0; i < 0x20; i++) {
+        plotRadarBlipColumn(r, i);
+    }
+    RF(u16, 0x800) = 1;
+    RF(u8, 0x810) = 1;
+    RF(f32, 0x804) = 0.2f;
+    RF(f32, 0x808) = 1.0f;
+    RF(s32, 0x80C) = 0;
+    { RdStr *dd = (RdStr *)(r + 0x814); const RdStr *ss = (const RdStr *)"radar_disp"; __builtin_memcpy(dd, ss, 11); }
+    RF(u8 *, 0x824) = r;
+    if (D_mission_overlay_8010CA1C & 0x200) {
+        RF(u8 *, 0x844) = D_mission_overlay_8010A028;
+    } else {
+        RF(u8 *, 0x844) = D_mission_overlay_80109FF8;
+    }
+    if (rdLevel == 0x14) {
+        RF(u8 *, 0x844) = D_mission_overlay_8010A058;
+    }
+    RF(u8, 0x850) = 1;
+    RF(s16, 0x84E) = 0x40;
+    RF(s16, 0x84C) = 0x40;
+    RF(s16, 0x852) = 0x300;
+    RF(u8 *, 0x848) = r + 0x814;
+    RF(u16, 0x858) = rdRegTex(r + 0x800, r + 0x824, 0);
+    RF(u16, 0x85A) = rdLoad("ov/ov_rdir", 0, 0);
+    RF(s32, 0x8E8) = 0x02770000;
+    RF(s32, 0x8F0) = 0xB;
+    RF(u8 *, 0x8FC) = r + 0x938;
+    RF(s32, 0x89C) = 0;
+    RF(s32, 0x898) = 0;
+    RF(s32, 0x894) = 0;
+    RF(s32, 0x890) = 0;
+    RF(u8 *, 0x8A0) = r + 0x8DC;
+    RF(s32, 0x8A4) = 0;
+    RF(s32, 0x8E0) = 0;
+    RF(s32, 0x8DC) = 0;
+    RF(s32, 0x8E4) = 0;
+    RF(s32, 0x8F8) = 0;
+    RF(s32, 0x8EC) = 0;
+    RF(s32, 0x8F4) = 0;
+    RF(u8 *, 0x900) = r + 0x948;
+    RF(s32, 0x904) = 0;
+    rdClear(r + 0x8DC);
+    RF(s32, 0x93C) = 0;
+    RF(s32, 0x938) = 0;
+    RF(RdEnt *, 0x940) = (RdEnt *)(r + 0x9F8);
+    e = RF(RdEnt *, 0x940);
+    RF(s32, 0x944) = 8;
+    for (i = 0; i < 16; e++, i++) {
+        e->w0 = 4;
+        e->w4 = 0x090C8005;
+        e->w8 = 0;
+        e->w0 |= 0x82;
+        e->hC = 0xA;
+        e->hE = i % 8;
+        e->h10 = (i + 1) % 8;
+        e->h14 = 0x800;
+        e->h16 = 0x1000;
+        e->h18 = 0;
+        e->h1A = 0;
+        e->h1C = 0x1000;
+        e->h1E = 0;
+        if (i >= 8) {
+            e->w8 = RF(u16, 0x858) << 16;
+            e->b20 = 0xFF;
+            e->b21 = 0xFF;
+            e->b22 = 0xFF;
+            e->b23 = 0xD2;
+        } else {
+            e->w8 = RF(u16, 0x85A) << 16;
+            e->b20 = 0xFF;
+            e->b21 = 0x8F;
+            e->b22 = 0x20;
+            e->b23 = 0xFF;
+        }
+    }
+    for (i = 0; i < 8; i++) {
+        ang = (f32)i * 3.1415927f * 2.0f * 0.125f - 0.3926991f;
+        *(s16 *)(r + i * 8 + 0x948) = sinf(ang) * 256.0f;
+        *(s16 *)(r + i * 8 + 0x94A) = -cosf(ang) * 256.0f;
+        *(s16 *)(r + i * 8 + 0x94C) = 0;
+    }
+    RF(s16, 0x998) = 0;
+    RF(s16, 0x99A) = 0;
+    RF(s16, 0x99C) = 0;
+    obj = rdFind("ckp_ra");
+    if (obj != NULL) {
+        RF(u8, 0xDD0) = 1;
+        c[0] = c[1] = c[2] = 0.0f;
+        for (k = 0; k < 9; k++) {
+            c[0] += (*obj)->pts[k].x;
+            c[1] += (*obj)->pts[k].y;
+            c[2] += (*obj)->pts[k].z;
+        }
+        c[0] /= 9.0f;
+        c[1] /= 9.0f;
+        c[2] /= 9.0f;
+        RF(u16, 0x9F0) = (*obj)->pts[0].x;
+        RF(u16, 0x9F2) = (*obj)->pts[0].y;
+        RF(u16, 0x9F4) = (*obj)->pts[0].z;
+        d[0] = (*obj)->pts[0].x - c[0];
+        d[1] = (*obj)->pts[0].y - c[1];
+        d[2] = (*obj)->pts[0].z - c[2];
+        best = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+        sel = 0;
+        for (k = 1; k < 9; k++) {
+            d[0] = (*obj)->pts[k].x - c[0];
+            d[1] = (*obj)->pts[k].y - c[1];
+            d[2] = (*obj)->pts[k].z - c[2];
+            dist = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+            if (dist < best) {
+                RF(u16, 0x9F0) = (*obj)->pts[k].x;
+                RF(u16, 0x9F2) = (*obj)->pts[k].y;
+                RF(u16, 0x9F4) = (*obj)->pts[k].z;
+                best = dist;
+                sel = k;
+            }
+        }
+        cnt = 0;
+        for (k = 0; k < 9; k++) {
+            if (k == sel) {
+                continue;
+            }
+            v[0] = (*obj)->pts[k].x - (*obj)->pts[sel].x;
+            v[1] = (*obj)->pts[k].y - (*obj)->pts[sel].y;
+            v[2] = 0.0f;
+            rdNorm(v);
+            a = rdAtan2(v[0], -v[1]);
+            for (j = 0; j < cnt; j++) {
+                if (a < angs[j]) {
+                    break;
+                }
+            }
+            for (m2 = cnt; m2 != j; m2--) {
+                RF(RdPt8, 0x9A0)[m2] = RF(RdPt8, 0x9A0)[m2 - 1];
+                angs[m2] = angs[m2 - 1];
+            }
+            cnt++;
+            RF(RdPt8, 0x9A0)[j] = (*obj)->pts[k];
+            angs[j] = a;
+        }
+        tmp = RF(RdPt8, 0x9A0)[cnt - 1];
+        for (i = cnt - 1; i != 0; i--) {
+            RF(RdPt8, 0x9A0)[i] = RF(RdPt8, 0x9A0)[i - 1];
+        }
+        RF(RdPt8, 0x9A0)[0] = tmp;
+        {
+            RdHdr *h = (*obj)->hdr;
+            u32 *p = h->p8;
+            for (k = 0; k < h->nC; k++) {
+                p[0] |= 0x100;
+                p = (u32 *)((u8 *)p + ((p[1] & 0x3F000000) >> 22));
+            }
+        }
+    } else {
+        RF(u8, 0xDD0) = 0;
+    }
+    m = r + 0x860;
+    *out = r + 0x890;
+    *out2 = m;
+    rdInit4(m, 0.2f, 0.2f, 0.2f);
+    rdAdd24(m, 0.0f, -0.25f, 1.0f);
+    RF(s16, 0xDB8) = 0;
+    RF(s16, 0xDC8) = -1;
+    RF(f32, 0xDCC) = 2.0f;
+    return r;
+}
 
 typedef struct { u8 pad[0x14]; s16 x0; s16 y0; s16 x1; s16 y1; s16 x2; s16 y2; u8 pad20[3]; s8 a; } Seg;
 extern f32 sinf(f32);
