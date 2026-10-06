@@ -7,7 +7,260 @@
 
 extern s32 D_main_bss_80137CE4;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", func_mission_overlay_800EFDE0);
+typedef struct {
+    f32 f0;
+    f32 f4;
+    f32 f8;
+    f32 fC;
+    f32 f10;
+    char *n14;
+    s8 s18;
+    s8 s19;
+    u16 h1A;
+    u16 h1C;
+    u16 h1E;
+    u8 b20;
+    u8 b21;
+    u8 b22;
+    u8 b23;
+} TgtSel;
+
+s32 findActiveNpcInSlotChain(u16, s32);
+void *getNpcContextByIndex(u16);
+s32 unregisterAndFreeNpcSlot(u16, void *);
+u16 popNpcSlotFromTail(u16, void *);
+void *getLevelDatItemByName(char *);
+s32 getPlayerField2(s32);
+s16 getNpcDetailLevelByIndex(u16);
+s32 tgtDetail(u16) __asm__("getNpcDetailLevelByIndex");
+void *getNpcContextField8(u16);
+s32 revalidateNpcSlotIterator(void *);
+f32 vec3Dot(f32 *, f32 *);
+f32 vec3Length(f32 *);
+s16 tgtRand(void) __asm__("rand");
+extern u16 D_main_bss_80139560[];
+extern u16 D_main_bss_80139562;
+extern s32 D_mission_overlay_8010B320[];
+extern s32 D_mission_overlay_8010B330[];
+
+static __inline__ void tgtClear(TgtSel *p) {
+    if (p->b20 == 1 && p->h1A != 0xFFFF) {
+        if ((findActiveNpcInSlotChain(p->h1C, 0) & 0xFFFF) != 0xFFFF) {
+            unregisterAndFreeNpcSlot(p->h1E, getNpcContextByIndex(p->h1E));
+        }
+        p->h1A = 0xFFFF;
+        p->h1E = 0xFFFF;
+        p->b20 = 0;
+    }
+}
+
+static __inline__ s32 tgtSet(TgtSel *p, u16 idx) {
+    if (idx != 0xFFFF) {
+        p->h1E = popNpcSlotFromTail(p->h1C, getNpcContextByIndex(idx));
+        if (p->h1E != 0xFFFF) {
+            p->h1A = idx;
+            p->b20 = 1;
+            return 1;
+        }
+        p->h1A = 0xFFFF;
+        p->b20 = 0;
+    }
+    return 0;
+}
+
+static __inline__ s32 tgtLos(f32 *a, f32 r, f32 th, f32 *b, f32 *out) {
+    Vec3f v;
+
+    v[0] = b[0] - a[0];
+    v[1] = b[1] - a[1];
+    v[2] = b[2] - a[2];
+    if ((r * r) < ((v[0] * v[0]) + (v[2] * v[2])) || (vec3Dot(a + 3, v) / (vec3Length(a + 3) * vec3Length(v))) < th) {
+        return 0;
+    }
+    *out = vec3Length(v);
+    return 1;
+}
+
+s32 func_mission_overlay_800EFDE0(u8 *obj, s32 mode, s32 alt, f32 dt) {
+    u8 it[8];
+    u16 ids[8];
+    f32 d;
+    TgtSel *p = (TgtSel *)(obj + 0x114);
+    u8 *item;
+    register s32 n asm("$23");
+    s32 k;
+    s32 idx;
+    u16 cur;
+    u16 best;
+    f32 bestD;
+    f32 r;
+    f32 th;
+    u8 fp;
+    u8 s6;
+    s32 s0;
+    s32 s3;
+
+    if (p->b21 != 0 && (p->f10 -= dt, !(p->f10 > 0.0f))) {
+    p->f10 = 1.0f;
+    if (p->n14 != NULL) {
+        item = getLevelDatItemByName(p->n14);
+        if (item != NULL && *(u16 *)(item + 6) != 0xFFFF && !(*(u16 *)((u8 *)getNpcContextByIndex(*(u16 *)(item + 6)) + 0x14) & 0x10)) {
+            tgtClear(p);
+            if (tgtSet(p, *(u16 *)(item + 6)) == 1) {
+                return 1;
+            }
+        }
+    }
+    if (p->s18 != 6) {
+        mode = p->s18;
+    }
+    if (p->s19 != 6) {
+        alt = p->s19;
+    }
+retry:
+    n = 1;
+    fp = 0;
+    s6 = 0;
+    switch (mode) {
+        case 7:
+            s6 = 1;
+        case 0:
+            ids[0] = 1;
+            fp = 1;
+            break;
+        case 8:
+            fp = 1;
+            s6 = 1;
+        case 1:
+            if (*(s16 *)(obj + 0x19A) == 1) {
+                ids[0] = 9;
+            } else {
+                ids[0] = 7;
+            }
+            break;
+        case 9:
+            fp = 1;
+            s6 = 1;
+        case 2:
+            if (*(s16 *)(obj + 0x19A) == 1) {
+                ids[0] = 0;
+            } else {
+                ids[0] = 5;
+            }
+            break;
+        case 10:
+            fp = 1;
+            s6 = 1;
+        case 3:
+            if (*(s16 *)(obj + 0x19A) == 1) {
+                ids[0] = 8;
+            } else {
+                ids[0] = 6;
+            }
+            break;
+        case 5:
+            if (*(s16 *)(obj + 0x19A) == 1) {
+                ids[0] = 0xC;
+            } else {
+                ids[0] = 0xD;
+            }
+            break;
+        case 4:
+            n = 4;
+            if (*(s16 *)(obj + 0x19A) == 1) {
+                ids[0] = 0xC;
+                ids[2] = 9;
+                ids[1] = 0;
+                ids[3] = 8;
+            } else {
+                ids[0] = 0xD;
+                ids[1] = 5;
+                ids[2] = 7;
+                ids[3] = 6;
+            }
+            break;
+        case 6:
+            tgtClear(p);
+            return 0;
+    }
+    best = 0xFFFF;
+    bestD = 0.0f;
+    k = 0;
+    if (n != 0) {
+        do {
+        for (idx = findActiveNpcInSlotChain(D_main_bss_80139560[ids[k]], (s32)it); (idx & 0xFFFF) != 0xFFFF; idx = revalidateNpcSlotIterator(it)) {
+            cur = idx;
+            if (*(u16 *)((u8 *)getNpcContextByIndex(cur) + 0x14) & 0x10) {
+                break;
+            }
+            if (s6 && tgtDetail(cur) != 0) {
+                continue;
+            }
+            if (tgtLos(getNpcContextField8(*(u16 *)(obj + 0x198)), p->f4, p->f0, getNpcContextField8(cur), &d) == 1) {
+                if (best == 0xFFFF || d < bestD) {
+                    bestD = d;
+                    best = idx;
+                }
+            }
+        }
+            } while (++k < n);
+    }
+    if (best == 0xFFFF) {
+        if (alt != 6) {
+            mode = alt;
+            alt = 6;
+            goto retry;
+        }
+        mode = alt;
+    }
+    if (fp == 0 && *(s16 *)(obj + 0x19A) == 1) {
+        s3 = 0;
+        s0 = 0;
+        if (best == 0xFFFF || (s16)(tgtRand() % 100) < D_mission_overlay_8010B320[D_main_bss_80137CE4]) {
+            s0 = 1;
+        }
+        if ((s16)(tgtRand() % 100) < D_mission_overlay_8010B330[D_main_bss_80137CE4]) {
+            s0 = 1;
+            r = p->fC;
+            th = p->f8;
+            s3 = 1;
+        } else {
+            r = p->f4;
+            th = p->f0;
+        }
+        if (s0 == 1) {
+            for (idx = findActiveNpcInSlotChain(D_main_bss_80139562, (s32)it); (idx & 0xFFFF) != 0xFFFF; idx = revalidateNpcSlotIterator(it)) {
+                cur = idx;
+                if (*(u16 *)((u8 *)getNpcContextByIndex(cur) + 0x14) & 0x10) {
+                    break;
+                }
+                if ((u8)tgtLos(getNpcContextField8(*(u16 *)(obj + 0x198)), r, th, getNpcContextField8(cur), &d) == 1) {
+                    if (s3 == 1) {
+                        s3 = 0;
+                        best = 0xFFFF;
+                    }
+                    if (best == 0xFFFF || d < bestD) {
+                        bestD = d;
+                        best = idx;
+                        s6 = 1;
+                    }
+                }
+            }
+        }
+    }
+    if (best == (getPlayerField2(0) & 0xFFFF) || p->b23 == 1) {
+        p->b23 = (p->b23 == 0);
+        p->f10 = 5.0f;
+    }
+    p->b22 = s6;
+    tgtClear(p);
+    if (best == 0xFFFF) {
+        return 0;
+    }
+    return tgtSet(p, best);
+    }
+    return 0;
+}
 
 typedef struct {
     u8 pad0[0x1A];
