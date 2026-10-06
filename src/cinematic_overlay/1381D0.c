@@ -431,7 +431,194 @@ rot:
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", spawnCutsceneObjectsFromList);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cutsceneDispatchSlotsByFlag);
+typedef struct CdNode { struct CdNode *next; struct CdNode *prev; struct CdNode *parent; struct CdNode *child; } CdNode;
+typedef struct { u8 pad0[0x44]; f32 f44; } CdMesh;
+typedef struct { CdMesh *mesh; u8 pad4[8]; CdNode node; } CdObj;
+typedef struct { u8 pad0[0xC]; f32 x; f32 z; } CdOff;
+extern CdOff D_800B04AC[];
+extern u8 D_cinematic_overlay_800B09C4[];
+void advanceNpcOnCurvedPath(void *, void *, f32 *, s32);
+s32 transformVec3ToNpcLocalWithScale(void *, void *, void *, f32, void *);
+f32 floatModulo(f32, f32);
+void seekAllModelAnimChannelsInSlotToTime(s32, f32);
+void parseModelAnimType2Entry(s32);
+void updateAnimatedTextureStreaming(s32, Vec3f *, f32);
+void walkDatTreeAndScaleLeafByFloat(void *, void *, f32);
+void walkDatTreeAndVisitChildren(void *, void *, void *);
+
+#define CD_SLOT(o) ((u8 *)(i * 0x13C + (s32)D_cinematic_overlay_800B1900))
+
+static __inline__ void cdLink(CdNode *n, CdNode *par) {
+    CdNode *t2;
+
+    n->parent = par;
+    t2 = par->child;
+    if (t2 == NULL) {
+        par->child = n;
+        n->prev = NULL;
+        n->next = NULL;
+    } else {
+        while (t2->next != NULL) {
+            t2 = t2->next;
+        }
+        t2->next = n;
+        n->prev = t2;
+    }
+}
+
+void cutsceneDispatchSlotsByFlag(CdNode **root, u8 *scene, f32 t, f32 scale) {
+    f32 m[12];
+    u8 sp48[8];
+    u32 i;
+    s32 o;
+    u8 *f;
+    u8 *s;
+    s32 hi;
+
+    for (i = 0; i < *(u16 *)(scene + 0x4A); i++) {
+        hi = 0x80;
+        if ((scene[i * 0x4C + 0x13F7] & 0x80) == hi) {
+            cinematicSlotDispatcher(scene, (u8)i, (u8 *)((CdObj *)*(void **)(CD_SLOT(o) + 0x50)) + 0x28, t);
+        } else {
+            cinematicSlotDispatcher(scene, (u8)i, (u8 *)D_cinematic_overlay_800B1900 + i * 0x13C + 0x20, t);
+        }
+    }
+    initCutsceneScene(scene);
+    __asm__("" :: "r"(root));
+    __asm__("" :: "r"(root));
+    {
+        typedef struct { u8 pad0[4]; s32 x4; s32 x8; s32 xC; s32 x10; u8 pad14[0x3C]; CdObj *obj; u8 pad54[0xE8]; } CdSl;
+        for (i = 0; i < *(u16 *)(scene + 0x4A); i++) {
+            CdObj *obj = ((CdSl *)D_cinematic_overlay_800B1900)[i].obj;
+            if (obj != NULL) {
+                obj->node.prev = NULL;
+                obj->node.next = NULL;
+                obj->node.parent = NULL;
+            } else {
+                ((CdSl *)D_cinematic_overlay_800B1900)[i].x10 = 0;
+                ((CdSl *)D_cinematic_overlay_800B1900)[i].x8 = 0;
+                ((CdSl *)D_cinematic_overlay_800B1900)[i].x4 = 0;
+                ((CdSl *)D_cinematic_overlay_800B1900)[i].xC = 0;
+            }
+        }
+    }
+    for (i = 0; i < *(u16 *)(scene + 0x4A); i++) {
+        u8 fl = scene[i * 0x4C + 0x13F7];
+        u32 p;
+        if (fl & 0x80) {
+            if ((fl & 0x3F) == 0x3F) {
+                u8 *sl = CD_SLOT(o);
+                CdObj *ob0 = *(CdObj **)(sl + 0x50);
+                CdNode *r = *root;
+                ob0->node.next = r;
+                if (r != NULL) {
+                    (*(CdObj **)(sl + 0x50))->node.next->prev = &(*(CdObj **)(sl + 0x50))->node;
+                }
+                (*(CdObj **)(CD_SLOT(o) + 0x50))->node.prev = NULL;
+                *root = &(*(CdObj **)(CD_SLOT(o) + 0x50))->node;
+            } else {
+                CdNode *par = (CdNode *)((fl & 0x3F) * 0x13C + (s32)D_cinematic_overlay_800B1900 + 4);
+                CdObj *ob = *(CdObj **)(CD_SLOT(o) + 0x50);
+                CdNode *n = &ob->node;
+                CdNode *t2;
+                n->parent = par;
+                t2 = par->child;
+                if (t2 == NULL) {
+                    par->child = n;
+                    n->prev = NULL;
+                    ob->node.next = NULL;
+                } else {
+                    while (t2->next != NULL) {
+                        t2 = t2->next;
+                    }
+                    t2->next = n;
+                    n->prev = t2;
+                }
+            }
+            if ((*(u32 *)CD_SLOT(o) & 0xFF000004) == 4) {
+                extractOrthonormalFrameFromStruct(m, CD_SLOT(o) + 0x88);
+                {
+                    u8 *sl = CD_SLOT(o);
+                    m[0] += D_800B04AC[sl[2]].x;
+                    m[2] += D_800B04AC[sl[2]].z;
+                    advanceNpcOnCurvedPath(D_cinematic_overlay_800B09C4, root, m, *(s32 *)(sl + 0x6C));
+                }
+            }
+        } else {
+            p = fl & 0x3F;
+            if (p == 0x3F) {
+                u8 *sl = CD_SLOT(o);
+                CdNode *r = *root;
+                ((CdNode *)(sl + 4))->next = r;
+                sl += 4;
+                if (r != NULL) {
+                    r->prev = (CdNode *)sl;
+                }
+                sl = CD_SLOT(o) + 4;
+                ((CdNode *)sl)->prev = NULL;
+                *root = (CdNode *)sl;
+            } else {
+                cdLink((CdNode *)(CD_SLOT(o) + 4), (CdNode *)(p * 0x13C + (s32)D_cinematic_overlay_800B1900 + 4));
+            }
+        }
+    }
+    for (i = 0; i < *(u16 *)(scene + 0x4A); i++) {
+        if (scene[i * 0x4C + 0x13F7] & 0x80) {
+            u8 *sl = CD_SLOT(o);
+            if (!(u8)transformVec3ToNpcLocalWithScale(root, (u8 *)root + 0x2C, sl + 0x70, (*(CdObj **)(sl + 0x50))->mesh->f44 * *(f32 *)(sl + 0x64), sp48) || *CD_SLOT(o) != 0) {
+                CdObj *ob = *(CdObj **)(CD_SLOT(o) + 0x50);
+                CdNode *n = &ob->node;
+                CdNode *t2 = *root;
+                CdNode *par;
+                if (t2 == n) {
+                    *root = ob->node.next;
+                    continue;
+                }
+                if (t2 != NULL) {
+                    do {
+                        if (t2 == n) {
+                            goto unlink;
+                        }
+                        t2 = t2->next;
+                    } while (t2 != NULL);
+                }
+                par = n->parent;
+                if (par->child == n) {
+                    par->child = n->next;
+                    continue;
+                }
+                t2 = par->child;
+                if (t2 != NULL) {
+                    do {
+                        if (t2 == n) {
+                        unlink:
+                            if (t2->prev != NULL) {
+                                t2->prev->next = t2->next;
+                            }
+                            if (t2->next != NULL) {
+                                t2->next->prev = t2->prev;
+                            }
+                            break;
+                        }
+                        t2 = t2->next;
+                    } while (t2 != NULL);
+                }
+            } else {
+                if (*(s32 *)(CD_SLOT(o) + 0x58) != 0xFFFF) {
+                    seekAllModelAnimChannelsInSlotToTime(*(s32 *)(CD_SLOT(o) + 0x58), floatModulo(t * *(f32 *)(CD_SLOT(o) + 0x68), 1.0f));
+                    parseModelAnimType2Entry(*(s32 *)(CD_SLOT(o) + 0x58));
+                }
+                if (CD_SLOT(o)[3] & 1) {
+                    updateAnimatedTextureStreaming(*(s32 *)(CD_SLOT(o) + 0x60), D_cinematic_overlay_800B1A08, 6.0f);
+                }
+                if (*(s32 *)(CD_SLOT(o) + 0x54) == 0 && CD_SLOT(o)[0x104] != 0xFF) {
+                    walkDatTreeAndScaleLeafByFloat(CD_SLOT(o) + 0x104, *(void **)(CD_SLOT(o) + 0x50), scale);
+                    walkDatTreeAndVisitChildren((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C + 0x104, *(void **)((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C + 0x50), &D_cinematic_overlay_800B0A00);
+                }
+            }
+        }
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A52F0);
 
