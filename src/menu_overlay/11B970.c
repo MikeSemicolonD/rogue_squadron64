@@ -744,7 +744,48 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateMenuPerFrame);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", driveFalconAnimationKeyframes);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", applyTieInterceptorAnimState);
+void applyTieInterceptorAnimState(u8 *arg0, s32 arg1, s32 arg2) {
+    register s32 g asm("$17") = arg1;
+    register s32 f asm("$16") = arg2;
+    u32 i;
+    u16 idx;
+    u8 *q;
+    u8 *p;
+    u8 v;
+    s32 bit;
+
+    *(char **)(arg0 + 0x10) = getGameOrFrontText(0xBA);
+    *(char **)(arg0 + 0x14) = getGameOrFrontText(0xBC);
+    *(char **)(arg0 + 0x18) = getGameOrFrontText(0xBD);
+    arg0[0x2B] = 0xB;
+    arg0[0x2C] = 0xC;
+    *(s16 *)(arg0 + 0x3C) = -0x34;
+    *(s16 *)(arg0 + 0x40) = 0x34;
+    *(s16 *)(arg0 + 0x3A) = 0x98;
+    *(s16 *)(arg0 + 0x3E) = 0xA2;
+    arg0[0x28] = g;
+    arg0[0x2A] = 0;
+    *(s16 *)(arg0 + 0x38) = 0;
+    *(s16 *)(arg0 + 0x42) = 0x7E;
+    *(f32 *)(arg0 + 0x5C) = 1.0f;
+    *(f32 *)(arg0 + 0x60) = 0.8f;
+    *(f32 *)(arg0 + 0x64) = 0.8f;
+    arg0[0x94] = (u8)f ? 3 : 4;
+    *(u16 *)(arg0 + 0x98) |= 0x1C;
+    for (i = 0; i < arg0[0x95]; i++) {
+        p = arg0 + i * 4;
+        bit = 1 << i;
+        if (bit & 0x1C) {
+            idx = i;
+            setPlayerSlotAnimationFlag(5, *(void **)(p + 8), idx, (s16)(*(u16 *)(p + 0x30) - 0x100), (s16)(*(u16 *)(p + 0x32) + (*(u16 *)(arg0 + 0x96) + (i * 0x24 - arg0[0x95] * 0x12))));
+            samplePlayerAnimChannel(5, idx, *(f32 *)(p + 0x54));
+            q = (u8 *)getPlayerSlotFieldAt34(5, idx);
+            *(f32 *)(p + 0xB0) = *(f32 *)(q + 0x18);
+            *(f32 *)(p + 0xD0) = *(f32 *)(q + 0x1C);
+        }
+    }
+    *(s32 *)(arg0 + 0x9C) = 0;
+}
 
 typedef struct {
     s16 x;
@@ -901,7 +942,7 @@ extern s8 D_menu_overlay_800CCC55;
 extern s8 D_menu_overlay_800CCC56;
 extern s8 D_menu_overlay_800CCC57;
 extern Bytes4 D_menu_overlay_800A6654;
-void applyTieInterceptorAnimState(void *, s32, s32);
+void applyTieInterceptorAnimState(u8 *, s32, s32);
 void updateMenuPerFrame(void *, f32, f32, s32, s32);
 u32 getControllerNewButtonsPressed(u8);
 void unsetControllerNewButtonsPressed(u8, u32);
