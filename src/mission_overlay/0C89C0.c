@@ -99,7 +99,131 @@ s32 playNpcStateChangeEffect(u8 *arg0) {
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C89C0", D_mission_overlay_800A69A0);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C89C0", spawnNpcDestructionEffect);
+extern s32 slotDispatcherIter(u16, s32, void *);
+typedef struct {
+    s16 unk0;
+    s16 unk2;
+    f32 unk4;
+    s32 unk8;
+    s32 unkC;
+    f32 unk10;
+    s8 unk14;
+    u8 pad15[0xB];
+} DestructParams;
+
+extern f32 *gomtA(s32, void *) __asm__("getObjectMeshTransformOrLocal");
+extern s16 getObjectNpcTypeId(s32);
+extern void spawnByteAnimDebrisWithParam(void *, s32);
+
+
+
+s32 spawnNpcDestructionEffect(NiActor *arg0)
+{
+  struct NiObj *o;
+  u8 *e;
+  DestructParams sp28;
+  u8 sp48[0x30];
+  u8 sp78[0x30];
+  u8 spA8[0x30];
+  f32 spD8;
+  f32 spDC;
+  s32 done;
+  s32 *hp;
+  s32 nh;
+  u16 idA;
+  u16 idB;
+  f32 *mt;
+  o = arg0->obj;
+  e = o->f34;
+  mt = gomtA(o->f38, sp48);
+  if (((*((f32 *) (e + 0xD0))) * 0.25f) < mt[1])
+  {
+    return 0;
+  }
+  hp = (s32 *)&e[D_main_bss_80137CE4 * 4 + 0xC0];
+  done = 0;
+  if (*hp > 0)
+  {
+    if ((*((s32 *) (e + 0xC4))) != 0)
+    {
+      nh = *hp - 1;
+    }
+    else
+    {
+      nh = *hp - 2;
+    }
+    *hp = nh;
+    if (nh <= 0)
+    {
+      done = 1;
+    }
+    sp28.unk0 = 0;
+    idB = 0xFFFF;
+    sp28.unk2 = getObjectNpcTypeId(o->f38);
+    sp28.unk4 = (*((s32 *) ((e + (D_main_bss_80137CE4 * 4)) + 0xCC))) * 0.033333335f;
+    sp28.unk8 = 0;
+    sp28.unkC = 0;
+    sp28.unk10 = -1.0f;
+    sp28.unk14 = 2;
+    lookupHmtTextureByName(*((s32 *) (((u8 *) o) + 0x30)), D_mission_overlay_800A6994, 0, sp48, (s32) spA8, 0);
+    lookupHmtTextureByName(*((s32 *) (((u8 *) o) + 0x30)), D_mission_overlay_800A6994, 1, sp78, (s32) spA8, 1);
+    generatePerpEmitDirectionWithJitter(o->f38, sp48, 0);
+    generatePerpEmitDirectionWithJitter(o->f38, sp78, 1);
+    idA = idB;
+    if ((*((s32 *) (e + 0xC4))) == 0)
+    {
+      if (tickProgressChannel(o->f38, sp48, 0, &spD8) == 1)
+      {
+        idA = triggerCueWithSlotEffect(o->f38, 0xB, sp48, 0, 0, 5.0f, spD8);
+        spawnByteAnimDebrisWithParam(sp48, 0x80);
+      }
+      if (tickProgressChannel(o->f38, sp78, 0, &spDC) == 1)
+      {
+        idB = triggerCueWithSlotEffect(o->f38, 0xB, sp78, 0, 0, 5.0f, spDC);
+        spawnByteAnimDebrisWithParam(sp78, 0x80);
+      }
+    }
+    else
+    {
+      o->f74 ^= 1;
+      if (o->f74 != 0)
+      {
+        if (tickProgressChannel(o->f38, sp48, 0, &spD8) == 1)
+        {
+          idA = triggerCueWithSlotEffect(o->f38, 0xB, sp48, 0, 0, 5.0f, spD8);
+          spawnByteAnimDebrisWithParam(sp48, 0x80);
+        }
+      }
+      else
+        if (tickProgressChannel(o->f38, sp78, 0, &spDC) == 1)
+      {
+        idA = triggerCueWithSlotEffect(o->f38, 0xB, sp78, 0, 0, 5.0f, spDC);
+        spawnByteAnimDebrisWithParam(sp78, 0x80);
+
+      }
+    }
+    if ((*((s32 *) (e + 0xC8))) != 0)
+    {
+      if (idA != 0xFFFF)
+      {
+        slotDispatcherIter(idA, 0xA, &sp28);
+      }
+      if (idB != 0xFFFF)
+      {
+        slotDispatcherIter(idB, 0xA, &sp28);
+      }
+    }
+    if ((idA != 0xFFFF) || (idB != 0xFFFF))
+    {
+      play3DSoundEvent(0, o, ((u8 *) o) + 0x24, 19.0f, 0.5f, 0, 0x30, 0x7F, 0x28);
+    }
+    else
+    {
+      return done;
+    }
+  }
+  return done;
+}
 
 s32 getObjectMeshTransformOrLocal();
 s16 getObjectNpcTypeId(s32);
