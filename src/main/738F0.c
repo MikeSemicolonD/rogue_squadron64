@@ -120,7 +120,83 @@ void initWaterSprayParticles(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", npcWaterSprayUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnDestructionEffectBurst);
+typedef struct { f32 x, y, z; } DbVec3;
+typedef struct {
+    f32 f10;
+    DbVec3 p;
+    s32 w20;
+    f32 f24;
+    s32 w28, w2C, w30, w34;
+    f32 f38, f3C;
+    s32 w40, w44;
+    f32 f48;
+    s16 h4C, h4E;
+    f32 f50;
+    s32 w54, w58;
+    f32 f5C;
+    s32 w60;
+    f32 fq64, f68;
+    s32 w6C, w70, w74, w78;
+    s8 b7C, b7D;
+    s16 pad7E;
+    s16 h80, h82, h84;
+    s32 w88;
+    s16 h8C;
+    s16 pad8E;
+} DestrBurstParams;
+extern s32 D_main_bss_80130C04;
+extern s32 gC08 __asm__("D_main_bss_80130C08");
+extern s32 spawnRandomBurstNpcVariantWrapper(void *);
+
+extern void assignNpcTargetAndPosition(u16, u16, void *, f32);
+
+
+u16 spawnDestructionEffectBurst(f32 *pos, u16 id, f32 size, f32 scale, f32 dir, f32 mul) {
+    DestrBurstParams d;
+    s32 npc;
+    f32 a;
+    f32 b;
+
+    a = scale * 0.5f;
+    b = scale * 3.0f * 0.5f;
+    d.f10 = 5.0f;
+    d.p = *(DbVec3 *)pos;
+    d.w20 = 0;
+    d.f24 = -dir;
+    d.w28 = 0;
+    d.w2C = 0;
+    d.w30 = 0;
+    d.w34 = 0;
+    d.f38 = 1.0f;
+    d.f3C = 1.0f;
+    d.w40 = 0;
+    d.w44 = 0;
+    d.f48 = size * 0.1f * 0.25f;
+    d.h4C = 0;
+    d.h4E = 0;
+    d.f50 = size * 4.0f;
+    d.w54 = 0;
+    d.w58 = 0;
+    d.f5C = size / dir;
+    d.w60 = 0;
+    d.fq64 = 0.8f;
+    d.f68 = 1.0f;
+    d.w6C = 0;
+    d.w74 = gC08 + 0x18;
+    d.b7C = 2;
+    d.w78 = D_main_bss_80130C04;
+    d.b7D = 16;
+    d.h80 = (u32)(a * 256.0f + 1.0f);
+    d.h82 = (u32)(b * 256.0f + 1.0f);
+    d.h84 = (u32)(d.f50 * mul);
+    d.w88 = 0x09000000;
+    d.h8C = 3;
+    npc = spawnRandomBurstNpcVariantWrapper(&d);
+    if (id != 0xFFFF) {
+        assignNpcTargetAndPosition(npc, id, 0, 0.0f);
+    }
+    return npc;
+}
 
 typedef struct { s32 x, y, z; } BurstV3;
 typedef struct {
