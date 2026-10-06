@@ -705,7 +705,131 @@ s32 initRenderStateArrays(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", drawFrameProfilerBars);
+extern s32 D_main_bss_8011A914;
+extern s32 D_main_bss_8011A918;
+extern s32 D_main_bss_8011A920;
+extern s32 D_main_bss_8011DC4C;
+extern s32 D_main_bss_8011DC54;
+extern u32 D_8011DC58u __asm__("D_main_bss_8011DC58");
+extern s32 D_main_bss_80128EDC;
+extern s32 D_main_bss_80128EE0;
+extern Gfx *D_main_bss_801163D4;
+extern struct DisplayListBuffer **D_main_bss_801163FC;
+extern struct DisplayListBuffer **D_main_bss_8011A7DC;
+Gfx *emitProfilerBarSegment(Gfx *, u32, s16, u8, u8, u8);
+Gfx *flushDebugTextOverlay(Gfx *);
+
+#define PROF_CHUNK_WRAP(cur) \
+    if ((u32)(cur) >= (u32)D_main_bss_801163D4) { \
+        struct DisplayListBuffer *chunk; \
+        struct DisplayListBuffer *tail; \
+        ((Gfx *)(cur))->words.w0 = 0xB5000000; \
+        ((Gfx *)(cur))->words.w1 = 0; \
+        chunk = D_main_bss_801163B0; \
+        if (chunk == NULL) { \
+            chunk = findAndUnlinkSmallestEntry(); \
+            if (chunk != NULL) { \
+                tail = chunk; \
+                while (tail->next != NULL) { \
+                    tail = tail->next; \
+                } \
+                tail->next = D_main_bss_801163B0; \
+                if (D_main_bss_801163B0 != NULL) { \
+                    D_main_bss_801163B0->prev = tail; \
+                } \
+                D_main_bss_801163B0 = chunk; \
+                chunk->prev = NULL; \
+            } \
+            chunk = D_main_bss_801163B0; \
+        } \
+        D_main_bss_801163B0 = D_main_bss_801163B0->next; \
+        if (D_main_bss_801163B0 != NULL) { \
+            D_main_bss_801163B0->prev = NULL; \
+        } \
+        if (*D_main_bss_801163FC == NULL) { \
+            *D_main_bss_801163FC = chunk; \
+        } else { \
+            (*D_main_bss_8011A7DC)->next = chunk; \
+            chunk->prev = *D_main_bss_8011A7DC; \
+        } \
+        chunk->next = NULL; \
+        *D_main_bss_8011A7DC = chunk; \
+        D_main_bss_801163D4 = &chunk->displayList[0x1F]; \
+        D_8011DC58u = (u32)chunk->displayList; \
+    }
+
+#define PROF_CHUNK_WRAP2(cur) \
+    if ((u32)(cur) >= (u32)D_main_bss_801163D4) { \
+        struct DisplayListBuffer *chunk; \
+        struct DisplayListBuffer *tail; \
+        ((Gfx *)(cur))->words.w0 = 0xB5000000; \
+        ((Gfx *)(cur))->words.w1 = 0; \
+        chunk = D_main_bss_801163B0; \
+        if (chunk == NULL) { \
+            chunk = findAndUnlinkSmallestEntry(); \
+            if (chunk != NULL) { \
+                tail = chunk; \
+                while (tail->next != NULL) { \
+                    tail = tail->next; \
+                } \
+                tail->next = D_main_bss_801163B0; \
+                if (D_main_bss_801163B0 != NULL) { \
+                    D_main_bss_801163B0->prev = tail; \
+                } \
+                D_main_bss_801163B0 = chunk; \
+                chunk->prev = NULL; \
+            } \
+            chunk = D_main_bss_801163B0; \
+        } \
+        D_main_bss_801163B0 = D_main_bss_801163B0->next; \
+        if (D_main_bss_801163B0 != NULL) { \
+            D_main_bss_801163B0->prev = NULL; \
+        } \
+        buf = chunk; \
+        if (*D_main_bss_801163FC == NULL) { \
+            *D_main_bss_801163FC = buf; \
+        } else { \
+            (*D_main_bss_8011A7DC)->next = buf; \
+            buf->prev = *D_main_bss_8011A7DC; \
+        } \
+        buf->next = NULL; \
+        *D_main_bss_8011A7DC = buf; \
+        D_main_bss_801163D4 = &buf->displayList[0x1F]; \
+        D_8011DC58u = (u32)buf->displayList; \
+    }
+
+s32 drawFrameProfilerBars(void) {
+    u32 *cur;
+    u32 *p;
+    u32 *q;
+    Gfx *gq;
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    struct DisplayListBuffer *buf;
+
+    beginFrameDLChunk();
+    D_8011DC58u = D_main_bss_8011DC50;
+    D_8011DC58u = (u32)emitProfilerBarSegment((Gfx *)D_main_bss_8011DC50, D_main_bss_8011A914, D_main_bss_8011A910 - 0x28, 0xFF, 0xFF, 0);
+    D_8011DC58u = (u32)emitProfilerBarSegment((Gfx *)D_8011DC58u, D_main_bss_80128EE0, D_main_bss_8011A910 - 0x23, 0, 0, 0xFF);
+    D_8011DC58u = (u32)emitProfilerBarSegment((Gfx *)D_8011DC58u, D_main_bss_80128EDC, D_main_bss_8011A910 - 0x1E, 0xFF, 0, 0);
+    D_8011DC58u = (u32)emitProfilerBarSegment((Gfx *)D_8011DC58u, D_main_bss_8011A920, D_main_bss_8011A910 - 0x19, 0xFF, 0, 0xFF);
+    D_8011DC58u = (u32)emitProfilerBarSegment((Gfx *)D_8011DC58u, D_main_bss_8011DC54, D_main_bss_8011A910 - 0x14, 0xFF, 0xFF, 0xFF);
+    D_8011DC58u = (u32)emitProfilerBarSegment((Gfx *)D_8011DC58u, D_main_bss_8011DC4C, D_main_bss_8011A910 - 0xF, 0, 0xFF, 0);
+    D_8011DC58u = (u32)emitProfilerBarSegment((Gfx *)D_8011DC58u, D_main_bss_8011A918, D_main_bss_8011A910 - 0xA, 0, 0xFF, 0xFF);
+    cur = (u32 *)flushDebugTextOverlay((Gfx *)D_8011DC58u);
+    D_8011DC58u = (u32)cur;
+    PROF_CHUNK_WRAP2(cur);
+    p = (u32 *)D_8011DC58u;
+    D_8011DC58u = (u32)(p + 2);
+    ((Gfx *)p)->words.w0 = 0xE9000000;
+    ((Gfx *)p)->words.w1 = 0;
+    PROF_CHUNK_WRAP(p + 2);
+    q = (u32 *)D_8011DC58u;
+    D_8011DC58u = (u32)(q + 2);
+    q[0] = 0xB8000000;
+    q[1] = 0;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitCombinerStateAndPatch);
 
