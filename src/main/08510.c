@@ -1251,7 +1251,75 @@ void resetSceneLightsAndMaterials(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", transformSceneLights);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", bindFaceVerticesToCache);
+typedef struct {
+    u16 idx;
+    u16 stamp;
+} VtxCacheSlot;
+
+extern u8 D_main_801132C0[];
+extern VtxCacheSlot D_main_bss_80113240[];
+extern u16 D_main_bss_801142C0;
+
+u8 bindFaceVerticesToCache(u32 *face, u8 *mask, u8 base) {
+    u8 buf[8];
+    u8 n;
+    u8 found;
+    u8 i;
+    u8 j;
+    u8 slot;
+    u16 vi;
+    u16 *vt;
+    u8 bit;
+    u16 ret;
+    s32 cnt;
+    u8 *bp;
+
+    n = (face[0] & 8) ? 4 : 3;
+    vt = (u16 *)((u8 *)face + (*(u16 *)((u8 *)face + 4) & 0xFC));
+    bp = buf;
+    found = 0;
+    for (j = 0; j < n; j++) {
+        vi = vt[j];
+        slot = D_main_801132C0[vi];
+        if (D_main_bss_80113240[slot].stamp == D_main_bss_801142C0 && D_main_bss_80113240[slot].idx == vi) {
+            bp[j] = slot;
+        } else {
+            bp[j] = 0xFF;
+            found++;
+        }
+    }
+    cnt = found;
+    ret = cnt;
+    if (cnt == 0) {
+        return 0;
+    }
+    if (base + cnt >= 0x21) {
+        D_main_bss_801142C0++;
+        if (D_main_bss_801142C0 == 0) {
+            D_main_bss_801142C0 = 1;
+        }
+        for (i = 0; i < n; i++) {
+            D_main_801132C0[vt[i]] = i;
+            D_main_bss_80113240[i].idx = vt[i];
+            D_main_bss_80113240[i].stamp = D_main_bss_801142C0;
+        }
+        *mask = 0xF;
+        return n;
+    }
+    *mask = 0;
+    i = 0;
+    bit = 1;
+    for (; i < n; i++) {
+        if (buf[i] == 0xFF) {
+            D_main_801132C0[vt[i]] = base;
+            D_main_bss_80113240[base].idx = vt[i];
+            D_main_bss_80113240[base++].stamp = D_main_bss_801142C0;
+            *mask |= bit;
+        }
+        bit <<= 1;
+    }
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", renderLitTexturedMeshFaces);
 
