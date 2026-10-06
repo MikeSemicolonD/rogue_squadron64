@@ -414,7 +414,90 @@ void updateShipPartAnimation(u8 *arg0, f32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", buildHudAmmoReadout);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", readAccountForSelectionScreen);
+typedef struct {
+    s32 unk0; s16 unk4; s16 unk6; f32 unk8; s32 unkC; u8 pad10[4]; u8 unk14; u8 unk15; u8 unk16; u8 pad17;
+    s32 unk18; f32 unk1C; u8 unk20; u8 unk21; u8 pad22[0x1F]; u8 unk41; u8 pad42[2]; s32 unk44;
+} RaSlot;
+extern RaSlot D_raSlots[] __asm__("D_menu_overlay_800CF180");
+typedef struct { u8 c[4]; } Str4;
+extern s8 D_menu_overlay_800CF161;
+s32 parseAccountDataBytes(s32, void *);
+void setupCraftAnimationFlagSet(void *);
+void setCraftMaterialTextureByName(u8, s32);
+extern Str4 D_ra6654 __asm__("D_menu_overlay_800A6654");
+extern char D_menu_overlay_800A6678[];
+extern s8 D_menu_overlay_800CF162;
+extern s32 D_menu_overlay_800CF10C;
+void animateBannerOscillation(f32);
+void copyMorphTargetVertices(s32, s32, s32);
+u8 getActiveAccountsBitmask();
+s8 getAccountUnk51();
+void *getAccountDataPtr(s32);
+void rs_strcpy(void *, void *);
+s32 strlen(u8 *);
+void sprintf(char *, const char *, ...);
+
+void readAccountForSelectionScreen(void) {
+    char sp10[0x20];
+    u8 sp30[0x18];
+    u8 sp48;
+    void *a0;
+    RaSlot *s1;
+    s32 t;
+    s32 s4;
+    s32 s5;
+    u32 s2;
+    u8 *s0;
+    u8 *s3;
+    u8 *pad;
+    u8 a2;
+    s8 v0;
+
+    sp48 = getActiveAccountsBitmask();
+    v0 = getAccountUnk51();
+    D_menu_overlay_800CF162 = v0;
+    s1 = D_raSlots;
+    D_menu_overlay_800CF161 = (3 - v0) % 3;
+    s2 = 0;
+    pad = s1->pad10;
+    do {
+        s1 = &D_raSlots[s2];
+        if (((s32)sp48 >> s2) & 1) {
+            {
+                s32 q = (s32)getAccountDataPtr(s2 & 0xFF);
+                s1->unkC = q;
+                a2 = *(u8 *)(q + 5);
+            }
+            if (a2 >= 0x10U) {
+                a2 = 0xF;
+            }
+            sprintf(sp10, "level%d", a2);
+            s0 = (u8 *)(s2 * 0x48 + (s32)pad);
+            rs_strcpy(s0, (void *)s1->unkC);
+            if (strlen(s0) != 3) {
+                *(Str4 *)s0 = D_ra6654;
+            }
+            s1->unk14 = *(u8 *)(s1->unkC + 4);
+            parseAccountDataBytes(s1->unkC, sp30);
+            a0 = sp30;
+        } else {
+            s1->unkC = 0;
+            s1->unk14 = 0;
+            *(Str4 *)D_raSlots[s2].pad10 = D_ra6654;
+            sprintf(sp10, D_menu_overlay_800A6678);
+            a0 = 0;
+        }
+        s0 = (u8 *)(s2 * 0x48 + (s32)pad);
+        setupCraftAnimationFlagSet(a0);
+        t = (s2 * 0x14) & 0xFFFF;
+        copyMorphTargetVertices(s1->unk0, D_menu_overlay_800CF10C, t);
+        setCraftMaterialTextureByName(s2 & 0xFF, (s32)sp10);
+        s1->unk18 = 0;
+        s1->unk1C = 1.0f;
+        s2 += 1;
+    } while (s2 < 3U);
+    animateBannerOscillation((f32)D_menu_overlay_800CF161 / 3.0f);
+}
 
 typedef struct {
     s32 unk0;
