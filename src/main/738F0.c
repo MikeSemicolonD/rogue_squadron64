@@ -1366,7 +1366,165 @@ u16 spawnDirectionalDebrisBurstAnchored(u16 id, f32 *pos, void *target, f32 scal
     return npc;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", npcWakeUpdate);
+typedef struct {
+    f32 m[12];
+} WkMat;
+
+typedef struct {
+    f32 v[4];
+} WkQ;
+
+typedef struct {
+    f32 x, y, z;
+} WkV3;
+
+typedef struct {
+    f32 x, y, z;
+    f32 fwd[3];
+    f32 up[3];
+    f32 r24[3];
+    f32 x2, y2, z2;
+    f32 fwd2[3];
+    f32 up2[3];
+    f32 r54[3];
+    WkV3 c60;
+    WkV3 c6C;
+    u8 *m78;
+    u8 *m7C;
+    f32 s80[3];
+    f32 g8C, g90, g94;
+    u8 rgba[4];
+    f32 f9C;
+    f32 fA0;
+    f32 fA4;
+} WkObj;
+
+typedef struct {
+    WkMat *mat;
+    void *target;
+    u8 *col;
+    s32 pal;
+    f32 f10;
+    f32 f14;
+    f32 f18;
+    f32 f1C;
+    f32 f20;
+    f32 f24;
+    f32 f28;
+    u16 h2C;
+} WkArgs;
+
+u8 *instantiateNamedMeshInstance(char *);
+void applyRgbaTintToMeshVertices(u8 *, u8 *);
+void wkFlags(void *, s32, s32, s32) __asm__("applyFlagsToMeshTreeOrList");
+s32 wkVis(s32, void *, void *, f32) __asm__("addNpcToVisibilityBucket");
+
+s32 wkImpl(u8 *npc, u16 action, void *arg2) __asm__("npcWakeUpdate");
+s32 wkImpl(u8 *npc, u16 action, void *arg2) {
+    WkObj *d;
+    f32 side[4];
+    f32 p[4];
+    WkQ q38;
+    WkQ q48;
+    WkQ q58;
+
+    d = *(WkObj **)(npc + 4);
+    switch (action) {
+    case 1: {
+        WkArgs *a = arg2;
+        f32 t;
+        f32 c;
+        d->m78 = instantiateNamedMeshInstance("wake");
+        wkFlags(d->m78, 0, 0x09010000, 0);
+        d->m7C = instantiateNamedMeshInstance("wake");
+        wkFlags(d->m7C, 0, 0x09010000, 0);
+        *(WkMat *)d = *a->mat;
+        vec3Cross(side, d->up, d->fwd);
+        t = ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / a->f10);
+        p[0] = d->x + side[0] * t;
+        p[1] = d->y + side[1] * t;
+        p[2] = d->z + side[2] * t;
+        spawnDirectionalDebrisBurstAnchored(a->h2C, p, a->target, a->f24, a->f28, a->pal);
+        d->c60 = *(WkV3 *)d->fwd;
+        d->c6C = *(WkV3 *)d->up;
+        d->x -= side[0] * a->f10;
+        d->y -= side[1] * a->f10;
+        d->z -= side[2] * a->f10;
+        quatFromAxisAngle(q38.v, side, 5.0f);
+        quatFromAxisAngle(q48.v, d->fwd, a->f1C);
+        quatMultiply(q38.v, q48.v, q58.v);
+        q48 = q58;
+        quatFromAxisAngle(q58.v, d->up, a->f18);
+        quatMultiply(q48.v, q58.v, q38.v);
+        rotateVec3ByQuat(q38.v, d->fwd, d->fwd);
+        rotateVec3ByQuat(q38.v, d->up, d->up);
+        *(WkMat *)&d->x2 = *a->mat;
+        d->x2 += side[0] * a->f10;
+        d->y2 += side[1] * a->f10;
+        d->z2 += side[2] * a->f10;
+        quatFromAxisAngle(q38.v, side, 5.0f);
+        quatFromAxisAngle(q48.v, d->fwd2, -a->f1C);
+        quatMultiply(q38.v, q48.v, q58.v);
+        q48 = q58;
+        quatFromAxisAngle(q58.v, d->up2, -a->f18);
+        quatMultiply(q48.v, q58.v, q38.v);
+        rotateVec3ByQuat(q38.v, d->fwd2, d->fwd2);
+        rotateVec3ByQuat(q38.v, d->up2, d->up2);
+        d->rgba[0] = a->col[0];
+        d->rgba[1] = a->col[1];
+        d->rgba[2] = a->col[2];
+        d->rgba[3] = 0xFF;
+        applyRgbaTintToMeshVertices(d->m78, d->rgba);
+        applyRgbaTintToMeshVertices(d->m7C, d->rgba);
+        d->f9C = *(f32 *)(*(u8 **)d->m78 + 0x44);
+        c = 0.2f;
+        d->s80[0] = c;
+        d->s80[1] = c;
+        d->s80[2] = a->f14 * c;
+        d->g8C = c;
+        d->g90 = c;
+        c = 0.4f;
+        d->g94 = a->f14 * c;
+        d->fA4 = 0.0f;
+        *(f32 *)((u8 *)d + 0xA0) = a->f20;
+        popNpcSlotFromTail(D_main_bss_80139574, npc);
+        return 1;
+    }
+    case 2:
+        releaseMeshAsset(d->m78);
+        releaseMeshAsset(d->m7C);
+        return 1;
+    case 3: {
+        f32 dt = *(f32 *)arg2;
+        f32 t;
+        f32 k;
+        t = d->fA4 + dt * d->fA0;
+        d->fA4 = t;
+        if (t < 1.0f) {
+            d->rgba[3] = (u32)(255.0f - t * 255.0f);
+            applyRgbaTintToMeshVertices(d->m78, d->rgba);
+            applyRgbaTintToMeshVertices(d->m7C, d->rgba);
+            d->s80[0] += d->g8C * dt * d->fA0;
+            d->s80[1] += d->g90 * dt * d->fA0;
+            d->s80[2] += d->g94 * dt * d->fA0;
+            k = dt * 0.2f;
+            d->y += k;
+            d->y2 += k;
+        } else {
+            destroyNpcSlotByIndex(*(u16 *)(npc + 0x16));
+            return 1;
+        }
+        break;
+    }
+    case 4:
+        mat34CrossRowsAndCopyPosPtr((void *)(d->m78 + 0x28), (void *)d, d->s80);
+        wkVis(*(s32 *)arg2, d->m78, d, d->f9C);
+        mat34CrossRowsAndCopyPosPtr((void *)(d->m7C + 0x28), (void *)&d->x2, d->s80);
+        wkVis(*(s32 *)arg2, d->m7C, &d->x2, d->f9C);
+        break;
+    }
+    return 1;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D2D4);
 
