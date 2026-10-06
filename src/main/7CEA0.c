@@ -277,7 +277,58 @@ void updateWalkerLegStrideAndDust(u8 *arg0) {
     } while (i < 4);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcWalkerUpdate);
+void zmemcpy(u8 *, u8 *, u32);
+extern void destroyNpcSlotByIndex(u16);
+s32 slotDispatcherIter(s32, s32, void *);
+extern void updateWalkerLegStrideAndDust(u8 *);
+extern f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+extern u8 D_main_bss_80138058[];
+
+void play3DSoundEventF(s32, void *, void *, f32, f32, s32, s32, s32, s32) __asm__("play3DSoundEvent");
+
+typedef struct { f32 x, y, z; u8 pad0C[0x18]; f32 vx, vy, vz; } WalkerPhys;
+
+void npcWalkerUpdate(u8 *arg0, f32 dt) {
+    struct { u16 h[4]; s32 w; } ev;
+    WalkerPhys *w = (WalkerPhys *)arg0;
+    s32 i;
+    f32 h;
+
+    zmemcpy(arg0, arg0 + 0x1F8, 0x30);
+    w->vy += dt * 0.7f;
+    w->x += w->vx * dt;
+    w->y += w->vy * dt;
+    w->z += w->vz * dt;
+    h = wrapAngleToCyclicRange(w->x, w->z, D_main_bss_80138058, 0);
+    if (h <= *(f32 *)(arg0 + 0x4)) {
+        *(f32 *)(arg0 + 0x4) = h;
+        *(s16 *)(arg0 + 0x1B2) = 3;
+        *(f32 *)(arg0 + 0x44) = *(f32 *)(arg0 + 0x40);
+        *(f32 *)(arg0 + 0x48) = *(f32 *)(arg0 + 0x40) * 0.9f;
+        for (i = 0; i < 4; i++) {
+            if (((u16 *)(arg0 + 0x114))[i] != 0xFFFF) {
+                destroyNpcSlotByIndex(((u16 *)(arg0 + 0x114))[i]);
+                ((u16 *)(arg0 + 0x114))[i] = 0xFFFF;
+            }
+        }
+        ev.h[0] = 0xFFFF;
+        ev.h[1] = 0xFFFF;
+        ev.h[2] = 7;
+        ev.h[3] = 0xFFFF;
+        ev.w = 0;
+        for (i = 0; i < *(s16 *)(arg0 + 0x1B4); i++) {
+            if (((u16 *)(arg0 + 0x1B6))[i] != 0xFFFF) {
+                slotDispatcherIter(((u16 *)(arg0 + 0x1B6))[i], 5, &ev);
+                ((u16 *)(arg0 + 0x1B6))[i] = 0xFFFF;
+            }
+        }
+        updateWalkerLegStrideAndDust(arg0);
+        { union { s32 i; f32 f; } u; u.i = 0x41C80000;
+        play3DSoundEventF(0, arg0, arg0 + 0x24, u.f, 0.8f, 0, 0x75, 0x7F, 0x64);
+        play3DSoundEventF(0, arg0, arg0 + 0x24, u.f, 0.8f, 0, 0x77, 0x7F, 0x64); }
+    }
+    zmemcpy(arg0 + 0x1F8, arg0, 0x30);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/7CEA0", D_main_8003D7C0);
 
