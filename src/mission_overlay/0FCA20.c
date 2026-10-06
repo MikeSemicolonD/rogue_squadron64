@@ -145,7 +145,152 @@ void teardownHudInstancesAndUnbindNpcs(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", dispatchHudInstanceWeaponEffect);
+typedef struct {
+    s16 hB8;
+    u16 hBA;
+    s32 wBC;
+    f32 fC0;
+    f32 fC4;
+    f32 fC8;
+    u8 bCC;
+    u8 padCD[0xB];
+} DhSlotArgs;
+typedef struct {
+    u8 pad0[4];
+    u8 *p4;
+    u8 pad8[0x13C];
+} DhCam;
+extern DhCam D_main_bss_80138D18[];
+extern u8 gPlayers[];
+extern f32 D_mission_overlay_8010B44C[];
+extern f32 D_mission_overlay_8010B454[];
+extern f32 D_mission_overlay_8010B45C[];
+extern f32 D_mission_overlay_8010B464[];
+extern f32 D_mission_overlay_8010B46C[];
+extern f32 D_mission_overlay_8010B474[];
+extern f32 D_mission_overlay_8010B47C[];
+extern f32 D_mission_overlay_8010B484[];
+extern f32 D_mission_overlay_8010B48C[];
+extern f32 D_mission_overlay_8010B494[];
+extern f32 D_mission_overlay_8010B49C[];
+extern f32 D_mission_overlay_8010B4A4[];
+extern f32 D_mission_overlay_8010B4AC[];
+extern f32 D_mission_overlay_8010B4C0[];
+extern f32 D_mission_overlay_8010B4CC[];
+u16 dispatchCueByCategory(s32, u16, void *, void *, s32, f32, f32);
+s32 slotDispatcherIter(u16, s32, void *);
+void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+void accumulateVectorInObjectFrame(void *, void *, void *);
+void mat34CrossRowsAndCopyPos(void *, void *, f32);
+
+void dispatchHudInstanceWeaponEffect(s32 arg0, s32 arg1, u8 *arg2, s32 arg3, s32 arg4, s32 arg5, u16 arg6) {
+    f32 mtx[12];
+    u8 buf[0x30];
+    f32 mtx2[12];
+    DhSlotArgs sa;
+    f32 scale[3];
+    struct hud_struct *h;
+    register u8 *p2 asm("$19") = arg2;
+    register s32 tex asm("$7") = arg3;
+    u16 r;
+    f32 one;
+    f32 t;
+    f32 u;
+
+    switch (arg4) {
+    case 3:
+    case 8:
+        {
+            struct hud_struct *hb = D_mission_overlay_8010CA30;
+            h = &hb[arg0 & 0xFF];
+        }
+        if (h->unk211 != 0) {
+            h->unk211 = 0;
+            goto case2;
+        }
+        lookupHmtTextureByName(tex, "scnd", arg5, mtx, buf, 0);
+        if (arg4 == 3) {
+            r = dispatchCueByCategory(0xA, arg1, mtx, D_mission_overlay_8010B4C0, 1, 4.0f, D_mission_overlay_8010B47C[h->secondaryWeaponIsAdvanced]);
+            sa.fC4 = D_mission_overlay_8010B46C[h->secondaryWeaponIsAdvanced];
+            sa.fC8 = D_mission_overlay_8010B474[h->secondaryWeaponIsAdvanced];
+        } else {
+            r = dispatchCueByCategory(0xD, arg1, mtx, D_mission_overlay_8010B4C0, 1, 4.0f, D_mission_overlay_8010B494[h->secondaryWeaponIsAdvanced]);
+            sa.fC4 = D_mission_overlay_8010B484[h->secondaryWeaponIsAdvanced];
+            sa.fC8 = D_mission_overlay_8010B48C[h->secondaryWeaponIsAdvanced];
+        }
+        sa.hB8 = 0;
+        sa.hBA = arg6;
+        sa.wBC = 0;
+        sa.bCC = 0;
+        sa.fC0 = 10.0f;
+        slotDispatcherIter(r, 0xA, &sa);
+        if (arg4 == 3) {
+            play3DSoundEvent(0, p2, p2 + 0x24, 18.0f, 0.2f, 0, 0x46, 0x78, 0);
+        } else {
+            play3DSoundEvent(0, p2, p2 + 0x24, 18.0f, 0.2f, 0, 0x46, 0x78, 0);
+        }
+        break;
+    case 4:
+        lookupHmtTextureByName(tex, "zb", 0, mtx, buf, 0);
+        mtx[9] = *(f32 *)(p2 + 0xC) * 4.0f + *(f32 *)(p2 + 0x24);
+        mtx[10] = *(f32 *)(p2 + 0x10) * 4.0f + *(f32 *)(p2 + 0x28) + 2.0f;
+        mtx[11] = *(f32 *)(p2 + 0x14) * 4.0f + *(f32 *)(p2 + 0x2C);
+        dispatchCueByCategory(8, arg1, mtx, NULL, 0, 0.0f, D_mission_overlay_8010B4AC[D_mission_overlay_8010CA30[arg0 & 0xFF].secondaryWeaponIsAdvanced]);
+        play3DSoundEvent(0, p2, p2 + 0x24, 18.0f, 0.2f, 0, 0x47, 0x78, 0);
+        break;
+    case 2:
+    case 5:
+    case2:
+        lookupHmtTextureByName(tex, "scnd", arg5, mtx, buf, 0);
+        if (arg4 == 2) {
+            dispatchCueByCategory(0xA, arg1, mtx, D_mission_overlay_8010B4C0, 1, D_mission_overlay_8010B44C[D_mission_overlay_8010CA30[arg0 & 0xFF].secondaryWeaponIsAdvanced], D_mission_overlay_8010B454[D_mission_overlay_8010CA30[arg0 & 0xFF].secondaryWeaponIsAdvanced]);
+            play3DSoundEvent(0, p2, p2 + 0x24, 18.0f, 0.2f, 0, 0x46, 0x78, 0);
+        } else {
+            dispatchCueByCategory(0xD, arg1, mtx, D_mission_overlay_8010B4C0, 1, D_mission_overlay_8010B45C[D_mission_overlay_8010CA30[arg0 & 0xFF].secondaryWeaponIsAdvanced], D_mission_overlay_8010B464[D_mission_overlay_8010CA30[arg0 & 0xFF].secondaryWeaponIsAdvanced]);
+            play3DSoundEvent(0, p2, p2 + 0x24, 18.0f, 0.2f, 0, 0x46, 0x78, 0);
+        }
+        break;
+    case 7:
+    case 9:
+        lookupHmtTextureByName(tex, "scnd", arg5, mtx, buf, 0);
+        r = dispatchCueByCategory(0xE, arg1, mtx, D_mission_overlay_8010B4C0, 1, D_mission_overlay_8010B49C[D_mission_overlay_8010CA30[arg0 & 0xFF].secondaryWeaponIsAdvanced], D_mission_overlay_8010B4A4[D_mission_overlay_8010CA30[arg0 & 0xFF].secondaryWeaponIsAdvanced]);
+        if (arg4 == 9) {
+            sa.hB8 = 0;
+            slotDispatcherIter(r, 0xA, &sa);
+        }
+        play3DSoundEvent(0, p2, p2 + 0x24, 18.0f, 0.2f, 0, 0x46, 0x78, 0);
+        break;
+    case 1:
+        lookupHmtTextureByName(tex, "scnd", arg5, mtx, buf, 0);
+        {
+            DhCam *cams = D_main_bss_80138D18;
+            u8 *pl = (u8 *)gPlayers;
+            if (*(u16 *)(cams[*(s32 *)(pl + 0xBC)].p4 + 4) == 3 && *(u16 *)(pl + 0xB8) == 1) {
+                accumulateVectorInObjectFrame(mtx, D_mission_overlay_8010B4CC, pl + 4);
+            }
+        }
+        one = 1.0f;
+        mat34CrossRowsAndCopyPos(mtx2, mtx, one);
+        { struct hud_struct *hh = D_mission_overlay_8010CA30; t = *(f32 *)&hh[arg0 & 0xFF].unknown_words214[6] / 3.0f; }
+        if (one < t) {
+            t = one;
+        }
+        u = t;
+        if (t < 0.25f) {
+            u = 0.25f;
+        }
+        scale[0] = u * 3.0f;
+        scale[1] = u * 3.0f;
+        scale[2] = u * 5.0f;
+        t = t + 0.1f;
+        if (one < t) {
+            t = one;
+        }
+        dispatchCueByCategory(0xC, arg1, mtx, scale, 1, 10.0f, t * 4.0f);
+        play3DSoundEvent(0, p2, p2 + 0x24, 20.0f, 0.2f, 0, 0x34, 0x78, 0x3C);
+        break;
+    }
+}
 
 u8 configurePlayerSecondaryWeaponHud(u8, u8, u8, s32);
 extern u8 D_main_bss_80130B12;
