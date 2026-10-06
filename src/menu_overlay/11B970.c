@@ -2038,9 +2038,257 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6E9C);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", tickMenuOptionEntry);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6EB8);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuRandomBackdropScreen);
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    s32 unk8;
+    s32 unkC;
+} RbCtx;
+typedef struct {
+    u8 pad0[0x18];
+    f32 f18;
+    f32 f1C;
+    u8 pad20[4];
+    f32 f24;
+    f32 f28;
+    u8 b2C;
+    u8 b2D;
+    u8 b2E;
+    u8 b2F;
+} RbElem;
+extern RbCtx rbCtx __asm__("D_menu_overlay_800CF090");
+extern void *rbList78 __asm__("D_menu_overlay_800CF078");
+extern void *rbList7C __asm__("D_menu_overlay_800CF07C");
+extern s32 rbText __asm__("D_menu_overlay_800CF108");
+extern RbElem *rbMedal __asm__("D_menu_overlay_800CFE30");
+extern RbElem *rbFade __asm__("D_menu_overlay_800CFE34");
+extern f32 rbPhase __asm__("D_menu_overlay_800CF074");
+extern s32 rbSong __asm__("D_menu_overlay_800CF070");
+extern s32 rbVoice __asm__("D_menu_overlay_800CF154");
+extern s32 rbB20 __asm__("D_main_bss_80138920");
+extern s32 rbMesh __asm__("D_menu_overlay_800CF0FC");
+extern char D_menu_overlay_800A6644[];
+void initVwingHudAndSlotState(void);
+void preloadMenuMusicSetA(void);
+void rbLoadScene(void *) __asm__("loadMenuSceneModelAndMaterials");
+s16 rbRand(void) __asm__("rand");
+s32 buildScaledFormatTextElement(char *, s32, s32, s32, s32, s32);
+void insertLookupEntry(void *, void *, u8);
+void setLookupEntryField5ByKey(s32, u8 *, s32);
+void setChildPosFromI16Pair(void *, s16, s16);
+void postLevelSaveInit(u8);
+void loadMedalInfo(void);
+u8 postLevelStatScreen(void *, u8, u8);
+void rbColor(s32, u8) __asm__("setMenuObjectColorPreset");
+void createMenuTextLabels(s32);
+void rbAnimFrame(f32, f32) __asm__("setMenuAnimGroupFrame");
+s32 findAudioChannelById(s32);
+s32 rbPlaySong(s32, u16, s32, s32) __asm__("playSongById");
+f32 advanceWrappingPhaseAccumulator(void);
+void pollControllerInputs(void);
+void setNewAndPreviousButtonsPressed(void);
+void rbVoiceLoop(s32) __asm__("setVoiceLineLoopFlag");
+void queueAudioVoiceCmd(s32, s32, s32, s32);
+void beginSceneRenderFrame(s32);
+u8 rbSongActive(s32) __asm__("isSongHandleActive");
+u8 rbTickVoice(s32, f32) __asm__("tickMultiPartVoiceLine");
+f32 quadraticEaseInOut(f32);
+void animateMenuSceneTransform(void *, f32, f32, s32);
+void updateVwingTrailGeometry(void *, f32, f32);
+void updateMenuElementTimedPosition(f32, u8);
+void waitForPrevFrameDone(void);
+void frameStartReset(void);
+s32 rebuildActiveDisplayObjectList(void *);
+void setupCameraMatrices(void *);
+void initRenderStateArrays(void);
+void drawFrameProfilerBars(void);
+void submitGfxFrame(void);
+void bufferArbiterProducerScanWait(void);
+s32 shutdownFormatMessageWorker();
+s32 finalizeCurrentSpeechBuffer();
+void tickMusyXIfActive(void);
+u8 anyAudioSlotActive(void);
+
+void runMenuRandomBackdropScreen(u8 arg0, void *arg1, u8 arg2, u8 arg3) {
+    char buf[16];
+    s32 songs[4] = { 0x35, 0x36, 0x36, 0x37 };
+    u8 done;
+    f32 t48;
+    f32 timer;
+    f32 t50;
+    RbCtx *ctx;
+    s32 *sp;
+    s32 head;
+    f32 dt;
+    f32 fade;
+    f32 anim;
+    f32 alpha;
+    f32 dir;
+    f32 e;
+    u32 state;
+    s32 medal;
+    u8 flag;
+    u8 played;
+
+    done = 0;
+    initVwingHudAndSlotState();
+    preloadMenuMusicSetA();
+    rbLoadScene(&rbCtx);
+    flag = 0;
+    sprintf(buf, D_menu_overlay_800A6644, (s16)(rbRand() % 7) + 1);
+    played = flag;
+    state = 0;
+    dir = 1.0f;
+    fade = 0.0f;
+    t48 = fade;
+    timer = 1.0f;
+    t50 = fade;
+    rbText = buildScaledFormatTextElement(buf, 2, 0x40, 0x20, 0, rbB20);
+    insertLookupEntry(rbList7C, getStructField0xC(rbText), 0xA);
+    anim = fade;
+    setLookupEntryField5ByKey((s32)rbList7C, getStructField0xC(rbText), 1);
+    setChildPosFromI16Pair((void *)rbText, -0x100, -0xE0);
+    alpha = fade;
+    postLevelSaveInit(arg3);
+    loadMedalInfo();
+    medal = postLevelStatScreen(arg1, arg2, arg3);
+    rbColor(rbMesh, medal);
+    createMenuTextLabels(medal == 0);
+    rbAnimFrame(fade, fade);
+    sp = &songs[arg3];
+    rbSong = rbPlaySong(0x1D, *sp, findAudioChannelById(*sp), 0);
+    rbPhase = fade;
+    while (1) {
+        dt = advanceWrappingPhaseAccumulator();
+        pollControllerInputs();
+        setNewAndPreviousButtonsPressed();
+        rbPhase += dt * 30.0f;
+        rbRand();
+        rbCtx.unk0 = 0;
+        switch (state) {
+        case 0:
+            if (fade == 1.0f) {
+                alpha += dt;
+                if (1.0f < alpha) {
+                    alpha = 1.0f;
+                }
+                rbFade->b2F = (u32)(alpha * 255.0f);
+                if (alpha == 1.0f) {
+                    state = 1;
+                }
+            }
+            break;
+        case 1:
+            if ((getControllerNewButtonsPressed(arg0) & 0x9000) || played) {
+                state = 2;
+            }
+            break;
+        case 2:
+            anim += dt;
+            if (1.0f < anim) {
+                anim = 1.0f;
+            }
+            rbAnimFrame(anim, dt);
+            rbFade->b2F = (u32)((1.0f - anim) * 255.0f);
+            if (anim == 1.0f) {
+                setLookupEntryField5ByKey((s32)rbList78, (u8 *)rbFade, 0);
+                state = 3;
+            }
+            break;
+        case 3:
+            t50 += dt;
+            if (flag == 0 && 1.5f < t50 && arg3 == 0) {
+                flag = 1;
+            }
+            if (getControllerNewButtonsPressed(arg0) & 0x9000) {
+                if (rbVoice != 0) {
+                    rbVoiceLoop(rbVoice);
+                }
+                bsearchFactor5TableByU16Key(0x44, 0x6E, 0x40);
+                queueAudioVoiceCmd(0, 0x6D6, rbSong, 1);
+                state = 5;
+                beginSceneRenderFrame(8);
+            }
+            rbAnimFrame(anim, dt);
+            break;
+        case 4:
+            break;
+        case 5:
+            t48 += dt * 0.5f;
+            if (1.0f < t48) {
+                t48 = 1.0f;
+                done = 1;
+            }
+            e = 3.2f;
+            rbMedal->f24 = quadraticEaseInOut(t48) * e * 512.0f / 640.0f;
+            rbMedal->f28 = quadraticEaseInOut(t48) * e;
+            rbMedal->f18 = rbMedal->f24 * -128.0f;
+            rbMedal->f1C = rbMedal->f28 * -128.0f;
+            setLookupEntryField5ByKey((s32)rbList78, (u8 *)rbMedal, 1);
+            break;
+        }
+        if (rbSongActive(rbSong) == 0) {
+            timer -= dt;
+            if (timer < 0.0f) {
+                rbSong = rbPlaySong(0xC, 0x1C, findAudioChannelById(0x1C), 0);
+                played = 1;
+            }
+        }
+        if (rbVoice != 0) {
+            if (rbTickVoice(rbVoice, dt) == 1) {
+                queueAudioVoiceCmd(0x78, 0x1F4, rbSong, 0);
+                rbVoice = 0;
+            }
+        }
+        if (0.0f < dir) {
+            fade += dt * 0.5f;
+            if (1.0f < fade) {
+                fade = 1.0f;
+            }
+        } else {
+            fade -= dt;
+            if (fade < 0.0f) {
+                fade = 0.0f;
+            }
+        }
+        if (medal != 0) {
+            {
+            f32 x = quadraticEaseInOut(fade);
+            animateMenuSceneTransform(&rbCtx, x, rbPhase, 0);
+            e = x;
+            }
+            updateMenuElementTimedPosition(e, 0);
+        } else {
+            e = quadraticEaseInOut(fade);
+            updateVwingTrailGeometry(&rbCtx, e, rbPhase);
+            updateMenuElementTimedPosition(e, 1);
+        }
+        if (done == 1) {
+            break;
+        }
+        waitForPrevFrameDone();
+        frameStartReset();
+        head = rbCtx.unk0;
+        rbCtx.unk0 = 0;
+        rbCtx.unkC = rebuildActiveDisplayObjectList(rbList7C);
+        rbCtx.unk8 = 0;
+        setupCameraMatrices(&rbCtx);
+        initRenderStateArrays();
+        rbCtx.unk8 = rebuildActiveDisplayObjectList(rbList78);
+        rbCtx.unkC = 0;
+        rbCtx.unk0 = head;
+        setupCameraMatrices(&rbCtx);
+        drawFrameProfilerBars();
+        submitGfxFrame();
+    }
+    bufferArbiterProducerScanWait();
+    shutdownFormatMessageWorker();
+    finalizeCurrentSpeechBuffer();
+    tickMusyXIfActive();
+    while (anyAudioSlotActive() == 0) {
+    }
+}
 
 extern char D_menu_overlay_800A6A1C[];
 extern s32 D_menu_overlay_800CF0FC;
