@@ -159,7 +159,121 @@ void resetEngineTrailQuads(TrailArg *arg0, f32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B64C0", acquireLockOnTarget);
+typedef struct { f32 x, y, z; } LockVec3;
+typedef struct {
+    f32 pos[3];
+    u8 pad0C[0x24 - 0xC];
+    f32 vel[3];
+} LockNpcData;
+typedef struct {
+    u8 pad0[8];
+    LockNpcData *data;
+    void *part;
+    u8 pad10[4];
+    u16 flags;
+} LockNpc;
+extern u16 D_mission_overlay_80109874[];
+extern u16 D_main_bss_80139560[];
+extern s32 findActiveNpcInSlotChain(u16, void *);
+extern LockNpc *getNpcCtxL(u16) __asm__("getNpcContextByIndex");
+extern s32 revalidateNpcSlotIterator(void *);
+extern void transformMeshPartIntoWorld(void *, f32 *);
+extern f32 vec3DotL(f32 *, f32 *) __asm__("vec3Dot");
+extern f32 vec3LenL(f32 *) __asm__("vec3Length");
+extern void normVecL(f32 *) __asm__("normalize_vector");
+
+u16 acquireLockOnTargetImpl(f32 *src, f32 *out, u16 cur, f32 range, f32 minDot, f32 lead, u8 mode) __asm__("acquireLockOnTarget");
+u16 acquireLockOnTargetImpl(f32 *src, f32 *out, u16 cur, f32 range, f32 minDot, f32 lead, u8 mode) {
+    f32 d[3];
+    f32 aim[3];
+    f32 pos[3];
+    f32 org[3];
+    u8 iter[8];
+    f32 bestScore;
+    f32 minD;
+    f32 len;
+    f32 dot;
+    f32 t;
+    u16 best;
+    u16 cid;
+    s32 id;
+    s32 k;
+    LockNpc *npc;
+
+    minD = range * 0.1f;
+    org[0] = src[0] - src[3] * minD;
+    org[1] = src[1] - src[4] * minD;
+    best = 0xFFFF;
+    org[2] = src[2] - src[5] * minD;
+    range = range * 1.1f;
+    if (D_mission_overlay_80109874[0] != 0xFFFF) {
+        k = 0;
+        do {
+            id = findActiveNpcInSlotChain(D_main_bss_80139560[D_mission_overlay_80109874[k]], iter);
+            while ((id & 0xFFFF) != 0xFFFF) {
+                npc = getNpcCtxL(id & 0xFFFF);
+                if (!(npc->flags & 0x100)) {
+                    if (npc->part != 0) {
+                        transformMeshPartIntoWorld(npc->part, pos);
+                    } else {
+                        *(LockVec3 *)pos = *(LockVec3 *)npc->data;
+                    }
+                    d[0] = pos[0] - org[0];
+                    d[1] = pos[1] - org[1];
+                    d[2] = pos[2] - org[2];
+                    len = vec3LenL(d);
+                    if (len < range && minD < len) {
+d[0] /= len;
+                        d[1] /= len;
+                        d[2] /= len;
+                        if (lead != 0.0f) {
+                            t = len / lead;
+                            aim[0] = pos[0] + npc->data->vel[0] * t;
+                            aim[1] = pos[1] + npc->data->vel[1] * t;
+                            aim[2] = pos[2] + npc->data->vel[2] * t;
+                            d[0] = aim[0] - org[0];
+                            d[1] = aim[1] - org[1];
+                            d[2] = aim[2] - org[2];
+                            normVecL(d);
+                        } else {
+                            *(LockVec3 *)aim = *(LockVec3 *)pos;
+                        }
+                        dot = vec3DotL(d, src + 3);
+                        if (minDot < dot) {
+                            switch (mode) {
+                            case 1:
+                                if (vec3DotL(src + 6, d) > 0.0f) {
+                                    goto next;
+                                }
+                                break;
+                            case 2:
+                                if (vec3DotL(src + 6, d) < 0.0f) {
+                                    goto next;
+                                }
+                                break;
+                            }
+                            cid = id;
+                            if (cid == cur) {
+                                *(LockVec3 *)out = *(LockVec3 *)aim;
+                                return cid;
+                            }
+                            len = len * ((1.0f - dot) * 180.0f + 1.0f);
+                            if ((best & 0xFFFF) == 0xFFFF || !(bestScore < len)) {
+                                best = id;
+                                bestScore = len;
+                                *(LockVec3 *)out = *(LockVec3 *)aim;
+                            }
+                        }
+                    }
+                }
+            next:
+                id = revalidateNpcSlotIterator(iter);
+            }
+k++;
+        } while (D_mission_overlay_80109874[k] != 0xFFFF);
+    }
+    return best;
+}
 
 typedef struct {
     s32 unk0;
