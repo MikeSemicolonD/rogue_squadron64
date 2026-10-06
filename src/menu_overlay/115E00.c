@@ -398,7 +398,281 @@ void initCraftSelectScreen(u8 arg0, s32 arg1, s32 arg2) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", tickCraftSelectScreen);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", handleCraftSelectInput);
+extern f32 bridgeRotationVelocityMultiplier;
+extern f32 bridgeRotationAngle;
+extern f32 bridgeDisplayFlickerTimer;
+extern f32 D_menu_overlay_800CDB00;
+extern f32 D_menu_overlay_800CDAF0;
+extern u8 D_menu_overlay_800CDAB8;
+extern u8 D_menu_overlay_800CDAB9;
+extern u8 D_menu_overlay_800CDABA;
+extern u8 D_menu_overlay_800CDABD;
+extern u8 D_menu_overlay_800CDAC6;
+extern char D_menu_overlay_800CDA90[];
+extern f32 D_menu_overlay_800CDAFC;
+extern f32 D_menu_overlay_800CDAE4;
+extern f32 D_menu_overlay_800CDADC;
+extern f32 D_menu_overlay_800CDAD4;
+extern f32 D_menu_overlay_800CDAD8;
+extern f32 D_menu_overlay_800CDAE8;
+extern f32 D_menu_overlay_800CDAEC;
+extern s32 D_menu_overlay_800CDAF4;
+extern f32 D_menu_overlay_800CDB08;
+void safeLookup3DSoundEntry(s32, s32);
+void playExitSoundAndToggleScreenMeshes(void);
+void enqueueFormatMessage(s32, char *);
+s32 pollServiceMessageByte(void *);
+void requestViFeatureChange(s32);
+s32 isStructUninitialized(s32);
+void startPlayerSlotAnimationChannelFlagged(s32, s32, s32);
+f32 sinf(f32);
+f32 quadraticEaseInOut(f32);
+void composeRotationMatrixSlot0(Mat4x3, f32);
+void composeRotationMatrixSlot1(Mat4x3, f32);
+void addVec3At0x24(Mat4x3, f32, f32, f32);
+void mat3x3InverseInto(Mat4x3, Mat4x3);
+extern void releaseSceneObjectMeshTree(s32);
+extern s32 getControllerNewButtonsPressed(u8);
+extern s32 getGameOrFrontText(s32);
+extern s32 isAnimInstanceActive(s32);
+extern s32 isPlayerShipActive();
+extern void markStructInitializedOnce(s32);
+extern void startPlayerSlotAnimationChannel(s32, s32);
+extern void stopVoiceByHandleLocked(s32);
+extern void setVoiceLineLoopFlag(s32);
+extern void queueAudioVoiceCmd(s32, s32, s32, s32);
+
+void handleCraftSelectInput(void) {
+    Mat4x3 m;
+    u8 sp40[8];
+    f32 e;
+    f32 t;
+    f32 inv;
+    u8 v;
+    s32 n;
+
+    bridgeRotationAngle = bridgeRotationAngle + bridgeRotationVelocityMultiplier * 5.0f;
+    if (bridgeRotationAngle >= 360.0f) {
+        bridgeRotationAngle = bridgeRotationAngle - 360.0f;
+    }
+    switch (bridgeTransitionState) {
+    case 0:
+        if (bridgeMenuDisplayLevel != bridgeMenuDesiredLevel) {
+            safeLookup3DSoundEntry(bsearchFactor5TableByU16Key(0x2C, 0x51, 0x40), 0);
+            D_menu_overlay_800CDB00 = 0.0f;
+            bridgeTransitionState = 1;
+        }
+        break;
+    case 1:
+        D_menu_overlay_800CDB00 = D_menu_overlay_800CDB00 + bridgeRotationVelocityMultiplier * 1.2717f;
+        if (D_menu_overlay_800CDB00 > 1.0f) {
+            D_menu_overlay_800CDB00 = 1.0f;
+        }
+        D_menu_overlay_800CDAF0 = 1.0f - quadraticEaseInOut(D_menu_overlay_800CDB00);
+        if (D_menu_overlay_800CDB00 >= 1.0f) {
+            if (D_menu_overlay_800CDAB9 == 1) {
+                if (!(isPlayerShipActive() & 0xFF)) {
+                    playExitSoundAndToggleScreenMeshes();
+                }
+                bridgeMenuState = 4;
+                D_menu_overlay_800CDACC = bridgeMenuDesiredLevel;
+            } else {
+                D_menu_overlay_800CDAC6 = 0;
+                bridgeTransitionState = 2;
+                bridgeMenuDisplayLevel = bridgeMenuDesiredLevel;
+                if (D_menu_overlay_800CDABA == 0) {
+                    sprintf(D_menu_overlay_800CDA90, D_menu_overlay_800A58BC, bridgeMenuDisplayLevel);
+                    enqueueFormatMessage(D_menu_overlay_800CDD70, D_menu_overlay_800CDA90);
+                }
+            }
+        }
+        break;
+    case 2:
+        if ((pollServiceMessageByte(sp40) & 0xFF) || D_menu_overlay_800CDABA != 0) {
+            if (D_menu_overlay_800CDABA == 0) {
+                layoutMenuTextRow((struct some_ui_list_root *)D_menu_overlay_800CDCDC, bridgeMenuDisplayLevel);
+            }
+            safeLookup3DSoundEntry(bsearchFactor5TableByU16Key(0x2C, 0x51, 0x40), 0x3000);
+            D_menu_overlay_800CDB00 = 0.0f;
+            D_menu_overlay_800CDABA = 0;
+            bridgeTransitionState = 3;
+        }
+        break;
+    case 3:
+        D_menu_overlay_800CDB00 = D_menu_overlay_800CDB00 + bridgeRotationVelocityMultiplier * 1.2717f;
+        if (D_menu_overlay_800CDB00 > 1.0f) {
+            D_menu_overlay_800CDB00 = 1.0f;
+        }
+        D_menu_overlay_800CDAF0 = e = quadraticEaseInOut(D_menu_overlay_800CDB00);
+        if (D_menu_overlay_800CDAB8 == 1) {
+            t = quadraticEaseInOut(D_menu_overlay_800CDB00) * -300.0f;
+            D_menu_overlay_800CDAFC = e;
+            D_menu_overlay_800CDAE4 = t;
+            inv = 1.0f - e;
+            D_menu_overlay_800CDADC = inv * -8.0f + e * -1.6f;
+            D_menu_overlay_800CDAD4 = inv * -6.1f + e * -3.6f;
+            D_menu_overlay_800CDAD8 = inv * -43.0f + e * -36.5f;
+        }
+        if (D_menu_overlay_800CDB00 == 1.0f) {
+            if (D_menu_overlay_800CDAB8 == 1) {
+                D_menu_overlay_800CDB20[2].next = NULL;
+                applyFlagsToMeshTreeOrList(csModels[2].mesh, 0, 0x20000000, 0);
+                applyFlagsToMeshTreeOrList(csModels[3].mesh, 0, 0x20000000, 0);
+                releaseSceneObjectMeshTree(csModels[2].mesh);
+                releaseSceneObjectMeshTree(csModels[3].mesh);
+                requestViFeatureChange(1);
+                D_menu_overlay_800CDAB8 = 0;
+            }
+            v = 2;
+            D_menu_overlay_800CDB00 = 0.0f;
+            if (D_menu_overlay_800CDAC7 == 1) {
+                v = 3;
+            }
+            bridgeMenuState = v;
+            D_menu_overlay_800CDABF = 0;
+            bridgeTransitionState = 0;
+        }
+        break;
+    }
+    if (bridgeMenuState == 2 || bridgeMenuState == 3) {
+        if (bridgeTransitionState == 0 && D_menu_overlay_800CDAC0 == 0
+            && ((getControllerNewButtonsPressed(D_menu_overlay_800CDAC8) & 0xF) || D_menu_overlay_800CDABD != 0)) {
+            D_menu_overlay_800CDABD = 0;
+            if (D_menu_overlay_800CDABB == 0) {
+                if (isStructUninitialized(D_menu_overlay_800CDFAC) & 0xFF) {
+                    D_menu_overlay_800CDABB = 1;
+                    setMenuOverlayHeaderState(5, 0, 0x128);
+                    startPlayerSlotAnimationChannelFlagged(D_menu_overlay_800CDFAC, getGameOrFrontText(bridgeMenuDesiredLevel + 0x21), 8);
+                    setMenuOverlayHeaderState(2, 0x200, 0);
+                    D_menu_overlay_800CDAC0 = -1;
+                }
+            } else {
+                markStructInitializedOnce(D_menu_overlay_800CDFAC);
+                if (D_menu_overlay_800CC700 != -1) {
+                    stopVoiceByHandleLocked(D_menu_overlay_800CC700);
+                    D_menu_overlay_800CC700 = -1;
+                }
+                D_menu_overlay_800CDABC = 1;
+                D_menu_overlay_800CDABF = 1;
+                D_menu_overlay_800CDB0C = -10.0f;
+            }
+        }
+    }
+    switch (bridgeMenuState) {
+    case 0:
+        D_menu_overlay_800CDAE8 = 0.0f;
+        D_menu_overlay_800CDAEC = 0.0f;
+        D_menu_overlay_800CDAE4 = 0.0f;
+        D_menu_overlay_800CDAB8 = 1;
+        D_menu_overlay_800CDAB9 = 0;
+        D_menu_overlay_800CDAF0 = 0.0f;
+        D_menu_overlay_800CDAF4 = 0;
+        D_menu_overlay_800CDAFC = 0.0f;
+        bridgeMenuState = 1;
+        D_menu_overlay_800CDABA = 0;
+        D_menu_overlay_800CDABD = 0;
+        bridgeDisplayFlickerTimer = 5.0f;
+        D_menu_overlay_800CDADC = -8.0f;
+        D_menu_overlay_800CDAD4 = -6.1f;
+        D_menu_overlay_800CDAD8 = -43.0f;
+        D_menu_overlay_800CDB08 = 0.8f;
+    case 1:
+        D_menu_overlay_800CDAE8 = D_menu_overlay_800CDAE8 + bridgeRotationVelocityMultiplier;
+        if (D_menu_overlay_800CDAE8 >= 0.5f) {
+            D_menu_overlay_800CDAE8 = 0.0f;
+            bridgeMenuState = 2;
+            D_menu_overlay_800CDB00 = 0.0f;
+            bridgeTransitionState = 3;
+            safeLookup3DSoundEntry(bsearchFactor5TableByU16Key(0x2C, 0x51, 0x40), 0x3000);
+            D_menu_overlay_800CE6A8 = 1.0f;
+        }
+        break;
+    case 2:
+        D_menu_overlay_800CDAE8 = D_menu_overlay_800CDAE8 + bridgeRotationVelocityMultiplier;
+        D_menu_overlay_800CDAEC = D_menu_overlay_800CDAE8 / 5.0f;
+        if (D_menu_overlay_800CDAEC >= 0.3f) {
+            D_menu_overlay_800CDAEC = 0.3f;
+        }
+        if (getControllerNewButtonsPressed(D_menu_overlay_800CDAC8) & 0x800200) {
+            bridgeMenuPreviousLevel = bridgeMenuDesiredLevel;
+            if (bridgeMenuDesiredLevel != 0) {
+                bridgeMenuDesiredLevel--;
+            }
+        lvl_changed:
+            if (bridgeMenuPreviousLevel != bridgeMenuDesiredLevel) {
+                bsearchFactor5TableByU16Key(0x17, 0x64, 0x40);
+                startPlayerSlotAnimationChannel(D_menu_overlay_800CDFA4, getGameOrFrontText(bridgeMenuDesiredLevel));
+                if (D_menu_overlay_800CDFB0 != 0) {
+                    setVoiceLineLoopFlag(D_menu_overlay_800CDFB0);
+                }
+                D_menu_overlay_800CDB0C = 1.0f;
+                if (D_menu_overlay_800CDABB != 0) {
+                    markStructInitializedOnce(D_menu_overlay_800CDFAC);
+                    if (D_menu_overlay_800CC700 != -1) {
+                        stopVoiceByHandleLocked(D_menu_overlay_800CC700);
+                        D_menu_overlay_800CC700 = -1;
+                    }
+                    D_menu_overlay_800CDABC = 1;
+                    D_menu_overlay_800CDABB = 0;
+                    D_menu_overlay_800CDABD = 1;
+                }
+            }
+        } else if (getControllerNewButtonsPressed(D_menu_overlay_800CDAC8) & 0x400100) {
+            bridgeMenuPreviousLevel = bridgeMenuDesiredLevel;
+            n = bridgeMenuDesiredLevel + 1;
+            if ((1 << n) & D_menu_overlay_800CDAD0) {
+                bridgeMenuDesiredLevel = n;
+            }
+            goto lvl_changed;
+        } else if ((getControllerNewButtonsPressed(D_menu_overlay_800CDAC8) & 0x9000) && !(isAnimInstanceActive(D_menu_overlay_800CDFA8) & 0xFF)
+            && bridgeTransitionState == 0) {
+            if (D_menu_overlay_800CDABB != 0) {
+                markStructInitializedOnce(D_menu_overlay_800CDFAC);
+                if (D_menu_overlay_800CC700 != -1) {
+                    stopVoiceByHandleLocked(D_menu_overlay_800CC700);
+                    D_menu_overlay_800CC700 = -1;
+                }
+                D_menu_overlay_800CDABB = 0;
+                D_menu_overlay_800CDABC = 1;
+            }
+            bsearchFactor5TableByU16Key(0x18, 0x5F, 0x40);
+            startPlayerSlotAnimationChannel(D_menu_overlay_800CDFA8, getGameOrFrontText(0x3A));
+            printLevelSelectWeaponText2(bridgeMenuDesiredLevel, 0);
+            bridgeMenuState = 3;
+            D_menu_overlay_800CDAC7 = 1;
+            D_menu_overlay_800CE6A8 = -1.0f;
+        }
+        break;
+    case 3:
+        if ((getControllerNewButtonsPressed(D_menu_overlay_800CDAC8) & 0x9000) && !(isAnimInstanceActive(D_menu_overlay_800CDFA8) & 0xFF)
+            && D_menu_overlay_800CDAB9 == 0) {
+            if (D_menu_overlay_800CDABB != 0) {
+                markStructInitializedOnce(D_menu_overlay_800CDFAC);
+                if (D_menu_overlay_800CC700 != -1) {
+                    stopVoiceByHandleLocked(D_menu_overlay_800CC700);
+                    D_menu_overlay_800CC700 = -1;
+                }
+                D_menu_overlay_800CDABB = 0;
+                D_menu_overlay_800CDABC = 1;
+            }
+            bsearchFactor5TableByU16Key(0x18, 0x5F, 0x40);
+            queueAudioVoiceCmd(0, 0x3E8, D_menu_overlay_800CDCE0, 1);
+            playSimpleAudioCmd(0, 0x3E8, 0xFE);
+            D_menu_overlay_800CDAB9 = 1;
+            D_menu_overlay_800CDABA = 1;
+            bridgeMenuDisplayLevel = 0xFF;
+            bridgeMenuState = 4;
+        }
+        break;
+    case 4:
+        break;
+    }
+    clearVec4QuadStruct(m);
+    composeRotationMatrixSlot0(m, D_menu_overlay_800CDADC);
+    addVec3At0x24(m, 0.0f, D_menu_overlay_800CDAD4, D_menu_overlay_800CDAD8 + sinf(D_menu_overlay_800CDB14 / 10.0f) * D_menu_overlay_800CDAEC * 0.1f + 0.2f);
+    composeRotationMatrixSlot1(m, bridgeRotationAngle);
+    mat3x3InverseInto((void *)((u8 *)&csMain + 0x2C), m);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A5994);
 
