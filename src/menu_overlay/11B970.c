@@ -459,7 +459,132 @@ void resetMaterialTextureEffectSlots(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setMaterialTextureByName);
+extern s8 D_menu_overlay_800CF162;
+void *getStructField0xC(s32);
+extern void rs_strcpy(void *, void *);
+extern s32 rs_strcmp(void *, void *);
+extern s32 pollServiceMessageByte(u8 *);
+extern u8 enqueueFormatMessage(s32, void *);
+extern char D_menu_overlay_800A6678[];
+extern u8 D_menu_overlay_800CF1A1[];
+extern void *D_menu_overlay_800CF078;
+extern void setLookupEntryField5ByKey(s32, u8 *, s32);
+
+typedef struct {
+    u8 pad0[0x14];
+    u32 flags;
+    u8 pad18[0x17];
+    u8 b2F;
+} MatTexDst;
+
+#define SLOT_F(s) (*(f32 *)&(s)->unk18)
+
+void setMaterialTextureByName(u8 a, void *b, f32 c) {
+    u8 sp10;
+    s32 i;
+    s32 j;
+    s32 k;
+    s32 m;
+    u32 s4;
+    MaterialTexEffectSlot *s0;
+    MaterialTexEffectSlot *sl;
+    MaterialTexEffectSlot *v1;
+    MatTexDst *dst;
+    f32 f;
+    f32 g;
+    u32 q;
+
+    if (b != 0) {
+        rs_strcpy(&D_menu_overlay_800CF1A1[a * 0x48], b);
+        (D_menu_overlay_800CF1A1 + a * 0x48)[0x20] = 4;
+        return;
+    }
+    s4 = 0;
+    i = 0;
+    do {
+        if (D_menu_overlay_800CF180[(u8)i].unk41 == 0) {
+            s4 = pollServiceMessageByte(&sp10);
+            break;
+        }
+        i++;
+    } while ((u8)i < 3);
+    j = 0;
+    do {
+        k = (D_menu_overlay_800CF162 + (u8)j);
+        k %= 3;
+        i = k;
+        switch (D_menu_overlay_800CF180[(u8)i].unk41) {
+        case 4:
+            s0 = &D_menu_overlay_800CF180[(u8)i];
+            if (0.0f < SLOT_F(s0)) {
+                SLOT_F(s0) = SLOT_F(s0) - c;
+            }
+            if (SLOT_F(s0) <= 0.0f) {
+                SLOT_F(s0) = 0.0f;
+                s0->unk20 = enqueueFormatMessage(s0->unk0, (u8 *)D_menu_overlay_800CF180 + 0x21 + (u8)i * 0x48);
+                s0->unk16 = 0;
+                s0->unk41 = 0;
+            }
+            break;
+        case 0:
+            if ((u8)s4 == 1) {
+                m = 0;
+                do {
+                    s0 = &D_menu_overlay_800CF180[(u8)m];
+                    if (s0->unk20 == sp10) {
+                        goto found;
+                    }
+                    m++;
+                } while ((u8)m < 3);
+            }
+            break;
+        case 1:
+            v1 = &D_menu_overlay_800CF180[(u8)i];
+            g = SLOT_F(v1) - c;
+            SLOT_F(v1) = g;
+            if (g < 0.0f) {
+                SLOT_F(v1) = 0.0f;
+                v1->unk41 = 3;
+            }
+            break;
+        found:
+            s0->unk16 = 1;
+            s0->unk41 = 2;
+            s0->unk15 = rs_strcmp((u8 *)D_menu_overlay_800CF180 + 0x21 + (u8)m * 0x48, D_menu_overlay_800A6678) == 0;
+            break;
+        case 2:
+            v1 = &D_menu_overlay_800CF180[(u8)i];
+            g = SLOT_F(v1) + c;
+            SLOT_F(v1) = g;
+            if (1.0f < g) {
+                SLOT_F(v1) = 1.0f;
+                v1->unk41 = 3;
+            }
+            break;
+        case 3:
+        default:
+            break;
+        }
+        j++;
+    } while ((u8)j < 3);
+    i = 0;
+    do {
+        sl = &D_menu_overlay_800CF180[(u8)i];
+        dst = getStructField0xC(sl->unk0);
+        dst->flags &= ~3;
+        f = SLOT_F(sl) * sl->unk1C;
+        if (0.0f < f) {
+            if (f < 1.0f) {
+                dst->flags |= 3;
+            }
+        }
+        q = (u32)(f * 255.0f);
+        i++;
+        dst->b2F = q;
+        setLookupEntryField5ByKey((s32)D_menu_overlay_800CF078, (u8 *)dst, (q & 0xFF) != 0);
+        __asm__("");
+    } while ((u8)i < 3);
+}
 
 extern u8 D_menu_overlay_800CF160;
 extern f32 D_menu_overlay_800CF164;
@@ -1975,9 +2100,9 @@ void setMaterialFadeTargetIfIdle(void *arg0, s32 arg1) {
     }
 }
 
-void setMaterialTextureByName(u8 a, s32 b, s32 c);
+void setMaterialTextureByNameCall(u8 a, s32 b, s32 c) __asm__("setMaterialTextureByName");
 void setCraftMaterialTextureByName(u8 arg0, s32 arg1) {
-    setMaterialTextureByName(arg0, arg1, 0);
+    setMaterialTextureByNameCall(arg0, arg1, 0);
 }
 
 void initWaterSprayEffectAndSfx(void);
