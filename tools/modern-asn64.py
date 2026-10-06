@@ -50,7 +50,7 @@ branch_mnemonics: Set[str] = {
     "blez", "blezl", # <= 0
     "bltz", "bltzal", "bltzall", "bltzl", # < 0
     "bne", "bnel", # !=
-    "j", "jal", "jalr", "jr" # unconditional absolute jumps
+    "j", "jal", "jalr", "jr", # unconditional absolute jumps
     "blt", "ble", "bgt", "bge" # pseudo instructions
 }
 
