@@ -3,7 +3,150 @@
 
 INCLUDE_ASM("asm/nonmatchings/main/06560", initMemoryPack);
 
-INCLUDE_ASM("asm/nonmatchings/main/06560", writeSaveBodyToEeprom);
+extern s32 gSaveDataBuffer;
+extern s32 D_main_bss_801126E0;
+extern u32 D_main_bss_801126C8;
+void rs_memset(u8 *, s32, s32);
+void memcpy(u8 *, u8 *, s32);
+u32 adler32(u32, u8 *, u32);
+typedef struct { u32 unk0; u32 unk4; } SaveHdrW;
+extern struct {
+    u32 gameCode;
+    u8 pad4[8];
+    u16 companyCode;
+    u8 padE[2];
+    u8 name[0x10];
+} gGamesaveAssetW __asm__("gGamesaveAsset");
+typedef struct { u8 b[0x68]; } PfsW;
+extern PfsW D_main_bss_80112730[];
+typedef struct { u16 type; u8 status; u8 errno; } ContStatW;
+extern ContStatW *D_main_bss_801126E8;
+extern s32 (*gSaveCbW)(s32) __asm__("D_main_bss_801126F0");
+s32 initMemoryPack(u32);
+s32 osPfsAllocateFile(void *, u16, u32, u8 *, u8 *, s32, s32 *);
+s32 osPfsDeleteFile(void *, u16, u32, u8 *, u8 *);
+s32 osPfsReadWriteFile(void *, s32, u8, s32, s32, u8 *);
+s32 osContStartQuery(s32);
+s32 osRecvMesg(s32, void *, s32);
+void osContGetQuery(void *);
+
+s32 writeSaveBodyToEeprom(u32 chan, s32 arg1, u8 *hdr, u8 *body, s32 size) {
+    u8 ext[8];
+    s32 fileNo;
+    s32 err;
+    s32 r;
+    s32 blk;
+    s32 cont;
+    u8 *buf;
+    u8 *b8;
+    u8 *b18;
+
+retry:
+    r = initMemoryPack(chan);
+    if (r != 0) {
+        goto out;
+    }
+    rs_memset(ext, 0, 4);
+    if (arg1 != 0) {
+        ext[0] = arg1 + 0x11;
+    } else {
+        ext[0] = 0;
+    }
+    blk = (size + 0x117) & ~0xFF;
+alloc:
+    switch (osPfsAllocateFile(&D_main_bss_80112730[chan], gGamesaveAssetW.companyCode, gGamesaveAssetW.gameCode, gGamesaveAssetW.name, ext, blk, &fileNo)) {
+    case 0:
+        err = 0;
+        break;
+    case 1:
+        osContStartQuery(D_main_bss_801126E0);
+        osRecvMesg(D_main_bss_801126E0, NULL, 1);
+        osContGetQuery(D_main_bss_801126E8);
+        if (D_main_bss_801126E8[chan].errno != 8) {
+            err = 1;
+            break;
+        }
+        if (gSaveCbW != NULL) {
+            gSaveCbW(0xB);
+        }
+        return 0xB;
+    case 2:
+        err = 7;
+        break;
+    case 3:
+    case 4:
+    case 5:
+        err = 9;
+        break;
+    case 7:
+    case 8:
+        err = 2;
+        break;
+    case 9:
+        err = 6;
+        break;
+    }
+    if (err != 0) {
+        cont = 0;
+        if (gSaveCbW != NULL) {
+            cont = gSaveCbW(err);
+        }
+        switch (err) {
+        case 1:
+        case 9:
+            if (cont != 0) {
+                goto alloc;
+            }
+            goto ret_err;
+        case 6:
+            if (cont == 0) {
+                break;
+            }
+            if (osPfsDeleteFile(&D_main_bss_80112730[chan], gGamesaveAssetW.companyCode, gGamesaveAssetW.gameCode, gGamesaveAssetW.name, ext) == 0) {
+                goto alloc;
+            }
+            err = 5;
+            if (gSaveCbW == NULL) {
+                break;
+            }
+            gSaveCbW(err);
+            goto ret_err;
+        case 7:
+            goto check;
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 8:
+            goto ret_err;
+        }
+        goto ret_err;
+    }
+    buf = (u8 *)gSaveDataBuffer;
+    rs_memset(buf, 0, blk);
+    b18 = buf + 0x18;
+    memcpy(b18, body, size);
+    b8 = buf + 8;
+    memcpy(b8, hdr, 0x10);
+    ((SaveHdrW *)buf)->unk4 = adler32(adler32(0, 0, 0), b8, 0x10);
+    ((SaveHdrW *)buf)->unk0 = adler32(adler32(0, 0, 0), b18, D_main_bss_801126C8);
+    if (osPfsReadWriteFile(&D_main_bss_80112730[chan], fileNo, 1, 0, blk, (u8 *)gSaveDataBuffer) != 0) {
+        err = 5;
+        if (gSaveCbW != NULL) {
+            cont = gSaveCbW(err);
+        } else {
+            cont = 0;
+        }
+    check:
+        if (cont != 0) {
+            goto retry;
+        }
+    ret_err:
+        return err;
+    }
+out:
+    return r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/06560", writeSaveDataBodyToEeprom);
 
