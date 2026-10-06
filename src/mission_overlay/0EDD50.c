@@ -46,7 +46,240 @@ extern u16 D_mission_overlay_8010B304[];
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", claimSongSlotForCurrentHandle);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", tickActiveSongSlots);
+typedef struct { s32 key; s32 unk4; u32 unk8; u8 unkC; u8 padD[3]; } TSSlot;
+typedef struct { s32 unk0; u16 unk4; u16 unk6; u8 unk8; u8 pad9; s16 unkA; u8 unkC; u8 unkD; u8 unkE; u8 unkF; u16 unk10; u16 unk12; u8 pad14[0x10]; } TSDesc;
+typedef struct { s32 unk0; u16 unk4; u16 pad6; s32 unk8; u16 unkC; u16 padE; s32 unk10; u16 unk14; u16 unk16; u8 unk18; u8 pad19[0xD]; s8 unk26; u8 pad27; } TSArgs;
+extern TSSlot gTSSlots[8] __asm__("D_mission_overlay_8010C270");
+extern TSDesc gTSNew __asm__("D_mission_overlay_8010C140");
+extern TSDesc gTSCur __asm__("D_mission_overlay_8010C0E0");
+extern u8 D_mission_overlay_8010C260;
+extern u8 D_mission_overlay_8010C261;
+extern u8 D_mission_overlay_8010C263;
+extern u8 D_mission_overlay_8010C2F0;
+extern u8 D_mission_overlay_8010C14C;
+extern u8 D_mission_overlay_8010C14D;
+extern u8 isSongHandleActive(s32);
+extern s32 tickSongSequenceLocked(s32);
+extern void quiesceSongSlotCmdLocked(s32);
+extern void setSongParamPairCmdLocked(s32, s32, s32);
+extern void queueAudioVoiceCmd(s32, u16, s32, s32);
+extern s32 playSongById(u16, u16, s32, s32);
+extern s32 findAudioChannelById(u16);
+extern void playSimpleAudioCmd(s32, s32, s32);
+extern void playSongIfMusyXActive(TSArgs *, TSDesc *, s32, s32);
+extern void claimSongSlotForCurrentHandle(u8);
+
+static __inline__ TSSlot *tsFind(void) {
+    s32 i = 0;
+    TSSlot *p = gTSSlots;
+    s32 k = (gTSNew.unk4 << 16) | gTSNew.unk6;
+    do {
+        i++;
+        if (p->key == k) {
+            return p;
+        }
+        p++;
+    } while (i < 8);
+    return NULL;
+}
+
+#define TS_EVICT() \
+    if ((s8)D_mission_overlay_8010C2F0 == 8) { \
+        s32 idx_ = 0, i_ = 0; u32 best_ = 0; TSSlot *p_ = gTSSlots; \
+        do { u32 t_ = p_->unk8; if (best_ < t_) { best_ = t_; idx_ = i_; } i_++; p_++; } while (i_ < 8); \
+        tickSongSequenceLocked(gTSSlots[idx_].unk4); gTSSlots[idx_].key = -1; }
+
+#define TS_FREE(s) \
+    s->key = -1; s->unk4 = 0; s->unk8 = 0; D_mission_overlay_8010C2F0 -= 1;
+
+static __inline__ void tsPlayArgs(TSArgs *a, s32 flags) {
+    D_mission_overlay_8010C260 = 1;
+    a->unk26 = flags;
+    D_mission_overlay_8010C261 = 0;
+    {
+        u32 fa = gTSNew.unk10;
+        u32 fb = gTSNew.unk12;
+        u8 cm = gTSNew.unk8;
+        a->unk0 = gTSCur.unk0;
+        a->unk4 = fa;
+        a->unkC = fb;
+        a->unk18 = cm;
+        playSongIfMusyXActive(a, &gTSNew, fa, fb);
+    }
+}
+
+void tickActiveSongSlots(void) {
+    TSArgs args;
+    register TSArgs *a asm("$4");
+    TSSlot *s;
+    TSSlot *pb;
+    TSSlot *t;
+    s32 i;
+    s32 flags;
+    u8 mode;
+
+    for (i = 0; i < 8; i++) {
+        if (gTSSlots[i].key != -1) {
+            gTSSlots[i].unk8++;
+        }
+    }
+    if (D_mission_overlay_8010C263 == 0) {
+        if (gTSNew.unkA == 0) {
+            gTSCur = gTSNew;
+            gTSCur.unk0 = -1;
+            return;
+        }
+        s = tsFind();
+        if (s != NULL && isSongHandleActive(s->unk4)) {
+            quiesceSongSlotCmdLocked(s->unk4);
+            queueAudioVoiceCmd(gTSNew.unk8, gTSNew.unk12, s->unk4, 0);
+            TS_FREE(s);
+            goto copy_set;
+        }
+        t = s;
+        if (t != NULL) {
+            TS_FREE(t);
+        }
+        TS_EVICT();
+        gTSNew.unk0 = playSongById(gTSNew.unk4, gTSNew.unk6, findAudioChannelById(gTSNew.unk6), 0);
+        playSimpleAudioCmd(gTSNew.unk8, 0, 0xFD);
+    copy_set:
+        gTSCur = gTSNew;
+        D_mission_overlay_8010C263 = 1;
+        return;
+    }
+    if (gTSNew.unkA == 0) {
+        D_mission_overlay_8010C260 = 1;
+        D_mission_overlay_8010C261 = 1;
+        gTSNew.unk0 = -1;
+        queueAudioVoiceCmd(0, gTSNew.unk10, gTSCur.unk0, 1);
+        return;
+    }
+    if (isSongHandleActive(gTSCur.unk0)) {
+        flags = 0;
+        if (gTSNew.unkC == 0) {
+            if (gTSNew.unkD != 0) {
+                flags = 0x40;
+            } else {
+                flags = 1;
+            }
+        }
+        goto cont_b;
+    found_b:
+        s = pb;
+        goto done_b;
+    cont_b:
+        if (gTSNew.unkF == 1) {
+            flags |= 4;
+        }
+        {
+            s32 ib = 0;
+            s32 kb = (gTSNew.unk4 << 16) | gTSNew.unk6;
+            pb = gTSSlots;
+        loop_b:
+            ib++;
+            if (pb->key == kb) {
+                goto found_b;
+            }
+            pb++;
+            if (ib < 8) {
+                goto loop_b;
+            }
+            s = NULL;
+        }
+    done_b:
+        mode = gTSNew.unkE;
+        if (mode == 1) {
+            if (s == NULL) {
+                args.unk10 = findAudioChannelById(gTSNew.unk6);
+                args.unk14 = gTSNew.unk4;
+                args.unk16 = gTSNew.unk6;
+                TS_EVICT();
+            } else if (isSongHandleActive(s->unk4)) {
+                args.unk8 = s->unk4;
+                flags |= 2;
+                if (s->unkC == mode) {
+                    setSongParamPairCmdLocked(s->unk4, -1, -1);
+                }
+                gTSNew.unk0 = s->unk4;
+                TS_FREE(s);
+            } else {
+                TS_FREE(s);
+                args.unk10 = findAudioChannelById(gTSNew.unk6);
+                args.unk14 = gTSNew.unk4;
+                args.unk16 = gTSNew.unk6;
+                TS_EVICT();
+            }
+        } else {
+            if (s != NULL) {
+                tickSongSequenceLocked(s->unk4);
+                TS_FREE(s);
+            }
+            args.unk10 = findAudioChannelById(gTSNew.unk6);
+            args.unk14 = gTSNew.unk4;
+            args.unk16 = gTSNew.unk6;
+            TS_EVICT();
+        }
+        if (D_mission_overlay_8010C14C == 0) {
+            TS_EVICT();
+            claimSongSlotForCurrentHandle(D_mission_overlay_8010C14D);
+        }
+        a = &args;
+        __asm__("" : "+r"(a));
+        {
+        u32 fa; u32 fb; register u8 cm asm("$8"); register s32 cur asm("$3"); register TSDesc *n asm("$5") = &gTSNew;
+D_mission_overlay_8010C260 = 1;
+cur = gTSCur.unk0;
+args.unk26 = flags;
+fa = n->unk10;
+fb = n->unk12;
+cm = n->unk8;
+D_mission_overlay_8010C261 = 0;
+args.unk0 = cur;
+__asm__("" :: "r"(cm));
+args.unk4 = fa;
+args.unkC = fb;
+args.unk18 = cm;
+        playSongIfMusyXActive(a, n, fa, fb);
+        }
+        return;
+    }
+    s = tsFind();
+    mode = gTSNew.unkE;
+    if (mode == 1) {
+        if (s == NULL) {
+            TS_EVICT();
+            goto play;
+        }
+        if (isSongHandleActive(s->unk4)) {
+            if (s->unkC == mode) {
+                setSongParamPairCmdLocked(s->unk4, -1, -1);
+            }
+            quiesceSongSlotCmdLocked(s->unk4);
+            queueAudioVoiceCmd(gTSNew.unk8, gTSNew.unk12, s->unk4, 0);
+            gTSNew.unk0 = s->unk4;
+            TS_FREE(s);
+        } else {
+            TS_FREE(s);
+            TS_EVICT();
+            goto play;
+        }
+    } else {
+        if (s != NULL) {
+            if (isSongHandleActive(s->unk4)) {
+                tickSongSequenceLocked(s->unk4);
+            }
+            TS_FREE(s);
+        }
+        TS_EVICT();
+    play:
+        gTSNew.unk0 = playSongById(gTSNew.unk4, gTSNew.unk6, findAudioChannelById(gTSNew.unk6), 0);
+        playSimpleAudioCmd(gTSNew.unk8, 0, 0xFD);
+    }
+    gTSCur = gTSNew;
+    D_mission_overlay_8010C260 = 0;
+    D_mission_overlay_8010C261 = 0;
+}
 
 #include "level_objectives.h"
 extern u8 D_mission_overlay_8010C2F1;
