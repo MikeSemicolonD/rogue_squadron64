@@ -1252,15 +1252,131 @@ void transformAndNormalizeDirectionByMatrix(DirObj *obj, Mat4x3 mat, Vec3f origi
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", loadBackdropAsset);
+static const char D_cinematic_overlay_800A5B60[12] = "backdrop/%s";
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5B6C);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5B74);
+__asm__(".section .rodata\n.align 2\n.globl D_cinematic_overlay_800A5B74\nD_cinematic_overlay_800A5B74:\n.asciz \"Q_____\"\n.space 1\n.globl D_cinematic_overlay_800A5B7C\nD_cinematic_overlay_800A5B7C:\n.asciz \"%03ld\"\n.space 2\n.section .text");
+extern s32 D_cinematic_overlay_800A5B74[];
+extern s32 D_cinematic_overlay_800A5B7C[];
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5B7C);
+typedef struct { u16 flags; u16 pad2; u16 w; u16 h; u8 pad8[4]; u8 data[1]; } BdAsset;
+typedef struct { u8 pad0[8]; s16 tilesX; s16 tilesY; u16 *ids; u8 pad10[0x14]; f32 f24; f32 f28; u8 b2C; u8 b2D; u8 b2E; u8 b2F; } BdTexSet;
+typedef struct { u16 w; u16 h; u16 bpp; u16 pad6; s32 count; BdTexSet *ts; BdAsset *asset; u16 *ids; u8 idx; u8 pad19[3]; s32 x1C; u8 pad20[0x18]; } Backdrop;
+typedef struct { u8 pad0[0x14]; char name[16]; } BdMat;
+typedef struct { u8 *pix[8]; u8 *plte; char *name; u16 w; u16 h; u8 one; u8 depth; u16 flags; u32 trans; } BdTex;
+extern s32 D_cinematic_overlay_800A5B6C[];
+extern u8 D_cinematic_overlay_800AF6E4;
+s32 sprintf(char *, const char *, ...);
+void *load_asset(char *);
+void rs_free(void *);
+u8 *rs_strcpy(u8 *, u8 *);
+s32 registerHmtTextureInTable(BdMat *, BdTex *, u8);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5B84);
+Backdrop *loadBackdropAsset(char *name, u16 w, u16 h, u8 arg3) {
+    union { s32 w; char c[8]; } n1;
+    union { s32 w; char c[8]; } n2;
+    char path[0x40];
+    BdTex tex;
+    BdMat mat;
+    Backdrop *b;
+    BdTexSet *ts;
+    u8 *src;
+    s32 n;
+    u32 i;
+    u32 j;
+    u32 off;
+    u32 tilesX;
+    u16 flags;
+    s32 fmt;
+    u32 aw;
+    u8 idx;
+
+    b = rs_malloc(0x38, 0x10);
+    rs_memset(b, 0, 0x38);
+    sprintf(path, D_cinematic_overlay_800A5B60, name);
+    b->asset = load_asset(path);
+    b->x1C = 0;
+    b->w = w;
+    b->h = h;
+    b->bpp = 2;
+    idx = D_cinematic_overlay_800AF6E4++;
+    b->idx = idx;
+    n = 0x100;
+    if ((b->asset->flags & 0xF) == 0) {
+        b->bpp = 1;
+        n = 0x10;
+    }
+    if ((b->asset->flags & 0xF) == 2) {
+        b->bpp = 4;
+    }
+    if ((b->asset->flags & 0xF) == 3) {
+        b->bpp = 8;
+    }
+    b->count = (b->asset->w + b->w - 1) / b->w;
+    b->count *= (b->asset->h + b->h - 1) / b->h;
+    b->ids = rs_malloc(b->count * 2, 0x10);
+    for (i = 0; i < b->count; i++) {
+        b->ids[i] = 0xFFFF;
+    }
+    ts = rs_malloc(0x30, 0x10);
+    b->ts = ts;
+    rs_memset(ts, 0, 0x30);
+    b->ts->ids = rs_malloc(b->count * 2, 0x10);
+    __builtin_memcpy(n1.c, (char *)D_cinematic_overlay_800A5B6C, 6);
+    __builtin_memcpy(n2.c, (char *)D_cinematic_overlay_800A5B74, 7);
+    n1.c[1] = b->idx + 0x41;
+    n2.c[1] = b->idx + 0x41;
+    rs_memset(&mat, 0, 0x24);
+    rs_memset(&tex, 0, 0x34);
+    rs_strcpy((u8 *)mat.name, (u8 *)n1.c);
+    tex.name = n2.c;
+    tex.w = b->w;
+    tex.h = b->h;
+    tex.one = 1;
+    flags = b->asset->flags;
+    if (arg3) {
+        flags |= 0x2000;
+    }
+    tex.flags = flags;
+    tex.plte = b->asset->data;
+    tex.pix[0] = rs_malloc((b->w * b->h * b->bpp) / 2, 0x10);
+    src = b->asset->data + ((b->asset->flags & 0x8000) ? n * 4 : n * 3);
+    fmt = b->asset->flags & 0xF;
+    if ((u32)(fmt - 4) < 2 || (u16)fmt == 2 || (u16)fmt == 3) {
+        src = b->asset->data;
+    }
+    for (i = 0; i < b->count; i++) {
+        sprintf(mat.name + 2, (char *)D_cinematic_overlay_800A5B7C, i);
+        sprintf(tex.name + 2, (char *)D_cinematic_overlay_800A5B7C, i);
+        aw = b->asset->w;
+        tilesX = aw / b->w;
+        off = (i % tilesX) * b->w;
+        off += (i / tilesX) * b->h * aw;
+        off *= b->bpp;
+        off >>= 1;
+        for (j = 0; j < b->h; j++) {
+            zmemcpy(tex.pix[0] + ((j * b->w * b->bpp) >> 1), src + (off + ((j * b->asset->w * b->bpp) >> 1)), (b->w * b->bpp) / 2);
+        }
+        {
+            s16 id = registerHmtTextureInTable(&mat, &tex, 1);
+            b->ids[i] = ts->ids[i] = id;
+        }
+    }
+    rs_free(tex.pix[0]);
+    ts->tilesX = (u16)b->asset->w / (u16)b->w;
+    { u16 ty = (u16)b->asset->h / (u16)b->h;
+    ts->f24 = 1.0f;
+    ts->f28 = 1.0f;
+    ts->b2C = 0xFF;
+    ts->b2D = 0xFF;
+    ts->b2E = 0xFF;
+    ts->b2F = 0xFF;
+    ts->tilesY = ty; }
+    rs_free(b->asset);
+    b->asset = NULL;
+    return b;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5B88);
 
