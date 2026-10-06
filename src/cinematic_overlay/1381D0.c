@@ -997,7 +997,63 @@ f32 computeCutsceneScreenScale(u32 arg0) {
     return r;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", tickCutsceneCameraFromTimeline);
+typedef struct { u8 p0[0x14]; u32 f14; f32 f18; f32 f1C; u8 p20[4]; f32 f24; f32 f28; u8 b2C; u8 b2D; u8 b2E; u8 b2F; } TcObj;
+typedef struct { f32 x; f32 y; f32 z; } TcRgb;
+extern void *D_cinematic_overlay_800B0B10;
+extern u8 D_cinematic_overlay_800B0B34[4];
+extern TcRgb D_cinematic_overlay_800AF6C0[];
+extern u8 D_cinematic_overlay_800B0B1D;
+extern f32 D_cinematic_overlay_800B0B2C;
+void applyRgbaTintToMeshVertices(s32, u8 *);
+f32 cosf(f32);
+f32 sinf(f32);
+struct DirObjFwd;
+void transformAndNormalizeDirectionByMatrixP(void *, void *, f32 *, f32) __asm__("transformAndNormalizeDirectionByMatrix");
+
+void tickCutsceneCameraFromTimeline(u32 arg0) {
+    f32 v[3];
+    TcObj *o;
+    f32 k;
+
+    o = (TcObj *)getCinematicStateSubObject(D_cinematic_overlay_800B0B10);
+    o->f24 = (f32)D_cinematic_overlay_800B09B2 * 0.8f / 240.0f;
+    o->f28 = (f32)D_cinematic_overlay_800B09B6 / 240.0f;
+    o->f14 |= 0x02400003;
+    o->f18 = o->f24 * -64.0f + 4.0f;
+    o->f1C = o->f28 * -64.0f + 5.0f;
+    setLookupEntryField5ByKey(D_cinematic_overlay_800B0B00, o, D_cinematic_overlay_800B0B1E != 0 ? arg0 < 0xC8 : arg0 < 0x1A4);
+    k = 1.0f;
+    o->b2C = 0xFF;
+    o->b2D = 0xFF;
+    o->b2E = 0xFF;
+    D_cinematic_overlay_800B0B34[0] = 0xFF;
+    D_cinematic_overlay_800B0B34[1] = 0xFF;
+    D_cinematic_overlay_800B0B34[2] = 0xFF;
+    D_cinematic_overlay_800B0B30 = 1.34f;
+    if (arg0 - 0xAA < 0x1F) {
+        k = 1.0 - ((f32)arg0 - 170.0) / 30.0;
+    }
+    if (arg0 - 0x186 < 0x1F) {
+        k = ((f32)arg0 - 390.0) / 30.0;
+    }
+    D_cinematic_overlay_800B0B34[3] = (u32)((1.0f - k) * 255.0f);
+    o->b2F = D_cinematic_overlay_800B0B1E != 0 ? (u32)(k * 255.0f) : 0xFF;
+    if (D_cinematic_overlay_800B0B1E != 0) {
+        if (arg0 - 0xAA < 0x1F || arg0 - 0x186 < 0x1F) {
+            D_cinematic_overlay_800B0B34[0] = (u32)(D_cinematic_overlay_800AF6C0[D_cinematic_overlay_800B0B1E - 1].x * 255.0f / 1.7f);
+            D_cinematic_overlay_800B0B34[1] = (u32)(D_cinematic_overlay_800AF6C0[D_cinematic_overlay_800B0B1E - 1].y * 255.0f / 1.7f);
+            D_cinematic_overlay_800B0B34[2] = (u32)(D_cinematic_overlay_800AF6C0[D_cinematic_overlay_800B0B1E - 1].z * 255.0f / 1.7f);
+            applyRgbaTintToMeshVertices(*(s32 *)((u8 *)D_cinematic_overlay_800B1900 + 0x21A8), D_cinematic_overlay_800B0B34);
+        }
+        if (arg0 - 0xAB < 0xF9) {
+            v[0] = cosf(D_cinematic_overlay_800B0B2C * 30.0f * 1.1f * 3.1415927f / 180.0f) * 50.0f;
+            v[1] = sinf(D_cinematic_overlay_800B0B2C * 30.0f * 1.2f * 3.1415927f / 180.0f) * 50.0f;
+            v[2] = sinf(D_cinematic_overlay_800B0B2C * 30.0f * 1.3f * 3.1415927f / 180.0f) * 10.0f;
+            transformAndNormalizeDirectionByMatrixP((void *)(*(s32 *)((u8 *)D_cinematic_overlay_800B1900 + 0x21A8) + 0x58), (u8 *)D_cinematic_overlay_800B1900 + 0x21DC, v, 0.9f);
+        }
+    }
+    D_cinematic_overlay_800B0B1D = arg0 < 0x1A4;
+}
 
 extern u16 D_cinematic_overlay_800B1B20[];
 extern Vec3f D_cinematic_overlay_800B1BA0[];
