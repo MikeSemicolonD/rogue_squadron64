@@ -1210,7 +1210,138 @@ void bufferArbiterProducerScanWait(void) {
     } while (i != D_main_bss_80128EAD);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", submitGfxFrame);
+u32 getTimeSinceLastFrame(void);
+void yieldFromSpThread(void);
+void yieldFromGfxFrame(void);
+void bufferArbiterMarkSlotReady(void);
+
+
+void *bufferArbiterAllocSlot(s32);
+u8 getInactiveBufferIndex(void);
+void osWritebackDCacheAll(void);
+s32 osSendMesg(void *, void *, s32);
+void osDpGetCounters(u32 *);
+void osDpSetStatus(u32);
+void setPostSwapPendingFlags(void);
+u8 isPreNmiPending(void);
+void recordFrameTimestamp(void);
+extern u16 sgCountA __asm__("D_main_bss_8010DFD4");
+extern u16 sgCountB __asm__("D_main_bss_8010DFD6");
+extern u16 sgCountC __asm__("D_main_bss_8010D59C");
+extern struct meshdef1 *sgMeshes[] __asm__("D_main_bss_8010E090");
+typedef struct { s32 w0; void *p4; } SgRefB;
+typedef struct { s32 w0; u32 w4; } SgRefC;
+extern SgRefB *sgRefsB[] __asm__("D_main_bss_8010E010");
+extern SgRefC *sgRefsC[] __asm__("D_main_bss_8010DF50");
+extern void *sgSlots[] __asm__("D_main_bss_801163C8");
+extern u8 sgBufIdx __asm__("D_main_bss_8011A899");
+extern s32 sgFrameCount __asm__("D_main_bss_8011A890");
+extern volatile s32 sgFrameCountV __asm__("D_main_bss_8011A890");
+extern u8 sgStamp2 __asm__("D_main_bss_801142C0+2");
+typedef struct { u16 a; u16 stamp; } SgVs;
+extern SgVs sgVtxSlots[] __asm__("D_main_bss_80113240");
+typedef struct { u32 type, flags; u8 *ucode_boot; u32 ucode_boot_size; u32 ucode, ucode_size, ucode_data, ucode_data_size, dram_stack, dram_stack_size, output_buff, output_buff_size; Gfx *data_ptr; u32 data_size, yield_data_ptr, yield_data_size; } SgTask;
+extern SgTask gspTaskS __asm__("gspTask");
+extern u8 rspbootTextStart[];
+extern u8 findModelAnimKeyframeByPhase[];
+extern u32 D_main_800377C0;
+extern u32 D_main_800377C4;
+extern Gfx *D_main_bss_8011A4C0;
+extern u8 D_main_8011A420[];
+typedef struct { u8 type; void *task; } SgMsg;
+extern SgMsg sgMsg __asm__("D_main_80112AE0");
+
+#define SG_DP_COUNTERS() \
+    if (wait != 0) { \
+        osRecvMesg(D_main_8011A7E8, NULL, 1); \
+        yieldFromGfxFrame(); \
+    } \
+    osDpGetCounters(cnt); \
+    D_main_bss_8011A920 = (u32)((f32)cnt[1] * 0.77034); \
+    D_main_bss_8011DC54 = (u32)((f32)cnt[2] * 0.77034) - D_main_bss_8011A920; \
+    D_main_bss_8011DC4C = (u32)((f32)cnt[3] * 0.77034);
+
+s32 submitGfxFrame(void) {
+    u32 cnt[4];
+    s32 i;
+    s32 j;
+    s32 k;
+    s32 n;
+    u8 wait;
+    void *slot;
+    u8 idx;
+    u32 mode;
+    volatile u8 *pend;
+    volatile s32 *fc;
+    u8 m;
+
+    D_main_bss_8011A914 = getTimeSinceLastFrame();
+    if (*(volatile u8 *)&D_main_bss_8011A89E != 0) {
+        osRecvMesg(D_main_bss_8011A818, NULL, 1);
+        yieldFromSpThread();
+    }
+    bufferArbiterMarkSlotReady();
+    drainMeshReleaseQueue();
+    for (i = 0; i < sgCountA; i++) {
+        commitMeshDrawBatchRefs(sgMeshes[i]);
+    }
+    pend = &D_main_bss_8011A89D;
+    wait = *pend;
+    if (sgSlots[sgBufIdx] != NULL) {
+        slot = bufferArbiterAllocSlot(1);
+        if (slot != NULL) {
+            idx = getInactiveBufferIndex();
+            for (j = 0; j < sgCountB; j++) {
+                sgRefsB[j]->p4 = slot;
+            }
+            mode = (idx != 0) ? 0x2000000 : 0x3000000;
+            for (j = 0; j < sgCountC; j++) {
+                sgRefsC[j]->w4 &= 0xFCFFFFFF;
+                sgRefsC[j]->w4 |= mode;
+            }
+            osWritebackDCacheAll();
+            gspTaskS.data_ptr = D_main_bss_8011A4C0 - 1;
+            gspTaskS.data_size = 0;
+            gspTaskS.ucode_boot = rspbootTextStart;
+            gspTaskS.ucode_boot_size = findModelAnimKeyframeByPhase - rspbootTextStart;
+            D_main_bss_8011A89E = 1;
+            D_main_bss_8011A89D = 1;
+            sgMsg.type = 1;
+            sgMsg.task = &gspTaskS;
+            gspTaskS.ucode = D_main_800377C0;
+            gspTaskS.ucode_data = D_main_800377C4;
+            osSendMesg(D_main_8011A420, &sgMsg, 0);
+            SG_DP_COUNTERS();
+            osDpSetStatus(0x1C0);
+            bufferArbiterProducerMark();
+            if (D_main_bss_8011A900 == -1) {
+                D_main_bss_8011A904 = 0;
+            } else {
+                D_main_bss_8011A904 = D_main_bss_80128ED8 - D_main_bss_8011A900;
+            }
+            D_main_bss_8011A900 = D_main_bss_80128ED8;
+        } else {
+            SG_DP_COUNTERS();
+            bufferArbiterProducerMark();
+            setPostSwapPendingFlags();
+        }
+    } else {
+        *pend = 0;
+        D_main_bss_8011A89E = 0;
+        bufferArbiterProducerMark();
+    }
+    while (isPreNmiPending()) {
+    }
+    fc = &sgFrameCount;
+    *fc += 1;
+    sgBufIdx ^= 1;
+    sgVtxSlots[sgStamp2++].stamp = 0;
+    if (sgStamp2 == 0x20) {
+        sgStamp2 = 0;
+    }
+    recordFrameTimestamp();
+    return 1;
+}
 
 extern Gfx *D_main_bss_801163B8;
 extern u8 D_main_bss_801163BC;
@@ -1412,33 +1543,19 @@ s32 reserveAlignedDLSpace(s32 gfx, u8 *out, u8 n, s32 *ptr, s32 arg4) {
     return gfx;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005A0);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005A8);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005B0);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005B8);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005C0);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005C8);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005D0);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005D8);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005E0);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005E8);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005F0);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_800005F8);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_80000600);
 
-INCLUDE_RODATA("asm/nonmatchings/main/08510", D_main_80000608);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", heapFreeListDequeue);
 
