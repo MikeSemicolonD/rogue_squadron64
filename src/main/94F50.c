@@ -603,7 +603,167 @@ void setSongChannelParamByHandle(u32 handle, u8 ch, u8 val) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", processSongByHandle);
+typedef struct {
+    u32 handle;
+    u16 h4;
+    u16 pad6;
+    s32 h8;
+    u16 hC;
+    u16 padE;
+    s32 x10;
+    u16 h14;
+    u16 h16;
+    u8 b18;
+    u8 pad19[3];
+    s32 x1C;
+    s32 x20;
+    u16 h24;
+    u8 flags;
+    u8 pad27;
+} PsReq;
+typedef struct {
+    s32 flags;
+    s32 x1C;
+    s32 x20;
+    u16 h24;
+    u16 h26;
+    u8 b28;
+    u8 pad29[7];
+    u8 b30;
+    u8 pad31[3];
+} PsCfg;
+s32 playSongByIdLockCtl(u16, u16, s32, PsCfg *, s32);
+s32 playSongById(u16, u16, s32, PsCfg *);
+void queueAudioVoiceCmdLocked(u8, u16, s32, u8);
+s32 quiesceSongSlotCmd(s32);
+s32 setSongParamPairCmd(s32, s32, s32);
+s32 applySongU16ParamCmd(s32, s32);
+
+static inline void psQueue(u8 a0, u16 a1, s32 a2, u8 a3) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        queueAudioVoiceCmdLocked(a0, a1, a2, a3);
+        factor5MutexRelease();
+    }
+}
+static inline void psQuiesce(s32 a0) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        quiesceSongSlotCmd(a0);
+        factor5MutexRelease();
+    }
+}
+static inline void psPair(s32 a0, s32 a1, s32 a2) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        setSongParamPairCmd(a0, a1, a2);
+        factor5MutexRelease();
+    }
+}
+static inline void psU16(s32 a0, u16 a1) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        applySongU16ParamCmd(a0, a1);
+        factor5MutexRelease();
+    }
+}
+
+s32 psImpl(PsReq *req, s32 *out, u8 locked) __asm__("processSongByHandle");
+s32 psImpl(PsReq *req, s32 *out, u8 locked) {
+    s32 slot;
+    s32 h;
+    PsCfg cfg;
+
+    slot = findSongSlotByHandle(req->handle);
+    if (slot == -1) {
+        return;
+    }
+    if (req->flags & 4) {
+        { struct D_main_bss_80149A00_type *e = &D_main_bss_80149A00[slot]; *(PsReq *)e->unkEC8 = *req; }
+        *(u8 *)&D_main_bss_80149A00[slot].unkEF0[1] = 1;
+        D_main_bss_80149A00[slot].unkEF0[0] = (u32)out;
+        D_main_bss_80149A00[slot].unkEEE &= ~4;
+        *out = req->handle | 0x80000000;
+        return;
+    }
+    if (locked) {
+        if (req->flags & 1) {
+            queueAudioVoiceCmdLocked(0, req->h4, req->handle, 2);
+        } else if (req->flags & 0x40) {
+            queueAudioVoiceCmdLocked(0, req->h4, req->handle, 3);
+        } else {
+            queueAudioVoiceCmdLocked(0, req->h4, req->handle, 1);
+        }
+    } else {
+        if (req->flags & 1) {
+            psQueue(0, req->h4, req->handle, 2);
+        } else if (req->flags & 0x40) {
+            psQueue(0, req->h4, req->handle, 3);
+        } else {
+            psQueue(0, req->h4, req->handle, 1);
+        }
+    }
+    if (out == NULL) {
+        return;
+    }
+    if (req->flags & 2) {
+        s32 h2 = findSongSlotByHandle(req->h8);
+        if (h2 != -1) {
+        if (locked) {
+            quiesceSongSlotCmd(req->h8);
+            queueAudioVoiceCmdLocked(req->b18, req->hC, req->h8, 0);
+            if (req->flags & 0x10) {
+                setSongParamPairCmd(req->h8, req->x1C, req->x20);
+            }
+            if (req->flags & 0x20) {
+                applySongU16ParamCmd(req->h8, req->h24);
+            }
+        } else {
+            psQuiesce(req->h8);
+            psQueue(req->b18, req->hC, req->h8, 0);
+            if (req->flags & 0x10) {
+                psPair(req->h8, req->x1C, req->x20);
+            }
+            if (req->flags & 0x20) {
+                psU16(req->h8, req->h24);
+            }
+        }
+        *out = req->h8;
+        } else {
+            *out = h2;
+        }
+        return;
+    }
+    cfg.flags = 4;
+    if (req->flags & 8) {
+        cfg.flags = 0x14;
+    }
+    if (req->flags & 0x20) {
+        cfg.flags |= 2;
+        cfg.h24 = req->h24;
+    }
+    if (req->flags & 0x10) {
+        cfg.flags |= 1;
+        cfg.x1C = req->x1C;
+        cfg.x20 = req->x20;
+    }
+    cfg.h26 = req->hC;
+    cfg.b28 = req->b18;
+    cfg.b30 = 0;
+    if (locked) {
+        s32 h3 = playSongByIdLockCtl(req->h14, req->h16, req->x10, &cfg, 1);
+        *out = h3;
+        if (h3 != -1 && (req->flags & 0x80)) {
+            setSongParamPairCmd(h3, 0, 0);
+        }
+    } else {
+        h = playSongById(req->h14, req->h16, req->x10, &cfg);
+        *out = h;
+        if (h != -1 && (req->flags & 0x80)) {
+            psPair(h, 0, 0);
+        }
+    }
+}
 
 s32 processSongByHandle(s32, s32, s32);
 
