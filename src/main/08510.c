@@ -805,7 +805,195 @@ s32 waitForPrevFrameDone(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", beginFrameDLChunk);
+typedef struct {
+    u16 start;
+    u16 end;
+    u16 lo1;
+    u16 hi1;
+    u16 lo0;
+    u16 hi0;
+} BfRange;
+
+typedef struct {
+    s32 dl;
+    s32 mtx;
+    s32 pad;
+} BfDlEntry;
+
+typedef struct BfNode {
+    struct BfNode *next;
+    s32 dl;
+    s32 mtx;
+} BfNode;
+
+extern BfRange D_main_bss_8011A470[];
+extern BfDlEntry D_bf400[] __asm__("D_main_bss_80116400");
+extern s32 D_main_bss_8011A4D0[];
+extern Gfx *D_main_bss_8011A4C0;
+extern u8 D_main_80037658[];
+
+static __inline__ void bfAlloc(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    struct DisplayListBuffer *buf;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    buf = chunk;
+    if (*D_main_bss_801163FC == NULL) {
+        *D_main_bss_801163FC = buf;
+    } else {
+        (*D_main_bss_8011A7DC)->next = buf;
+        buf->prev = *D_main_bss_8011A7DC;
+    }
+    buf->next = NULL;
+    *D_main_bss_8011A7DC = buf;
+    D_main_bss_801163D4 = &buf->displayList[0x1F];
+    D_main_bss_8011DC58 = buf->displayList;
+}
+
+#define BF_G(g)     CFR_ENSURE();     g = D_main_bss_8011DC58;
+
+static __inline__ void bfEnsure(void) {
+    CFR_ENSURE();
+}
+
+s32 beginFrameDLChunk(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    struct DisplayListBuffer *buf;
+    RenderStateRow *row;
+    s32 *bl;
+    s32 k;
+    s32 i;
+    s32 j;
+    s32 *pp;
+    BfNode *n;
+    register Gfx *h asm("$2");
+    register Gfx *g asm("$3");
+    s32 st;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    buf = chunk;
+    if (*D_main_bss_801163FC == NULL) {
+        *D_main_bss_801163FC = buf;
+    } else {
+        (*D_main_bss_8011A7DC)->next = buf;
+        buf->prev = *D_main_bss_8011A7DC;
+    }
+    buf->next = NULL;
+    *D_main_bss_8011A7DC = buf;
+    D_main_bss_801163D4 = &buf->displayList[0x1F];
+    D_main_bss_8011DC58 = buf->displayList;
+    if (D_main_bss_8011DC50 != 0) {
+        ((Gfx *)D_main_bss_8011DC50)->words.w0 = 0x07000000;
+        ((Gfx *)D_main_bss_8011DC50)->words.w1 = (u32)buf;
+    } else {
+        D_main_bss_8011A4C0 = D_main_bss_8011DC58;
+        g = D_main_bss_8011DC58++;
+        g->words.w0 = 0x06000000;
+        g->words.w1 = (u32)D_main_80037658;
+    }
+    for (k = 0; k < D_main_bss_80117C00; k++) {
+        st = D_main_bss_8011A470[k].start;
+        BF_G(g);
+        g->words.w0 = 0x06000000;
+        g->words.w1 = D_bf400[st].dl - 8;
+        D_main_bss_8011DC58 = g + 1;
+        st++;
+        for (j = D_main_bss_8011A470[k].lo0; j < D_main_bss_8011A470[k].hi0; j++) {
+            CFR_ENSURE();
+            h = D_main_bss_8011DC58;
+            h->words.w0 = 0x06000000;
+            h->words.w1 = D_main_bss_8011A4D0[j] - 8;
+            D_main_bss_8011DC58 = h + 1;
+        }
+        for (; st < D_main_bss_8011A470[k].end; st++) {
+            if (D_bf400[st].mtx != 0) {
+                BF_G(g);
+                g->words.w0 = 0x01020040;
+                g->words.w1 = D_bf400[st].mtx;
+                D_main_bss_8011DC58 = g + 1;
+            }
+            CFR_ENSURE();
+            h = D_main_bss_8011DC58;
+            h->words.w0 = 0x06000000;
+            h->words.w1 = D_bf400[st].dl - 8;
+            D_main_bss_8011DC58 = h + 1;
+        }
+        for (i = 0x3F; i >= 0; i--) {
+            for (n = (BfNode *)D_main_bss_8011D498[k].a[i]; n != NULL; n = n->next) {
+                if (n->mtx != 0) {
+                    BF_G(g);
+                    g->words.w0 = 0x01020040;
+                    g->words.w1 = n->mtx;
+                    D_main_bss_8011DC58 = g + 1;
+                }
+                BF_G(g);
+                g->words.w0 = 0x06000000;
+                g->words.w1 = n->dl - 8;
+                D_main_bss_8011DC58 = g + 1;
+            }
+        }
+        for (j = D_main_bss_8011A470[k].lo1; j < D_main_bss_8011A470[k].hi1; j++) {
+            CFR_ENSURE();
+            h = D_main_bss_8011DC58;
+            h->words.w0 = 0x06000000;
+            h->words.w1 = D_main_bss_8011A4D0[j] - 8;
+            D_main_bss_8011DC58 = h + 1;
+        }
+        for (i = 0x1F; i >= 0; i--) {
+            for (n = (BfNode *)D_main_bss_8011D498[k].b[i]; n != NULL; n = n->next) {
+                BF_G(g);
+                g->words.w0 = 0x06000000;
+                g->words.w1 = n->dl - 8;
+                D_main_bss_8011DC58 = g + 1;
+            }
+        }
+    }
+    CFR_ENSURE();
+    D_main_bss_8011DC50 = (s32)D_main_bss_8011DC58++;
+    return 1;
+}
 
 s32 initRenderStateArrays(void) {
     s32 i;
