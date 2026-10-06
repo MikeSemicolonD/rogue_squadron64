@@ -194,7 +194,67 @@ void loadCharTextureSet(s32 arg0, u16 arg1, u16 arg2, u16 arg3) {
     f->unk102 = f->unk01F;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", loadFontAsset);
+__asm__(".section .rodata
+.globl D_main_8003B730
+D_main_8003B730:
+.asciz \"fonts/%s\"
+.align 2
+.section .text");
+#include "textures.h"
+extern struct material_entry D_main_8003B6BC;
+extern char D_main_8003B6E0[];
+extern char D_main_8003B730[];
+extern char *D_main_8009ED70[];
+extern u16 D_main_bss_80139970[];
+extern u16 D_main_bss_80139980[];
+void *load_asset(char *);
+s32 registerHmtTextureInTable(struct material_entry *, struct texture_entry *, u8);
+void rs_memset(void *, s32, s32);
+void rs_free(void *);
+
+void loadFontAsset(u8 arg0) {
+    char path[0x40];
+    struct material_entry mat = D_main_8003B6BC;
+    struct texture_entry tex;
+    u8 *asset;
+    u16 id;
+    char *np;
+    u32 i;
+    s32 c;
+
+    rs_memset(&tex, 0, 0x34);
+    tex.texture_name_offset = (u32)D_main_8003B6E0;
+    tex.one = 1;
+    for (i = 0; i < 6; i++) {
+        sprintf(path, D_main_8003B730, D_main_8009ED70[i]);
+        asset = load_asset(path);
+        ((u8 *)&tex.transparency_color)[0] = asset[8];
+        ((u8 *)&tex.transparency_color)[1] = asset[9];
+        ((u8 *)&tex.transparency_color)[2] = asset[10];
+        tex.width = *(u16 *)(asset + 4);
+        tex.height = *(u16 *)(asset + 6);
+        ((char *)tex.texture_name_offset)[0] = 0x58;
+        c = i + 0x30;
+        ((char *)tex.texture_name_offset)[1] = c;
+        mat.material_name[0] = 0x58;
+        mat.material_name[1] = c;
+        *(void **)&tex = asset + 0xC;
+        mat.material_name[2] = 0x41;
+        ((char *)tex.texture_name_offset)[2] = 0x41;
+        tex.flags_type = 0x8002;
+        id = registerHmtTextureInTable(&mat, &tex, 0);
+        D_main_bss_80139980[i] = id;
+        if (arg0 == 0) {
+            mat.material_name[2] = 0x53;
+            ((char *)tex.texture_name_offset)[2] = 0x53;
+            tex.flags_type = 0x4002;
+            D_main_bss_80139970[i] = registerHmtTextureInTable(&mat, &tex, 0);
+        } else {
+            D_main_bss_80139970[i] = id;
+        }
+        rs_free(asset);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", activateAnimationKeyframe);
 
