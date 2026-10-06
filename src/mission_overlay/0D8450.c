@@ -1146,7 +1146,129 @@ void npcTieVariantTickAttachmentEffect(u8 *arg0, f32 dt) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcTieVariantHandleDestruction);
+#define TD_ABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
+
+typedef struct {
+    f32 x, y, z;
+    f32 fwd[3];
+    u8 pad18[0xC];
+    f32 vel[3];
+    u8 pad30[8];
+    s32 obj;
+    u8 pad3C[4];
+    u8 audio[0x44];
+    u8 pad84[2];
+    u8 audioOn;
+    u8 state;
+    u16 pad88;
+    s16 kind;
+    f32 radius;
+    u8 pad90[8];
+    f32 spinAxis[3];
+    f32 spin;
+    u8 padA8[0x14];
+    u8 bBC;
+} TdObj;
+
+f32 vec3Dot(f32 *, f32 *);
+f32 *getCraftRecordByIdx(s32);
+void spawnNpcType0xAFromTemplate(void *, f32);
+void buildRandomCameraFacingOrientation(s32, f32 *, f32, s32, s32, s32);
+void spawnOrientedNpc(s32, void *, f32 *, s32, f32, f32, f32, f32);
+void composeRandomRotationMatrix(void *, void *, f32, s32, s32, s32);
+void scaleVec3ByRandomRange(void *, f32, f32);
+void spawnDebris1Npc(void *, void *, f32, f32, f32);
+void spawnDestructionEffectBurst(void *, u16, f32, f32, f32, f32);
+void spawnDestructionDebris(u16, void *, f32, f32, f32);
+void spawnDirectionalDebrisBurst(void *, u16, f32, f32, s32, f32);
+void normalize_vector(f32 *);
+s32 mostlyMusyxFlagGatedHelper(void *);
+void spreadVoiceByteParamLocked(s32, s32);
+
+void tdImpl(TdObj *o, s32 a1, s32 a2, s32 a3) __asm__("npcTieVariantHandleDestruction");
+void tdImpl(TdObj *o, s32 a1, s32 a2, s32 a3) {
+    f32 v[4];
+    f32 p[4];
+    s32 mode;
+    s32 n;
+    f32 a, b;
+
+    mode = 1;
+    {
+    s32 q3 = a3;
+    register s32 q1 asm("$19") = a1;
+    register s32 q2 asm("$16") = a2;
+    if (q3 == 0 && (u16)q2 == (u16)getPlayerField2(0)) {
+        f32 *c;
+        __asm__("" :: "r"(q1));
+        __asm__("" :: "r"(q2));
+        c = getCraftRecordByIdx(0);
+        v[0] = c[0] - o->x;
+        v[1] = c[1] - o->y;
+        v[2] = c[2] - o->z;
+        if (vec3Length(v) < 3.0f) {
+            if (vec3Dot((f32 *)(getNpcContextField8((u16)q1) + 0xC), o->fwd) < -0.9396926f) {
+                mode = 0;
+            }
+        }
+    }
+    if (q3 == 0xC) {
+        mode = 2;
+    }
+    switch (mode) {
+    case 0:
+        spawnNpcType0xAFromTemplate(o, o->radius * 4.0f);
+        buildRandomCameraFacingOrientation(0, v, 0, 0, 5, 1);
+        spawnOrientedNpc(1, o, v, 0, 0.1f, 0.7f, 0.15f, 1.0f);
+        o->state = 5;
+        if (rand() & 1) {
+            n = (s16)(rand() % 2) + 3;
+            for (; mode < n; mode++) {
+                composeRandomRotationMatrix(p, v, o->radius * 0.5f, 0x87, 0, 0);
+                p[0] += o->x;
+                p[1] += o->y;
+                p[2] += o->z;
+                scaleVec3ByRandomRange(v, 3.0f, 4.0f);
+                a = TD_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 16.0f;
+                b = TD_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 106.666664f) + 0.9f;
+                spawnDebris1Npc(p, v, a, b, TD_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
+            }
+        }
+        break;
+    case 1:
+        o->state = 2;
+        o->bBC = mode;
+        switch ((s16)(rand() % 3)) {
+        case 0:
+            spawnDestructionEffectBurst(o, *(u16 *)(o->obj + 0x198), 2.0f, 0.7f, 1.2f, 1.5f);
+            break;
+        case 1:
+            spawnDestructionDebris(*(u16 *)(o->obj + 0x198), o, 0.6f, 20.0f, 3.0f);
+            break;
+        case 2:
+            spawnDirectionalDebrisBurst(o, *(u16 *)(o->obj + 0x198), 1.0f, 0.5f, 0, 5.0f);
+            break;
+        }
+        break;
+    case 2:
+    default:
+        o->state = 2;
+        o->bBC = 1;
+        break;
+    }
+    do {
+        o->spinAxis[0] = ((f32)(rand() & 0x7F) - 64.0f) * 0.015625f;
+        o->spinAxis[1] = ((f32)(rand() & 0x7F) - 64.0f) * 0.015625f;
+        o->spinAxis[2] = ((f32)(rand() & 0x7F) - 64.0f) * 0.015625f;
+    } while (vec3Length(o->spinAxis) == 0.0f);
+    normalize_vector(o->spinAxis);
+    o->spin = TD_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 6.4f) + 8.0f;
+    if (o->kind != 4 && o->audioOn != 0) {
+        play3DSoundEvent(0, o, o->vel, 24.0f, 0.8f, 0, 1, 0x7F, 0x50);
+        spreadVoiceByteParamLocked(mostlyMusyxFlagGatedHelper(o->audio), 0x7F);
+    }
+    }
+}
 
 #define TV_ABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 
