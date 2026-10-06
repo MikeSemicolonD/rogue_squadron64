@@ -178,7 +178,87 @@ s32 parseJfifSOIMarker(SoiSt *s) {
     return (s->cur - s->base != len + 4) ? 8 : 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifSOF0Marker);
+typedef struct {
+    u8 id;
+    u8 h;
+    u8 v;
+    u8 tq;
+    u8 pad4[4];
+    s32 f8;
+    s32 fC;
+    u8 pad10[0x1C];
+} SofComp;
+typedef struct {
+    u16 d0;
+    u16 d2;
+    u16 flags;
+    u8 pad6[0x2A];
+    u8 *base;
+    u8 *cur;
+    u8 pad38[4];
+    u16 w;
+    u16 hgt;
+    u8 pad40[0xA];
+    u8 maxH;
+    u8 maxV;
+    u8 ncomp;
+    u8 pad4D[0x6F8 - 0x4D];
+    SofComp comp[4];
+    u8 pad7A8[0x7D4 - 0x7A8];
+    u16 h7D4;
+} SofSt;
+static __inline__ s32 sofCdiv(s32 a, s32 b) { s32 t = a - 1; return (t + b) / b; }
+
+s32 parseJfifSOF0Marker(SofSt *s) {
+    u8 i;
+    u8 p;
+    u8 t;
+    SofComp *c;
+
+    s->cur += 2;
+    p = *s->cur++;
+    if (p != 8) {
+        return 10;
+    }
+    s->hgt = (s->cur[0] << 8) | s->cur[1];
+    s->cur += 2;
+    s->w = (s->cur[0] << 8) | s->cur[1];
+    s->cur += 2;
+    if (!(s->flags & 0x40)) {
+        if (s->w % s->d0 != 0 || s->hgt % s->d2 != 0) {
+            return 0x15;
+        }
+    }
+    s->ncomp = *s->cur++;
+    if (s->ncomp != 3 && s->ncomp != 1) {
+        return 0xC;
+    }
+    for (i = 0; i < s->ncomp; i++) {
+        s->comp[i].id = *s->cur++;
+        if (s->comp[i].id != i + 1) {
+            return 0x13;
+        }
+        t = *s->cur++;
+        s->comp[i].h = t >> 4;
+        s->comp[i].v = t & 0xF;
+        __asm__("" :: "r"(t));
+        s->comp[i].tq = *s->cur++;
+    }
+    s->maxH = 1;
+    s->maxV = 1;
+    for (i = 0; i < s->ncomp; i++) {
+        c = &s->comp[i];
+        s->maxH = (c->h < s->maxH) ? s->maxH : c->h;
+        s->maxV = (c->v < s->maxV) ? s->maxV : c->v;
+    }
+    { s32 hm = s->hgt - 1; s32 q = (hm + s->maxV * 8) / (s->maxV * 8); s->h7D4 = (hm + q) / q; }
+    for (i = 0; i < s->ncomp; i++) {
+        c = &s->comp[i];
+        c->f8 = sofCdiv(s->w * c->h, s->maxH);
+        c->fC = sofCdiv(s->hgt * c->v, s->maxV);
+    }
+    return 0;
+}
 
 typedef struct {
     u8 pad0[0x34];
