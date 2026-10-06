@@ -204,7 +204,129 @@ void despawnCraftAnimationSlotNpcsAndMarkStopping(u8 slot) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", allocateCraftAnimationStateForSlot);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", tickCraftAnimationSlot);
+typedef struct {
+    s32 w0;
+    u8 b4;
+    u8 b5;
+    u8 pad6[2];
+    f32 f8;
+    f32 fC;
+} CaEnt;
+
+typedef struct {
+    u8 count;
+    u8 pad1[3];
+    CaEnt *ents;
+} CaList;
+
+#define CA_LIST(s) ((CaList *)(s)->unk4)
+
+extern s32 gCurrentLevel;
+extern s32 D_mission_overlay_8010B510[];
+extern s32 D_mission_overlay_8010B514[];
+extern s32 D_mission_overlay_8010B524[];
+u16 spawnNpcChildForActivePlayerCell(u16, f32, u8, s32, s32, void *, s32);
+void sendSlotActionTwelve(u16);
+u8 isWeaponSlotReady(s32);
+void applyCraftAnimationKeyframePose(u8 *, f32);
+
+void tickCraftAnimationSlot(u8 slot, f32 dt) {
+    CraftAnimSlot *s;
+    u8 en;
+    u8 i;
+    u8 ok;
+
+    if (gCurrentLevel == 5 || gCurrentLevel == 0x11) {
+        en = 0;
+    } else {
+        en = 1;
+    }
+    s = &D_mission_overlay_8010CF20[slot];
+    if (CA_LIST(s)->count != 0) {
+        switch (s->unk10) {
+        case 0:
+            if (s->unk12 != 0) {
+                for (i = 0; i < CA_LIST(s)->count; i++) {
+                    if ((CA_LIST(s)->ents[i].b5 & 1) && (en || (CA_LIST(s)->ents[i].b5 & 0xF0))) {
+                        if (s->unk12 == 1) {
+                            s->npcs[0][i] = spawnNpcChildForActivePlayerCell(*(u16 *)(s->unk0 + 0xB6), CA_LIST(s)->ents[i].f8 * 0.0035f, (u32)(CA_LIST(s)->ents[i].fC * 6.0f), CA_LIST(s)->ents[i].w0, CA_LIST(s)->ents[i].b4, &D_mission_overlay_8010B514[CA_LIST(s)->ents[i].b5 >> 4], 1);
+                        } else {
+                            s->npcs[0][i] = spawnNpcChildForActivePlayerCell(*(u16 *)(s->unk0 + 0xB6), CA_LIST(s)->ents[i].f8 * 0.0035f, (u32)(CA_LIST(s)->ents[i].fC * 7.0f), CA_LIST(s)->ents[i].w0, CA_LIST(s)->ents[i].b4, &D_mission_overlay_8010B524[CA_LIST(s)->ents[i].b5 >> 4], 1);
+                        }
+                    }
+                }
+                s->unk10 = 1;
+                s->unk13 = s->unk12;
+            }
+            break;
+        case 1:
+            if (s->unk14 != 0.0f) {
+                s->unk14 -= dt;
+                if (s->unk14 <= 0.0f) {
+                    s->unk12 = 0;
+                    goto despawn;
+                }
+            }
+            if (s->unk12 != s->unk13) {
+            despawn:
+                for (i = 0; i < CA_LIST(s)->count; i++) {
+                    if ((CA_LIST(s)->ents[i].b5 & 1) && s->npcs[0][i] != 0xFFFF) {
+                        sendSlotActionTwelve(s->npcs[0][i]);
+                        s->npcs[0][i] = 0xFFFF;
+                    }
+                }
+                s->unk13 = 0;
+                s->unk10 = 0;
+            }
+            break;
+        case 2:
+        default:
+            break;
+        }
+        if (en) {
+            switch (*(u16 *)(s->unk0 + 0xB4)) {
+            case 0:
+                ok = !isWeaponSlotReady(0);
+                break;
+            case 2:
+                ok = 4.5f < *(f32 *)(s->unk0 + 0xE8);
+                break;
+            case 3:
+                ok = 3.6000001f < *(f32 *)(s->unk0 + 0xE8);
+                break;
+            case 7:
+                ok = 3.8999999f < *(f32 *)(s->unk0 + 0xE8);
+                break;
+            case 8:
+                ok = 4.8f < *(f32 *)(s->unk0 + 0xE8);
+                break;
+            default:
+                ok = 0;
+                break;
+            }
+            if (ok) {
+                if (s->unk11 == 0) {
+                    for (i = 0; i < CA_LIST(s)->count; i++) {
+                        if (CA_LIST(s)->ents[i].b5 & 2) {
+                            __asm__("" :: "i"(0));
+                            s->npcs[1][i] = spawnNpcChildForActivePlayerCell(*(u16 *)(s->unk0 + 0xB6), CA_LIST(s)->ents[i].f8 * 0.008f, (u32)(CA_LIST(s)->ents[i].fC * 3.0f), CA_LIST(s)->ents[i].w0, CA_LIST(s)->ents[i].b4, D_mission_overlay_8010B510, 1);
+                        }
+                    }
+                    s->unk11 = 1;
+                }
+            } else if (s->unk11 != 0) {
+                for (i = 0; i < CA_LIST(s)->count; i++) {
+                    if ((CA_LIST(s)->ents[i].b5 & 2) && s->npcs[1][i] != 0xFFFF) {
+                        sendSlotActionTwelve(s->npcs[1][i]);
+                        s->npcs[1][i] = 0xFFFF;
+                    }
+                }
+                s->unk11 = 0;
+            }
+        }
+    }
+    applyCraftAnimationKeyframePose(s->unk0, dt);
+}
 
 void freePlayerAuxBuffersIfActive(u8 index) {
     if (*D_mission_overlay_8010CF20[index].unk4 != 0) {
