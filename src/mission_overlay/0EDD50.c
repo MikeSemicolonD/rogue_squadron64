@@ -44,7 +44,34 @@ extern SoundDescriptorStackEntry D_mission_overlay_8010C320[];
 extern SoundDescriptor D_mission_overlay_8010C400;
 extern u16 D_mission_overlay_8010B304[];
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", claimSongSlotForCurrentHandle);
+typedef struct { s32 key; s32 w4; s32 w8; u8 bC; u8 padD[3]; } CsSlot;
+typedef struct { s32 w0; u16 h4; u16 h6; } CsDesc;
+extern CsSlot csSlots[8] __asm__("D_mission_overlay_8010C270");
+extern CsDesc csCur __asm__("D_mission_overlay_8010C0E0");
+
+void csImpl(s32 arg0) __asm__("claimSongSlotForCurrentHandle");
+void csImpl(s32 arg0) {
+    s32 i;
+    register s32 a asm("$4") = arg0;
+
+    for (i = 0; i < 8; i++) {
+        if (csSlots[i].key == ((csCur.h4 << 16) | csCur.h6)) {
+            csSlots[i].w4 = csCur.w0;
+            csSlots[i].bC = a;
+            csSlots[i].w8 = 0;
+            return;
+        }
+    }
+    for (i = 0; i < 8; i++) {
+        if (csSlots[i].key == -1) {
+            csSlots[i].key = (csCur.h4 << 16) | csCur.h6;
+            csSlots[i].w4 = csCur.w0;
+            csSlots[i].bC = a;
+            csSlots[i].w8 = 0;
+            return;
+        }
+    }
+}
 
 typedef struct { s32 key; s32 unk4; u32 unk8; u8 unkC; u8 padD[3]; } TSSlot;
 typedef struct { s32 unk0; u16 unk4; u16 unk6; u8 unk8; u8 pad9; s16 unkA; u8 unkC; u8 unkD; u8 unkE; u8 unkF; u16 unk10; u16 unk12; u8 pad14[0x10]; } TSDesc;
