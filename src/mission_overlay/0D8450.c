@@ -148,7 +148,169 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A784C);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanBehaviorByMode);
+f32 getNpcHealthPercentage(s32);
+void playSpeechClip(s32, s32, f32, s32);
+s16 rand(void);
+f32 fabsf(f32);
+extern f32 D_main_bss_80130BA4;
+extern s32 D_mission_overlay_8010CA20;
+
+typedef struct {
+    f32 t0;
+    f32 iv;
+    u8 pad8[4];
+    u8 hurt;
+    u8 padD[3];
+    f32 t10;
+    u8 done14;
+    u8 pad15[3];
+    f32 t18;
+    u8 done1C;
+} WingSpeech;
+
+#define WING_CASE(n, a, b, c)                                         \
+    case n:                                                           \
+        if (st->t0 == 0.0f) {                                         \
+            s1 = a;                                                   \
+            st->t0 = D_main_bss_80130BA4;                             \
+            st->iv = 30.0f;                                           \
+        } else if (st->iv <= D_main_bss_80130BA4 - st->t0) {          \
+            s1 = b;                                                   \
+            st->t0 = D_main_bss_80130BA4;                             \
+            st->iv = 1000000.0f;                                      \
+        }                                                             \
+        if (st->hurt == 0 && getNpcHealthPercentage(*(s32 *)(npc + 0x38)) <= 50.0f) { \
+            st->hurt = 1;                                             \
+            s2 = c;                                                   \
+        }                                                             \
+        break;
+
+void npcWingmanBehaviorByMode(u8 *npc, s32 arg1, s32 mode) {
+    WingSpeech *st;
+    s32 s1;
+    s32 s2;
+    u32 kind;
+    f32 zero;
+
+    if (D_mission_overlay_8010CA20 != 0) {
+        return;
+    }
+    kind = *(u32 *)(*(u8 **)(npc + 0x34) + 0x90);
+    s1 = -1;
+    if (kind == 7) {
+        return;
+    }
+    zero = 0.0f;
+    st = (WingSpeech *)(npc + 0x68);
+    switch (mode) {
+    case 0:
+        s2 = -1;
+        switch (kind) {
+            WING_CASE(0, 0x1E4, 0x221, 0x1EE)
+            WING_CASE(1, 0x26, 0x23, 0x29)
+            WING_CASE(2, 0x257, 0x254, 0x25A)
+            WING_CASE(3, 0x96, 0x93, 0x99)
+            WING_CASE(4, 0xBC, 0xB5, 0xCB)
+            WING_CASE(6, 0x3B, 0x3E, 0x41)
+            WING_CASE(5, 0x1AF, 0x1AC, 0x1B2)
+        }
+        if (s1 != -1) {
+            playSpeechClip(s1, 0x73, zero, 0);
+        }
+        if (s2 != -1) {
+            playSpeechClip(s2, 0x73, zero, 0);
+        }
+        break;
+    case 2:
+        if (st->done14 == 0) {
+            if (st->t10 == zero) {
+                st->t10 = D_main_bss_80130BA4 + 5.0f + (f32)(s16)(rand() % 8) * 3.5f;
+            }
+            if (D_main_bss_80130BA4 >= st->t10) {
+                st->done14 = 1;
+                switch (*(u32 *)(*(u8 **)(npc + 0x34) + 0x90)) {
+                case 0:
+                    s1 = 0x1EA;
+                    break;
+                case 4:
+                    s1 = 0xCC;
+                    break;
+                }
+                if (s1 != -1) {
+                    playSpeechClip(s1, 0x73, zero, 9);
+                }
+            }
+        }
+        break;
+    case 3:
+        switch (kind) {
+        case 0:
+            s1 = (s16)(rand() % 6) + 0x1FD;
+            break;
+        case 1:
+            s1 = (s16)(rand() % 5) + 0x1E;
+            break;
+        case 2:
+            s1 = (s16)(rand() % 3) + 0x260;
+            break;
+        case 3:
+            s1 = 0x9F;
+            break;
+        case 4:
+            s1 = (s16)(rand() % 4) + 0xD1;
+            break;
+        case 6:
+            s1 = 0x47;
+            break;
+        case 5:
+            s1 = (s16)(rand() % 6) + 0x1B8;
+            break;
+        }
+        if (s1 != -1) {
+            playSpeechClip(s1, 0x73, zero, 1);
+        }
+        break;
+    case 4:
+        if (st->done1C == 0) {
+            if (st->t18 == zero) {
+
+                f32 ab, q = ((f32)(rand() & 0x7F) - 64.0f) * 0.03125f;
+                __asm__ volatile("abs.s %0, %1" : "=f"(ab) : "f"(q));
+                st->t18 = D_main_bss_80130BA4 + ab + 3.0f;
+            }
+            if (D_main_bss_80130BA4 >= st->t18) {
+                st->done1C = 1;
+                switch (*(u32 *)(*(u8 **)(npc + 0x34) + 0x90)) {
+                case 0:
+                    s1 = 0x1E7;
+                    break;
+                case 1:
+                    s1 = 0x24;
+                    break;
+                case 2:
+                    s1 = 0x255;
+                    break;
+                case 3:
+                    s1 = 0x94;
+                    break;
+                case 4:
+                    s1 = 0xBB;
+                    break;
+                case 6:
+                    s1 = 0x3C;
+                    break;
+                case 5:
+                    s1 = 0x1AD;
+                    break;
+                }
+                if (s1 != -1) {
+                    playSpeechClip(s1, 0x73, zero, 1);
+                }
+            }
+        }
+        break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanSpawnBurstEffects);
 
