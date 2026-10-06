@@ -1097,7 +1097,174 @@ s32 attachedAudioVisualEmitterNpcHandler(u8 *arg0, u16 action, u8 *arg2) {
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcShieldGeneratorUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcVortexUpdate);
+typedef struct { s32 w[12]; } VxBlk;
+typedef struct { s32 a, b, c; } VxBlk3;
+typedef struct {
+    f32 pos[3];
+    f32 fwd[3];
+    f32 up[3];
+    f32 vel[3];
+    u8 *mesh;
+    f32 scale;
+    f32 sv[3];
+    f32 f44;
+    f32 ang;
+    u16 link;
+    u16 slot4E;
+    u16 slot50;
+    u16 f52;
+    u8 audio[0x44];
+    u8 f98;
+    u8 f99;
+    u16 spray;
+    s32 f9C;
+} VxObj;
+typedef struct { u16 id; s16 zero; u8 pad4[0x14]; u8 type; } VxMsg;
+extern u8 D_main_bss_80130B39;
+extern f32 D_main_bss_80130BA4;
+void *rs_malloc(s32, s32);
+void applyFlagsToMeshTreeOrList(void *, s32, s32, s32);
+void play3DSoundEventVariant(void *, void *, void *, f32, f32, s32, s32, s32, s32, s32);
+u16 spawnWaterSprayNpc(u16, f32 *);
+void factor5RemoveListNode(void *);
+u8 *getNpcContextByIndex(u16);
+f32 floatModulo(f32, f32);
+void updateActive3DAudioSource(void *, void *, void *, s32);
+void spawnRandomScaleColoredEffectAltVariant(s32, f32);
+
+s32 npcVortexUpdate(u8 *arg0, u16 action, u8 *arg2) {
+    VxObj *s1 = *(VxObj **)(arg0 + 4);
+    f32 spray[3];
+    char buf[4];
+    f32 q[4];
+    VxMsg msg;
+    f32 dt;
+
+    switch (action) {
+    case 1:
+        {
+            u8 *a1c = arg2;
+            f32 f;
+            s1 = rs_malloc(0xA0, 0);
+            *(VxObj **)(arg0 + 4) = s1;
+            *(u16 *)(arg0 + 0x14) |= 0x100;
+            s1->mesh = walkMeshdef0List("vortex");
+            applyFlagsToMeshTreeOrList(s1->mesh, 0, 0x10000, 0);
+            *(VxBlk *)s1 = *(VxBlk *)a1c;
+            s1->vel[0] = s1->vel[1] = s1->vel[2] = 0.0f;
+            f = *(f32 *)(*(u8 **)s1->mesh + 0x34);
+            s1->scale = f * *(f32 *)(a1c + 0x30);
+            s1->sv[0] = f * *(f32 *)(a1c + 0x30);
+            s1->sv[1] = f * *(f32 *)(a1c + 0x34);
+            s1->sv[2] = f * *(f32 *)(a1c + 0x38);
+            mat34CrossRowsAndCopyPosPtr((void *)(s1->mesh + 0x28), (void *)s1, s1->sv);
+            *(VxObj **)(arg0 + 8) = s1;
+            *(u8 **)(arg0 + 0xC) = s1->mesh;
+            {
+                u8 *b = (u8 *)D_main_bss_80139560;
+                s1->slot4E = popNpcSlotFromTail(*(u16 *)(b + 0x1C), arg0);
+                s1->slot50 = popNpcSlotFromTail(D_main_bss_80139560[0xC / 2], arg0);
+            }
+            s1->f44 = *(f32 *)(*(u8 **)s1->mesh + 0x44) * f * *(f32 *)(a1c + 0x34) * 100.0f;
+            s1->f99 = 0;
+            s1->link = *(u16 *)(a1c + 0x3C);
+            s1->f9C = *(s32 *)(a1c + 0x40);
+            s1->f52 = *(u16 *)(a1c + 0x3E);
+            s1->f98 = 1;
+            s1->ang = 0.0f;
+            play3DSoundEventVariant(s1->audio, s1, s1->vel, 10.0f, 0.6f, 0xF, 0x66, 1, 0x78, 0x28);
+            spray[0] = s1->scale * 0.9f;
+            spray[1] = s1->scale * 0.6f;
+            spray[2] = s1->scale * 0.9f;
+            s1->spray = spawnWaterSprayNpc(*(u16 *)(arg0 + 0x16), spray);
+        }
+        break;
+    case 2:
+        if (s1->f98 == 1) {
+            factor5RemoveListNode(s1->audio);
+        }
+        releaseMeshAsset(s1->mesh);
+        return 1;
+    case 3:
+        dt = *(f32 *)arg2;
+        buf[0] = '0';
+        buf[1] = ((u8 *)&s1->f52)[1] + '1';
+        buf[2] = 0;
+        lookupHmtTextureByName(D_main_bss_80130B39 ? s1->f9C : *(s32 *)(getNpcContextByIndex(s1->link) + 0xC), buf, 0, s1, 0, 0);
+        s1->up[0] = -s1->up[0];
+        s1->up[1] = -s1->up[1];
+        s1->up[2] = -s1->up[2];
+        if (!D_main_bss_80130B39) {
+            *(VxBlk3 *)s1->vel = *(VxBlk3 *)(getNpcContextField8(s1->link) + 0x24);
+        } else {
+            s1->vel[0] = 0.0f;
+            s1->vel[1] = 0.0f;
+            s1->vel[2] = 0.0f;
+        }
+        s1->ang = floatModulo(s1->ang + 2.0f, 360.0f);
+        quatFromAxisAngle(q, s1->up, s1->ang);
+        rotateVec3ByQuat(q, s1->fwd, s1->fwd);
+        if (s1->f99 == 0) {
+            s1->sv[1] = (wrapAngleToCyclicRange(s1->pos[0], s1->pos[2], D_main_bss_80138058, 0) - s1->pos[1] + 0.7f) / s1->scale;
+            if (D_main_bss_80130B39) {
+                s1->sv[1] *= sinf(D_main_bss_80130BA4 * 3.0f) * 0.3f + 2.5f;
+            }
+            if (s1->sv[1] <= 0.0f) {
+                s1->sv[1] = 0.001f;
+            }
+        } else {
+            if (s1->spray != 0xFFFF) {
+                destroyNpcSlotByIndex(s1->spray);
+                s1->spray = 0xFFFF;
+            }
+            s1->sv[1] -= dt * 3.0f;
+            if (s1->sv[1] <= 0.0f) {
+                if (!D_main_bss_80130B39) {
+                    msg.type = 0xF;
+                    msg.id = *(u16 *)(arg0 + 0x16);
+                    msg.zero = 2;
+                    slotDispatcherIter(s1->link, 9, &msg);
+                }
+                destroyNpcSlotByIndex(*(u16 *)(arg0 + 0x16));
+                return 1;
+            }
+        }
+        s1->f44 = *(f32 *)(*(u8 **)s1->mesh + 0x44) * s1->sv[1];
+        break;
+    case 4:
+        mat34CrossRowsAndCopyPosPtr((void *)(s1->mesh + 0x28), (void *)s1, s1->sv);
+        if (D_main_bss_80130B39) {
+            if ((*(u8 **)(s1->mesh + 0xC) = **(u8 ***)arg2) != NULL) {
+                *(u8 **)(*(u8 **)(s1->mesh + 0xC) + 4) = s1->mesh + 0xC;
+            }
+            *(u8 **)(s1->mesh + 0x10) = NULL;
+            **(u8 ***)arg2 = s1->mesh + 0xC;
+        } else {
+            addNpcToVisibilityBucket(*(s32 *)arg2, s1->mesh, s1, 100.0f);
+        }
+        if (s1->f98) {
+            updateActive3DAudioSource(s1->audio, s1, s1->vel, 0x78);
+            return 1;
+        }
+        break;
+    case 5:
+        if (*(s32 *)(arg2 + 8) != 0) {
+            spawnRandomScaleColoredEffectAltVariant(*(s32 *)(arg2 + 8), 0.4f);
+        }
+        play3DSoundEvent(0, s1, s1->vel, 20.0f, 0.4f, 0, 0x2A, 0x78, 0x50);
+        if (*(u16 *)arg2 != 0xFFFF) {
+            destroyNpcSlotByIndex(*(u16 *)arg2);
+            return 1;
+        }
+        return 1;
+    case 9:
+        if (arg2[0x18] == 0x10) {
+            s1->f99 = 1;
+        }
+        break;
+    }
+    return 1;
+}
 
 extern s8 D_main_bss_8013A980;
 
