@@ -35,7 +35,182 @@ void buildGridCellAdjacencyTable(void) {
     D_main_bss_80137614_b[4].f2 = 0xFFFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/48A50", getGridCellValueAt);
+typedef struct {
+    u16 *tbl0;
+    u8 *tbl4;
+    u16 *tbl8;
+    s32 padC;
+    f32 f10;
+    u8 pad14[0x24];
+    u16 w;
+    u16 h;
+} GridDescG;
+
+typedef struct {
+    u16 f0;
+    u16 f2;
+    u16 f4;
+    u16 f6;
+    u16 f8;
+    u16 fA[5];
+    u16 f14;
+    u16 f16;
+    s16 f18;
+    s16 f1A;
+    u8 pad1C[2];
+    u16 f1E;
+    u8 pad20[0x30];
+    f32 f50;
+    u8 pad54[0x64];
+} GridCellG;
+
+typedef struct {
+    u16 prev;
+    u16 next;
+    s32 f4;
+    GridCellG *f8;
+} PoolG;
+
+extern GridDescG gGridG __asm__("D_main_bss_80136DC0");
+extern GridCellG *gCellsG __asm__("D_main_bss_80137A5C");
+extern PoolG *gPoolG __asm__("gDoublyLinkedNodePool12");
+extern u16 gFreeHeadG __asm__("D_main_bss_80136FC0");
+extern u16 gFreeCntG __asm__("D_main_bss_80137A58");
+extern u16 *gFreeListG __asm__("D_main_bss_80137A4C");
+extern GridCellG *clampGridCellLookup(s32, s32);
+
+GridCellG *getGridCellValueAt(s32 x, s32 y, s32 flag)
+{
+  s32 idx;
+  s32 v;
+  GridCellG *c;
+  GridCellG *base;
+  u16 head;
+  u16 a;
+  u8 *t;
+  GridCellG *r;
+  if ((((x < 0) || (x >= gGridG.w)) || (y < 0)) || (y >= gGridG.h))
+  {
+    return clampGridCellLookup(x, y);
+  }
+  idx = x + (y * gGridG.w);
+  head = gGridG.tbl8[idx];
+  v = head;
+  if (v != 0xFFFF)
+  {
+    if ((head & 0x8000) && flag)
+    {
+      return gPoolG[v & 0x7FFF].f8;
+    }
+  }
+  if ((gGridG.tbl0[idx] & 0x1FFF) == 0xFFFF)
+  {
+    return 0;
+  }
+  base = gCellsG;
+  c = &base[*((u16 *) (((u8 *) base) + 0x22A))];
+  while (c->f6 != 0xFFFF)
+  {
+    if (c->f8 != 0xFFFF) break;
+    c = &gCellsG[c->f2];
+  }
+  if ((c->f16 == 4) || (gFreeHeadG == 0xFFFF))
+  {
+    return 0;
+  }
+  head = c->f1E;
+  if (head != 0xFFFF)
+  {
+    if (c->f14 & 0x20)
+    {
+      {
+        s32 p = c->f4;
+        if (p != 0xFFFF)
+        {
+          gCellsG[p].f6 = c->f6;
+        }
+      }
+      {
+        s32 p = c->f6;
+        if (p != 0xFFFF)
+        {
+          gCellsG[p].f4 = c->f4;
+        }
+      }
+      head = 0;
+      do
+      {
+        c->fA[head] = 0;
+        head++;
+      }
+      while ((head) < 5);
+    }
+    else
+    {
+      PoolG *pb = gPoolG;
+      PoolG *n = (PoolG *)(head * sizeof(PoolG) + (s32)pb);
+      if (n->prev != 0xFFFF)
+      {
+        gPoolG[n->prev].next = n->next;
+      }
+      else
+      {
+        gGridG.tbl8[c->f18 + (c->f1A * gGridG.w)] = n->next;
+      }
+      {
+      s32 hh = head;
+      PoolG *pb2 = gPoolG;
+      PoolG *m = (PoolG *)(hh * sizeof(PoolG) + (s32)pb2);
+      if (m->next != 0xFFFF)
+      {
+        gPoolG[m->next].prev = m->prev;
+      }
+      }
+      gPoolG[gFreeHeadG].prev = head;
+      gPoolG[head].next = gFreeHeadG;
+      gFreeHeadG = head;
+      if (!(c->f14 & 0x40))
+      {
+        head = 0;
+        if (c->fA[0] != 0)
+        {
+          while (1)
+          {
+            if (head >= 5) break;
+            gFreeListG[gFreeCntG++] = c->fA[head];
+            c->fA[head] = 0;
+            head++;
+            if (c->fA[head] == 0) goto done;
+          }
+        }
+      }
+      else
+      {
+        head = 0;
+        do
+        {
+          c->fA[head] = 0;
+          head++;
+        }
+        while ((head) < 5);
+      }
+    }
+    done:
+    c->f1E = 0xFFFF;
+  }
+  c->f18 = x;
+  c->f1A = y;
+  t = gGridG.tbl4 + ((gGridG.tbl0[idx] & 0x1FFF) * 0x1E);
+  {
+    s32 lo = ((s8 *) t)[3];
+    s32 hi = ((s8 *) t)[4];
+    f32 fv = (((((f32) lo) + (((f32) (hi - lo)) * 0.5f)) * gGridG.f10) * 0.00390625f) * 0.5f;
+    r = c;
+    r->f14 = 3;
+    r->f50 = fv;
+  }
+  return r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/48A50", clampGridCellLookup);
 
