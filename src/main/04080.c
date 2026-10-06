@@ -566,7 +566,8 @@ u32 get_asset_size_extra(u32 seg, u8 *entry_name) {
 
 INCLUDE_ASM("asm/nonmatchings/main/04080", setupAssetDma);
 
-INCLUDE_ASM("asm/nonmatchings/main/04080", spillArgsNoopHandler);
+void spillArgsNoopHandler(s32 a0, ...) {
+}
 
 void noopHandler_80004FC8(void) {
 }
