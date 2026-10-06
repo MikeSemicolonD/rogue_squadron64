@@ -156,7 +156,26 @@ s32 stopVoiceByHandle(s32 handle) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", isVoiceHandleActive);
+s32 isVoiceHandleActive(s32 handle) {
+    u32 i;
+    register s32 h asm("$5") = handle;
+
+    if (speechFileLoaded) {
+        for (i = 0; i < 1; i++) {
+            if (D_main_bss_80154620[i].active != 0 && D_main_bss_80154620[i].handle == h) {
+                goto found;
+            }
+        }
+        i = -1;
+    found:
+        h = i;
+        __asm__("" : "=r"(h) : "0"(h));
+        if (h != -1) {
+            return D_main_bss_80154620[h].active != 0;
+        }
+    }
+    return 0;
+}
 
 extern u8 D_main_bss_80154621[];
 extern u8 D_main_bss_80154622[];
