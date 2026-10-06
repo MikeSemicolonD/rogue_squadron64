@@ -1739,7 +1739,282 @@ u8 bindFaceVerticesToCache(u32 *face, u8 *mask, u8 base) {
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", renderLitTexturedMeshFaces);
+typedef struct LFNode {
+    struct LFNode *link;
+    struct LFNode *next;
+    u32 *face[64];
+} LFNode;
+
+typedef struct {
+    u8 p0[0xC];
+    u32 flags;
+    u8 *lights;
+    u8 p14[0x2C - 0x14];
+    u32 unk2C;
+    s32 unk30;
+    u8 p34[0x44 - 0x34];
+    struct DisplayListBuffer *list44[2];
+    struct DisplayListBuffer *list4C[2];
+    LFNode *faces;
+} LitMesh;
+
+extern u16 D_main_bss_801142C0;
+extern s32 D_main_bss_80114300[];
+extern s32 D_main_bss_8011A894;
+extern u8 D_main_bss_8011A899;
+extern struct DisplayListBuffer *D_main_bss_8011A458[];
+extern struct DisplayListBuffer *D_main_bss_8011A4B0[];
+s32 bfvcS(u32 *, u8 *, s32) __asm__("bindFaceVerticesToCache");
+void rltEmit(u32 *, void *, void *, void *, void *, s32, void *, s32, u8) __asm__("emitTexturedFaceGeometry");
+
+static __inline__ Gfx *rltAllocA(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    if (*D_main_bss_8011A4C4 != NULL) {
+        (*D_main_bss_8011A4C4)->prev = chunk;
+    }
+    chunk->next = *D_main_bss_8011A4C4;
+    *D_main_bss_8011A4C4 = chunk;
+    return chunk->displayList;
+}
+
+static __inline__ Gfx *rltAllocB(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    if (*D_main_bss_8011A4AC != NULL) {
+        (*D_main_bss_8011A4AC)->prev = chunk;
+    }
+    chunk->next = *D_main_bss_8011A4AC;
+    *D_main_bss_8011A4AC = chunk;
+    return chunk->displayList;
+}
+
+#define LIT_BUMP() \
+    D_main_bss_801142C0++; \
+    if (D_main_bss_801142C0 == 0) { \
+        D_main_bss_801142C0 = 1; \
+    }
+
+s32 renderLitTexturedMeshFaces(s32 arg0, f32 *arg1, LitMesh *arg2, s32 arg3) {
+    u8 sp28;
+    LFNode *faceList;
+    struct DisplayListBuffer *s2;
+    struct DisplayListBuffer *s4;
+    struct DisplayListBuffer *tmp;
+    Gfx *sp44;
+    Gfx *sp4C;
+    s32 s1;
+    s32 s3;
+    s32 s5;
+    s32 fp;
+    u32 s7;
+    u32 sign;
+    u32 v;
+    u8 *l;
+    u8 hasA;
+    u8 hasB;
+    register u32 **s0 asm("$16");
+    u32 *f;
+    u32 w;
+
+    arg2->unk30 = D_main_bss_8011A894;
+    s7 = 0;
+    do {
+        D_main_bss_80114300[s7] = 0;
+        s7++;
+    } while (s7 < 0x20);
+    l = arg2->lights;
+    while (l != NULL) {
+        transformLightByType(l, arg1);
+        l = *(u8 **)l;
+    }
+    v = arg2->unk2C;
+    sign = v >> 31;
+    faceList = arg2->faces;
+    v ^= 0x80000000;
+    arg2->unk2C = v;
+    if (faceList != NULL) {
+    while (faceList->link != NULL) {
+        faceList = faceList->link;
+    }
+    tmp = arg2->list44[sign];
+    if (tmp != NULL) {
+        if (arg2->flags & 0x40) {
+            s4 = tmp;
+            while (s4->next != NULL) {
+                s4 = s4->next;
+            }
+        }
+        if (arg2->flags & 0x20) {
+            s2 = arg2->list4C[sign];
+            while (s2->next != NULL) {
+                s2 = s2->next;
+            }
+        }
+        s3 = 0;
+        s1 = 0;
+        hasA = (arg2->flags >> 8) & 1;
+        hasB = (arg2->flags >> 7) & 1;
+        while (faceList != NULL) {
+            s0 = &faceList->face[0];
+            for (s7 = 0; s7 < 0x40; s7++) {
+                f = *s0;
+                if (f == NULL) {
+                    break;
+                }
+                if (f != (u32 *)-1) {
+                    if (arg2->flags & 0x20) {
+                        w = *f;
+                        if (w & 0x30) {
+                            s5 = 3;
+                            if (w & 8) {
+                                s5 = 4;
+                            }
+                        } else {
+                            s5 = 1;
+                        }
+                    }
+                    if (arg2->flags & 0x40) {
+                        fp = bfvcS(*s0, &sp28, s1 & 0xFF);
+                    }
+                    if ((arg2->flags & 0x20) && ((s3 & 0xFFFF) + (s5 & 0xFFFF)) >= 0x41) {
+                        s3 = 0;
+                        s2 = s2->prev;
+                    }
+                    if ((arg2->flags & 0x40) && ((s1 & 0xFFFF) + (fp & 0xFF)) >= 0x21) {
+                        s1 = 0;
+                        s4 = s4->prev;
+                    }
+                    if ((hasA && (**s0 & 0x200)) || (hasB && (**s0 & 0x400)) || hasA == hasB) {
+                        rltEmit(*s0, &s2->displayList[0].words.w0 + (s3 & 0xFFFF), NULL, &s4->displayList[s1 & 0xFFFF], NULL, arg3, arg2, sp28, fp);
+                    }
+                    s3 += s5;
+                    s1 += fp & 0xFF;
+                } else {
+                    if (arg2->flags & 0x20) {
+                        s3 = 0;
+                        s2 = s2->prev;
+                    }
+                    if (arg2->flags & 0x40) {
+                        s4 = s4->prev;
+                        LIT_BUMP();
+                        s1 = 0;
+                    }
+                }
+                s0++;
+            }
+            faceList = faceList->next;
+        }
+        return 1;
+    }
+    D_main_bss_8011A4C4 = &arg2->list44[sign];
+    D_main_bss_8011A4AC = &arg2->list4C[sign];
+    sp4C = rltAllocA();
+    sp44 = rltAllocB();
+    s4 = arg2->list44[sign ^ 1];
+    while (s4->next != NULL) {
+        s4 = s4->next;
+    }
+    s2 = arg2->list4C[sign ^ 1];
+    while (s2->next != NULL) {
+        s2 = s2->next;
+    }
+    s3 = 0;
+    s1 = 0;
+    while (faceList != NULL) {
+        s0 = &faceList->face[0];
+        for (s7 = 0; s7 < 0x40; s7++) {
+            f = *s0;
+            if (f == NULL) {
+                break;
+            }
+            if (f != (u32 *)-1) {
+                w = *f;
+                if (w & 0x30) {
+                    s5 = 3;
+                    if (w & 8) {
+                        s5 = 4;
+                    }
+                } else {
+                    s5 = 1;
+                }
+                fp = bfvcS(*s0, &sp28, s1 & 0xFF);
+                if (((s3 & 0xFFFF) + (s5 & 0xFFFF)) >= 0x41) {
+                    s3 = 0;
+                    sp44 = rltAllocB();
+                    s2 = s2->prev;
+                }
+                if (((s1 & 0xFFFF) + (fp & 0xFF)) >= 0x21) {
+                    s1 = 0;
+                    sp4C = rltAllocA();
+                    s4 = s4->prev;
+                }
+                rltEmit(*s0, &sp44->words.w0 + (s3 & 0xFFFF), &s2->displayList[0].words.w0 + (s3 & 0xFFFF), &sp4C[s1 & 0xFFFF], &s4->displayList[s1 & 0xFFFF], arg3, arg2, sp28, fp);
+                s3 += s5;
+                s1 += fp & 0xFF;
+            } else {
+                s3 = 0;
+                sp44 = rltAllocB();
+                s2 = s2->prev;
+                s1 = 0;
+                sp4C = rltAllocA();
+                s4 = s4->prev;
+                LIT_BUMP();
+            }
+            s0++;
+        }
+        faceList = faceList->next;
+    }
+    LIT_BUMP();
+    D_main_bss_8011A4C4 = &D_main_bss_8011A4B0[D_main_bss_8011A899];
+    D_main_bss_8011A4AC = &D_main_bss_8011A458[D_main_bss_8011A899];
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", submitSceneNodeRender);
 
