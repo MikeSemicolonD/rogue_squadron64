@@ -1220,7 +1220,71 @@ void setupPlayerCraftDisplayAnim(void) {
     } while (i < 10);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", applyPlayerSlotAnimChannelKeyframe);
+typedef struct { u16 x; u16 y; } ApXy;
+typedef struct {
+    u8 pad0[8];
+    u16 count;
+    u16 padA;
+    u16 *ids;
+    ApXy *xy;
+    u8 pad14[0x1B];
+    u8 alpha;
+} ApElem;
+extern u8 apMs[] __asm__("gMissionState");
+struct ui_element *getPlayerAnimChannelEntryByIds(s32);
+struct ui_element *getPlayerAnimChannelEntryReversed(s32);
+s32 findCharEntryAltValueByKey(s32, s32);
+void activateAnimationKeyframe(s32, s32, u8);
+struct ui_element *getPlayerSlotFieldAt34(u16, u16);
+void setLookupEntryField5ByKey(struct some_ui_list_root *, struct ui_element *, u8);
+f32 sinf(f32);
+extern s32 D_menu_overlay_800CDFA4;
+extern s32 D_menu_overlay_800CDAD0;
+extern s32 D_menu_overlay_800CDCDC;
+extern f32 D_menu_overlay_800CDB14;
+
+#define AP_BLOCK(GET, K0, K1, K2, IDX)                                                       \
+    { ApElem *p; ApElem *q; s32 first; s32 last; u8 a; u8 m; \
+    e = (ApElem *)GET(D_menu_overlay_800CDFA4);                                              \
+    first = e->xy[0].x;                                                                      \
+    last = e->xy[e->count - 1].x;                                                            \
+    q = (ApElem *)getPlayerSlotFieldAt34(0, K1); \
+    x = first - 0x22; \
+    y = last + 0x1C; \
+    first -= 0x20; \
+    q->xy->x = first; \
+    q = (ApElem *)getPlayerSlotFieldAt34(0, K2); \
+    q->xy->x = last + 0x1A; \
+    last += 0x1A; \
+    p = (ApElem *)getPlayerSlotFieldAt34(0, K0);                                             \
+    m = apMs[IDX + 0xC]; \
+    p->ids[0] = p->ids[1] = findCharEntryAltValueByKey(0, m ? (u8)(m + 1) : -1); \
+    p->xy[0].x = x - 2;                                                                      \
+    p->xy[1].x = y - 7;                                                                      \
+    if (e->alpha < 0xFF) {                                                                   \
+        a = (u32)(e->alpha * alpha);                                                         \
+    } else {                                                                                 \
+        a = (u32)(alpha * 254.0f);                                                           \
+    }                                                                                        \
+    activateAnimationKeyframe(0, K0, a);                                                     \
+    setLookupEntryField5ByKey((struct some_ui_list_root *)D_menu_overlay_800CDCDC, (struct ui_element *)p, p->ids[0] != 0xFFFF); \
+    activateAnimationKeyframe(0, K1, fa ? (u8)(u32)(a * (sinf(D_menu_overlay_800CDB14 / 9.0f) * 0.5f + 0.5f)) : 0); \
+    activateAnimationKeyframe(0, K2, fb ? ({ f32 t = sinf(D_menu_overlay_800CDB14 / 9.0f) * 0.5f + 0.5f; (u8)(u32)(a * t); }) : 0); \
+    }
+
+void applyPlayerSlotAnimChannelKeyframe(u8 s0, s32 s1, f32 alpha) {
+    ApElem *e;
+    s32 x;
+    s32 y;
+    u8 fa;
+    u8 fb;
+    s32 v = s1;
+
+    fa = s0 != 0;
+    fb = (D_menu_overlay_800CDAD0 & (1 << (s0 + 1))) != 0;
+    AP_BLOCK(getPlayerAnimChannelEntryByIds, 6, 4, 5, s0)
+    AP_BLOCK(getPlayerAnimChannelEntryReversed, 9, 7, 8, (u8)v)
+}
 
 s32 anyAudioSlotActive();
 s32 bufferArbiterProducerScanWait();
@@ -1283,4 +1347,4 @@ void playExitSoundAndToggleScreenMeshes(void) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", fake_func_800B2628);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A5C18);
+static u32 D_menu_overlay_800A5C1C[] __attribute__((section(".rodata"))) = { 0xC4229840 };
