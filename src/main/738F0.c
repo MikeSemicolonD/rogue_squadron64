@@ -691,7 +691,199 @@ void transformLimbStrideAnchorsLocal(u16 idx, f32 *out, f32 *out2) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", randomParticleWithParentNpcHandler);
+typedef struct RPLink {
+    struct RPLink *next;
+    struct RPLink *prev;
+} RPLink;
+typedef struct {
+    f32 pos[3];
+    f32 fC;
+    RPLink link;
+    s32 w18;
+    s32 w1C;
+    void *p20;
+    s32 w24;
+    u8 p28[0x34];
+    s32 w5C;
+    s32 w60;
+    s32 w64;
+    s32 w68;
+    s32 w6C;
+    s32 w70;
+    s32 w74;
+    u8 p78[4];
+    void *p7C;
+    u8 p80[0x38];
+    s32 wB8;
+    s32 wBC;
+    s16 hC0;
+    s16 hC2;
+    s16 hC4;
+    u8 pC6[2];
+    u16 hC8;
+    u16 hCA;
+    u8 pCC[12];
+    f32 fD8;
+    f32 fDC;
+    u8 pE0[4];
+    u8 bE4;
+    u8 bE5;
+    u8 bE6;
+    u8 bE7;
+    f32 fE8;
+    f32 fEC;
+    f32 fF0;
+    f32 fF4;
+    f32 fF8;
+    f32 fFC;
+    f32 pos2[3];
+    u16 h10C;
+    u16 h10E;
+} RPNode;
+typedef struct {
+    f32 f0;
+    f32 f4;
+    u16 h8;
+} RPSpawn;
+typedef struct { RPLink **headp; } RPLinks;
+typedef struct { u8 p0[4]; RPNode *unk04; u8 p8[0xE]; u16 unk16; } RPSelf;
+#include "rs_math.h"
+#include "main/192E0.h"
+#include "main/1D000.h"
+#include "main/5A750.h"
+extern s16 rand(void);
+static __inline__ f32 absf_(f32 v) {
+    f32 r;
+    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(v));
+    return r;
+}
+extern void *rs_malloc(u32, u16);
+extern void clearStructPair2C30(void *);
+extern u16 findFreeNpcSlotByKey(s32, u16);
+extern u16 getNextSlotNpcTypeId(u16);
+extern void destroyNpcSlotChain(u16);
+extern void destroyNpcSlotByIndex(u16);
+extern void popNpcSlotFromTail(u16, void *);
+extern u8 transformVec3ToNpcLocalWithScale(void *, s32, void *, f32, s32);
+extern void forwardToNpcGeneratorSpawn(u16, s32, f32);
+extern void *getNpcContextField8(u16);
+extern u16 D_main_bss_80139574;
+extern u16 D_main_bss_80139910[];
+
+s32 rpHandler(void *selfp, u16 action, void *arg2) __asm__("randomParticleWithParentNpcHandler");
+s32 rpHandler(void *selfp, u16 action, void *arg2) {
+    RPSelf *self = selfp;
+    RPNode *n = self->unk04;
+    RPSpawn *sp = arg2;
+    RPLinks *rl = arg2;
+    void *s0;
+    Mat4x3 m;
+    f32 x;
+    f32 a;
+    f32 dt;
+    s32 i;
+
+    switch (action) {
+    case 1:
+        n = rs_malloc(0x110, 0);
+        s0 = &n->w5C;
+        __asm__("" :: "r"(s0));
+        self->unk04 = n;
+        n->w68 = 0x49000000;
+        n->p7C = (u8 *)n + 0xB8;
+        n->w1C = 0;
+        n->w18 = 0;
+        n->link.prev = 0;
+        n->link.next = 0;
+        n->w24 = 0;
+        n->p20 = s0;
+        n->w64 = 0;
+        n->w60 = 0;
+        n->w5C = 0;
+        n->w6C = 0;
+        n->w74 = 0;
+        n->w70 = 0;
+        n->wBC = 0;
+        n->wB8 = 0;
+        n->hC4 = 0;
+        n->hC2 = 0;
+        n->hC0 = 0;
+        n->hC8 = 0x300;
+        i = rand() & 0x1C00;
+        n->bE6 = 0xFF;
+        n->bE5 = 0xFF;
+        n->bE4 = 0xFF;
+        n->bE7 = 0xFF;
+        n->hC8 = n->hC8 | i;
+        n->fEC = 255.0f;
+        n->fF0 = sp->f4;
+        n->fF4 = (absf_(((f32)(rand() & 0x7F) - 64.0f) * 0.00390625f) + 0.625f) * n->fF0;
+        n->fF8 = 2.0f * n->fF4 - n->fF4;
+        n->fD8 = n->fDC = n->fF4 + 0.0001f;
+        n->hCA = D_main_bss_80139910[0];
+        clearStructPair2C30(s0);
+        n->pos[0] = -100.0f;
+        n->pos[1] = -100.0f;
+        n->pos[2] = -100.0f;
+        n->fE8 = absf_(((f32)(rand() & 0x7F) - 64.0f) / 160.0f);
+        n->fC = n->fE8 * 16.0f;
+        n->fEC = 255.0f - 2.0f * (n->fE8 * 255.0f);
+        n->h10C = sp->h8;
+        n->h10E = findFreeNpcSlotByKey(0xFFFF, sp->h8);
+        if (n->h10E == 0xFFFF) {
+            destroyNpcSlotByIndex(self->unk16);
+            return 1;
+        }
+        *(f32 *)((u8 *)n + 0xFC) = sp->f0;
+        popNpcSlotFromTail(D_main_bss_80139574, self);
+        forwardToNpcGeneratorSpawn(n->h10C, (s32)n->pos2, n->fFC);
+        return 1;
+    case 2:
+        if (n->h10E != 0xFFFF) {
+            destroyNpcSlotChain(n->h10E);
+        }
+        return 1;
+    case 3:
+        if (getNextSlotNpcTypeId(n->h10E) == 0xFFFF) {
+            destroyNpcSlotByIndex(self->unk16);
+            return 1;
+        }
+        n->fE8 = n->fE8 + sp->f0;
+        n->fC = n->fE8 * 16.0f;
+        n->fEC = 255.0f - 2.0f * (n->fE8 * 255.0f);
+        n->fF4 = n->fF4 + 2.0f * (n->fF8 * sp->f0);
+        n->fD8 = n->fDC = n->fF0;
+        if (n->fE8 <= 0.5f) {
+            n->bE7 = (u32)n->fEC;
+        } else {
+            n->fEC = 255.0f;
+            n->fE8 = 0.0f;
+            n->fC = 0.0f;
+            forwardToNpcGeneratorSpawn(n->h10C, (s32)n->pos2, n->fFC);
+            n->fF4 = (absf_(((f32)(rand() & 0x7F) - 64.0f) * 0.00390625f) + 0.625f) * n->fF0;
+            n->fF8 = 2.0f * n->fF4 - n->fF4;
+            n->fD8 = n->fDC = n->fF4;
+        }
+        mat34CrossRowsAndCopyPos(m, getNpcContextField8(n->h10C), 1.0f);
+        transformVec3ByMat34(m, n->pos2, n->pos);
+        return 1;
+    case 4:
+        setVec3At0x24((void *)((u8 *)n + 0x2C), n->pos[0], n->pos[1], n->pos[2]);
+        n->hCA = D_main_bss_80139910[(s32)n->fC % 8];
+        if (transformVec3ToNpcLocalWithScale(*(void **)rl, 0, n, 1.0f, 0)) {
+            n->link.next = *rl->headp;
+            if (n->link.next != 0) {
+                (*rl->headp)->prev = &n->link;
+            }
+            *rl->headp = &n->link;
+            n->link.prev = 0;
+        }
+        break;
+    default:
+        return 1;
+    }
+    return 1;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D15C);
 
