@@ -1142,7 +1142,26 @@ s32 drawFrameProfilerBars(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", emitCombinerStateAndPatch);
+typedef struct { s32 w0; void *p4; } EcRefB;
+typedef struct { s32 w0; u32 w4; } EcRefC;
+extern u16 ecCountB __asm__("D_main_bss_8010DFD6");
+extern u16 ecCountC __asm__("D_main_bss_8010D59C");
+extern EcRefB *ecRefsB[] __asm__("D_main_bss_8010E010");
+extern EcRefC *ecRefsC[] __asm__("D_main_bss_8010DF50");
+
+void emitCombinerStateAndPatch(void *arg0, u8 arg1) {
+    s32 i;
+    u32 mode;
+
+    for (i = 0; i < ecCountB; i++) {
+        ecRefsB[i]->p4 = arg0;
+    }
+    mode = (arg1 != 0) ? 0x2000000 : 0x3000000;
+    for (i = 0; i < ecCountC; i++) {
+        ecRefsC[i]->w4 &= 0xFCFFFFFF;
+        ecRefsC[i]->w4 |= mode;
+    }
+}
 
 extern s32 D_main_bss_8011A900;
 extern s32 D_main_bss_8011A904;
