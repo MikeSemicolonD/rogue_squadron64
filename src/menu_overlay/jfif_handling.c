@@ -895,7 +895,65 @@ s32 findFreeCellBitSlot(JfifBitReader *arg0, u8 arg1) {
     return var_a3;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", allocCellBitGroup);
+typedef struct {
+    u8 pad0[0x34];
+    u8 *cur;
+    u8 pad38[0xC];
+    u16 bitbuf;
+    u16 bitcnt;
+    u8 pad48[5];
+    u8 eof;
+    u8 pad4E[0x58 - 0x4E];
+    HuffTable tables[4];
+} CbSt;
+
+#define CBBIT(OP) \
+    if (s->bitcnt == 0) { \
+        s->bitcnt = 8; \
+        if (s->eof == 0) { \
+            c = *s->cur++; \
+        } else { \
+            c = 0; \
+        } \
+        s->bitbuf = c; \
+        if (c == 0xFF) { \
+            u8 tt = *s->cur++; \
+            if (tt == 0xD9) { \
+                s->eof = 1; \
+            } \
+        } \
+        v = s->bitbuf; \
+        code OP ((v >> 7) & 1); \
+        s->bitcnt = s->bitcnt - 1; \
+        s->bitbuf = v * 2; \
+    } else { \
+        s->bitcnt = s->bitcnt - 1; \
+        v = s->bitbuf * 2; \
+        code OP ((v >> 8) & 1); \
+        s->bitbuf = v; \
+    }
+
+s32 cbImpl(CbSt *s, u8 tbl) __asm__("allocCellBitGroup");
+s32 cbImpl(CbSt *s, u8 tbl) {
+    s32 l = 1;
+    HuffTable *h = &s->tables[tbl];
+    s32 code;
+    u16 v;
+    u8 c;
+    u8 t;
+
+    CBBIT(=)
+    while (code > h->maxcode[l]) {
+        code <<= 1;
+        CBBIT(|=)
+        l++;
+    }
+    if (l > 16) {
+        code = 0;
+        l = 1;
+    }
+    return h->vals[code + h->valptr[l]];
+}
 
 void allocCellGeometryBuffer(u8 *arg0) {
     f32 sp[4];
