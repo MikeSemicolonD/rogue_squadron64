@@ -1505,8 +1505,17 @@ void npcInitFromTemplate(u8 *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", spawnScaledBootVec4Effect);
+extern u8 D_main_bss_8013800C[];
+void sbComputeF(s32, f32, f32, void *, f32, f32) __asm__("computeBootConfigScaledVec4");
+
+void spawnScaledBootVec4Effect(s32 arg0, f32 arg1) {
+    register f32 t asm("$f4") = arg1;
+    union { s32 i; f32 f; } u;
+    __asm__("" :: "f"(t));
+    u.i = 0x3D400000;
+    sbComputeF(0, u.f, u.f, D_main_bss_8013800C, 1.0f, t);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", fake_func_800D2C98);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A73B8);
+static u32 D_mission_overlay_800A73BC[] __attribute__((section(".rodata"))) = { 0x8FBE0008 };
