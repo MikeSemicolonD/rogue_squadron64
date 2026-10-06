@@ -202,7 +202,325 @@ void func_mission_overlay_800FA250(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800FA6A4);
+#include "level_objectives.h"
+
+typedef struct {
+    u8 pad0[0x1C];
+    f32 period;
+    f32 elapsed;
+} MissionTimeSnap;
+
+typedef struct {
+    void *p0;
+    void *p4;
+    void *p8;
+    void *pC;
+    void *p10;
+    void *p14;
+    f32 frame[9];
+    u8 pad74[0xC];
+    void *p80;
+    u32 p84;
+} MissionSlotArgs;
+
+typedef struct {
+    u8 active;
+    u8 pad1[3];
+    u8 *camBase;
+    u8 *node8;
+    u8 pad0C[0x90];
+    void *unk9C;
+    void *unkA0;
+    void *unkA4;
+    void *unkA8;
+    void *unkAC;
+    s32 unkB0;
+    u8 padB4[4];
+    u8 unkB8[0x30];
+    s32 unkE8;
+    s32 unkEC;
+    s32 unkF0;
+    s32 unkF4;
+    s32 unkF8;
+    s32 unkFC;
+    s32 unk100;
+    u8 pad104[4];
+    s32 unk108;
+    u8 pad10C[0x38];
+} MissionView;
+
+extern void bufferArbiterProducerScanWait(void);
+extern void checkComplexObjectives(f32);
+extern void checkObjectiveHandles(f32);
+extern void clearSceneNodeMotionFields(void);
+extern void clearStructPair2C30(void *);
+extern void drawFrameProfilerBars(void);
+extern f32 floatModulo(f32, f32);
+extern void frameStartReset(void);
+extern f32 getDemoRecordedTimestep(f32);
+extern void linkHudNodeAndComputeScreenPos(void *);
+extern void loadGridCellTilesByDistance(f32);
+extern void refreshAllSceneNodeInverseTransforms(f32);
+extern void refreshEffectObjectCamerasAndState(void);
+extern void setActiveRenderListPtr(s32);
+extern void setFrameLevelStateBytes(u8, u8, u8);
+extern void setRenderStateFlagByteOne(s32);
+extern void setupCameraMatrices(void *);
+extern void startLevelBackgroundMusic(f32);
+extern void submitGfxFrame(void);
+extern void tickSpeechSubsystem(f32);
+extern void tickTextureAnimSlots(f32);
+extern void tickVoiceSubtitleDisplay(f32);
+extern void tickWrappingTimerAccumulatorList(f32);
+extern void timeSnapshotFiller(void *);
+extern void updateAudioListenerVelocity(f32);
+extern void updateGridLayerScroll(f32);
+extern void updateMultiNodeAudioListeners(void);
+extern void waitForPrevFrameDone(void);
+extern void lookupActivePlayerCraftGridCell(void);
+extern void requestSpeechResponseMode1F(f32) __asm__("requestSpeechResponseMode1");
+extern void requestSpeechResponseMode2F(f32) __asm__("requestSpeechResponseMode2");
+extern void func_mission_overlay_800FBBA0F(f32) __asm__("func_mission_overlay_800FBBA0");
+extern void func_mission_overlay_800FBBA8(f32);
+extern void func_mission_overlay_800FBC4C(f32);
+extern void flashMissionAlertObjectsAndPrintF(f32) __asm__("flashMissionAlertObjectsAndPrint");
+extern void func_mission_overlay_800BF408(u8, void *);
+extern void extractOrthonormalFrameFromStruct(f32 *, void *);
+extern void setVec3At0x24(void *, f32, f32, f32);
+extern s32 slotDispatcherIter(u16, s32, void *);
+extern s32 pollControllerInputs(void);
+extern void tickPlayerHudIndicators(f32);
+
+extern s32 D_main_bss_80130B50;
+extern u16 gCutNpc6A4 __asm__("D_main_bss_80130BA2");
+extern f32 D_main_bss_80130BA4;
+extern s32 D_mission_overlay_8010C9E8;
+extern u32 mFlags __asm__("D_mission_overlay_8010CA1C");
+typedef struct { u8 pad[0x10]; u32 f10; u8 b14; } GS6A4;
+extern GS6A4 gGS __asm__("gGameSettings");
+extern u8 D_main_bss_80136E18[];
+extern s32 D_main_bss_80138260;
+extern s32 D_main_bss_8013889C;
+extern s32 D_main_bss_80138D10;
+extern MissionView gViews6A4[] __asm__("D_main_bss_80138D18");
+extern u16 D_main_bss_80139560[];
+typedef struct { u8 id; u8 pad[3]; s32 (*fn)(u8, f32); } Ent6A4;
+extern Ent6A4 gEnt6A4[] __asm__("D_mission_overlay_8010B350");
+extern f32 gT6A4 __asm__("D_mission_overlay_8010C9E4");
+
+void func_mission_overlay_800FA6A4(void) {
+    MissionTimeSnap snap;
+    MissionSlotArgs args;
+    f32 dt;
+    f32 var_fs0;
+    f32 m;
+    f32 zero;
+    s32 i;
+    s32 k;
+    u8 *p;
+    f32 *tp;
+    f32 *pd;
+    MissionView *view;
+    MissionSlotArgs *ap;
+    u8 *nd;
+
+    D_mission_overlay_8010C9E8 = 3;
+    if (gGS.f10 & 0x20) {
+        func_mission_overlay_800BF408(gGS.b14, &gGS);
+    }
+    if (!(mFlags & 0x40)) {
+        do {
+            zero = 0.0f;
+            timeSnapshotFiller(&snap);
+            var_fs0 = snap.elapsed;
+            m = floatModulo(var_fs0, snap.period);
+            if (m > zero) {
+                if ((m / snap.period) < 0.5f) {
+                    var_fs0 -= m;
+                } else {
+                    var_fs0 = (var_fs0 + snap.period) - m;
+                }
+            }
+            if (var_fs0 <= zero) {
+                var_fs0 = 0.033333335f;
+            }
+            if (var_fs0 > 0.1f) {
+                var_fs0 = 0.1f;
+            }
+            if (D_main_bss_80130B50 & 0x20) {
+                var_fs0 = getDemoRecordedTimestep(var_fs0);
+            }
+            dt = var_fs0;
+            pollControllerInputs();
+            tickPlayerHudIndicators(var_fs0);
+            k = 0;
+            while (gEnt6A4[k].id != 0xFF) {
+                if ((D_mission_overlay_8010C9E0 & (1 << gEnt6A4[k].id)) && (gEnt6A4[k].fn(gEnt6A4[k].id, var_fs0) != 0)) {
+                    D_mission_overlay_8010C9E0 &= ~(1 << gEnt6A4[k].id);
+                }
+                k++;
+            }
+            switch (D_mission_overlay_8010CA20) {
+            case 5:
+                func_mission_overlay_800FBBA0F(var_fs0);
+                break;
+            case 6:
+                func_mission_overlay_800FBBA8(var_fs0);
+                break;
+            case 1:
+                func_mission_overlay_800FBC4C(var_fs0);
+                break;
+            case 4:
+                requestSpeechResponseMode2F(var_fs0);
+                break;
+            case 3:
+                requestSpeechResponseMode1F(var_fs0);
+                break;
+            case 0:
+                flashMissionAlertObjectsAndPrintF(var_fs0);
+            default:
+                break;
+            }
+            i = 0;
+            if (!(mFlags & 1)) {
+                D_main_bss_80130BA4 += var_fs0;
+                gT6A4 += var_fs0;
+                for (i = 0; i < 8; i++) {
+                    gObjectiveTimers[i] += var_fs0;
+                }
+                if (D_mission_overlay_8010CA20 == 0) {
+                    checkComplexObjectives(var_fs0);
+                }
+                pd = &dt;
+                slotDispatcherIter(D_main_bss_80139560[3], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[4], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[1], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[10], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[5], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[0], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[6], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[8], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[7], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[9], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[0x1F], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[0x1B], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[0x1C], 3, pd);
+                slotDispatcherIter(D_main_bss_80139560[0x1E], 3, pd);
+                updateGridLayerScroll(var_fs0);
+                checkObjectiveHandles(var_fs0);
+            } else {
+                updateGridLayerScroll(0.0f);
+            }
+            tickSpeechSubsystem(var_fs0);
+            tickVoiceSubtitleDisplay(var_fs0);
+            slotDispatcherIter(D_main_bss_80139560[0xB], 3, &dt);
+            i = 0;
+            ap = &args;
+            updateMultiNodeAudioListeners();
+            refreshAllSceneNodeInverseTransforms(var_fs0);
+            updateAudioListenerVelocity(var_fs0);
+            startLevelBackgroundMusic(var_fs0);
+            lookupActivePlayerCraftGridCell();
+            D_main_bss_80138D10 += 1;
+            waitForPrevFrameDone();
+            frameStartReset();
+            clearSceneNodeMotionFields();
+            do {
+                view = &gViews6A4[i];
+                if (view->active != 0) {
+                    args.p0 = (u8 *)view + 8;
+                    args.p4 = (u8 *)view + 0x64;
+                    args.p8 = (u8 *)view + 0x68;
+                    args.pC = (u8 *)view + 0x6C;
+                    args.p10 = (u8 *)view + 0x70;
+                    args.p14 = (u8 *)view + 0x74;
+                    *(s32 *)((u8 *)view + 0x74) = 0;
+                    *(void **)((u8 *)view + 0x78) = (u8 *)view + 0x7C;
+                    extractOrthonormalFrameFromStruct(args.frame, view->camBase + 0x28);
+                    view->unkA8 = 0;
+                    view->unkA4 = 0;
+                    view->unkA0 = 0;
+                    view->unk9C = 0;
+                    view->unkB0 = 0;
+                    view->unkAC = (u8 *)view + 0xE8;
+                    setVec3At0x24(view->unkB8, args.frame[0], args.frame[1], args.frame[2]);
+                    view->unkF0 = 0;
+                    view->unkEC = 0;
+                    view->unkE8 = 0;
+                    view->unkF4 = 0x49000000;
+                    view->unkF8 = 0;
+                    view->unk100 = 0;
+                    view->unkFC = 0;
+                    view->unk108 = 0;
+                    clearStructPair2C30((u8 *)view + 0xE8);
+                    args.p80 = (u8 *)view + 0xE8;
+                    slotDispatcherIter(D_main_bss_80139560[3], 4, ap);
+                    slotDispatcherIter(D_main_bss_80139560[4], 4, ap);
+                    slotDispatcherIter(D_main_bss_80139560[1], 4, ap);
+                    slotDispatcherIter(D_main_bss_80139560[5], 4, ap);
+                    slotDispatcherIter(D_main_bss_80139560[0], 4, ap);
+                    slotDispatcherIter(D_main_bss_80139560[6], 4, ap);
+                    slotDispatcherIter(D_main_bss_80139560[8], 4, ap);
+                    slotDispatcherIter(D_main_bss_80139560[7], 4, ap);
+                    slotDispatcherIter(D_main_bss_80139560[9], 4, ap);
+                    slotDispatcherIter(D_main_bss_80139560[10], 4, ap);
+                    slotDispatcherIter(D_main_bss_80139560[0x1A], 4, ap);
+                    slotDispatcherIter(D_main_bss_80139560[0xB], 4, ap);
+                    if (D_main_bss_80138260 == 1 && gCutNpc6A4 != 0xFFFF) {
+                        slotDispatcherIter(gCutNpc6A4, 4, ap);
+                    }
+                    linkHudNodeAndComputeScreenPos((u8 *)view + 8);
+                    nd = view->node8;
+                    view->unk9C = nd;
+                    if (nd != 0) {
+                        *(void **)(nd + 4) = (u8 *)view + 0x9C;
+                    }
+                    view->unkA0 = 0;
+                    view->node8 = (u8 *)view + 0x9C;
+                }
+                i++;
+
+            } while (i <= 0);
+            if (!(mFlags & 1)) {
+                tickWrappingTimerAccumulatorList(var_fs0);
+                tickTextureAnimSlots(var_fs0);
+            }
+            loadGridCellTilesByDistance(var_fs0);
+            if (D_mission_overlay_8010C9E8 > 0) {
+                setFrameLevelStateBytes(0, 0, 0);
+                i = 0;
+                view = gViews6A4;
+                do {
+                    view = &gViews6A4[i];
+                    if (view->active != 0) {
+                        *(s32 *)((u8 *)view + 0x64) = 0;
+                        *(s32 *)((u8 *)view + 0x68) = 0;
+                        *(s32 *)((u8 *)view + 0x6C) = 0;
+                        *(s32 *)((u8 *)view + 0x70) = 0;
+                        *(s32 *)((u8 *)view + 0x74) = 0;
+                        *(void **)((u8 *)view + 0x78) = (u8 *)view + 0x7C;
+                        setActiveRenderListPtr(0);
+                        setRenderStateFlagByteOne(1);
+                        view->node8 = 0;
+                        *(s32 *)((u8 *)view + 0x14) = 0;
+                        *(s32 *)((u8 *)view + 0x10) = 0;
+                        setupCameraMatrices((u8 *)view + 8);
+                    }
+                    i++;
+
+                } while (i <= 0);
+                D_mission_overlay_8010C9E8 -= 1;
+            } else {
+                setFrameLevelStateBytes(D_main_bss_80136E18[0], D_main_bss_80136E18[1], D_main_bss_80136E18[2]);
+                refreshEffectObjectCamerasAndState();
+            }
+            D_main_bss_8013889C += 1;
+            drawFrameProfilerBars();
+            submitGfxFrame();
+        } while (!(mFlags & 0x40));
+    }
+    bufferArbiterProducerScanWait();
+}
 
 typedef struct {
     u8 pad0[0x1A];
