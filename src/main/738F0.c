@@ -554,7 +554,87 @@ void triggerDistanceScaledExplosion(s32 i, f32 arg1) {
     distanceAndDopplerNpcHelper(pos, 0.1f, 0.4f);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", triggerObjectDestructionEffects);
+typedef struct { f32 x, y, z; } TodV;
+typedef struct { f32 *vec; void *parent; u8 pad8[4]; f32 f24c; f32 f28c; f32 pad2C; f32 f30c; u16 s34; s16 s36; } TodWsArgs;
+extern f32 D_tod8013A8B0 __asm__("D_main_bss_8013A8B0");
+extern f32 D_main_bss_80130BA4;
+extern f32 D_main_bss_80136FA8;
+extern u8 D_main_bss_80139920[];
+extern u8 D_main_bss_801398C0[];
+extern s32 isTerrainCellBlockedAtWorldXz(f32, f32, void *);
+extern void spawnMinimalRandomNpc(f32 *, f32, void *);
+extern s32 getPlayerField2(s32);
+extern void spawnStubMarkerNpc(f32, f32, f32, f32, s32);
+extern s16 todRand(void) __asm__("rand");
+extern void spawnDebris1Npc(f32 *, f32 *, f32, f32, f32);
+extern u16 todBurst(f32 *, u16, f32, f32, f32, f32) __asm__("spawnDestructionEffectBurst");
+extern void todExplode(f32 *, f32, f32, f32) __asm__("triggerDistanceScaledExplosion");
+extern void todDebris(void *, f32, f32) __asm__("spawnDistanceScaledDebrisBurst");
+
+static __inline__ void todSpray(f32 *arg0, f32 arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5, s16 kind) {
+    TodWsArgs a;
+    f32 v[3];
+    if (D_main_bss_8013A944 != 0) {
+        a.s34 = 0xFFFF;
+        a.s36 = kind;
+        a.parent = arg0;
+        v[0] = arg1;
+        v[2] = arg1;
+        v[1] = arg3;
+        a.vec = v;
+        a.f30c = arg4;
+        a.f28c = 1.0f / arg5;
+        a.f24c = arg2 - arg1;
+        spawnNpcOfType(npcWaterSprayUpdate, &a, 1, 0xF);
+    }
+}
+
+s32 triggerObjectDestructionEffects(f32 *pos, f32 *vel, u16 owner) {
+    f32 v[3];
+    s32 r;
+
+    r = isTerrainCellBlockedAtWorldXz(pos[0], pos[2], D_main_bss_80138058);
+    if (r == 0) {
+        spawnMinimalRandomNpc(pos, 0.5f, D_main_bss_80139920);
+        if (owner != (u16)getPlayerField2(0)) {
+            return 0;
+        }
+        if (D_tod8013A8B0 + 0.1f < D_main_bss_80130BA4) {
+            D_tod8013A8B0 = D_main_bss_80130BA4;
+            spawnStubMarkerNpc(((TodV *)pos)->x, ((TodV *)pos)->z, 0.08f, 0.08f, 0xC);
+        }
+        r = (s16)(todRand() % 100);
+        if (r < 2) {
+            v[0] = vel[0];
+            v[1] = -1.0f;
+            v[2] = vel[2];
+            spawnDebris1Npc(pos, v, 20.0f, 0.5f, 0.1f);
+        } else if (r < 10) {
+            todBurst(pos, 0xFFFF, 1.2f, 0.25f, 0.8f, 0.5f);
+        }
+        if (gCurrentLevel == 13 && pos[1] >= 10.0f) {
+            todExplode(pos, 0.1f, 0.4f, 1.0f);
+            return 0;
+        }
+        return 0;
+    }
+    if (r != 1) {
+        return 0;
+    }
+    v[0] = pos[0];
+    v[2] = pos[2];
+    v[1] = wrapAngleToCyclicRange(v[0], v[2], D_main_bss_80138058, 0) - D_main_bss_80136FA8;
+    if (gCurrentLevel != 13) {
+        todDebris(v, 0.1f, 0.4f);
+        spawnMinimalRandomNpc(v, 0.5f, D_main_bss_801398C0);
+        todSpray(v, 0.05f, 0.4f, 0.3f, 0.3f, 0.3f, 1);
+        return 1;
+    }
+    if (owner == (u16)getPlayerField2(0)) {
+        todExplode(pos, 0.1f, 0.4f, 1.0f);
+    }
+    return 1;
+}
 
 #include "main/192E0.h"
 #include "main/1D000.h"
