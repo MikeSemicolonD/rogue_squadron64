@@ -863,7 +863,152 @@ void executeActorType3Effect(void *arg0, f32 dt) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType4);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", buildSineWaveEffectGeometryA);
+f32 sinfApprox(f32);
+typedef struct { f32 f0; u8 pad4[4]; f32 f8; } SwIn;
+typedef struct { u8 pad0[8]; f32 f8; } SwOut;
+void buildSineWaveEffectGeometryA(s32 mode, void *inp, f32 base, void *outp) {
+    SwIn *in = inp;
+    SwOut *out = outp;
+    f32 a[4];
+    f32 b[4];
+    f32 max;
+    f32 scale;
+    f32 amp;
+    u8 *o = (u8 *)out;
+
+    max = out->f8;
+    scale = 255.0f / max;
+    amp = (1.0f - (sinfApprox(in->f8) / 1.5707964f)) * base;
+    a[0] = base + amp;
+    if (a[0] < 0.0f) {
+        a[0] = 0.0f;
+    }
+    if (max < a[0]) {
+        a[0] = max;
+    }
+    b[0] = base - amp;
+    if (b[0] < 0.0f) {
+        b[0] = 0.0f;
+    }
+    if (max < b[0]) {
+        b[0] = max;
+    }
+    amp = (sinfApprox(in->f0) / 1.5707964f) * (max - base);
+    b[2] = base + amp;
+    a[2] = base - amp;
+    switch (mode) {
+    case 0:
+        o[0x19] = (u32)(a[0] * scale);
+        o[0x1B] = (u32)(b[0] * scale);
+        if (o[0x14] == 0xFF) {
+            o[0x17] = (u32)(b[2] * scale);
+        } else {
+            o[0x17] = (u32)(((f32)o[0x14] + (f32)o[0x1A]) * 0.5f);
+        }
+        if (o[0x20] == 0xFF) {
+            o[0x1D] = (u32)(a[2] * scale);
+        } else {
+            o[0x1D] = (u32)(((f32)o[0x20] + (f32)o[0x1A]) * 0.5f);
+        }
+        b[3] = a[0] * (b[2] / base);
+        if (max < b[3]) {
+            b[3] = max;
+        }
+        o[0x16] = (u32)(b[3] * scale);
+        a[1] = a[0] * (a[2] / base);
+        if (max < a[1]) {
+            a[1] = max;
+        }
+        o[0x1C] = (u32)(a[1] * scale);
+        b[1] = b[0] * (b[2] / base);
+        if (max < b[1]) {
+            b[1] = max;
+        }
+        o[0x18] = (u32)(b[1] * scale);
+        a[3] = b[0] * (a[2] / base);
+        if (max < a[3]) {
+            a[3] = max;
+        }
+        o[0x1E] = (u32)(a[3] * scale);
+        break;
+    case 1:
+        o[0x13] = (u32)(a[0] * scale);
+        o[0x15] = (u32)(b[0] * scale);
+        if (o[0x1A] == 0xFF) {
+            o[0x17] = (u32)(a[2] * scale);
+        } else {
+            o[0x17] = (u32)(((f32)o[0x1A] + (f32)o[0x14]) * 0.5f);
+        }
+        o[0x11] = (u32)(b[2] * scale);
+        if (o[0x16] == 0xFF) {
+            a[1] = a[0] * (a[2] / base);
+            if (max < a[1]) {
+                a[1] = max;
+            }
+            o[0x16] = (u32)(a[1] * scale);
+        } else {
+            o[0x16] = (u32)(((f32)o[0x13] + (f32)o[0x19]) * 0.5f);
+        }
+        if (o[0x18] == 0xFF) {
+            a[3] = b[0] * (a[2] / base);
+            if (max < a[3]) {
+                a[3] = max;
+            }
+            o[0x18] = (u32)(a[3] * scale);
+        } else {
+            o[0x18] = (u32)(((f32)o[0x15] + (f32)o[0x1B]) * 0.5f);
+        }
+        b[3] = a[0] * (b[2] / base);
+        if (max < b[3]) {
+            b[3] = max;
+        }
+        o[0x10] = (u32)(b[3] * scale);
+        b[1] = b[0] * (b[2] / base);
+        if (max < b[1]) {
+            b[1] = max;
+        }
+        o[0x12] = (u32)(b[1] * scale);
+        break;
+    case 2:
+        o[0x1F] = (u32)(a[0] * scale);
+        o[0x21] = (u32)(b[0] * scale);
+        if (o[0x1A] == 0xFF) {
+            o[0x1D] = (u32)(b[2] * scale);
+        } else {
+            o[0x1D] = (u32)(((f32)o[0x1A] + (f32)o[0x20]) * 0.5f);
+        }
+        o[0x23] = (u32)(a[2] * scale);
+        if (o[0x1C] == 0xFF) {
+            b[3] = a[0] * (b[2] / base);
+            if (max < b[3]) {
+                b[3] = max;
+            }
+            o[0x1C] = (u32)(b[3] * scale);
+        } else {
+            o[0x1C] = (u32)(((f32)o[0x1F] + (f32)o[0x19]) * 0.5f);
+        }
+        if (o[0x1E] == 0xFF) {
+            b[1] = b[0] * (b[2] / base);
+            if (max < b[1]) {
+                b[1] = max;
+            }
+            o[0x1E] = (u32)(b[1] * scale);
+        } else {
+            o[0x1E] = (u32)(((f32)o[0x21] + (f32)o[0x1B]) * 0.5f);
+        }
+        a[1] = a[0] * (a[2] / base);
+        if (max < a[1]) {
+            a[1] = max;
+        }
+        o[0x22] = (u32)(a[1] * scale);
+        a[3] = b[0] * (a[2] / base);
+        if (max < a[3]) {
+            a[3] = max;
+        }
+        o[0x24] = (u32)(a[3] * scale);
+        break;
+    }
+}
 
 typedef struct {
     f32 f0;
@@ -987,7 +1132,7 @@ void buildSineWaveEffectGeometryB(s32 mode, SineWaveIn *in, f32 base, SineWaveOu
 
 void rs_memset(u8 *, u8, u32);
 void rotateVec3ByMat3x3(Mat4x3, Vec3f, Vec3f);
-void buildSineWaveEffectGeometryA(s32, SineWaveIn *, f32, SineWaveOut *);
+void buildSineWaveEffectGeometryA(s32, void *, f32, void *);
 f32 raycastTerrainAndNpcs(f32 *, f32 *, u16, u16 *, f32, s32, f32 *, f32 *, s32, u8 *);
 
 typedef struct { f32 m[12]; } RnMat;
