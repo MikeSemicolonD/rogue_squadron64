@@ -65,7 +65,125 @@ void playerT16Init(void *argv, s32 arg1, s32 arg2) {
     D_mission_overlay_8010BEA8[arg0[0]][countTrailingZeros16(D_mission_overlay_8010BE18[arg0[0]].unk18)] = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BD840", computeT16Transform);
+typedef struct {
+    u8 pad0[0x12];
+    u16 maskA;
+    u8 pad14[4];
+    u16 maskB;
+    u8 pad1A[0xA];
+} T16Cfg;
+
+typedef struct {
+    u8 pad0[0xB8];
+    s32 owner;
+    u8 padBC[0xE8 - 0xBC];
+    f32 fE8;
+    f32 fEC;
+    f32 fF0;
+    f32 fF4;
+    u8 padF8[0x180 - 0xF8];
+    u16 flags;
+    u8 pad182[0x2A0 - 0x182];
+} T16Craft;
+
+typedef struct {
+    s32 index;
+    f32 scale;
+} T16Arg;
+
+extern u16 D_main_bss_80130B88[][3];
+extern u8 D_main_bss_8013800C[][0x2A0];
+extern s32 getCraftAnimationSlotFlag(s32);
+extern f32 getCraftAnimationSlotValue(s32);
+extern void setCraftAnimationSlotParams(s32, s32, f32);
+extern void updatePlayerCraftPhysics(void *, f32);
+extern void computeBootConfigScaledVec4(s32, f32, f32, void *, f32, f32);
+
+void computeT16TransformImpl(T16Arg *arg0, f32 dt) __asm__("computeT16Transform");
+void computeT16TransformImpl(T16Arg *arg0, f32 dt) {
+    T16Craft *c;
+    f32 fs0;
+    f32 sc;
+    f32 t;
+    f32 e8;
+    f32 lim;
+    u16 bits;
+    register f32 *tb asm("$16");
+    register T16Cfg *cf asm("$19");
+
+    c = (T16Craft *)D_main_bss_80137DBC[arg0->index];
+    if (*(u16 *)((s32)D_main_bss_80137DBC + c->owner * 0x2A0 + 0x180) & 1) {
+        fs0 = c->fEC;
+        sc = 0.375f;
+        if ((D_main_bss_80130B88[arg0->index][0] & ((T16Cfg *)D_mission_overlay_8010BE18)[arg0->index].maskA) && !(D_main_bss_80130B88[arg0->index][0] & ((T16Cfg *)D_mission_overlay_8010BE18)[arg0->index].maskB)) {
+            sc = 0.0f;
+            fs0 -= 0.3f;
+        }
+        {
+            f32 t1 = arg0->scale * 1.875f;
+            if (fs0 < t1) {
+                fs0 = t1;
+            }
+        }
+        { s32 hi; __asm__("lui %0, %%hi(D_mission_overlay_8010BE18)" : "=r"(hi)); __asm__("addiu %0, %1, %%lo(D_mission_overlay_8010BE18)" : "=r"(cf) : "r"(hi)); }
+        {
+            s32 k = countTrailingZeros16(cf[arg0->index].maskB);
+            tb = (f32 *)D_mission_overlay_8010BEA8;
+            fs0 += *(f32 *)((k << 2) + (arg0->index << 6) + (s32)tb) * 0.6f;
+        }
+        countTrailingZeros16(cf[arg0->index].maskB);
+        {
+        s32 ii = arg0->index;
+        __asm__("" : "+r"(ii));
+        if (D_main_bss_80130B88[ii][0] & cf[ii].maskB) {
+            if (!(u8)getCraftAnimationSlotFlag(0)) {
+                setCraftAnimationSlotParams(0, 1, 0.0f);
+            }
+        } else if ((u8)getCraftAnimationSlotFlag(0) == 1) {
+            if (getCraftAnimationSlotValue(0) == 0.0f) {
+                setCraftAnimationSlotParams(0, 1, 0.5f);
+            }
+        }
+        }
+        bits = D_main_bss_80130B88[arg0->index][0];
+        if (!(bits & ((T16Cfg *)D_mission_overlay_8010BE18)[arg0->index].maskA) && !(bits & ((T16Cfg *)D_mission_overlay_8010BE18)[arg0->index].maskB) && c->fE8 < 3.0f) {
+            f32 t2 = arg0->scale * 3.0f;
+            fs0 += 0.3f;
+            if (t2 < fs0) {
+                fs0 = t2;
+            }
+        }
+        {
+            register f32 t3 asm("$f2") = arg0->scale * 6.0f;
+            if (t3 < fs0) {
+                fs0 = t3;
+            }
+        }
+        {
+            f32 e8a = c->fE8;
+            f32 la = c->fF0;
+            c->fEC = fs0;
+            if (la < fs0 - e8a) {
+                c->fE8 = e8a + la;
+            } else {
+                c->fE8 = fs0;
+            }
+        }
+        e8 = c->fE8;
+        lim = c->fF4;
+        if (fs0 - e8 < -lim) {
+            c->fE8 = e8 - lim;
+        } else {
+            c->fE8 = fs0;
+        }
+        __asm__("" :: "f"(sc));
+        arg0->scale = 1.0f;
+    }
+    updatePlayerCraftPhysics(c, dt);
+    sc = 0.375f;
+    t = arg0->scale;
+    computeBootConfigScaledVec4(arg0->index, sc, sc, D_main_bss_8013800C[arg0->index], (c->fE8 - t * 1.875f) / (t * 4.125f) + 1.0f, dt);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BD840", D_mission_overlay_800A6074);
 
