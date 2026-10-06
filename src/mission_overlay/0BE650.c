@@ -84,7 +84,157 @@ void playerNabooStarfighterInit(s32 *arg0, s32 arg1, s32 arg2) {
     arg0[8] = lookupHmtMaterialByName(*(s32 *)p, "f_trns_r", (u8 *)arg0 + 0x18);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BE650", buildNabooSubmodelTransform);
+typedef struct {
+    u8 pad0[0x4C];
+    u32 flags;
+    f32 f50, f54, f58;
+    f32 f5C, f60, f64;
+    u8 q68[0x10];
+    f32 f78, f7C, f80;
+} NbDef;
+
+typedef struct {
+    s32 index;
+    u8 pad4[0x10];
+    NbDef *def1;
+    NbDef *def2;
+    u8 *obj1;
+    u8 *obj2;
+} NbArg;
+
+typedef struct {
+    u8 pad0[0xB8];
+    s32 owner;
+    u8 padBC[0x2C];
+    f32 fE8;
+    f32 fEC;
+    f32 fF0;
+    f32 fF4;
+    u8 padF8[0x28];
+    f32 f120;
+} NbCraft;
+
+typedef struct {
+    u8 pad0[0x12];
+    u16 maskA;
+    u8 pad14[4];
+    u16 maskB;
+    u8 pad1A[0xA];
+} NbCfg;
+
+extern u16 nbB88[][3] __asm__("D_main_bss_80130B88");
+extern u8 D_main_bss_8013800C[][0x2A0];
+extern f32 D_mission_overlay_8010BDD8[][2];
+extern void updatePlayerCraftPhysics(void *, f32);
+extern void computeBootConfigScaledVec4(s32, f32, f32, void *, f32, f32);
+extern void clearVec4QuadStruct(void *);
+extern void addVec3At0x24(void *, f32, f32, f32);
+extern void applyScaleToMat3x4(void *, f32, f32, f32);
+extern void composeRotationMatrixSlot0(void *, f32);
+extern void composeQuatToMat3x4(void *, void *);
+
+#define NB_SUB(D, M, ANG)                                                              \
+    {                                                                                  \
+        NbDef *d;                                                                      \
+        u8 *m;                                                                         \
+        fs0 = D_mission_overlay_8010BDD8[c->owner][0] * (ANG);                         \
+        d = D;                                                                         \
+        m = M + 0x1C;                                                                  \
+        clearVec4QuadStruct(m);                                                        \
+        if (d->flags & 1) {                                                            \
+            addVec3At0x24(m, -d->f50, -d->f54, -d->f58);                               \
+        }                                                                              \
+        if (d->flags & 2) {                                                            \
+            applyScaleToMat3x4(m, d->f5C, d->f60, d->f64);                             \
+        }                                                                              \
+        composeRotationMatrixSlot0(m, fs0);                                            \
+        if (d->flags & 4) {                                                            \
+            composeQuatToMat3x4(m, d->q68);                                            \
+        }                                                                              \
+        {                                                                              \
+            u32 fl = d->flags;                                                         \
+            if ((fl & 9) == 9) {                                                       \
+                addVec3At0x24(m, d->f78 + d->f50, d->f7C + d->f54, d->f80 + d->f58);   \
+            } else if ((fl & 9) == 8) {                                                \
+                addVec3At0x24(m, d->f78, d->f7C, d->f80);                              \
+            } else if (fl & 1) {                                                       \
+                addVec3At0x24(m, d->f50, d->f54, d->f58);                              \
+            }                                                                          \
+        }                                                                              \
+    }
+
+void nbImpl(NbArg *arg0, f32 dt) __asm__("buildNabooSubmodelTransform");
+void nbImpl(NbArg *arg0, f32 dt) {
+    NbCraft *c;
+    f32 fs0;
+    f32 sc;
+    u16 bits;
+    register f32 *tb asm("$16");
+    register NbCfg *cf asm("$17");
+
+    c = (NbCraft *)sCraftBytes[arg0->index];
+    if (*(u16 *)((s32)sCraftBytes + c->owner * 0x2A0 + 0x180) & 1) {
+        fs0 = c->fEC;
+        sc = 0.375f;
+        if ((nbB88[arg0->index][0] & ((NbCfg *)sHudDefs)[arg0->index].maskA) && !(nbB88[arg0->index][0] & ((NbCfg *)sHudDefs)[arg0->index].maskB)) {
+            sc = 0.0f;
+            fs0 -= 0.3f;
+        }
+        c->f120 = 60.0f;
+        if (fs0 < 1.6875f) {
+            fs0 = 1.6875f;
+        }
+        { s32 hi; __asm__("lui %0, %%hi(D_mission_overlay_8010BE18)" : "=r"(hi)); __asm__("addiu %0, %1, %%lo(D_mission_overlay_8010BE18)" : "=r"(cf) : "r"(hi)); }
+        {
+            s32 k = countTrailingZeros16(cf[arg0->index].maskB);
+            tb = (f32 *)D_mission_overlay_8010BEA8;
+            fs0 += *(f32 *)((k << 2) + (arg0->index << 6) + (s32)tb) * 0.3f;
+        }
+        countTrailingZeros16(cf[arg0->index].maskB);
+        {
+            s32 ii = arg0->index;
+            __asm__("" :: "r"(ii));
+            bits = nbB88[ii][0];
+        }
+        if (!(bits & cf[arg0->index].maskA) && !(bits & cf[arg0->index].maskB) && c->fE8 < 3.0f) {
+            fs0 += 0.3f;
+            if (3.0f < fs0) {
+                fs0 = 3.0f;
+            }
+        }
+        {
+            register f32 t3 asm("$f2") = 6.0f;
+            if (t3 < fs0) {
+                fs0 = t3;
+            }
+        }
+        {
+            f32 e8a = c->fE8;
+            f32 la = c->fF0;
+            c->fEC = fs0;
+            if (la < fs0 - e8a) {
+                c->fE8 = e8a + la;
+            } else {
+                c->fE8 = fs0;
+            }
+        }
+        {
+            f32 e8 = c->fE8;
+            f32 lim = c->fF4;
+            if (fs0 - e8 < -lim) {
+                c->fE8 = e8 - lim;
+            } else {
+                c->fE8 = fs0;
+            }
+        }
+        __asm__("" :: "f"(sc));
+    }
+    updatePlayerCraftPhysics(c, dt);
+    sc = 0.375f;
+    computeBootConfigScaledVec4(arg0->index, sc, sc, D_main_bss_8013800C[arg0->index], (c->fE8 - 1.6875f) / 4.3125f + 1.0f, dt);
+    NB_SUB(arg0->def1, arg0->obj1, 45.0f)
+    NB_SUB(arg0->def2, arg0->obj2, -45.0f)
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BE650", triggerNabooEngineEffect);
 
