@@ -516,9 +516,315 @@ s32 updateNpcEffectIntensity(u8 *arg0, u8 *arg1) {
     return 0;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0F3E90", D_mission_overlay_800A8BB8);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", executeActorType1Effect);
+typedef struct { f32 x, y, z; } T1aV3;
+typedef struct { u16 a, b; } T1aPair;
+typedef struct { f32 t; u16 h4, h6; } T1aEv;
+extern u8 *D_main_bss_801375D8;
+extern u8 D_main_bss_80138058[];
+extern s32 slotDispatcherIter(u16, s32, void *);
+void buildPositionAndCallTransformHelper(void *, void *, void *, void *, f32, f32, f32);
+void setupActorAnchorTransformType1(void *, void *, void *, void *, f32);
+f32 sinf(f32);
+f32 cosf(f32);
+f32 sinfApprox(f32);
+f32 constMinusSinfApprox(f32);
+f32 vec3Dot(f32 *, f32 *);
+void vec3Cross(f32 *, f32 *, f32 *);
+void normalize_vector(f32 *);
+void quatFromAxisAngle(f32 *, f32 *, f32);
+void quatFromAxisAngleSafe(f32 *, f32 *, f32);
+void rotateVec3ByQuat(f32 *, f32 *, f32 *);
+f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+f32 sampleTerrainSurfaceAtWorldXz(f32, f32, void *, void *);
+s32 updateNpcEffectIntensityA(u8 *, u8 *) __asm__("updateNpcEffectIntensity");
+void computeRandomizedOrientationFrameA(void *, void *, void *, f32) __asm__("computeRandomizedOrientationFrame");
+s32 resolveScriptedNameTokenListA(u8 *, u8 *) __asm__("resolveScriptedNameTokenList");
+extern UnFx D_mission_overlay_8010C480;
+
+#define SF(o) (*(f32 *)(s + (o)))
+#define SW(o) (*(s32 *)(s + (o)))
+#define SP(o) (*(u8 **)(s + (o)))
+
+s32 executeActorType1EffectS(u8 *arg0, f32 dt) __asm__("executeActorType1Effect");
+
+s32 executeActorType1EffectS(u8 *arg0, f32 dt) {
+    f32 rm[12];
+    f32 prev[3];
+    struct { f32 f0; u8 pad[0x14]; u8 type; u8 pad2[7]; } msg;
+    u8 *s;
+    f32 *m;
+    u8 stop;
+    u8 fired;
+    f32 t;
+
+    s = arg0 + 8;
+    stop = 0;
+    m = getNpcContextField8(*(u16 *)(arg0 + 0x198));
+    *(T1aV3 *)prev = *(T1aV3 *)(s + 0xD0);
+    fired = 0;
+    t = SF(0x104);
+    if (t != 0.0f || (SW(0xFC) & 0xFF00FF00) != 0) {
+        if (t > 0.0f) {
+            t -= dt;
+            SF(0x104) = t;
+            if (t > 0.0f) {
+                goto stopped;
+            }
+            SF(0x104) = 0.0f;
+        }
+        if (s[0xFC] != 0 && gObjectiveBooleans[s[0xFC] - 1] != s[0xFD]) {
+            stop = 1;
+            goto anim;
+        }
+        if (s[0xFE] != 0 && gObjectiveCounts[s[0xFE] - 1] < SW(0x100)) {
+        stopped:
+            stop = 1;
+            goto anim;
+        }
+        if (*(u16 *)(arg0 + 0x110) & 2) {
+            s[0xFE] = 0;
+            s[0xFC] = 0;
+            msg.type = 3;
+            slotDispatcherIter(*(u16 *)(arg0 + 0x198), 9, &msg);
+        }
+    }
+    if (SF(0x48) != SF(0x50)) {
+        SF(0x58) += SF(0x5C) * dt;
+        if (SF(0x58) >= 1.0f) {
+            SF(0x48) = SF(0x50);
+        } else {
+            SF(0x48) = SF(0x4C) + sinf(SF(0x58) * 3.1415927f * 0.5f) * SF(0x54);
+        }
+        SF(0x2C) = SF(0x48) / *(f32 *)(SP(0x24) + 0x24);
+        if (*(u16 *)(arg0 + 0x110) & 1) {
+            msg.type = 2;
+            msg.f0 = SF(0x48);
+            slotDispatcherIter(*(u16 *)(arg0 + 0x198), 9, &msg);
+        }
+    }
+    SF(0x30) += SF(0x2C) * dt;
+    if (SF(0x30) > 1.0f) {
+        u8 *cur;
+        u8 *nx;
+        f32 saved;
+        SW(0x34)++;
+        cur = SP(0x24);
+        if (*(s32 *)(cur + 0x40) != 0) {
+            gObjectiveCounts[*(s32 *)(cur + 0x40) - 1] += *(s32 *)(cur + 0x44);
+        }
+        if (*(s32 *)(cur + 0x48) != 0) {
+            gObjectiveBooleans[*(s32 *)(cur + 0x48) - 1] = cur[0x4F];
+        }
+        if (!(u8)resolveScriptedNameTokenListA(arg0, s)) {
+            arg0[0x1A4] = 1;
+            return 0;
+        }
+        nx = SP(0x28);
+        SF(0x30) = (SF(0x30) - 1.0f) / SF(0x2C) * (SF(0x48) / *(f32 *)(nx + 0x24));
+        saved = SF(0x14);
+        {
+            f32 dd = *(f32 *)(nx + 0x24);
+            SF(0x2C) = SF(0x48) / dd;
+        }
+        SP(0x24) = nx;
+        SP(0x28) = 0;
+        SW(0x0) = *(s32 *)(nx + 0x1C);
+        SW(0x4) = *(s32 *)(SP(0x24) + 0x20);
+        SP(0x8) = *(u8 **)(SP(0x24) + 0x20) + SW(0x0) * 0xC;
+        setupActorAnchorTransformType1(s, SP(0x24) + 0x10, s + 0xD0, s + 0xC, SF(0x30));
+        SF(0x14) = saved;
+        SW(0x3C) = 0;
+        if (*(s32 *)(SP(0x24) + 0x28) != 0) {
+            SF(0x40) = **(f32 **)(SP(0x24) + 0x2C);
+        } else {
+            SF(0x40) = 10.0f;
+        }
+    }
+anim:
+    buildPositionAndCallTransformHelper(s, SP(0x24) + 0x10, s + 0xD0, s + 0xC, SF(0x44), 1.0f, SF(0x30));
+    m[9] = (SF(0xD0) - prev[0]) / dt;
+    m[10] = (SF(0xD4) - prev[1]) / dt;
+    m[11] = (SF(0xD8) - prev[2]) / dt;
+    buildRotationMatrixSlot2((Vec3f *)rm, SF(0x14));
+    composeRotationMatrixSlot0((Vec3f *)rm, SF(0xC));
+    composeRotationMatrixSlot1((Vec3f *)rm, SF(0x10));
+    m[6] = rm[1];
+    m[7] = rm[4];
+    m[8] = rm[7];
+    m[3] = rm[2];
+    m[4] = rm[5];
+    m[5] = rm[8];
+    if (*(u16 *)(arg0 + 0x110) & 8) {
+        f32 up[3] = { 0.0f, 1.0f, 0.0f };
+        f32 c1[3];
+        f32 c2[3];
+        f32 q[4];
+        vec3Cross(c1, &m[6], &m[3]);
+        vec3Cross(c2, up, c1);
+        normalize_vector(c2);
+        vec3Cross(up, c1, c2);
+        normalize_vector(up);
+        quatFromAxisAngle(q, c1, sinfApprox(vec3Dot(&m[3], up)) * 57.29578f);
+        rotateVec3ByQuat(q, &m[6], up);
+        *(T1aV3 *)&m[6] = *(T1aV3 *)up;
+        rotateVec3ByQuat(q, &m[3], up);
+        *(T1aV3 *)&m[3] = *(T1aV3 *)up;
+    }
+    if (SF(0x30) >= SF(0x40)) {
+        u8 *p = SP(0x24);
+        s32 idx;
+        T1aPair *tb = (T1aPair *)(p + (*(s32 *)(p + 0xD8) + 0xD4));
+        fired = updateNpcEffectIntensityA(arg0, ((u8 **)*(u8 **)(D_main_bss_801375D8 + 0x3C))[tb[((T1aEv *)*(u8 **)(p + 0x2C))[SW(0x3C)].h6].b]);
+        idx = SW(0x3C) + 1;
+        SW(0x3C) = idx;
+        if (idx < *(s32 *)(SP(0x24) + 0x28)) {
+            SF(0x40) = *(f32 *)(*(u8 **)(SP(0x24) + 0x2C) + idx * 8);
+        } else {
+            SF(0x40) = 10.0f;
+        }
+    }
+    if (SF(0xDC) > 0.0f) {
+        f32 off[3];
+        f32 v[3];
+        f32 q[4];
+        v[0] = 0.0f;
+        v[1] = SF(0xDC) * 0.25f;
+        v[2] = 0.0f;
+        quatFromAxisAngle(q, &m[3], -SF(0xE0));
+        rotateVec3ByQuat(q, v, off);
+        m[0] = SF(0xD0) + off[0];
+        m[1] = SF(0xD4) + off[1];
+        m[2] = SF(0xD8) + off[2];
+    } else {
+        *(T1aV3 *)m = *(T1aV3 *)(s + 0xD0);
+    }
+    if (SF(0xE8) > 0.0f) {
+        SF(0xEC) += dt * SF(0xF0);
+        if (SF(0xEC) < 1.0f) {
+            f32 w[3];
+            f32 q[4];
+            f32 k;
+            w[2] = 0.0f;
+            w[0] = 0.0f;
+            k = 1.0f - (cosf((SF(0xEC) + SF(0xEC)) * 3.1415927f) + 1.0f) * 0.5f;
+            w[1] = -SF(0xE8) * k;
+            quatFromAxisAngle(q, &m[3], SF(0xE4));
+            rotateVec3ByQuat(q, w, w);
+            m[0] += w[0];
+            m[1] += w[1];
+            m[2] += w[2];
+            if (wrapAngleToCyclicRange(m[0], m[2], D_main_bss_80138058, 0) < m[1]) {
+                struct { u16 a, b, c, d; s32 e; } msg2;
+                msg2.a = 0xFFFF;
+                msg2.b = 0xFFFF;
+                msg2.c = 7;
+                msg2.d = 0xFFFF;
+                msg2.e = 0;
+                slotDispatcherIter(*(u16 *)(arg0 + 0x198), 5, &msg2);
+            }
+        } else {
+            SF(0xE8) = 0.0f;
+        }
+    }
+    if (!stop) {
+        computeRandomizedOrientationFrameA(arg0, s, m, dt);
+    }
+    if (SF(0xF8) != 0.0f || SF(0xF4) != 0.0f) {
+        f32 w[3];
+        f32 q[4];
+        f32 ang;
+        f32 *ax;
+        if (SF(0xF4) > 0.0f) {
+            SF(0xF8) += SF(0xF4) * dt;
+            if (SF(0xF8) > 1.0f) {
+                SF(0xF8) = 1.0f;
+                SF(0xF4) = 0.0f;
+            }
+        } else if (SF(0xF4) < 0.0f) {
+            SF(0xF8) += SF(0xF4) * dt;
+            if (SF(0xF8) < 0.0f) {
+                SF(0xF8) = 0.0f;
+                SF(0xF4) = 0.0f;
+            }
+        }
+        ax = w;
+        vec3Cross(ax, &m[6], &m[3]);
+        if (*(s32 *)(SP(0x24) + 0x50) == 0) {
+            quatFromAxisAngle(q, ax, constMinusSinfApprox(cosf(SF(0xF8) * 3.1415927f)) * 57.29578f * 0.5f);
+        } else {
+            quatFromAxisAngle(q, ax, -constMinusSinfApprox(cosf(SF(0xF8) * 3.1415927f)) * 57.29578f * 0.5f);
+        }
+        rotateVec3ByQuat(q, &m[3], w);
+        *(T1aV3 *)&m[3] = *(T1aV3 *)w;
+        rotateVec3ByQuat(q, &m[6], w);
+        *(T1aV3 *)&m[6] = *(T1aV3 *)w;
+    }
+    if (fired) {
+        slotDispatcherIter(*(u16 *)(arg0 + 0x198), 9, &D_mission_overlay_8010C480);
+        return 1;
+    }
+    if (*(u16 *)(arg0 + 0x110) & 4) {
+        if (!(*(u16 *)(arg0 + 0x110) & 0x10)) {
+            m[1] = wrapAngleToCyclicRange(m[0], m[2], D_main_bss_80138058, 0) - SF(0x38) * 0.25f;
+        } else {
+            f32 terr[10];
+            f32 c[3];
+            f32 q[4];
+            f32 ang;
+            m[1] = sampleTerrainSurfaceAtWorldXz(m[0], m[2], D_main_bss_80138058, terr) - SF(0x38) * 0.25f;
+            ang = constMinusSinfApprox(vec3Dot((f32 *)(s + 0x18), &terr[3])) * 57.29578f;
+            if (ang > 0.0001f) {
+                if (dt * 30.0f < ang) {
+                    ang = dt * 30.0f;
+                }
+                vec3Cross(c, (f32 *)(s + 0x18), &terr[3]);
+                quatFromAxisAngleSafe(q, c, ang);
+                rotateVec3ByQuat(q, (f32 *)(s + 0x18), c);
+                *(T1aV3 *)(s + 0x18) = *(T1aV3 *)c;
+            } else {
+                *(T1aV3 *)(s + 0x18) = *(T1aV3 *)&terr[3];
+            }
+            ang = constMinusSinfApprox(vec3Dot((f32 *)(s + 0x18), &m[6])) * 57.29578f;
+            if (ang > 0.0001f) {
+                vec3Cross(c, &m[6], (f32 *)(s + 0x18));
+                quatFromAxisAngleSafe(q, c, ang);
+                rotateVec3ByQuat(q, &m[3], c);
+                *(T1aV3 *)&m[3] = *(T1aV3 *)c;
+                rotateVec3ByQuat(q, &m[6], c);
+                *(T1aV3 *)&m[6] = *(T1aV3 *)c;
+            }
+        }
+    } else if (*(u16 *)(arg0 + 0x110) & 0x10) {
+        f32 terr[10];
+        f32 c[3];
+        f32 q[4];
+        f32 ang;
+        sampleTerrainSurfaceAtWorldXz(m[0], m[2], D_main_bss_80138058, terr);
+        ang = constMinusSinfApprox(vec3Dot((f32 *)(s + 0x18), &terr[3])) * 57.29578f;
+        if (ang > 0.0001f) {
+            if (dt * 30.0f < ang) {
+                ang = dt * 30.0f;
+            }
+            vec3Cross(c, (f32 *)(s + 0x18), &terr[3]);
+            quatFromAxisAngleSafe(q, c, ang);
+            rotateVec3ByQuat(q, (f32 *)(s + 0x18), c);
+            *(T1aV3 *)(s + 0x18) = *(T1aV3 *)c;
+        } else {
+            *(T1aV3 *)(s + 0x18) = *(T1aV3 *)&terr[3];
+        }
+        ang = constMinusSinfApprox(vec3Dot((f32 *)(s + 0x18), &m[6])) * 57.29578f;
+        if (ang > 0.0001f) {
+            vec3Cross(c, &m[6], (f32 *)(s + 0x18));
+            quatFromAxisAngleSafe(q, c, ang);
+            rotateVec3ByQuat(q, &m[3], c);
+            *(T1aV3 *)&m[3] = *(T1aV3 *)c;
+            rotateVec3ByQuat(q, &m[6], c);
+            *(T1aV3 *)&m[6] = *(T1aV3 *)c;
+        }
+    }
+    return 0;
+}
 
 void *getNpcContextField8(u16);
 typedef struct {
