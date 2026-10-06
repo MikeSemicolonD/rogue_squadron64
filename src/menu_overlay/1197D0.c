@@ -751,7 +751,22 @@ void destroyPlayerShipRecord(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", spawnProjectileObject);
+u8 *spawnProjectileObject(s32 arg0, s16 arg1, s16 arg2, s32 arg3) {
+    BgObj *obj;
+    BgInfo *info;
+
+    obj = (BgObj *)rs_malloc(0x38, 0);
+    rs_memset((u8 *)obj, 0, 0x38);
+    info = (BgInfo *)rs_malloc(0x10, 0);
+    obj->info = info;
+    rs_memset((u8 *)info, 0, 0x10);
+    *(u16 *)obj->info = arg0;
+    obj->flags = arg3;
+    obj->w = arg1;
+    obj->h = arg2;
+    obj->b18 = D_menu_overlay_800CC850++;
+    return (u8 *)obj;
+}
 
 typedef struct {
     u8 pad0[8];
