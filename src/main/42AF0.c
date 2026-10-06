@@ -147,7 +147,230 @@ INCLUDE_ASM("asm/nonmatchings/main/42AF0", binPolygonIntoTerrainGrid);
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", streamTerrainGridCellsByDistance);
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", buildGridCellMeshForFace);
+typedef struct BgFace {
+    struct BgFace *prev;
+    struct BgFace *next;
+    u8 pad8[8];
+    u8 b10;
+    u8 b11;
+    u8 b12;
+    u8 b13;
+    u8 b14;
+    u8 pad15;
+    u16 s16;
+    u16 s18;
+    u16 s1A;
+    u16 s1C;
+    u16 s1E;
+} BgFace;
+
+typedef struct {
+    u8 pad0[0x14];
+    u16 flags;
+    u8 pad16[0xA];
+    BgFace face;
+    u8 pad40[0x14];
+    u8 c54;
+    u8 c55;
+    u8 c56;
+    u8 pad57[0xD];
+    u8 c64;
+    u8 c65;
+    u8 c66;
+    u8 pad67[0x3D];
+    u8 cA4;
+    u8 cA5;
+    u8 cA6;
+    u8 padA7[0xD];
+    u8 cB4;
+    u8 cB5;
+    u8 cB6;
+} BgCell;
+
+typedef struct BgNode {
+    struct BgNode *a;
+    struct BgNode *b;
+    f32 dist;
+    s32 col;
+    s32 row;
+    BgCell *cell;
+} BgNode;
+
+extern f32 D_main_8009DE94[];
+extern f32 D_main_8009DEB4;
+extern s32 bgSettings[] __asm__("gGameSettings");
+extern BgNode *D_main_bss_80132DC0[][64];
+extern s32 D_main_bss_80132DB4;
+extern s32 D_main_bss_80132DBC;
+extern void selectGridCellTileVariant(BgCell *, BgFace *, s32, s32);
+extern void buildGridCellMesh(BgCell *);
+
+s32 buildGridCellMeshForFace(BgNode *head, BgFace **out) {
+    BgFace *found = NULL;
+    BgNode *n;
+    BgNode *stop;
+    BgNode *o;
+    BgFace *face;
+    BgFace *of;
+    BgCell *c;
+    s32 lod;
+    s32 count;
+    s32 mode;
+    s32 row;
+    s32 flags;
+    f32 t;
+    f32 dist;
+    f32 f;
+
+    if (head == NULL) {
+        return 0;
+    }
+    lod = 0;
+    stop = NULL;
+    while (head->dist < D_main_8009DE94[lod + 1]) {
+        lod++;
+    }
+    n = head;
+    count = 0;
+    while (1) {
+        flags = n->cell->flags;
+        dist = n->dist;
+        face = &n->cell->face;
+        while (dist < D_main_8009DE94[lod + 1]) {
+            lod++;
+            if (lod == 3) {
+                stop = n->a;
+            }
+        }
+        switch (lod) {
+        case 0:
+            count += 1;
+            mode = 2;
+            t = 0.0f;
+            break;
+        case 1:
+            count += 2;
+            mode = 1;
+            t = (n->dist - D_main_8009DE94[2]) / (D_main_8009DE94[1] - D_main_8009DE94[2]);
+            break;
+        case 2:
+            count += 2;
+            mode = 1;
+            t = 0.0f;
+            break;
+        case 3:
+            count += 3;
+            mode = 0;
+            t = (n->dist - D_main_8009DE94[4]) / (D_main_8009DE94[3] - D_main_8009DE94[4]);
+            break;
+        default:
+            count += 3;
+            mode = 0;
+            t = 0.0f;
+            break;
+        }
+        if (flags & 8) {
+            t = 0.0f;
+            mode = 1;
+            if (bgSettings[3] & 0x08000000) {
+                c = n->cell;
+                c->c55 = c->c56 = c->c64 = c->c66 = c->cA4 = c->cA6 = c->cB5 = c->cB6 = 0;
+            }
+        } else if (flags & 4) {
+            mode = 2;
+            if (bgSettings[3] & 0x08000000) {
+                n->cell->c54 = n->cell->c55 = n->cell->c56 = 0xFF;
+                n->cell->c64 = n->cell->c65 = n->cell->c66 = 0;
+                n->cell->cA4 = 0xFF;
+                n->cell->cA5 = 0xFF;
+                n->cell->cA6 = 0;
+                n->cell->cB4 = 0xFF;
+                n->cell->cB5 = 0;
+                n->cell->cB6 = 0xFF;
+            }
+        }
+        face->b14 = mode;
+        if (mode == 2) {
+            face->b10 = face->b11 = face->b12 = face->b13 = mode;
+            face->s16 = face->s18 = face->s1A = face->s1C = face->s1E = 0;
+        } else {
+            f = t * 65535.0f;
+            face->b10 = face->b11 = face->b12 = face->b13 = mode;
+            face->s16 = face->s18 = face->s1A = face->s1C = face->s1E = (u32)f;
+        }
+        if (n->cell->flags & 0xC0) {
+            selectGridCellTileVariant(n->cell, face, mode, flags);
+        }
+        buildGridCellMesh(n->cell);
+        if (n->b == NULL) {
+            n->cell->face.prev = NULL;
+            break;
+        }
+        n->b->cell->face.next = &n->cell->face;
+        n->cell->face.prev = &n->b->cell->face;
+        if (found == NULL && n->dist < D_main_8009DEB4) {
+            n->b->cell->face.next = NULL;
+            n->cell->face.prev = NULL;
+            found = &n->b->cell->face;
+            *out = found;
+        }
+        n = n->b;
+    }
+    if (n != stop) {
+        do {
+            face = &n->cell->face;
+            if (face->b10 == 0) {
+                row = n->row;
+                lod = n->col;
+                if (row > 0 && (o = D_main_bss_80132DC0[row - 1][lod]) != NULL && o->cell->face.b10 == 2) {
+                    face->b10 = face->b11 = face->b12 = face->b13 = face->b14 = 1;
+                    face->s16 = face->s18 = face->s1A = face->s1C = face->s1E = 0;
+                } else if (row < D_main_bss_80132DBC - 1 && (o = D_main_bss_80132DC0[row + 1][lod]) != NULL && o->cell->face.b10 == 2) {
+                    face->b10 = face->b11 = face->b12 = face->b13 = face->b14 = 1;
+                    face->s16 = face->s18 = face->s1A = face->s1C = face->s1E = 0;
+                } else if (lod > 0 && (o = D_main_bss_80132DC0[row][lod - 1]) != NULL && o->cell->face.b10 == 2) {
+                    face->b10 = face->b11 = face->b12 = face->b13 = face->b14 = 1;
+                    face->s16 = face->s18 = face->s1A = face->s1C = face->s1E = 0;
+                } else if (lod < D_main_bss_80132DB4 - 1 && (o = D_main_bss_80132DC0[row][lod + 1]) != NULL && o->cell->face.b10 == 2) {
+                    face->b10 = face->b11 = face->b12 = face->b13 = face->b14 = 1;
+                    face->s16 = face->s18 = face->s1A = face->s1C = face->s1E = 0;
+                }
+            }
+            n = n->a;
+        } while (n != stop);
+    }
+    n = head;
+    if (n != NULL) {
+        do {
+            lod = n->col;
+            face = &n->cell->face;
+            row = n->row;
+            if (row > 0 && (o = D_main_bss_80132DC0[row - 1][lod]) != NULL) {
+                of = &o->cell->face;
+                if (of->b10 < face->b10) {
+                    of->b14 = face->b13;
+                    of->s1E = face->s1C;
+                } else {
+                    face->b13 = of->b14;
+                    face->s1C = of->s1E;
+                }
+            }
+            if (lod > 0 && (o = D_main_bss_80132DC0[row][lod - 1]) != NULL) {
+                of = &o->cell->face;
+                if (of->b10 < face->b10) {
+                    of->b12 = face->b11;
+                    of->s1A = face->s18;
+                } else {
+                    face->b11 = of->b12;
+                    face->s18 = of->s1A;
+                }
+            }
+            n = n->b;
+        } while (n != NULL);
+    }
+    head->cell->face.next = NULL;
+    return count;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", buildVisibleTerrainGridAroundCamera);
 
