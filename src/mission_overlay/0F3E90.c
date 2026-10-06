@@ -339,7 +339,182 @@ void computeRandomizedOrientationFrame(f32 *arg0, RandOrient *o, f32 (*m)[3], f3
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", updateNpcEffectIntensity);
+extern void setEffectIntensity(u8 *, s32);
+extern s32 slotDispatcherIter(u16, s32, void *);
+typedef struct { u8 *p; u8 pad[0x14]; u8 b18; } UnFx;
+extern UnFx D_mission_overlay_8010C480;
+
+typedef struct {
+    union { f32 f; s32 i; } w0;
+    s32 w4;
+    union { s32 i; u8 b[4]; } w8;
+    f32 wC;
+    s32 w10;
+    f32 w14;
+    u8 b18;
+    u8 pad[3];
+} UnMsg;
+
+s32 updateNpcEffectIntensity(u8 *arg0, u8 *arg1) {
+    UnMsg msg;
+    u8 *a = arg1;
+    s32 v;
+
+    {
+        s32 v1 = *(s32 *)(a + 0x28);
+        if (v1 != 0 && !rsObjBool(arg0, v1)) {
+            return 0;
+        }
+    }
+    {
+        s32 v2 = *(s32 *)(a + 0x2C);
+        if (v2 != 0 && gObjectiveCounts[v2 - 1] < *(s32 *)(a + 0x30)) {
+            return 0;
+        }
+    }
+    {
+        s32 v3 = *(s32 *)(a + 0x3C);
+        if (v3 != 0) {
+            gObjectiveBooleans[v3 - 1] = a[0x43];
+        }
+    }
+    {
+        s32 v4 = *(s32 *)(a + 0x34);
+        if (v4 != 0) {
+            gObjectiveCounts[v4 - 1] += *(s32 *)(a + 0x38);
+        }
+    }
+    switch (*(u16 *)arg1) {
+    case 0x1A:
+        msg.b18 = 0;
+        msg.w0.i = *(s32 *)(arg1 + 0x44);
+        *(f32 *)&msg.w4 = *(f32 *)(arg1 + 0x48);
+        *(f32 *)&msg.w8 = *(f32 *)(arg1 + 0x4C);
+        msg.wC = *(f32 *)(arg1 + 0x50);
+        *(f32 *)&msg.w10 = *(f32 *)(arg1 + 0x54);
+        msg.w14 = *(f32 *)(arg1 + 0x58);
+        slotDispatcherIter(*(u16 *)(arg0 + 0x198), 9, &msg);
+        break;
+    case 0x1B:
+        {
+            u8 *s;
+            u8 *b = arg1;
+            f32 d;
+            if (*(u16 *)(arg0 + 0x110) & 0x20) {
+                break;
+            }
+            s = arg0 + 8;
+            if (*(s32 *)(arg1 + 0x48) != 0) {
+                *(f32 *)(s + 0x50) = *(f32 *)(s + 0x48) * *(f32 *)(arg1 + 0x44);
+            } else {
+                *(f32 *)(s + 0x50) = *(f32 *)(arg1 + 0x44);
+            }
+            if (*(f32 *)(s + 0x50) <= 0.0f) {
+                *(f32 *)(s + 0x50) = 0.1f;
+            }
+            *(f32 *)(s + 0x4C) = *(f32 *)(s + 0x48);
+            d = *(f32 *)(s + 0x50) - *(f32 *)(s + 0x48);
+            *(f32 *)(s + 0x54) = d;
+            if (d != 0.0f) {
+                *(f32 *)(s + 0x58) = 0.0f;
+                if (*(f32 *)(b + 0x4C) > 0.0f) {
+                    *(f32 *)(s + 0x5C) = 1.0f / *(f32 *)(b + 0x4C);
+                } else {
+                    *(f32 *)(s + 0x48) = *(f32 *)(s + 0x50);
+                    *(f32 *)(s + 0x2C) = *(f32 *)(s + 0x50) / *(f32 *)(*(u8 **)(s + 0x24) + 0x24);
+                }
+            }
+        }
+        break;
+    case 0x1C:
+        if (*(u16 *)(arg0 + 0x110) & 0x20) {
+            return 0;
+        }
+        {
+            u8 *b = arg1;
+            if (*(s32 *)(arg1 + 0x48) == 0) {
+                *(f32 *)(arg0 + 0x68) = *(f32 *)(arg1 + 0x44) * 0.25f;
+            } else {
+                *(f32 *)(arg0 + 0x68) = *(f32 *)(arg0 + 0x68) * (*(f32 *)(arg1 + 0x44) * 0.25f);
+            }
+            *(f32 *)(arg0 + 0x78) = *(f32 *)(b + 0x4C);
+        }
+        break;
+    case 0x1D:
+        if (*(s32 *)(arg1 + 0x44) != 0) {
+            arg0[0x1A5] = 1;
+        }
+        arg0[0x1A6] = 1;
+        break;
+    case 0x20:
+        {
+            u8 *str;
+            arg0[0x12C] = arg1[0x47];
+            arg0[0x12D] = arg1[0x4B];
+            setEffectIntensity(arg0, *(s32 *)(arg1 + 0x54));
+            str = (u8 *)(*(s32 *)(arg1 + 0x4C) + (s32)arg1);
+            if (*str == 0 || *str == 0x2D) {
+                *(u8 **)(arg0 + 0x128) = NULL;
+            } else {
+                *(u8 **)(arg0 + 0x128) = str;
+            }
+            *(s32 *)(arg0 + 0x124) = 0;
+            msg.b18 = 4;
+            msg.w0.i = *(s32 *)(arg1 + 0x50);
+            *(f32 *)&msg.w4 = *(f32 *)(arg1 + 0x54);
+            slotDispatcherIter(*(u16 *)(arg0 + 0x198), 9, &msg);
+        }
+        break;
+    case 0x22:
+        if (*(u16 *)(arg0 + 0x110) & 0x20) {
+            return 0;
+        }
+        {
+            u8 *b = arg1;
+            msg.b18 = 1;
+            msg.w0.f = *(f32 *)(b + 0x44);
+            {
+            s32 v5 = *(s32 *)(b + 0x48);
+            if (v5 != 0 && gObjectiveBooleans[v5 - 1] == *(s32 *)(b + 0x4C)) {
+                msg.w8.b[1] = 0;
+                msg.w8.b[2] = 0;
+            } else {
+                msg.w8.b[1] = b[0x4B];
+                msg.w8.b[2] = b[0x4F];
+            }
+            }
+            {
+            s32 v6 = *(s32 *)(b + 0x50);
+            if (v6 != 0 && gObjectiveCounts[v6 - 1] >= *(s32 *)(b + 0x54)) {
+                msg.w8.b[0] = 0;
+                msg.w4 = 0;
+            } else {
+                msg.w8.b[0] = b[0x53];
+                msg.w4 = *(s32 *)(b + 0x54);
+            }
+            }
+            if (msg.w0.f == 0.0f && !(msg.w8.i & 0xFFFF0000)) {
+                return 0;
+            }
+            slotDispatcherIter(*(u16 *)(arg0 + 0x198), 9, &msg);
+        }
+        break;
+    case 0x23:
+        if (*(s32 *)(arg1 + 0x44) != 0) {
+            *(f32 *)(arg0 + 0xFC) = 1.0f / *(f32 *)(arg1 + 0x48);
+            *(s32 *)(arg0 + 0x100) = 0;
+        } else {
+            *(f32 *)(arg0 + 0xFC) = -1.0f / *(f32 *)(arg1 + 0x48);
+            *(f32 *)(arg0 + 0x100) = 1.0f;
+        }
+        break;
+    case 0x4E:
+        D_mission_overlay_8010C480.b18 = 7;
+        D_mission_overlay_8010C480.p = (u8 *)(*(s32 *)(arg1 + 0x44) + (s32)arg1);
+        return 1;
+    }
+    return 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0F3E90", D_mission_overlay_800A8BB8);
 
