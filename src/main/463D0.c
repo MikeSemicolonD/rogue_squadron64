@@ -21,7 +21,175 @@ extern u8 D_main_bss_80137130[];
 extern s32 D_main_bss_80137140;
 
 
-INCLUDE_ASM("asm/nonmatchings/main/463D0", initGridLayerFromLevelData);
+typedef struct {
+    u8 *f0;
+    u8 *f4;
+    s32 f8;
+    u8 padC[0x2C];
+    u16 f38;
+    u16 f3A;
+    u8 pad3C[0x14];
+    f32 f10;
+} IgRaw;
+typedef struct {
+    u8 pad0[2];
+    u8 flags;
+    s8 lo;
+    s8 hi;
+    u8 pad5[0x19];
+} IgElem;
+typedef struct {
+    u16 *cells;
+    IgElem *elems;
+    u8 pad8[8];
+    f32 f10;
+    u8 pad14[0x24];
+    u16 w;
+    u16 h;
+} IgLvl;
+typedef struct {
+    u8 pad0[0xA];
+    u16 hA;
+    u16 hC;
+    u16 hE;
+    u16 h10;
+    u16 h12;
+    u16 h14;
+    u8 pad16[2];
+    u16 h18;
+    u16 h1A;
+    u8 pad1C[2];
+    u16 h1E;
+    u8 pad20[0x10];
+    u8 b30;
+    u8 pad31[0x87];
+} IgSlot;
+typedef struct {
+    u8 pad0[0x60];
+    s32 i60;
+    s32 i64;
+    f32 f68;
+    f32 f6C;
+} IgDat;
+typedef struct {
+    u8 *f0;
+    u8 *f4;
+    s32 f8;
+    u8 padC[0x2C];
+    u16 f38;
+    u16 f3A;
+    u8 pad3C[0x1C];
+} IgHdr;
+extern u8 ig37150 __asm__("D_main_bss_80137150");
+extern u8 ig37151 __asm__("D_main_bss_80137151");
+extern s32 ig375C0 __asm__("D_main_bss_801375C0");
+extern f32 ig37164 __asm__("D_main_bss_80137164");
+extern f32 ig3715C __asm__("D_main_bss_8013715C");
+extern f32 ig37160 __asm__("D_main_bss_80137160");
+extern f32 ig37158 __asm__("D_main_bss_80137158");
+extern f32 ig37154 __asm__("D_main_bss_80137154");
+extern s32 ig37168 __asm__("D_main_bss_80137168");
+extern f32 ig36FA8 __asm__("D_main_bss_80136FA8");
+extern void *ig37148[2] __asm__("D_main_bss_80137148");
+extern IgHdr ig37450 __asm__("D_main_bss_80137450");
+extern IgSlot ig37170[] __asm__("D_main_bss_80137170");
+extern u16 ig374B0[16] __asm__("D_main_bss_801374B0");
+extern u8 ig374D0[] __asm__("D_main_bss_801374D0");
+extern void *getLevelDatItemByNameI(char *) __asm__("getLevelDatItemByName");
+extern void *rs_mallocI(u32, u16) __asm__("rs_malloc");
+
+void initGridLayerFromLevelData(IgLvl *arg0, s32 arg1) {
+    IgDat *dat;
+    s32 i;
+    s32 j;
+    s32 v;
+    IgElem *p;
+    IgElem *e;
+    u16 *cp;
+
+    ig37150 = 0;
+    dat = getLevelDatItemByNameI("player_StartPosition");
+    if (dat == 0) {
+        return;
+    }
+    v = dat->i60;
+    if (v == 0) {
+        return;
+    }
+    ig375C0 = 0x7F - v;
+    e = arg0->elems;
+    ig37164 = (f32)dat->i64;
+    ig3715C = dat->f68;
+    ig37160 = dat->f6C;
+    ig36FA8 = ig37164 * arg0->f10 * 0.00390625f;
+    p = e;
+    for (i = 0; i < arg1; i++, p++) {
+        if (!(p->lo < ig375C0)) {
+            p->flags |= 8;
+            p->lo = (s32)((f32)ig375C0 - ig37164);
+        } else {
+            if (p->hi < ig375C0) {
+                continue;
+            }
+            p->flags |= 0x10;
+        }
+        p->hi = (s32)((f32)ig375C0 + ig37164);
+        ig37150 = 1;
+    }
+    i = 0;
+    e = arg0->elems;
+    v = 0;
+    if (arg0->w * arg0->h > 0) {
+    do {
+        __asm__("" :: "r"(v));
+        __asm__("" :: "r"(v));
+        __asm__("" :: "r"(v));
+        cp = (u16 *)(i * 2 + (s32)arg0->cells);
+        if (e[*cp & 0x1FFF].flags & 0x18) {
+            *cp |= 0x2000;
+            arg0->cells[i] &= 0x3FFF;
+            if (e[arg0->cells[i] & 0x1FFF].flags & 0x10) {
+                v++;
+            }
+        }
+        i++;
+    } while (i < arg0->w * arg0->h);
+    }
+    if (v > 0) {
+        ig37148[0] = rs_mallocI(v * 25, 0);
+        ig37148[1] = rs_mallocI(v * 25, 0);
+    }
+    zmemcpy(&ig37450, arg0, 0x58);
+    ig37450.f0 = (u8 *)ig374B0;
+    ig37450.f3A = 4;
+    ig37450.f38 = 4;
+    ig37450.f4 = ig374D0;
+    ig37450.f8 = 0;
+    for (j = 0; j < 4; j++) {
+        ig37170[j].h18 = j % 2 + 1;
+        ig37170[j].h1A = j / 2 + 1;
+        ig37170[j].b30 = 0;
+        ig37170[j].h12 = 0;
+        ig37170[j].h10 = 0;
+        ig37170[j].hE = 0;
+        ig37170[j].hC = 0;
+        ig37170[j].hA = 0;
+        ig37170[j].h14 = 0;
+        ig37170[j].h1E = 0xFFFF;
+    }
+    for (j = 0; j < 4; j++) {
+        for (i = 0; i < 4; i++) {
+            ig374B0[j * 4 + i] = (j + 1) % 2 * 2 + (i + 1) % 2;
+        }
+    }
+    ig37151 = 0;
+    ig37168 = 0;
+    {
+        f32 z = 0.0f;
+        ig37158 = z;
+        ig37154 = z;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/463D0", updateGridLayerScroll);
 
