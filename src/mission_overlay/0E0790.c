@@ -389,7 +389,73 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A8090);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", tickWalkerCraftWithLimbsAndDestruction);
+typedef struct {
+    f32 f0;
+    s32 v4[3];
+    f32 f10, f14, f18, f1C;
+    s32 w20, w24;
+    f32 f28, f2C;
+    s32 w30, w34;
+    f32 f38;
+    s16 h3C, h3E;
+    f32 f40, f44, f48, f4C, f50, f54, f58, f5C;
+    s32 w60;
+    s32 w64;
+    s32 w68;
+    u8 b6C, b6D;
+    u8 pad6E[2];
+    s16 h70, h72, h74, h76;
+    s32 w78;
+    u16 h7C;
+} TwCtx;
+extern s32 D_main_bss_80130C04;
+extern s32 D_main_bss_80130C08;
+extern void initNpcContextFromTransform(TwCtx *, void *, s32);
+extern s32 spawnRandomBurstNpcVariantWrapper(void *);
+extern void assignNpcTargetAndPosition(s32, u16, f32 *, f32);
+
+void tickWalkerCraftWithLimbsAndDestruction(void *argv) {
+    u8 *arg0 = argv;
+    TwCtx c;
+    f32 v[3];
+    s32 id;
+    f32 zero;
+    initNpcContextFromTransform(&c, arg0, 0);
+    c.b6C = 2;
+    c.b6D = 0x10;
+    c.h70 = 0x80;
+    c.h72 = 0x400;
+    c.w64 = D_main_bss_80130C08 + 0x18;
+    c.w68 = D_main_bss_80130C04;
+    c.f14 = -3.0f;
+    c.f58 = 1.0f;
+    c.h3C = 0;
+    c.h3E = 0;
+    c.h7C |= 2;
+    zero = 0.0f;
+    c.f40 = 4.0f;
+    c.f18 = zero;
+    c.f10 = zero;
+    c.f38 = 0.1f;
+    c.f54 = 0.8f;
+    c.f48 = 1.0f;
+    c.w78 |= 0x09000000;
+    id = spawnRandomBurstNpcVariantWrapper(&c) & 0xFFFF;
+    v[0] = zero;
+    v[2] = zero;
+    v[1] = -0.1f;
+    assignNpcTargetAndPosition(id, *(u16 *)(*(u8 **)(arg0 + 0x38) + 0x198), v, 0.3f);
+    id = spawnRandomBurstNpcVariantWrapper(&c) & 0xFFFF;
+    v[0] = zero;
+    v[1] = -0.1f;
+    v[2] = -0.6f;
+    assignNpcTargetAndPosition(id, *(u16 *)(*(u8 **)(arg0 + 0x38) + 0x198), v, 0.3f);
+    id = spawnRandomBurstNpcVariantWrapper(&c) & 0xFFFF;
+    v[0] = zero;
+    v[1] = -0.1f;
+    v[2] = 0.6f;
+    assignNpcTargetAndPosition(id, *(u16 *)(*(u8 **)(arg0 + 0x38) + 0x198), v, 0.3f);
+}
 
 typedef struct { f32 x, y, z; } TcVec3;
 typedef struct {
