@@ -26,7 +26,87 @@ extern s32 D_main_bss_80138260;
 extern SceneNode *D_main_bss_80138894;
 extern SceneNode D_main_bss_80138D18[];
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", applyPlayerVehicleStateUpdate);
+extern f32 sinf(f32);
+extern f32 cosf(f32);
+extern s32 sampleTerrainAtNpcPosition(f32 *, f32 *, void *, f32 *);
+extern void clampVec3ToUnitIfLongerThan(f32 *);
+extern void addScaledVec3ToVec3(f32 *, f32 *, f32, f32 *);
+extern f32 wrapAngleToCyclicRange(f32, f32, void *, f32 *);
+extern u8 D_main_bss_80138058[];
+
+void applyPlayerVehicleStateUpdate(u8 *arg0) {
+    f32 buf[40];
+    SceneNode *n;
+    u8 *cur;
+    f32 f;
+    f32 *p;
+    f32 *q;
+    s32 i;
+
+    n = &D_main_bss_80138D18[*(s32 *)(arg0 + 0xC)];
+    cur = n->unk4;
+    if (*(u16 *)(cur + 4) == 3) {
+        return;
+    }
+    if (*(u16 *)arg0 & 0x20) {
+        if (*(u16 *)(arg0 + 4) == 3) {
+            return;
+        }
+    } else {
+        if (arg0 == cur) {
+            buf[10] = (f32)(-*(s32 *)((u8 *)n + 0x18)) * 0.5 * (240.0 / *(s32 *)((u8 *)n + 0x1C));
+            buf[11] = (f32)(-*(s32 *)((u8 *)n + 0x1C)) * 0.5 * (240.0 / *(s32 *)((u8 *)n + 0x1C));
+            f = (*(f32 *)((u8 *)n + 0x28) + 2.0f) * 0.5f * 3.1415927f / 180.0f;
+            f = sinf(f) / cosf(f);
+            buf[12] = 120.0f / f;
+            f = *(f32 *)((u8 *)n + 0x2C) + *(f32 *)((u8 *)n + 0x2C);
+            normalize_vector(&buf[10]);
+            buf[10] = buf[10] * f;
+            buf[11] = buf[11] * f;
+            buf[12] = buf[12] * f;
+            transformVec3ByMat34(arg0 + 0x28, &buf[10], &buf[14]);
+            buf[10] = -buf[10];
+            transformVec3ByMat34(arg0 + 0x28, &buf[10], &buf[17]);
+            buf[11] = -buf[11];
+            transformVec3ByMat34(arg0 + 0x28, &buf[10], &buf[20]);
+            buf[10] = -buf[10];
+            transformVec3ByMat34(arg0 + 0x28, &buf[10], &buf[23]);
+            for (i = 0; i < 3; i++) {
+                p = buf + i * 3;
+                q = p + 14;
+                buf[10] = q[0] - *(f32 *)(arg0 + 0x10);
+                buf[11] = q[1] - *(f32 *)(arg0 + 0x14);
+                buf[12] = q[2] - *(f32 *)(arg0 + 0x18);
+                if (sampleTerrainAtNpcPosition((f32 *)(arg0 + 0x10), &buf[10], D_main_bss_80138058, buf)) {
+                    clampVec3ToUnitIfLongerThan(&buf[10]);
+                    buf[10] = -buf[10];
+                    buf[11] = -buf[11];
+                    buf[12] = -buf[12];
+                    addScaledVec3ToVec3((f32 *)(arg0 + 0x10), buf, f, &buf[10]);
+                    *(f32 *)(arg0 + 0x4C) = *(f32 *)(arg0 + 0x10);
+                    *(f32 *)(arg0 + 0x50) = *(f32 *)(arg0 + 0x14);
+                    *(f32 *)(arg0 + 0x54) = *(f32 *)(arg0 + 0x18);
+                }
+            }
+        }
+        if (*(u16 *)(arg0 + 4) == 3) {
+            return;
+        }
+    }
+    f = wrapAngleToCyclicRange(*(f32 *)(arg0 + 0x4C), *(f32 *)(arg0 + 0x54), D_main_bss_80138058, &buf[26]) - *(f32 *)(arg0 + 0x50);
+    buf[36] = *(f32 *)(arg0 + 0x10) - buf[26];
+    buf[37] = *(f32 *)(arg0 + 0x14) - buf[27];
+    {
+        f32 t = buf[28];
+        buf[38] = *(f32 *)(arg0 + 0x18) - t;
+    }
+    vec3Length(&buf[36]);
+    if (f < *(f32 *)(arg0 + 0xB8)) {
+        f32 g = buf[27] - *(f32 *)(arg0 + 0xB8);
+        *(f32 *)(arg0 + 0x50) = g;
+        *(f32 *)(arg0 + 0x14) = g;
+    }
+}
 
 typedef struct { s32 b[12]; } RoBlob30;
 typedef struct { s32 a, b, c; } RoV3;
