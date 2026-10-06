@@ -169,8 +169,49 @@ void addScaledVec3ToVec3(Vec3f arg0, Vec3f arg1, f32 arg2, Vec3f arg3) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AA780", buildRotationMatrixFromEulerAngles);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AA780", buildTransformMatrixFromEulerAngles);
+void buildTransformMatrixFromEulerAngles(f32 (*arg0)[3], f32 arg1, f32 arg2, f32 arg3) {
+    f32 v[6];
+    f32 t1;
+    f32 t2;
+    f32 t3;
+    f32 s1, c1, s2, c2, s3, c3;
+    f32 a, b, c, d;
+
+    arg0[3][0] = 0.0f;
+    arg0[3][1] = 0.0f;
+    arg0[3][2] = 0.0f;
+    t1 = arg1 * 0.017453292f;
+    v[1] = cosf(t1);
+    v[0] = sinf(t1);
+    t2 = arg2 * 0.017453292f;
+    v[3] = cosf(t2);
+    v[2] = sinf(t2);
+    t3 = arg3 * 0.017453292f;
+    v[5] = cosf(t3);
+    v[4] = sinf(t3);
+    c1 = v[1];
+    s3 = v[4];
+    c2 = v[3];
+    s2 = v[2];
+    s1 = v[0];
+    c3 = v[5];
+    b = c1 * c3;
+    c = c1 * s3;
+    d = s1 * c3;
+    a = s1 * s3;
+    arg0[0][0] = b - (a * s2);
+    arg0[1][0] = -s3 * c2;
+    arg0[2][0] = d + (c * s2);
+    arg0[0][2] = -s1 * c2;
+    arg0[2][2] = c1 * c2;
+    arg0[1][2] = s2;
+    arg0[0][1] = c + (d * s2);
+    arg0[1][1] = c3 * c2;
+    arg0[2][1] = a - (b * s2);
+}
+
+__asm__(".word 0");
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AA780", fake_func_800AA6CC);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0AA780", D_mission_overlay_800A51D8);
+static u32 D_mission_overlay_800A51DC[] __attribute__((section(".rodata"))) = { 0x8FC20038 };
