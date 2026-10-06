@@ -254,7 +254,188 @@ void markHighLodCellsInGrid(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", load_level_hmp);
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", cutsceneActorNpcHandler);
+typedef struct CaNode {
+    struct CaNode *next;
+    struct CaNode *prev;
+    s32 unk8;
+    s32 cb;
+    s32 unk10;
+    s32 unk14;
+    s32 unk18;
+    u8 pad1C[4];
+    s32 unk20;
+    s32 unk24;
+    s32 unk28;
+    u8 pad2C[0x30];
+} CaNode;
+
+typedef struct { f32 x, y, z; } CaVec3;
+
+typedef struct CaActor {
+    struct CaActor *next;
+    struct CaActor *prev;
+    s32 unk8;
+    s32 unkC;
+    CaNode *head;
+    s32 unk14;
+    u8 pad18[4];
+    u8 mat[0x30];
+    CaNode a;
+    CaNode b;
+    s16 npc;
+    u8 pad106[2];
+    s32 frames;
+    CaVec3 dir;
+} CaActor;
+
+typedef struct {
+    u8 *grid;
+    u8 pad4[4];
+    CaActor **list;
+} CaCtx;
+
+typedef struct {
+    s32 unk0;
+    u8 *cam;
+} CaCam;
+
+extern s32 getLevelCutsceneActorCallbackPrimary(void);
+extern s32 getLevelCutsceneActorCallbackSecondary(void);
+extern void clearStructPair2C30(CaNode *);
+extern void clearVec4QuadStruct(void *);
+extern void applyScaleToMat3x4(void *, f32, f32, f32);
+extern void initVec4TripletFromArgs(void *, f32, f32, f32);
+extern void addVec3At0x24(void *, CaVec3);
+extern s32 buildVisibleTerrainGridAroundCamera(CaVec3 *, s32 *, s32);
+extern void computeGridLayerScrollOffset(void *);
+extern void setViewStateBytesAndFadeScale(u8, u8, u8, f32, f32);
+extern void setMissionLevelInitByte(s32);
+extern void normalize_vector(CaVec3 *);
+extern f32 vec3Dot(CaVec3 *, CaVec3 *);
+extern u8 isCameraTransitionIdle();
+extern void slotDispatcherIter(u16, s32, void *);
+extern void requestViFeatureChange(s32);
+extern void beginSceneRenderFrame(s32);
+extern s16 spawnNpcOfType(void *, s32, s32, s32);
+extern s32 cinematicSplineWalkerNpcHandler;
+extern s32 D_8010CA1C;
+extern s32 D_main_bss_80130B50;
+extern f32 D_main_bss_80136DD0;
+extern u8 D_main_bss_80138838;
+extern CaCam D_main_bss_80138D18;
+extern void *D_main_bss_80138D1C;
+extern s32 gCurrentLevel;
+extern f32 D_main_8009DEAC;
+extern f32 D_main_bss_80136FBC;
+extern u8 D_main_bss_80136E18[];
+extern u8 D_main_bss_80130B39;
+extern s32 D_main_bss_80138898;
+extern s32 D_main_bss_80138928;
+
+s32 cutsceneActorNpcHandler(CaActor **self, u16 msg, CaCtx *ctx) {
+    CaVec3 ofs;
+    CaVec3 v;
+    CaActor *s = *(self + 1);
+    s32 cnt;
+    CaCtx *c;
+    u8 go;
+    f32 far;
+    f32 near;
+    CaActor *t;
+
+    switch (msg) {
+    case 2:
+        break;
+    case 1:
+        s = (CaActor *)rs_malloc(0x118, 0);
+        self[1] = s;
+        s->a.next = &s->b;
+        s->a.prev = (CaNode *)(s->a.unk8 = 0);
+        s->a.cb = getLevelCutsceneActorCallbackPrimary() | 0x80040000;
+        s->a.unk14 = s->a.unk18 = s->a.unk10 = 0;
+        s->a.unk24 = s->a.unk28 = s->a.unk20 = 0;
+        clearStructPair2C30(&s->a);
+        s->b.next = 0;
+        s->b.prev = &s->a;
+        s->b.unk8 = 0;
+        s->b.cb = getLevelCutsceneActorCallbackSecondary() | 0x80050000;
+        s->b.unk14 = s->b.unk18 = s->b.unk10 = 0;
+        s->b.unk24 = s->b.unk28 = s->b.unk20 = 0;
+        clearStructPair2C30(&s->b);
+        s->next = (CaActor *)(s->prev = (CaActor *)(s->unk8 = s->unkC = 0));
+        s->head = &s->a;
+        s->unk14 = 0;
+        clearVec4QuadStruct(s->mat);
+        applyScaleToMat3x4(s->mat, 1.0f, D_main_bss_80136DD0 * 0.0625f, 1.0f);
+        s->frames = 0;
+        s->npc = spawnNpcOfType(&cinematicSplineWalkerNpcHandler, 0, 4, 100);
+        break;
+    case 4:
+        c = ctx;
+        s->b.unk20 = 0;
+        if (gCurrentLevel == 0xA) {
+            cnt = 0;
+            D_main_8009DEAC = 22.0f;
+        } else {
+            cnt = buildVisibleTerrainGridAroundCamera(&ofs, &s->b.unk20, *(s32 *)(c->grid + 0x20));
+        }
+        computeGridLayerScrollOffset(c->grid);
+        far = *(f32 *)(c->grid + 0x28);
+        near = far * D_main_bss_80136FBC;
+        setViewStateBytesAndFadeScale(D_main_bss_80136E18[0], D_main_bss_80136E18[1], D_main_bss_80136E18[2], near, 32.0f / (far - near));
+        setMissionLevelInitByte(1);
+        go = 0;
+        if (D_main_bss_80130B39 != 1) {
+            if (++s->frames >= 5 && !(D_main_bss_80130B50 & 1) && !(D_8010CA1C & 1)) {
+                go = (u8)D_main_bss_80138838 == 0;
+            }
+        }
+        if (go == 1) {
+            v.x = *(f32 *)((u8 *)D_main_bss_80138D1C + 0x30);
+            v.y = *(f32 *)((u8 *)D_main_bss_80138D1C + 0x3C);
+            v.z = *(f32 *)((u8 *)D_main_bss_80138D1C + 0x48);
+            normalize_vector(&v);
+            if (vec3Dot(&v, &s->dir) >= 0.9999f) {
+                D_main_bss_80138898 |= 0x11;
+                D_main_bss_80138928 &= ~0x11;
+                s->a.cb = (s->a.cb & 0xCFFFFFFF) | 0x30000000;
+                s->b.cb = (s->a.cb & 0xCFFFFFFF) | 0x30000000;
+            } else {
+                D_main_bss_80138928 |= 0x11;
+                D_main_bss_80138898 &= ~0x11;
+                s->a.cb &= 0xCFFFFFFF;
+                s->b.cb &= 0xCFFFFFFF;
+            }
+            if (D_main_bss_80130B39 == 0 && !(D_main_bss_80138898 & 1) && !isCameraTransitionIdle()) {
+                D_main_bss_80138898 |= 0x11;
+                D_main_bss_80138928 &= ~0x11;
+            }
+        }
+        s->dir.x = *(f32 *)(D_main_bss_80138D18.cam + 0x30);
+        s->dir.y = *(f32 *)(D_main_bss_80138D18.cam + 0x3C);
+        s->dir.z = *(f32 *)(D_main_bss_80138D18.cam + 0x48);
+        normalize_vector(&s->dir);
+        if (cnt != 0) {
+            *(s32 *)((u8 *)s + 0x6C) = cnt;
+            initVec4TripletFromArgs(s->mat, 1.0f, D_main_bss_80136DD0 * 0.0625f, 1.0f);
+            addVec3At0x24(s->mat, ofs);
+            t = *c->list;
+            s->next = t;
+            if (t != 0) {
+                t->prev = s;
+            }
+            *c->list = s;
+            s->prev = 0;
+        }
+        if (D_main_bss_80130B39 != 1 || gCurrentLevel != 0x13) {
+            slotDispatcherIter(s->npc, 4, c);
+        }
+        requestViFeatureChange(D_main_bss_80138898);
+        beginSceneRenderFrame(D_main_bss_80138928);
+        break;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", computeGridTileEdgeAdjacencyMasks);
 
