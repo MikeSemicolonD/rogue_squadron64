@@ -226,14 +226,14 @@ with open(input_filename, mode="r") as input_file:
                 # addiu zero, 0 (word 2); lui + ori (word 1) for a full word double
                 # lui (word 2); lui + ori (word 1) for a 1.5 word double,
                 # lui + ori (word 2); lui + ori (word 1) for a 2 word double
-            elif identifier in "div":
+            elif identifier == "div":
                 # Insert nops if there was a mflo/mfhi recently right after it
                 while mfhilo_delay_count > 0:
                     preprocessed.append("\tnop\n")
                     mfhilo_delay_count -= 1
                 # Manually expand div operations, since modern gnu assembler expands them slightly differently
                 operands = [s.strip() for s in tokens[1].split(",")]
-                if operands[0] != "$0":
+                if len(operands) == 3 and operands[0] != "$0":
                     div_branch_label_1: str = f"BRANCH_LABEL_{generated_symbol_count}"
                     div_branch_label_2: str = f"BRANCH_LABEL_{generated_symbol_count + 1}"
                     generated_symbol_count += 2
@@ -256,14 +256,14 @@ with open(input_filename, mode="r") as input_file:
                     )
                     mfhilo_delay_count = 3 # Set to 3 so it becomes 2 after the decrement
                     mfhilo_delay_location = len(preprocessed) + 1
-            elif identifier in "divu":
+            elif identifier == "divu":
                 # Insert nops if there was a mflo/mfhi recently right after it
                 while mfhilo_delay_count > 0:
                     preprocessed.append("\tnop\n")
                     mfhilo_delay_count -= 1
                 # Manually expand divu operations, since modern gnu assembler expands them slightly differently
                 operands = [s.strip() for s in tokens[1].split(",")]
-                if operands[0] != "$0":
+                if len(operands) == 3 and operands[0] != "$0":
                     divu_branch_label: str = f"BRANCH_LABEL_{generated_symbol_count}"
                     generated_symbol_count += 1
                     line = (
@@ -285,7 +285,7 @@ with open(input_filename, mode="r") as input_file:
                     mfhilo_delay_count -= 1
                 # Manually expand rem operations, since modern gnu assembler expands them slightly differently
                 operands = [s.strip() for s in tokens[1].split(",")]
-                if operands[0] != "$0":
+                if len(operands) == 3 and operands[0] != "$0":
                     rem_branch_label_1: str = f"BRANCH_LABEL_{generated_symbol_count}"
                     rem_branch_label_2: str = f"BRANCH_LABEL_{generated_symbol_count + 1}"
                     generated_symbol_count += 2
@@ -315,7 +315,7 @@ with open(input_filename, mode="r") as input_file:
                     mfhilo_delay_count -= 1
                 # Expanded like asn64: divu, then the divide-by-zero check, then mfhi
                 operands = [s.strip() for s in tokens[1].split(",")]
-                if operands[0] != "$0":
+                if len(operands) == 3 and operands[0] != "$0":
                     remu_branch_label: str = f"BRANCH_LABEL_{generated_symbol_count}"
                     generated_symbol_count += 1
                     line = (
