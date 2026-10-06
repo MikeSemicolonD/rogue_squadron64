@@ -746,7 +746,50 @@ void buildDebrisCellBitfield(u8 *s, u8 idx, s32 blkArg) {
     } while (k < 64);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", decodeDeltaCellCounts);
+typedef struct {
+    s8 *sizes;
+    s32 *codes;
+    u8 pad8[0x98];
+    s32 n;
+    u8 padA4[4];
+} DdTbl;
+typedef struct {
+    u8 pad0[0xE];
+    u16 hE;
+    u8 pad10[0x4C];
+    DdTbl t[4];
+} DdSt;
+
+s32 decodeDeltaCellCounts(DdSt *s, u8 tbl, u8 *counts) {
+    s32 p;
+    s32 l;
+    s32 i;
+
+    p = 0;
+    for (l = 1; l <= 16; l++) {
+        i = counts[l - 1];
+        if (i < 0 || p + i > 256) {
+            return 16;
+        }
+        while (i--) {
+            p++;
+        }
+    }
+    s->t[tbl].sizes = rs_malloc(p + 1, s->hE);
+    if (s->t[tbl].sizes == NULL) {
+        return 6;
+    }
+    p = 0;
+    for (l = 1; l <= 16; l++) {
+        i = counts[l - 1];
+        while (i--) {
+            s->t[tbl].sizes[p++] = l;
+        }
+    }
+    s->t[tbl].sizes[p] = 0;
+    s->t[tbl].n = p;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", allocDebrisCellTable);
 
