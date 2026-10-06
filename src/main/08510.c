@@ -1496,7 +1496,178 @@ void resetSceneLightsAndMaterials(void) {
     D_main_bss_801143A4 = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", transformSceneLights);
+struct TSLEnt {
+    /* 0x0 */ void *p0;
+    /* 0x4 */ void *p4;
+};
+
+struct TSLItem {
+    /* 0x0 */ u32 flags;
+    /* 0x4 */ u16 h4;
+    /* 0x6 */ u16 h6;
+    /* 0x8 */ u16 mat;
+};
+
+struct TSLGroup {
+    /* 0x00 */ struct TSLGroup *next;
+    /* 0x04 */ u32 pad4;
+    /* 0x08 */ struct TSLItem *items;
+    /* 0x0C */ u32 count;
+};
+
+struct TSLScene {
+    /* 0x00 */ u8 pad0[0xC];
+    /* 0x0C */ u32 flags;
+    /* 0x10 */ u8 **lights;
+    /* 0x14 */ u8 pad14[0xC];
+    /* 0x20 */ struct TSLGroup *groups;
+    /* 0x24 */ u8 *verts;
+};
+
+extern s32 D_main_bss_8011437C;
+extern u32 D_main_bss_8011A8BC;
+extern u32 D_main_bss_8011A8B8;
+extern s32 D_main_bss_80114380;
+extern u8 D_main_bss_8010F8B0[];
+extern s32 D_main_bss_801143A4;
+extern u8 D_main_bss_8011A454;
+extern struct D_main_bss_8011A444 *D_main_bss_8010E8A8;
+extern struct D_main_bss_8011A444 *D_main_bss_8010E8AC;
+extern void *D_main_bss_8010E8B0[];
+extern struct TSLEnt D_main_bss_801143B0[];
+
+void transformSceneLights(struct TSLScene *scene, f32 *m, f32 *light_mat, s8 *out_a, s8 *out_b) {
+    s32 i;
+    s32 *p;
+    u8 *l;
+    u32 n;
+    register struct TSLEnt *ent asm("$9");
+    struct TSLEnt *e;
+    struct TSLGroup *g;
+    struct TSLItem *it;
+    u32 j;
+    s32 idx;
+    s32 t;
+    s32 q;
+    s32 c;
+    u16 vi;
+    u8 tag;
+    void **pp;
+    u8 *arr;
+    struct D_main_bss_8011A444 *mt;
+    struct { f32 x; f32 y; f32 z; f32 pad[4]; } vec;
+
+    idx = 0x1F;
+    p = &D_main_bss_8011437C;
+    do {
+        *p-- = 0;
+    } while (--idx >= 0);
+    l = scene->lights;
+    if (l != NULL) {
+        do {
+            transformLightByType(l, light_mat);
+            l = *(u8 **)l;
+        } while (l != NULL);
+    }
+    D_main_bss_8011A454++;
+    if (D_main_bss_8011A454 == 0) {
+        D_main_bss_8011A454 = 1;
+    }
+    n = 0;
+    if (D_main_bss_8011A8BC != 0) {
+        do {
+            ((u8 *)D_main_bss_8010E8AC)[D_main_bss_80114380++] = 0;
+            if (D_main_bss_80114380 == D_main_bss_8011A8B8) {
+                D_main_bss_80114380 = 0;
+            }
+            D_main_bss_8010F8B0[D_main_bss_801143A4++] = 0;
+            if (D_main_bss_801143A4 == 0x400) {
+                D_main_bss_801143A4 = 0;
+            }
+            n++;
+        } while (n < D_main_bss_8011A8BC);
+    }
+    *out_a = 0;
+    *out_b = 0;
+    g = scene->groups;
+    ent = D_main_bss_801143B0;
+    if (g != NULL) {
+        do {
+            it = g->items;
+            j = 0;
+            if (g->count != 0) {
+                do {
+                    if (!(it->flags & 0x100)) {
+                        if (it->flags & 2) {
+                            *out_b = 1;
+                            vi = *(u16 *)((it->h4 & 0xFC) + (s32)it);
+                            if (scene->flags & 1) {
+                                f32 *v = (f32 *)(vi * 12 + (s32)scene->verts);
+                                t = (s32)(m[6] * v[0] + m[7] * v[1] + m[8] * v[2] + m[11]);
+                            } else {
+                                vec.x = (f32)*(s16 *)(scene->verts + vi * 8) * 0.00390625f;
+                                vec.y = (f32)*(s16 *)(scene->verts + vi * 8 + 2) * 0.00390625f;
+                                vec.z = (f32)*(s16 *)(scene->verts + vi * 8 + 4) * 0.00390625f;
+                                t = (s32)(m[6] * vec.x + m[7] * vec.y + m[8] * vec.z + m[11]);
+                            }
+                            idx = (s32)((f32)t * 256.0f / 64.0f);
+                            if (idx >= 0) {
+                                c = 0x1FF;
+                                if (idx < 0x200) {
+                                    c = idx;
+                                }
+                            } else {
+                                c = 0;
+                            }
+                            idx = c;
+                            if ((it->flags & 0x10) || (it->flags & 0x60) == 0x60) {
+                                idx |= 0x200;
+                            }
+                            tag = D_main_bss_8011A454;
+                            e = ent;
+                            ent = e + 1;
+                            e->p4 = it;
+                            if (D_main_bss_8010F8B0[idx] == tag) {
+                                e->p0 = D_main_bss_8010E8B0[idx];
+                            } else {
+                                e->p0 = NULL;
+                                D_main_bss_8010F8B0[idx] = tag;
+                            }
+                            D_main_bss_8010E8B0[idx] = e;
+                        } else {
+                            *out_a = 1;
+                            idx = it->mat;
+                            if ((D_main_bss_8011A444[idx].material_type & 1) && (it->flags & 4)) {
+                                idx = (D_main_bss_8011A444[idx].D_80128F08_index + 1) * 2;
+                            } else {
+                                idx = 0;
+                            }
+                            if ((it->flags & 0x10) || (it->flags & 0x60) == 0x60) {
+                                idx |= 1;
+                            }
+                            e = ent;
+                            ent = e + 1;
+                            pp = (void **)&e->p4;
+                            *pp = it;
+                            arr = (u8 *)D_main_bss_8010E8AC;
+                            tag = D_main_bss_8011A454;
+                            if (arr[idx] == tag) {
+                                ((void **)e)[0] = ((void **)D_main_bss_8010E8A8)[idx];
+                            } else {
+                                ((void **)e)[0] = NULL;
+                                ((u8 *)D_main_bss_8010E8AC)[idx] = tag;
+                            }
+                            ((void **)D_main_bss_8010E8A8)[idx] = e;
+                        }
+                    }
+                    j++;
+                    it = (struct TSLItem *)((u8 *)it + (*(u8 *)&it->h4 & 0x3F) * 4);
+                } while (j < g->count);
+            }
+            g = g->next;
+        } while (g != NULL);
+    }
+}
 
 typedef struct {
     u16 idx;
