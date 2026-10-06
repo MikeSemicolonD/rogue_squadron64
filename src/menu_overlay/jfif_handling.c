@@ -318,7 +318,109 @@ s32 parseJfifDQTMarker(JfifDQT *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifDHTMarker);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", paserJfifSOSMarker);
+typedef struct {
+    u8 id;
+    u8 h;
+    u8 v;
+    u8 tq;
+    u8 dc;
+    u8 ac;
+    u8 pad6[4];
+    u16 hA;
+    u8 padC[4];
+    void *p10;
+    u8 pad14[0x18];
+} SosComp;
+typedef struct {
+    u16 h0;
+    u16 h2;
+    u16 flags;
+    u8 pad6[8];
+    u16 hE;
+    u8 pad10[0x18];
+    u16 h28;
+    u16 h2A;
+    u8 pad2C[4];
+    u8 *base;
+    u8 *cur;
+    u8 pad38[4];
+    u16 w;
+    u16 hgt;
+    u16 h40;
+    u16 h42;
+    u8 pad44[4];
+    u8 b48;
+    u8 pad49;
+    u8 maxH;
+    u8 maxV;
+    u8 ncomp;
+    u8 pad4D[0x6F8 - 0x4D];
+    SosComp comp[4];
+    u8 pad7A8[0x7D4 - 0x7A8];
+    u16 h7D4;
+} SosSt;
+static __inline__ s32 sosCdiv(s32 a, s32 b) { s32 t = a - 1; return (t + b) / b; }
+u8 sosGrid(SosSt *) __asm__("computeCellGridIndices");
+
+s32 paserJfifSOSMarker(SosSt *s) {
+    u8 n;
+    u8 i;
+    u8 id;
+    u8 t;
+    s32 xdc;
+    s32 xac;
+    u8 ss;
+    u8 se;
+    u8 a;
+    u8 r;
+    SosComp *c;
+
+    s->cur += 2;
+    n = *s->cur++;
+    if (n != s->ncomp) {
+        return 0xC;
+    }
+    for (i = 0; i < n; i++) {
+        id = *s->cur++;
+        if (id != i + 1) {
+            return 0xE;
+        }
+        t = *s->cur++;
+        s->comp[i].dc = xdc = t >> 4;
+        s->comp[i].ac = xac = t & 0xF;
+        if (!((s->b48 >> xdc) & 1)) {
+            return 0xF;
+        }
+        if (!((s->b48 >> (xac + 1)) & 1)) {
+            return 0xF;
+        }
+        s->h40 = s->h0;
+        s->h42 = s->h2;
+        if (s->flags & 0x80) {
+            s->h40 = s->w * s->h40 / s->h28;
+            s->h42 = s->hgt * s->h2 / s->h2A;
+        }
+        {
+            u16 rows = sosCdiv(s->h42, s->h7D4);
+            u16 sz;
+            rows += ((u32)s->h42 % (u32)s->h7D4) != 0;
+            sz = rows * s->h7D4;
+            sz >>= s->maxV - s->comp[i].v;
+            s->comp[i].p10 = rs_malloc(s->comp[i].hA * sz, s->hE);
+        }
+    }
+    ss = *s->cur++;
+    se = *s->cur++;
+    a = *s->cur++;
+    if (ss != 0 || se != 0x3F || a != 0) {
+        return 0xE;
+    }
+    r = sosGrid(s);
+    if (r != 0) {
+        return r;
+    }
+    return 0;
+}
 
 typedef struct {
     u8 pad[0x77C];
