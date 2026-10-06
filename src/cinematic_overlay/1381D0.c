@@ -143,7 +143,23 @@ void initCinematicDispatchSlots(s32 *arg0, void *arg1) {
     clearStructPair2C30(&D_cinematic_overlay_800B0A50);
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicSlotBatchDispatch);
+extern u16 D_main_bss_80139560[];
+extern u16 D_main_bss_80130BA2;
+s32 slotDispatcherIter(u16, s32, void *);
+void cinematicSlotBatchDispatch(CineNode **arg0) {
+    s32 n;
+    slotDispatcherIter(D_main_bss_80139560[3], 4, &D_cinematic_overlay_800B0A00);
+    slotDispatcherIter(D_main_bss_80139560[4], 4, &D_cinematic_overlay_800B0A00);
+    slotDispatcherIter(D_main_bss_80139560[6], 4, &D_cinematic_overlay_800B0A00);
+    slotDispatcherIter(D_main_bss_80139560[8], 4, &D_cinematic_overlay_800B0A00);
+    slotDispatcherIter(D_main_bss_80139560[10], 4, &D_cinematic_overlay_800B0A00);
+    slotDispatcherIter(D_main_bss_80139560[7], 4, &D_cinematic_overlay_800B0A00);
+    slotDispatcherIter(D_main_bss_80130BA2, 4, &D_cinematic_overlay_800B0A00);
+    D_cinematic_overlay_800B0AB0.unk0 = n = ({ s32 t = (s32)*arg0; __asm__("" : "+r"(t)); t; });
+    if (n != 0) ((CineNode *)n)->unk4 = (s32)&D_cinematic_overlay_800B0AB0;
+    D_cinematic_overlay_800B0AB0.unk4 = 0;
+    *arg0 = &D_cinematic_overlay_800B0AB0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", slotEffectHandlerDispatch);
 
