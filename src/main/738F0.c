@@ -1279,7 +1279,146 @@ INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D220);
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D224);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", npcPowerGeneratorHandleDestruction);
+typedef struct { u8 pad[0x10]; u32 n; u8 **objs; } PgDat;
+extern PgDat *pgDat __asm__("D_main_bss_801375D8");
+extern f32 pgNext __asm__("D_main_bss_8013A8B4");
+extern ExplColor D_main_8003D220;
+extern ExplColor D_main_8003D224;
+void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+
+static __inline__ f32 pgAbs(f32 x) { f32 r; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); return r; }
+
+void npcPowerGeneratorHandleDestruction(void) {
+    f32 d[3];
+    f32 cp[3];
+    f32 fwd[3];
+    f32 v[3];
+    u8 list[16];
+    ExplosionArgs args;
+    ExplColor colA;
+    ExplColor colB;
+    f32 pos[3];
+    f32 ep[3];
+    f32 d2[3];
+    u8 *cam;
+    u8 *obj;
+    s32 i;
+    s32 n;
+    s32 more;
+    f32 sq;
+    f32 len;
+    f32 dist;
+    f32 scale;
+    s32 count;
+    f32 x;
+    f32 z;
+    f32 ground;
+    f32 t;
+
+    if (gCurrentLevel == 0xD && D_main_bss_80130BA4 > pgNext) {
+        cam = D_main_bss_80138D1C + 0x28;
+        cp[0] = *(f32 *)(cam + 0x24);
+        cp[1] = *(f32 *)(cam + 0x28);
+        cp[2] = *(f32 *)(cam + 0x2C);
+        fwd[0] = *(f32 *)(cam + 0x8);
+        fwd[1] = *(f32 *)(cam + 0x14);
+        fwd[2] = *(f32 *)(cam + 0x20);
+        i = 0;
+        n = 0;
+        do {
+            PgDat *dd = pgDat;
+            u8 *lp = list;
+            more = 1;
+            if ((u32)i < dd->n) {
+                obj = dd->objs[i];
+                d[0] = *(f32 *)(obj + 0x10) - cp[0];
+                d[1] = *(f32 *)(obj + 0x14) - cp[1];
+                d[2] = *(f32 *)(obj + 0x18) - cp[2];
+                sq = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
+                if (sq < 900.0f) {
+                    __asm__("sqrt.s %0, %1" : "=f"(len) : "f"(sq));
+                    if (0.0f < len) {
+                        if (vec3Dot(fwd, d) / len >= 0.0f) {
+                            lp[n] = i;
+                            n++;
+                        }
+                    }
+                }
+            } else {
+                break;
+            }
+            i++;
+        } while (more);
+        if (n != 0) {
+            colA = D_main_8003D220;
+            colB = D_main_8003D224;
+            obj = pgDat->objs[list[todRand() % n]];
+            {
+                u8 *cam2 = D_main_bss_80138D1C + 0x28;
+                f32 *p = (f32 *)(obj + 0x10);
+                d2[0] = p[0] - *(f32 *)(cam2 + 0x24);
+                d2[1] = p[1] - *(f32 *)(cam2 + 0x28);
+                d2[2] = p[2] - *(f32 *)(cam2 + 0x2C);
+            }
+            scale = 0.2f;
+            dist = vec3Length(d2);
+            if (dist > 4.0f) {
+                dist = 4.0f;
+            }
+            dist = dist / 2.5f;
+            scale = scale * dist;
+            if (dist > 0.0f) {
+                count = 12.0f / dist;
+            } else {
+                count = 1;
+            }
+            if (count >= 8) {
+                count = 12;
+            }
+            x = *(f32 *)(obj + 0x10);
+            pos[0] = x;
+            z = *(f32 *)(obj + 0x18);
+            pos[2] = z;
+            ground = wrapAngleToCyclicRange(x, z, D_main_bss_80138058, 0);
+            i = 0;
+            args.id = 0xFFFF;
+            args.colorA = &colA;
+            args.colorB = &colB;
+            pos[1] = ground;
+            args.pos = ep;
+            ep[1] = ground;
+            if (count > 0) {
+                do {
+                    ep[0] = pos[0] + ((f32)(randX() & 0x7F) - 64.0f) / 106.666664f;
+                    ep[2] = pos[2] + ((f32)(randX() & 0x7F) - 64.0f) / 106.666664f;
+                    args.scale = scale + ((f32)(randX() & 0x7F) - 64.0f) / 640.0f;
+                    if (args.scale <= 0.0f) {
+                        args.scale = 0.001f;
+                    }
+                    spawnNpcOfType((void *)explosionEffectNpcHandler, &args, 1, 10); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0));
+                    i++;
+                } while (i < count);
+            }
+            spawnOrientedNpcX(0x8002, pos, 0, &colA, 0.4f, 1.3f, 0.4f, 0.5f);
+            pos[1] = pos[1] - 0.3f;
+            distanceAndDopplerNpcHelper(pos, 0.2f, 0.4f);
+            spawnMinimalRandomNpc(pos, 2.5f, D_main_bss_801398C0);
+            if (randX() & 3) {
+                composeRandomRotationMatrix(fwd, v, 0.6f, 0x28, 0, 0);
+                pos[0] = pos[0] + fwd[0];
+                pos[1] = pos[1] + fwd[1];
+                pos[2] = pos[2] + fwd[2];
+                scaleVec3ByRandomRange(v, 0.5f, 1.5f);
+                spawnDebris1Npc(pos, v, 10.0f, -(((f32)(randX() & 0x7F) - 64.0f) * 0.015625f + 3.0f), ((f32)(randX() & 0x7F) - 64.0f) / 320.0f + 0.8f);
+            }
+            fwd[0] = fwd[1] = fwd[2] = 0.0f;
+            play3DSoundEvent(0, pos, fwd, 18.0f, 0.5f, 0, 0x7D, 0x5A, 0x14);
+            pgNext = D_main_bss_80130BA4 + (pgAbs(((f32)(randX() & 0x7F) - 64.0f) * 0.015625f) + 0.5f) / ((f32)n / 3.0f);
+        } else {
+            pgNext = D_main_bss_80130BA4;
+        }
+    }
+}
 
 typedef struct {
     f32 f10;
