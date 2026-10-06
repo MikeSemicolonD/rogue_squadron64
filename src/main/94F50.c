@@ -623,7 +623,157 @@ s32 isSongHandleFree(s32 *h) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", tickAllActiveSongs);
+extern s32 D_main_bss_80142038;
+extern s32 D_main_bss_801440C0;
+extern s32 D_main_bss_801499F4;
+extern s8 D_main_bss_801499F8;
+extern u8 D_main_bss_8014A8C0[];
+extern u8 D_main_bss_8014A8C1[];
+extern u8 D_main_bss_8014A8C4[];
+extern u32 D_main_bss_801529C8;
+extern u8 D_main_bss_801529CB;
+extern s32 D_main_bss_801529CC;
+extern s32 advanceSongRegion(u32, struct D_main_bss_80149A00_type *, s32);
+extern s8 isAudioFaderRampActive(u8);
+extern void setTrackVoiceTickBudget(u32, u8, struct D_main_bss_80149A00_type *);
+extern s32 stepActiveSongTracks();
+extern void stepSongModulationLanes();
+extern void stepSongPitchBendLanes();
+extern s32 validateVoiceHandle(s32);
+
+void tickAllActiveSongs(void)
+{
+  s32 temp_a2_2;
+  s32 temp_s3;
+  s32 temp_s6;
+  s32 temp_s7;
+  s32 temp_v1_3;
+  s32 var_a2;
+  s32 var_s2;
+  struct D_main_bss_80149A00_type *temp_a3;
+  struct D_main_bss_80149A00_type *var_a1;
+  struct D_main_bss_801511C0_type *temp_s1;
+  struct D_main_bss_801511C0_type *var_s0;
+  struct SNG_unk0C_type *temp_a1;
+  struct SNG_unk0C_type *temp_v1;
+  u32 temp_a0;
+  u32 temp_a0_2;
+  register u32 temp_lo asm("$2");
+  u32 temp_v0;
+  register u32 temp_v1_2 asm("$3");
+  u32 var_s5;
+  u8 *var_s4;
+  struct D_main_bss_80149A00_type *p;
+  if (D_main_bss_80142038 != 0)
+  {
+    var_s5 = 0;
+    D_main_bss_801499F4 = 0;
+    D_main_bss_801499FC = 0;
+    D_main_bss_801529CC = 0;
+    do
+    {
+      var_s2 = var_s5 * 0xEF8;
+      if (D_main_bss_8014A8C0[var_s2] != 0)
+      {
+        D_main_bss_801529C0 = (struct D_main_bss_80149A00_type *) (((u8 *) D_main_bss_80149A00) + var_s2);
+        D_main_bss_801529C8 = var_s5;
+        D_main_bss_801499F8 = isAudioFaderRampActive(*(D_main_bss_8014A8C4 + var_s2));
+        p = D_main_bss_801529C0;
+        if (p->unkE6C->unk0 != (-1U))
+        {
+          u32 end = -1;
+          do
+          {
+            temp_a1 = p->unkE6C;
+            if (((u32) (p->unkE74 + p->unk110[4])) >= ((u32) temp_a1->unk0))
+            {
+              temp_a0 = temp_a1->unk4;
+              p->unk110[5] = (s32) temp_a0;
+              setTrackVoiceTickBudget(temp_a0, D_main_bss_801529CB, p);
+              temp_v1 = D_main_bss_801529C0->unkE6C;
+              D_main_bss_801529C0->unkE6C = temp_v1 + 1;
+              p = D_main_bss_801529C0;
+            }
+            else
+            {
+              break;
+            }
+          }
+          while (temp_v1[1].unk0 != end);
+        }
+        {
+            register s32 rt asm("$4") = ((s32) (D_main_bss_80142038 << 0x10)) / ((s32) D_main_bss_801440C0);
+            temp_lo = ((u32) (D_main_bss_801529C0->unk110[5] * 0x600)) / 240;
+            temp_v1_2 = temp_lo * rt;
+        }
+        temp_lo = temp_v1_2 * D_main_bss_801529C0->unkEC2;
+        temp_v1_2 = (temp_lo >> 8) & 0xFFFF;
+        *((volatile s32 *) (&D_main_bss_801529C0->unk110[2])) = temp_v1_2;
+        temp_v1_2 = (*(volatile u32 *)&D_main_bss_801529C0->unkE70);
+        temp_v1_2 += (*((volatile s32 *) (&D_main_bss_801529C0->unk110[2])));
+        temp_lo = temp_lo >> 0x18;
+        *((volatile s32 *) (&D_main_bss_801529C0->unk110[3])) = (s32) temp_lo;
+        temp_a2_2 = *((volatile s32 *) (&D_main_bss_801529C0->unk110[3]));
+        *((volatile s32 *) (&D_main_bss_801529C0->unk110[4])) = ((s32) temp_lo) >> 1;
+        temp_a0_2 = temp_v1_2 & 0xFFFF;
+        D_main_bss_801529C0->unkE70 = temp_a0_2;
+        D_main_bss_801529C0->unkE74 += (temp_v1_2 >> 0x10) + temp_a2_2;
+        temp_s7 = advanceSongRegion(temp_a0_2, D_main_bss_801529C0, temp_a2_2);
+        temp_s6 = stepActiveSongTracks();
+        stepSongPitchBendLanes();
+        stepSongModulationLanes();
+        for (var_a2 = 0; var_a2 < 0x40; var_a2++)
+        {
+          temp_v1_3 = D_main_bss_801529C0->unk568[var_a2].unk00 + D_main_bss_801529C0->unk110[2];
+          D_main_bss_801529C0->unk568[var_a2].unk00 = temp_v1_3 & 0xFFFF;
+          D_main_bss_801529C0->unk568[var_a2].unk04 += (temp_v1_3 >> 0x10) + D_main_bss_801529C0->unk110[3];
+        }
+
+        temp_s3 = tickScheduledSongEvents();
+        var_s0 = D_main_bss_801529C0->unkE78[1];
+        if (var_s0 != 0)
+        {
+          do
+          {
+            temp_s1 = var_s0->unk00;
+            D_main_bss_801529CC += 1;
+            if (validateVoiceHandle(var_s0->unk08) == (-1))
+            {
+              if (var_s0->unk00 != 0)
+              {
+                var_s0->unk00->unk04 = var_s0->unk04;
+              }
+              if (var_s0->unk04 != 0)
+              {
+                var_s0->unk04->unk00 = var_s0->unk00;
+              }
+              else
+              {
+                D_main_bss_801529C0->unkE78[1] = var_s0->unk00;
+              }
+              var_s0->unk00 = D_main_bss_801529C4;
+              if (D_main_bss_801529C4 != 0)
+              {
+                D_main_bss_801529C4->unk04 = var_s0;
+              }
+              var_s0->unk04 = 0;
+              D_main_bss_801529C4 = var_s0;
+            }
+            var_s0 = temp_s1;
+          }
+          while (var_s0 != 0);
+        }
+        if (((!(temp_s7 & 0xFF)) & (!(temp_s6 & 0xFF))) && (!(temp_s3 & 0xFF)))
+        {
+          D_main_bss_8014A8C0[var_s2] = 0;
+          *(D_main_bss_8014A8C1 + var_s2) = 1;
+        }
+      }
+      var_s5 += 1;
+    }
+    while (var_s5 < 8U);
+  }
+}
 
 void initSongSequencerPools(void) {
     struct D_main_bss_801511C0_type *var_v1_2;
