@@ -570,7 +570,187 @@ void buildSineWaveEffectGeometryB(s32 mode, SineWaveIn *in, f32 base, SineWaveOu
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", renderNpcAnchoredProceduralEffect);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", spawnAndUpdateEffectActors);
+typedef struct {
+    f32 f0;
+    f32 f4;
+    f32 f8;
+    f32 fC;
+    u8 grid[0x15];
+} SaGrid;
+
+s32 spawnAndUpdateEffectActors(u8 *arg0, s32 arg1, f32 *arg2, f32 *arg3) {
+    f32 maxLo[3];
+    f32 maxHi[3];
+    f32 firstLo[3];
+    f32 firstHi[3];
+    s32 maxLoIdx[3];
+    s32 maxHiIdx[3];
+    s32 firstLoIdx[3];
+    s32 firstHiIdx[3];
+    SaGrid *s;
+    s32 i;
+    s32 j;
+    s32 k;
+    s32 row;
+    s32 col;
+    f32 v;
+    f32 w;
+    f32 best;
+    f32 x;
+    f32 y;
+    s32 r;
+
+    row = 0;
+    col = 0;
+    r = 8;
+    s = (SaGrid *)(arg0 + 0x50);
+    x = 0.0f;
+    y = 0.0f;
+    if (s->grid[0xA] != 0xFF) {
+        v = ((f32)s->grid[0xA] / 255.0f) * s->f8;
+        if (v < s->fC) {
+            for (i = 0; i < 3; i++) {
+                maxHiIdx[i] = 3;
+                maxLoIdx[i] = 3;
+                firstHiIdx[i] = -1;
+                firstLoIdx[i] = -1;
+            }
+            firstHi[1] = v;
+            firstLo[1] = v;
+            maxHi[1] = v;
+            maxLo[1] = v;
+            w = ((f32)s->grid[9] / 255.0f) * s->f8;
+            firstHi[0] = w;
+            firstLo[0] = w;
+            maxHi[0] = w;
+            maxLo[0] = w;
+            w = ((f32)s->grid[0xB] / 255.0f) * s->f8;
+            firstHi[2] = w;
+            firstLo[2] = w;
+            maxHi[2] = w;
+            maxLo[2] = w;
+            for (i = 2; i >= 0; i--) {
+                for (j = 0; j < 3; j++) {
+                    v = ((f32)s->grid[j + i * 3] / 255.0f) * s->f8;
+                    if (s->fC < v && firstLoIdx[j] == -1) {
+                        firstLoIdx[j] = i;
+                        firstLo[j] = v;
+                    }
+                    if (maxLo[j] < v) {
+                        maxLo[j] = v;
+                        maxLoIdx[j] = i;
+                    }
+                    v = ((f32)s->grid[j + (6 - i) * 3] / 255.0f) * s->f8;
+                    if (s->fC < v && firstHiIdx[j] == -1) {
+                        firstHiIdx[j] = 6 - i;
+                        firstHi[j] = v;
+                    }
+                    if (maxHi[j] < v) {
+                        maxHi[j] = v;
+                        maxHiIdx[j] = 6 - i;
+                    }
+                }
+            }
+            if (firstLoIdx[1] != -1 || firstHiIdx[1] != -1 || firstLoIdx[0] != -1 || firstHiIdx[0] != -1) {
+                best = -1.0f;
+                if (firstLoIdx[1] != -1 && best < firstLo[1]) {
+                    row = firstLoIdx[1];
+                    best = firstLo[1];
+                    col = 0;
+                }
+                if (firstHiIdx[1] != -1 && (best < firstHi[1] || (firstHi[1] == best && (rand() & 1)))) {
+                    col = 0;
+                    row = firstHiIdx[1];
+                    best = firstHi[1];
+                }
+                if (firstLoIdx[0] != -1 && (best < firstLo[0] || (firstLo[0] == best && (rand() & 1)))) {
+                    col = 1;
+                    row = firstLoIdx[0];
+                    best = firstLo[0];
+                }
+                if (firstHiIdx[0] != -1 && (best < firstHi[0] || (firstHi[0] == best && (rand() & 1)))) {
+                    row = firstHiIdx[0];
+                    col = 1;
+                }
+            } else {
+                best = -1.0f;
+                if (best < maxLo[1]) {
+                    row = maxLoIdx[1];
+                    best = maxLo[1];
+                    col = 0;
+                }
+                if (best < maxHi[1] || (maxHi[1] == best && (rand() & 1))) {
+                    col = 0;
+                    row = maxHiIdx[1];
+                    best = maxHi[1];
+                }
+                if (best < maxLo[0] || (maxLo[0] == best && (rand() & 1))) {
+                    col = 1;
+                    row = maxLoIdx[0];
+                    best = maxLo[0];
+                }
+                if (best < maxHi[0] || (maxHi[0] == best && (rand() & 1))) {
+                    col = 1;
+                    row = maxHiIdx[0];
+                    best = maxHi[0];
+                }
+                if (best < s->fC) {
+                    if (firstLoIdx[2] != -1 && best < firstLo[2]) {
+                        row = firstLoIdx[2];
+                        best = firstLo[2];
+                        col = -1;
+                    }
+                    if (firstHiIdx[2] != -1 && (best < firstHi[2] || (firstHi[2] == best && (rand() & 1)))) {
+                        col = -1;
+                        row = firstHiIdx[2];
+                        best = firstHi[2];
+                    }
+                    if (best < s->fC) {
+                        if (best < maxLo[2] || (maxLo[2] == best && (rand() & 1))) {
+                            col = -1;
+                            row = maxLoIdx[2];
+                            best = maxLo[2];
+                        }
+                        if (best < maxHi[2] || (maxHi[2] == best && (rand() & 1))) {
+                            row = maxHiIdx[2];
+                            col = -1;
+                        }
+                    }
+                }
+            }
+            x = (s->f0 / 3.0f) * (f32)(row - 3);
+            y = s->f4 * (f32)col;
+            if (y == 0.0f) {
+                if (x == 0.0f) {
+                    r = 8;
+                } else if (x < 0.0f) {
+                    r = 6;
+                } else {
+                    r = 2;
+                }
+            } else if (y > 0.0f) {
+                if (x == 0.0f) {
+                    r = 0;
+                } else if (x < 0.0f) {
+                    r = 7;
+                } else {
+                    r = 1;
+                }
+            } else {
+                if (x == 0.0f) {
+                    r = 4;
+                } else if (x < 0.0f) {
+                    r = 5;
+                } else {
+                    r = 3;
+                }
+            }
+        }
+    }
+    *arg2 = y;
+    *arg3 = x;
+    return r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", executeActorType4Effect);
 
