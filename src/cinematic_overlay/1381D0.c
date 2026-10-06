@@ -231,7 +231,107 @@ void cinematicSlotBatchDispatch(CineNode **arg0) {
     *arg0 = &D_cinematic_overlay_800B0AB0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", slotEffectHandlerDispatch);
+extern u8 sehBusy __asm__("D_cinematic_overlay_800B09B0");
+extern s32 D_cinematic_overlay_800B0AFC;
+extern void *D_cinematic_overlay_800B0B00;
+extern u8 D_cinematic_overlay_800B0B14;
+extern u8 D_cinematic_overlay_800B0B1D;
+extern u8 D_main_bss_80136E18[];
+extern s32 D_cinematic_overlay_800B0B18;
+s32 setActiveRenderListPtr();
+void setRenderStateFlagByteOne(s32);
+void setRenderStateFlagByteTwo(s32);
+void setRenderStateFlagByteThree(s32);
+void setupCameraMatrices(void *);
+void initRenderStateArrays(void);
+void linkHudNodeAndComputeScreenPos(void *);
+s32 rebuildActiveDisplayObjectList();
+void setFrameLevelStateBytes(u8, u8, u8);
+
+typedef struct { void *p0; s32 p4; s32 p8; s32 pC; } SehObj;
+
+void slotEffectHandlerDispatch(u8 *arg0, u8 arg1) {
+    void *saved;
+    s32 a0;
+    void **tbl;
+    void **t;
+    s32 x;
+
+    if (sehBusy != 0) {
+        setFrameLevelStateBytes(0, 0, 0);
+        setActiveRenderListPtr(0);
+        setRenderStateFlagByteOne(1);
+        *(s32 *)(arg0 + 0) = 0;
+        *(s32 *)(arg0 + 8) = 0;
+        *(s32 *)(arg0 + 0xC) = 0;
+        linkHudNodeAndComputeScreenPos(arg0);
+        setupCameraMatrices(arg0);
+        sehBusy -= 1;
+        return;
+    }
+    if (arg1 != 0x13) {
+        if (arg1 == 0xA) {
+            __asm__("");
+            a0 = 0;
+            goto call;
+        }
+        if (D_cinematic_overlay_800B09D0.unk0 == 0) {
+            a0 = 0;
+            goto call;
+        }
+        setActiveRenderListPtr(&D_cinematic_overlay_800B09D0);
+    }
+    a0 = 1;
+call:
+    setRenderStateFlagByteOne(a0);
+    tbl = (void **)D_cinematic_overlay_800B09C0;
+    x = D_cinematic_overlay_800B0B00;
+    saved = *(void **)arg0;
+    ((SehObj *)arg0)->p8 = 0;
+    *(void **)arg0 = tbl[0];
+    *(s32 *)(arg0 + 0xC) = rebuildActiveDisplayObjectList(x);
+    setFrameLevelStateBytes(D_main_bss_80136E18[0], D_main_bss_80136E18[1], D_main_bss_80136E18[2]);
+    setupCameraMatrices(arg0);
+    initRenderStateArrays();
+    setRenderStateFlagByteOne(0);
+    *(s32 *)(arg0 + 0xC) = 0;
+    t = tbl[1];
+    ((SehObj *)arg0)->p0 = t;
+    if (D_cinematic_overlay_800B0B1D != 0) {
+        ((SehObj *)arg0)->p0 = *t;
+    }
+    setupCameraMatrices(arg0);
+    initRenderStateArrays();
+    x = D_cinematic_overlay_800B0AFC;
+    *(void **)arg0 = saved;
+    *(s32 *)(arg0 + 8) = rebuildActiveDisplayObjectList(x);
+    linkHudNodeAndComputeScreenPos(arg0);
+    setupCameraMatrices(arg0);
+    if (D_cinematic_overlay_800B0B18 != 0 && D_cinematic_overlay_800B0B14 != 0) {
+        f32 fs0;
+        f32 fs1;
+        initRenderStateArrays();
+        setupCameraMatrices(arg0);
+        fs0 = *(f32 *)(arg0 + 0x24);
+        fs1 = *(f32 *)(arg0 + 0x28);
+        *(f32 *)(arg0 + 0x24) = 0.1171875f;
+        *(f32 *)(arg0 + 0x28) = 27.34375f;
+        setRenderStateFlagByteOne(1);
+        setRenderStateFlagByteThree(0);
+        setRenderStateFlagByteTwo(1);
+        setActiveRenderListPtr(0);
+        *(s32 *)arg0 = 0;
+        *(s32 *)(D_cinematic_overlay_800B0B18 + 0xC) = 0;
+        *(s32 *)(D_cinematic_overlay_800B0B18 + 0x10) = 0;
+        *(s32 *)arg0 = D_cinematic_overlay_800B0B18 + 0xC;
+        __asm__("" :: "m"(*(s32 *)arg0) : "$4");
+        setupCameraMatrices(arg0);
+        setRenderStateFlagByteThree(1);
+        setRenderStateFlagByteOne(0);
+        *(f32 *)(arg0 + 0x24) = fs0;
+        *(f32 *)(arg0 + 0x28) = fs1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cutscenePopulateSlotsFromLevelLists);
 
