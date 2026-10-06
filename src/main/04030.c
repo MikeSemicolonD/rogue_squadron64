@@ -15,14 +15,10 @@ static u32 padding_junk[] = {
 // Given that the .data in this file (the rngSeed variable) is awkardly placed directly
 //   after the .text section, I wonder if  this was some statically linked library?
 
-#if 0
 u16 rand(void) {
     rngSeed *= 0xA8351D63;
     return (rngSeed >> 6) % 32768;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/04030", rand);
-#endif
 
 void setRngSeed(u32 seed) {
     rngSeed = seed;
