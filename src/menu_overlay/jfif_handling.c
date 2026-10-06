@@ -250,7 +250,70 @@ s32 rebuildDebrisCellGeometry(u8 *s) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", emitDebrisCellFaces);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", computeCellGridIndices);
+typedef struct {
+    u8 pad0[1];
+    u8 h;
+    u8 v;
+    u8 pad3[3];
+    u16 h6;
+    u8 pad8[0xC];
+    s32 f14;
+    s32 f18;
+    s32 f1C;
+    s32 f20;
+    s32 f24;
+    s32 f28;
+} CgComp;
+
+typedef struct {
+    u8 pad0[0x3C];
+    u16 w;
+    u16 hgt;
+    u8 pad40[0xA];
+    u8 maxH;
+    u8 maxV;
+    u8 ncomp;
+    u8 pad4D[0x6F8 - 0x4D];
+    CgComp comp[4];
+    u8 pad7A8[0x7BC - 0x7A8];
+    u8 order[0x10];
+    s16 mcuW;
+    u16 cnt;
+    s16 mcuH;
+} CgState;
+
+static __inline__ s32 cdiv(s32 a, s32 b) { s32 t = a - 1; return (t + b) / b; }
+#define CDIV cdiv
+static __inline__ s32 cdiv2(s32 a, s32 m) { s32 t = a - 1; return (t + m * 8) / (m * 8); }
+
+s32 computeCellGridIndices(CgState *s) {
+    u32 i;
+    CgComp *c;
+    s32 n;
+    s32 a;
+
+    s->cnt = 0;
+    s->mcuW = cdiv2(s->w, s->maxH);
+    s->mcuH = cdiv2(s->hgt, s->maxV);
+    for (i = 0; i < s->ncomp; i++) {
+        c = &s->comp[i];
+        c->f28 = CDIV(s->w * c->h, s->maxH * 8);
+        c->f24 = CDIV(s->hgt * c->v, s->maxV * 8);
+        c->f14 = c->h;
+        c->f18 = c->v;
+        c->f1C = c->f14 * c->f18;
+        c->f20 = c->f14 * 8;
+        n = c->f1C;
+        if (s->cnt + n > 16) {
+            return 17;
+        }
+        while (n-- > 0) {
+            s->order[s->cnt++] = i;
+        }
+        c->h6 = 0;
+    }
+    return 0;
+}
 
 extern s32 allocCellBitGroup(void *, u8);
 extern s32 findFreeBitsL(void *, u8) __asm__("findFreeCellBitSlot");
