@@ -32,7 +32,221 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5C2C);
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5C34);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", buildFormatMessageGlyphBuffer);
+typedef struct {
+    u16 w;
+    u16 h;
+    s16 f44;
+    u8 pad6[2];
+    s32 f48;
+    s32 f4C;
+    u8 pad50[0x18];
+    u16 w68;
+    u16 h68;
+} BgReq;
+
+typedef struct {
+    u16 type;
+    u16 pad2;
+    u16 w;
+    u16 h;
+} BgInfo;
+
+typedef struct {
+    u8 pad0[8];
+    s16 h8;
+    s16 hA;
+    u16 *wC;
+    u8 pad10[0x14];
+    f32 f24;
+    f32 f28;
+    u8 b2C;
+    u8 b2D;
+    u8 b2E;
+    u8 b2F;
+} BgElem;
+
+typedef struct {
+    u16 w;
+    u16 h;
+    u16 depth;
+    u8 pad6[2];
+    u32 count;
+    BgElem *elem;
+    BgInfo *info;
+    u16 *ids;
+    u8 b18;
+    u8 pad19[3];
+    s32 flags;
+    u8 pad20[0x14];
+    u16 h34;
+    u16 h36;
+} BgObj;
+
+typedef struct {
+    u8 pad0[0x3C];
+    u16 w;
+    u16 h;
+} BgImg;
+
+typedef struct {
+    s32 a;
+    s16 b;
+} BgRoA;
+
+typedef struct {
+    s32 a;
+    s16 b;
+    s8 c;
+} BgRoB;
+
+typedef struct {
+    s32 a;
+    s16 b;
+    s8 c;
+    u8 pad7;
+    s32 a8;
+    s16 bC;
+    s8 cE;
+} BgHdr;
+
+typedef struct {
+    u8 b0;
+    u8 b1;
+    u8 pad2[0x36];
+    void *p38;
+    void *p3C;
+    u8 pad40[0x1C];
+    void *p5C;
+    u16 h60;
+    u16 h62;
+    u8 b64;
+    u8 b65;
+    u16 h66;
+    u8 pad68[4];
+    BgImg *img6C;
+    void *p70;
+} BgBuf;
+
+extern char D_menu_overlay_800A5C20[];
+extern char D_menu_overlay_800A5C2C[] __attribute__((aligned(4)));
+extern char D_menu_overlay_800A5C34[] __attribute__((aligned(4)));
+extern void sprintf(char *, const char *, ...);
+extern void *loadJfifAsset(char *, u16 *, void *, s32);
+u8 *rs_malloc(s32, s32);
+extern char *buildPrefixedAssetName(char *);
+
+s32 buildFormatMessageGlyphBuffer(void *arg0, void *arg1, s32 arg2, s32 arg3) {
+    BgObj *obj = arg0;
+#define buf ((BgBuf *)arg1)
+    char name[0x30];
+    BgReq req;
+    u8 sp70[8];
+    s32 var_s0;
+    u32 i;
+    s32 ret;
+    s32 area;
+    s32 bytes;
+    BgElem *e;
+    u8 *p8;
+    s32 d2;
+    s32 half;
+    BgBuf *bb;
+
+    req.w = obj->w;
+    req.h = obj->h;
+    req.w68 = obj->h34;
+    req.h68 = obj->h36;
+    req.f48 = obj->info->type;
+    req.f4C = 0;
+    req.f44 = 0x50;
+    if (obj->h34 != 0 && obj->h36 != 0) {
+        req.f44 = 0xD0;
+    }
+    sprintf(name, D_menu_overlay_800A5C20);
+    buf->img6C = loadJfifAsset(name, (u16 *)&req, sp70, arg3);
+    if (obj->info->w == 0) {
+        obj->info->w = buf->img6C->w;
+        obj->info->h = buf->img6C->h;
+        switch (obj->info->type) {
+        case 2:
+            obj->depth = 4;
+            break;
+        case 3:
+            obj->depth = 8;
+            break;
+        case 4:
+            obj->depth = 1;
+            break;
+        case 5:
+            obj->depth = 2;
+            break;
+        }
+        obj->count = ((obj->info->w + obj->w - 1) / obj->w) * ((obj->info->h + obj->h - 1) / obj->h);
+        obj->ids = rs_malloc(obj->count * 2, 0);
+        for (i = 0; i < obj->count; i++) {
+            obj->ids[i] = 0xFFFF;
+        }
+        if (obj->elem == 0) {
+            obj->elem = rs_malloc(0x30, 0);
+            rs_memset(obj->elem, 0, 0x30);
+        }
+        e = obj->elem;
+        e->wC = rs_malloc(obj->count * 2, 0);
+        e->h8 = buf->img6C->w / obj->w;
+        d2 = buf->img6C->h / obj->h;
+        e->f24 = 1.0f;
+        e->f28 = 1.0f;
+        e->b2C = 0xFF;
+        e->b2D = 0xFF;
+        e->b2E = 0xFF;
+        e->b2F = 0xFF;
+        e->hA = d2;
+    }
+    bb = arg1;
+    __builtin_memcpy(bb, D_menu_overlay_800A5C2C, 6);
+    __builtin_memcpy((char *)bb + 8, D_menu_overlay_800A5C34, 7);
+    buf->b1 = obj->b18 + 0x41;
+    ((u8 *)buf)[9] = obj->b18 + 0x41;
+    rs_memset((u8 *)buf + 0x14, 0, 0x24);
+    rs_memset((u8 *)buf + 0x38, 0, 0x34);
+    rs_strcpy((u8 *)buf + 0x28, (u8 *)buf);
+    buf->p5C = (char *)buf + 8;
+    buf->h60 = obj->w;
+    buf->h62 = obj->h;
+    buf->b64 = 1;
+    buf->h66 = obj->info->type;
+    if (obj->flags & 6) {
+        if (obj->flags & 2) {
+            buf->h66 |= 0x800;
+            req.f48 = 4;
+        }
+        if (obj->flags & 4) {
+            buf->h66 |= 0x400;
+            req.f48 = 5;
+        }
+        req.w = obj->w >> 1;
+        req.h = obj->h >> 1;
+        buf->b65 = 1;
+        buf->p70 = loadJfifAsset(buildPrefixedAssetName(name), (u16 *)&req, sp70, arg3);
+    }
+    area = obj->w * obj->h;
+    bytes = area * obj->depth;
+    half = bytes / 2;
+    if (obj->flags & 6) {
+        var_s0 = area / 4;
+    } else {
+        var_s0 = 0;
+    }
+    buf->p38 = rs_malloc(half, 0);
+    ret = obj->flags & 6;
+    if (ret != 0) {
+        ret = (s32)rs_malloc(var_s0, 0);
+        buf->p3C = (void *)ret;
+    }
+    *(s32 *)((u8 *)buf + 0x10) = 0;
+    return ret;
+}
+#undef buf
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5C40);
 
