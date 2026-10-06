@@ -248,7 +248,153 @@ s32 rebuildDebrisCellGeometry(u8 *s) {
     return !(*(u16 *)(s + 0x7D2) < *(u16 *)(s + 0x7D0));
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", emitDebrisCellFaces);
+typedef struct {
+    u8 pad0[3];
+    u8 qtbl;
+    u8 pad4[4];
+    s32 stride;
+    u8 padC[4];
+    u8 *buf;
+    u8 pad14[0x2C - 0x14];
+} EdComp;
+
+typedef struct {
+    u8 pad0[0x50];
+    u8 *rangeLimit;
+    u8 pad54[0x2F8 - 0x54];
+    f32 qt[4][64];
+    EdComp comp[4];
+} EdState;
+
+void edIdct(EdState *s, u8 ci, s16 *coef, s32 col, s32 row) __asm__("emitDebrisCellFaces");
+void edIdct(EdState *s, u8 ci, s16 *coef, s32 col, s32 row) {
+    f32 tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+    f32 tmp10, tmp11, tmp12, tmp13;
+    f32 z5, z10, z11, z12, z13;
+    s16 *inptr;
+    f32 *quantptr;
+    f32 *wsptr;
+    u8 *outptr;
+    u8 *range_limit;
+    u32 ctr;
+    f32 workspace[64];
+
+    inptr = coef;
+    quantptr = s->qt[s->comp[ci].qtbl];
+    range_limit = s->rangeLimit + 0x80;
+    wsptr = workspace;
+    for (ctr = 8; ctr > 0; ctr--) {
+        if (inptr[8 * 1] == 0 && inptr[8 * 2] == 0 && inptr[8 * 3] == 0 && inptr[8 * 4] == 0 && inptr[8 * 5] == 0 && inptr[8 * 6] == 0 && inptr[8 * 7] == 0) {
+            f32 dcval = inptr[8 * 0] * quantptr[8 * 0];
+
+            wsptr[8 * 7] = dcval;
+            wsptr[8 * 6] = dcval;
+            wsptr[8 * 5] = dcval;
+            wsptr[8 * 4] = dcval;
+            wsptr[8 * 3] = dcval;
+            wsptr[8 * 2] = dcval;
+            wsptr[8 * 1] = dcval;
+            wsptr[8 * 0] = dcval;
+            inptr++;
+            quantptr++;
+            wsptr++;
+            continue;
+        }
+
+        tmp0 = inptr[8 * 0] * quantptr[8 * 0];
+        tmp1 = inptr[8 * 2] * quantptr[8 * 2];
+        tmp2 = inptr[8 * 4] * quantptr[8 * 4];
+        tmp3 = inptr[8 * 6] * quantptr[8 * 6];
+
+        tmp10 = tmp0 + tmp2;
+        tmp11 = tmp0 - tmp2;
+
+        tmp13 = tmp1 + tmp3;
+        tmp12 = (tmp1 - tmp3) * 1.414213562f - tmp13;
+
+        tmp0 = tmp10 + tmp13;
+        tmp3 = tmp10 - tmp13;
+        tmp1 = tmp11 + tmp12;
+        tmp2 = tmp11 - tmp12;
+
+        tmp4 = inptr[8 * 1] * quantptr[8 * 1];
+        tmp5 = inptr[8 * 3] * quantptr[8 * 3];
+        tmp6 = inptr[8 * 5] * quantptr[8 * 5];
+        tmp7 = inptr[8 * 7] * quantptr[8 * 7];
+
+        z13 = tmp6 + tmp5;
+        z10 = tmp6 - tmp5;
+        z11 = tmp4 + tmp7;
+        z12 = tmp4 - tmp7;
+
+        tmp7 = z11 + z13;
+        tmp11 = (z11 - z13) * 1.414213562f;
+
+        z5 = (z10 + z12) * 1.847759065f;
+        tmp10 = 1.082392200f * z12 - z5;
+        tmp12 = -2.613125930f * z10 + z5;
+
+        tmp6 = tmp12 - tmp7;
+        tmp5 = tmp11 - tmp6;
+        tmp4 = tmp10 + tmp5;
+
+        wsptr[8 * 0] = tmp0 + tmp7;
+        wsptr[8 * 7] = tmp0 - tmp7;
+        wsptr[8 * 1] = tmp1 + tmp6;
+        wsptr[8 * 6] = tmp1 - tmp6;
+        wsptr[8 * 2] = tmp2 + tmp5;
+        wsptr[8 * 5] = tmp2 - tmp5;
+        wsptr[8 * 4] = tmp3 + tmp4;
+        wsptr[8 * 3] = tmp3 - tmp4;
+
+        inptr++;
+        quantptr++;
+        wsptr++;
+    }
+
+    wsptr = workspace;
+    for (ctr = 0; ctr < 8; ctr++) {
+        outptr = s->comp[ci].buf + (col + (row + ctr) * s->comp[ci].stride);
+
+        tmp10 = wsptr[0] + wsptr[4];
+        tmp11 = wsptr[0] - wsptr[4];
+
+        tmp13 = wsptr[2] + wsptr[6];
+        tmp12 = (wsptr[2] - wsptr[6]) * 1.414213562f - tmp13;
+
+        tmp0 = tmp10 + tmp13;
+        tmp3 = tmp10 - tmp13;
+        tmp1 = tmp11 + tmp12;
+        tmp2 = tmp11 - tmp12;
+
+        z13 = wsptr[5] + wsptr[3];
+        z10 = wsptr[5] - wsptr[3];
+        z11 = wsptr[1] + wsptr[7];
+        z12 = wsptr[1] - wsptr[7];
+
+        tmp7 = z11 + z13;
+        tmp11 = (z11 - z13) * 1.414213562f;
+
+        z5 = (z10 + z12) * 1.847759065f;
+        tmp10 = 1.082392200f * z12 - z5;
+        tmp12 = -2.613125930f * z10 + z5;
+
+        tmp6 = tmp12 - tmp7;
+        tmp5 = tmp11 - tmp6;
+        tmp4 = tmp10 + tmp5;
+
+        outptr[0] = range_limit[(((s32)(tmp0 + tmp7) + 4) >> 3) & 0x3FF];
+        outptr[7] = range_limit[(((s32)(tmp0 - tmp7) + 4) >> 3) & 0x3FF];
+        outptr[1] = range_limit[(((s32)(tmp1 + tmp6) + 4) >> 3) & 0x3FF];
+        outptr[6] = range_limit[(((s32)(tmp1 - tmp6) + 4) >> 3) & 0x3FF];
+        outptr[2] = range_limit[(((s32)(tmp2 + tmp5) + 4) >> 3) & 0x3FF];
+        outptr[5] = range_limit[(((s32)(tmp2 - tmp5) + 4) >> 3) & 0x3FF];
+        outptr[4] = range_limit[(((s32)(tmp3 + tmp4) + 4) >> 3) & 0x3FF];
+        outptr[3] = range_limit[(((s32)(tmp3 - tmp4) + 4) >> 3) & 0x3FF];
+
+        wsptr += 8;
+    }
+}
 
 typedef struct {
     u8 pad0[1];
