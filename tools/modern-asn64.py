@@ -184,6 +184,11 @@ with open(input_filename, mode="r") as input_file:
                 is_branch = True
                 if is_reorder:
                     line += "\tnop\n" # insert a nop after the instruction
+            elif identifier.split(".")[0] in ("trunc", "round", "ceil", "floor") and identifier.endswith((".w.s", ".w.d")):
+                # SN64 assembles cc1's 3-operand form (fd, fs, scratch gpr) as the bare MIPS3 instruction
+                ops = [s.strip() for s in tokens[1].split(",")]
+                if len(ops) == 3:
+                    line = f"\t{identifier} {ops[0]}, {ops[1]}\n"
             elif identifier == "li.s":
                 float_sym_name: str = f"RODATA_SYM_{generated_symbol_count}"
                 operands = [s.strip() for s in tokens[1].split(",")]
