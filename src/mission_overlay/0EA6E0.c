@@ -1,9 +1,40 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EA6E0", func_mission_overlay_800E9AE0);
+s32 setNpcHealth(s32, void *, void *);
+void initActorMotionParams(s32, s32, s32, s32, f32);
+void initObjectAnimSubstruct(s32, s32, s32, s32, f32, void *, s32, f32, f32, s32);
+void setObjectDetailLevel(s32, s32);
+s32 spawnObjectImpactEffectWithSound(u8 *arg0, s32 arg1);
+extern s32 D_main_bss_80137CE4;
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EA6E0", initObjectAnimAndDetail);
+void func_mission_overlay_800E9AE0(u8 *arg0) {
+    u8 *s1 = *(u8 **)(arg0 + 4);
+    u8 *d;
+    s32 o;
+    s32 p;
+    f32 one;
+
+    if (setNpcHealth(*(s32 *)(s1 + 0x38), *(u8 **)(s1 + 0x34) + 0x6C, *(u8 **)(s1 + 0x34)) > 0) {
+        one = 1.0f;
+        o = D_main_bss_80137CE4 * 4;
+        *(s16 *)(s1 + 0x6C) = 0;
+        *(s32 *)(s1 + 0x60) = 0;
+        *(s16 *)(s1 + 0x6E) = 0;
+        *(f32 *)(s1 + 0x5C) = one;
+        *(f32 *)(s1 + 0x58) = *(f32 *)(o + *(s32 *)(s1 + 0x34) + 0xBC) * 10.0f;
+        p = o + *(s32 *)(s1 + 0x34);
+        d = *(u8 **)(s1 + 0x34);
+        initActorMotionParams(*(s32 *)(s1 + 0x38), *(s32 *)(p + 0xB4), *(s32 *)(p + 0xB8), *(s32 *)(p + 0xC0), *(f32 *)(p + 0xC4));
+        initObjectAnimSubstruct(*(s32 *)(s1 + 0x38), *(s32 *)(d + 0xC8), *(s32 *)(d + 0xCC), *(s32 *)(d + 0xD0), *(f32 *)(d + 0xD4), spawnObjectImpactEffectWithSound, 0, 10.0f, 15.0f, 0);
+        __asm__("" :: "r"(d)); __asm__("" :: "r"(d)); 
+        setObjectDetailLevel(*(s32 *)(s1 + 0x38), *(s32 *)(*(u8 **)(s1 + 0x34) + 0xA0));
+    } else {
+        __asm__("" :: "r"(d));
+        *(s16 *)(s1 + 0x6C) = 3;
+    }
+}
+
 
 extern f32 D_mission_overlay_8010B184[];
 extern u8 D_mission_overlay_8010B198[];
