@@ -52,7 +52,77 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A519C);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicSlotUpdate);
+typedef struct { f32 v; f32 s; f32 t; } CsuKey;
+extern u16 D_cinematic_overlay_800B0B22;
+
+void cinematicSlotUpdateU8(u8 *, f32 *, f32, f32, u8) __asm__("cinematicSlotUpdate");
+
+void cinematicSlotUpdateU8(u8 *arg0, f32 *arg1, f32 arg2, f32 arg3, u8 arg4) {
+    u16 idx[4];
+    f32 val[4];
+    f32 c[8];
+    f32 tm[4];
+    u8 *g;
+    s32 n;
+    u16 i;
+    u16 j;
+    f32 x;
+    f32 d;
+    f32 t;
+    f32 t2;
+    f32 t3;
+    CsuKey *e;
+
+    g = (u8 *)D_cinematic_overlay_800B1904;
+    n = (s32)(arg2 * ((f32)*(u32 *)(g + 0x44) / arg3));
+    tm[0] = (f32)(n - 1) / ((f32)*(u32 *)(g + 0x44) / arg3);
+    tm[1] = (f32)n / ((f32)*(u32 *)(g + 0x44) / arg3);
+    tm[2] = (f32)(n + 1) / ((f32)*(u32 *)(g + 0x44) / arg3);
+    tm[3] = (f32)(n + 2) / ((f32)*(u32 *)(g + 0x44) / arg3);
+    if (tm[0] < 0.0f || 1.0f < tm[2] || 1.0f < tm[3] || (D_cinematic_overlay_800B0B22 != 0 && arg4 == 0)) {
+        j = 0;
+        while (((CsuKey *)arg0)[j].t <= arg2) {
+            j++;
+        }
+        if (j != 0) {
+            j--;
+        }
+        e = (CsuKey *)(j * 12 + (s32)arg0);
+        *arg1 = (arg2 - e->t) * e->s + e->v;
+    } else {
+        for (i = 0; i < 4; i++) {
+            register f32 *vp asm("$8") = (f32 *)((i << 2) + (s32)idx);
+            vp = (f32 *)((s32)vp + 8);
+            __asm__("" :: "r"(vp));
+            x = tm[i];
+            j = 0;
+            while (((CsuKey *)arg0)[j].t <= x) {
+                j++;
+            }
+            if (j != 0) {
+                j--;
+            }
+            { s32 k = j; e = (CsuKey *)(k * 12 + (s32)arg0);
+            *vp = (x - e->t) * e->s + e->v;
+            idx[i] = k; }
+        }
+        d = tm[2] - tm[1];
+        if (d < 0.00005f) {
+            d = 0.00005f;
+        }
+        t = (arg2 - tm[1]) / d;
+        t2 = t * t;
+        t3 = t2 * t;
+        c[4] = t3 * -0.5f + t2 + t * -0.5f;
+        c[5] = t3 * 1.5f + t2 * -2.5f + 1.0f;
+        c[6] = t3 * -1.5f + (t2 + t2) + t * 0.5f;
+        c[7] = t3 * 0.5f + t2 * -0.5f;
+        c[1] = t;
+        c[2] = t2;
+        c[3] = t3;
+        *arg1 = c[4] * val[0] + c[5] * val[1] + c[6] * val[2] + c[7] * val[3];
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", setupCutsceneLevel);
 
