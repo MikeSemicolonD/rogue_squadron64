@@ -2160,7 +2160,155 @@ s32 tickMenuSelectionActiveState(MsaState *arg0, f32 dt) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", transformSceneMeshVertices);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuModelViewerScreen);
+extern f32 gMvPhase __asm__("D_menu_overlay_800CF074");
+extern u8 D_main_bss_80130B63;
+void updateMenuItemAnimationState(void);
+void initNpcBookkeepingTables(void);
+void requestViFeatureChange(s32);
+f32 advanceWrappingPhaseAccumulator(void);
+void pollControllerInputs(void);
+void setNewAndPreviousButtonsPressed(void);
+void tickMenuOptionEntry(s32);
+void waitForPrevFrameDone(void);
+void frameStartReset(void);
+s32 rebuildActiveDisplayObjectList(void *);
+void setupCameraMatrices(void *);
+void drawFrameProfilerBars(void);
+void submitGfxFrame(void);
+void bufferArbiterProducerScanWait(void);
+void tickMusyXIfActive(void);
+u8 anyAudioSlotActive(void);
+void initMenuScreenCameraViewport(void);
+
+void runMenuModelViewerScreen(void) {
+    u8 *mesh;
+    u8 *m;
+    u8 *node;
+    s32 head;
+    f32 dt;
+    f32 fade;
+    f32 amp;
+    f32 t;
+    f32 lim;
+    f32 s;
+    f32 ph;
+    u8 state;
+    u8 quit;
+    u8 i;
+
+    initMenuScreenCameraViewport();
+    quit = 0;
+    state = 0;
+    updateMenuItemAnimationState();
+    initNpcBookkeepingTables();
+    load_hmt_and_hob((s32 *)"frontend/mempak/mempak", 0, 0, 0);
+    mesh = (u8 *)walkMeshdef0List((s32 *)"mempak");
+    applyFlagsToMeshTreeOrList((s32)mesh, 0, 0x30800000, 0);
+    requestViFeatureChange(0x11);
+    fade = 0.0f;
+    amp = 1.0f;
+    lim = 2.0f;
+    t = 0.0f;
+    gMvPhase = 0.0f;
+    if (D_main_bss_80130B63 != 0) {
+        lim = 3.0f;
+    }
+    while (1) {
+        dt = advanceWrappingPhaseAccumulator();
+        pollControllerInputs();
+        setNewAndPreviousButtonsPressed();
+        D_menu_overlay_800CF090.unk0 = 0;
+        gMvPhase += dt;
+        switch (state) {
+        case 0:
+            fade += dt + dt;
+            if (1.0f < fade) {
+                fade = 1.0f;
+            }
+            for (i = 0; i < 10; i++) {
+                activateAnimationKeyframe(9, i, (u32)(fade * 254.0f));
+            }
+            if (fade == 1.0f) {
+                state = 1;
+            }
+            break;
+        case 1:
+            t += dt;
+            if (lim < t) {
+                t = lim;
+                state = 2;
+            }
+            break;
+        case 2:
+            fade -= dt + dt;
+            if (fade < 0.0f) {
+                fade = 0.0f;
+            }
+            for (i = 0; i < 10; i++) {
+                activateAnimationKeyframe(9, i, (u32)(fade * 254.0f));
+            }
+            if (fade == 0.0f) {
+                quit = 1;
+            }
+            break;
+        }
+        tickMenuOptionEntry(1);
+        if (state != 0) {
+            if (D_main_bss_80130B63 == 0) {
+                setLookupEntryField5ByKey((s32)D_menu_overlay_800CF078, getPlayerSlotFieldAt34(9, 9), 0);
+            } else {
+                s = sinf(gMvPhase * 10.0f) * amp * 0.3f + 1.0f;
+                if (1.0f < gMvPhase) {
+                    amp -= dt + dt;
+                    if (amp < 0.0f) {
+                        amp = 0.0f;
+                    }
+                }
+                ph = gMvPhase;
+                if (0.5f <= ph && ph <= 1.0f) {
+                    ph = ph - 0.5f;
+                    s *= quadraticEaseInOut(ph + ph) * 0.95f + 0.05f;
+                }
+                if (state == 2) {
+                    s *= fade;
+                }
+                s *= 0.018f;
+                if (0.005f < s) {
+                    m = mesh + 0x28;
+                    initVec4TripletFromArgs(m, s, s, s);
+                    composeRotationMatrixSlot0(m, -5.0f);
+                    composeRotationMatrixSlot1(m, sinf(gMvPhase * 1.2f) * 45.0f + 180.0f);
+                    addVec3At0x24(m, 0.0f, 0.5f, 2.41421f);
+                    node = mesh + 0xC;
+                    __asm__("" :: "r"(mesh));
+                    head = D_menu_overlay_800CF090.unk0;
+                    *(s32 *)(mesh + 0xC) = head;
+                    if (head != 0) {
+                        *(u8 **)(head + 4) = node;
+                    }
+                    *(s32 *)(mesh + 0x10) = 0;
+                    D_menu_overlay_800CF090.unk0 = (s32)node;
+                }
+            }
+        }
+        if (quit == 1) {
+            break;
+        }
+        waitForPrevFrameDone();
+        frameStartReset();
+        D_menu_overlay_800CF090.unk8 = rebuildActiveDisplayObjectList(D_menu_overlay_800CF078);
+        D_menu_overlay_800CF090.unkC = 0;
+        setupCameraMatrices(&D_menu_overlay_800CF090);
+        drawFrameProfilerBars();
+        submitGfxFrame();
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+    }
+    bufferArbiterProducerScanWait();
+    tickMusyXIfActive();
+    while (anyAudioSlotActive() == 0) {
+    }
+}
 
 void setRenderStateFlagByteThree(s32);
 void setRenderStateFlagByteTwo(s32);
