@@ -421,7 +421,194 @@ void destroyNpcSlotChain(u16 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/3F160", spawnChildNpcWithTransform);
+typedef struct {
+    f32 x, y, z;
+} ScV3;
+
+typedef struct {
+    ScV3 p;
+    ScV3 q;
+    ScV3 r;
+    ScV3 s;
+    u8 m30[0x30];
+    ScV3 v60;
+    u16 h6C;
+    u16 h6E;
+    s32 w70;
+    s16 h74;
+    s16 h76;
+    u16 h78;
+} ScBuf;
+
+typedef struct {
+    u16 h0;
+    u16 h2;
+    u8 *w4;
+    ScV3 *w8;
+    s32 wC;
+    u16 h10;
+    u16 h12;
+    u16 h14;
+} ScArg;
+
+typedef struct {
+    f32 x, y, z;
+    ScV3 q;
+    ScV3 r;
+    ScV3 s;
+} ScMat;
+
+extern u16 D_main_bss_8013959E;
+extern void zmemcpy(void *, void *, s32);
+extern void mat34CrossRowsAndCopyPos(void *, void *, f32);
+extern void mat3x3InverseInto(void *, void *);
+extern void mat3x4Multiply(void *, void *, void *);
+extern void transformVec3ByMat34(void *, void *, void *);
+extern void extractOrthonormalFrameFromStruct(void *, void *);
+void computeNamedAttachPointTransform(s32, s32, s32, s32 *, f32 *, s32, s32);
+
+extern u16 D_main_bss_8013959E_arr[] __asm__("D_main_bss_8013959E");
+
+#define PARMAT(par, idx) { struct D_80130BB8_type *n_ = gNpcSlotList[idx].unk00; par = 0; if (n_ != 0) par = (u8 *)n_->unk08; }
+
+s32 spawnChildNpcWithTransform(struct D_80130BB8_type *self, u16 arg1, void *arg2) {
+    ScBuf *buf;
+    s32 msg;
+    u16 slot;
+    u8 *par;
+    u8 sp20[0x30];
+    u8 sp50[0x30];
+    ScV3 sp80;
+    u8 sp90[0x30];
+    u8 spC0[0x30];
+    u8 spF0[0x30];
+    s32 sp120;
+    f32 zero;
+    f32 one;
+
+    msg = arg1;
+    buf = (ScBuf *)self->unk04;
+    switch (msg) {
+    case 1: {
+        ScArg *a = arg2;
+        __asm__("" : "+r"(a));
+        if (a->w4 != 0) {
+            zmemcpy(buf, a->w4, 0x30);
+        }
+        zero = 0.0f;
+        buf->s.z = zero;
+        buf->s.y = zero;
+        buf->s.x = zero;
+        self->unk08 = (void *)buf;
+        self->unk0C = 0;
+        popNpcSlotFromTail(D_main_bss_8013959E_arr[0], self);
+        buf->h78 = a->h14;
+        buf->h76 = a->h0;
+        buf->w70 = a->wC;
+        buf->h74 = a->h12;
+        buf->h6C = a->h2;
+        switch (buf->h76) {
+        case 0:
+            PARMAT(par, a->h2);
+            one = 1.0f;
+            mat34CrossRowsAndCopyPos(sp20, par, one);
+            *(f32 *)(sp20 + 0x2C) = zero;
+            *(f32 *)(sp20 + 0x28) = zero;
+            *(f32 *)(sp20 + 0x24) = zero;
+            mat3x3InverseInto(sp50, sp20);
+            sp80.x = buf->p.x - ((ScMat *)par)->x;
+            sp80.y = buf->p.y - ((ScMat *)par)->y;
+            sp80.z = buf->p.z - ((ScMat *)par)->z;
+            transformVec3ByMat34(sp50, &sp80, sp90);
+            transformVec3ByMat34(sp50, &buf->q, sp90 + 0xC);
+            transformVec3ByMat34(sp50, &buf->r, sp90 + 0x18);
+            mat34CrossRowsAndCopyPos(buf->m30, sp90, one);
+            break;
+        case 1:
+            if (buf->h78 & 1) {
+                buf->v60 = *a->w8;
+            }
+            break;
+        case 2:
+            PARMAT(par, a->h2);
+            zmemcpy(buf, par, 0x30);
+            buf->v60 = *((ScArg *)arg2)->w8;
+            break;
+        }
+        slot = 0xFFFF;
+        {
+            u16 idx = buf->h6C;
+            if (idx != 0xFFFF) {
+                if (gNpcSlotList[idx].unk00 != 0) {
+                    slot = allocateNpcSlot(0);
+                    if ((u16)slot != 0xFFFF) {
+                        popNpcSlotFromTail(slot, gNpcSlotList[idx].unk00);
+                    }
+                }
+            }
+        }
+        buf->h6E = slot;
+        return 1;
+    }
+    case 2:
+        if (buf->h6E != 0xFFFF) {
+            destroyNpcSlotChain(buf->h6E);
+        }
+        return 1;
+    case 3:
+        break;
+    default:
+        return 1;
+    }
+    {
+    u16 h = buf->h6E;
+    if (h != 0xFFFF) {
+        register s32 o asm("$2") = h * 8;
+        register struct D_80130BB0_type *e asm("$3") = (struct D_80130BB0_type *)(o + (s32)gNpcSlotList);
+        u16 nx = e->next_idx;
+        u16 pid;
+        if (nx == 0xFFFF) {
+            pid = 0xFFFF;
+        } else {
+            pid = gNpcSlotList[nx].unk00->unk16;
+        }
+        if (pid == buf->h6C) {
+            switch (buf->h76) {
+            case 0:
+                PARMAT(par, pid);
+                mat34CrossRowsAndCopyPos(spC0, par, 1.0f);
+                mat3x4Multiply(spC0, buf->m30, spF0);
+                extractOrthonormalFrameFromStruct(buf, spF0);
+            tail:
+                buf->s = ((ScMat *)par)->s;
+                return 1;
+            case 1:
+                sp120 = buf->h74;
+                computeNamedAttachPointTransform(buf->w70, 0, 0, &sp120, (f32 *)buf, 0, 0);
+                if (buf->h78 & 1) {
+                    buf->p.x = buf->p.x + buf->q.x * buf->v60.x;
+                    buf->p.y = buf->p.y + buf->q.y * buf->v60.y;
+                    buf->p.z = buf->p.z + buf->q.z * buf->v60.z;
+                }
+                PARMAT(par, buf->h6C);
+                break;
+            case 2:
+                PARMAT(par, pid);
+                mat34CrossRowsAndCopyPos(spC0, par, 1.0f);
+                transformVec3ByMat34(spC0, &buf->v60, buf);
+                buf->q = ((ScMat *)par)->q;
+                buf->r = ((ScMat *)par)->r;
+                break;
+            default:
+                return 1;
+            }
+            goto tail;
+        }
+    }
+    }
+    destroyNpcSlotByIndex(self->unk16);
+    return 1;
+}
 
 s32 spawnChildNpcWithTransform(struct D_80130BB8_type *self, u16 arg1, void *arg2);
 
