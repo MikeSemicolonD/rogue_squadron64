@@ -82,7 +82,43 @@ u16 *packTlutEntriesRgba5551(u16 *dst, s32 flags, u8 *src, s16 count, u8 *key) {
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", allocTextureTlutBlock);
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", freeTextureTlutBlock);
+void ftlbImpl(u16 idx, u8 fmt) __asm__("freeTextureTlutBlock");
+
+void ftlbImpl(u16 idx, u8 fmt) {
+    s32 size;
+    u16 *blk;
+    u32 *src;
+    u32 *dst;
+    s32 i;
+    u16 *p;
+
+    size = 0x100;
+    if ((fmt & 0x3F) == 1) {
+        size = 0x10;
+    }
+    blk = D_main_bss_80128EFC[idx];
+    src = (u32 *)blk;
+    dst = (u32 *)(blk + size);
+    while ((s32)src != D_main_bss_8011A7D0) {
+        src--;
+        dst--;
+        *dst = *src;
+    }
+    D_main_bss_80128EFC[idx] = NULL;
+    D_main_bss_8011A7D0 += size * 2;
+    i = 0;
+    if (D_main_bss_80128F04 != 0) {
+        do {
+            p = D_main_bss_80128EFC[i & 0xFFFF];
+            if (p != NULL) {
+                if (p < blk) {
+                    D_main_bss_80128EFC[i & 0xFFFF] = (u16 *)((u8 *)p + size * 2);
+                }
+            }
+            i++;
+        } while ((u16)i < D_main_bss_80128F04);
+    }
+}
 
 void freeTextureDataSlot(u16 arg0) {
     u8 *data;
