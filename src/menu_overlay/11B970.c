@@ -1654,7 +1654,176 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", allocT16EffectContext);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", computeNabooBankingOrientation);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", handleNabooFlightInput);
+typedef struct { u8 pad[0x27]; u8 a27; u8 p1[3]; u8 a2B; u8 p2[3]; u8 a2F; u8 p3[3]; u8 a33; u8 p4[4]; } NbQ;
+u32 readControllerInputs(u8);
+void zmemcpy(u8 *, u8 *, u32);
+f32 floatModulo(f32, f32);
+f32 sinf(f32);
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+void composeRotationMatrixSlot0(void *, f32);
+void composeRotationMatrixSlot1(void *, f32);
+void addVec3At0x24(void *, f32, f32, f32);
+void buildVwingRenderMatrices(void *, f32);
+void computeNabooBankingOrientation(u8 *, u8, f32);
+void bsearchFactor5TableByU16Key(s32, s32, s32);
+extern f32 nbPhase __asm__("D_menu_overlay_800CF074");
+typedef struct {
+    u8 pad[0xC];
+    f32 fC;
+    f32 f10;
+    f32 f14;
+    u8 pad18[0xC];
+    f32 f24;
+    f32 f28;
+    f32 f2C;
+    f32 f30;
+} NbFx;
+extern NbFx nbFx __asm__("D_menu_overlay_800CCBF4");
+
+static __inline__ f32 avabs(f32 x) { f32 r; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); return r; }
+#define NF(o) (*(f32 *)(s + (o)))
+#define NW(o) (*(s32 *)(s + (o)))
+
+u8 handleNabooFlightInput(void **list, u8 *s, u8 port, f32 t, f32 dt, u8 input, u16 type, u8 flag) {
+    f32 zero;
+    f32 cur, tgt, fm, ph, one, k, w, a;
+    u8 *m;
+    u8 *q;
+    s32 o1, o2;
+    void **node;
+    NbFx *p;
+    void **n;
+    s32 i;
+    u8 idx;
+    u8 old;
+
+    if (input != 0) {
+        if (readControllerInputs(port) & 0x400100) {
+            NF(0x14EC) += 7.5f;
+            if (NF(0x14EC) > 150.0f) {
+                NF(0x14EC) = 150.0f;
+            }
+            goto done;
+        }
+        if (readControllerInputs(port) & 0x800200) {
+            NF(0x14EC) -= 7.5f;
+            if (NF(0x14EC) < -150.0f) {
+                NF(0x14EC) = -150.0f;
+            }
+            goto done;
+        }
+    }
+    cur = NF(0x14EC);
+    if (cur != 0.0f) {
+        if (cur < 0.0f) {
+            NF(0x14EC) = cur + avabs(cur) * 5.0f / 25.0f;
+            if (NF(0x14EC) > -20.0f) {
+                NF(0x14EC) = -20.0f;
+            }
+        } else if (cur > 0.0f) {
+            NF(0x14EC) = cur - avabs(cur) * 5.0f / 25.0f;
+            if (NF(0x14EC) < 20.0f) {
+                NF(0x14EC) = 20.0f;
+            }
+        }
+        fm = floatModulo(NF(0x14F0), 12.41379356f);
+        cur = NF(0x14F0);
+        tgt = (cur - fm) + 10.0f;
+        if (avabs(NF(0x14EC)) < 25.0f) {
+            if ((cur < tgt) ? (tgt - cur < 0.5f) : (cur - tgt < 0.5f)) {
+                NF(0x14F0) = tgt;
+                NF(0x14EC) = 0.0f;
+            }
+        }
+    }
+done:
+    NF(0x14F0) = NF(0x14F0) + dt * NF(0x14EC);
+    zero = 0.0f;
+    if (NF(0x14F0) < zero) {
+        NF(0x14F0) += 360.0f;
+    }
+    if (NF(0x14F0) >= 360.0f) {
+        NF(0x14F0) -= 360.0f;
+    }
+    if (t > 0.05f) {
+        m = s + 0x1C;
+        ph = nbPhase / 30.0f * 3.2f;
+        one = 1.0f;
+        initVec4TripletFromArgs(m, 0.34f, 0.34f, 0.34f);
+        k = one - t;
+        composeRotationMatrixSlot1(m, NF(0x14F0) + k * 69.69f);
+        composeRotationMatrixSlot0(m, NF(0x14FC));
+        k = k * 0.8172f;
+        addVec3At0x24(m, zero, NF(0x14F8), 2.41421f - k);
+        zmemcpy(s + 0x68, m, 0x30);
+        NW(0xA4) &= ~0x60;
+        NW(0x100) &= ~0x60;
+        p = &nbFx;
+        list[1] = p;
+        p->fC = zero;
+        p->f10 = NF(0x14F8);
+        p->f14 = 0.4142100811f;
+        p->f24 = sinf(ph) * 0.35f + 1.1f;
+        p->f28 = sinf(ph) * 0.3f + 1.1f;
+        p->f2C = sinf(ph) * 0.25f + 1.1f;
+        p->f30 = sinf(nbPhase / 30.0f * 7.2f) * 7.5f + 20.0f;
+        NW(0xA4) |= 0x20;
+        if (t < one) {
+            for (i = 0; i < 29; i++) {
+                q = s + (i * 0x38 + 0x170);
+                q[0x27] = q[0x2B] = q[0x2F] = q[0x33] = (u32)(t * 255.0f);
+                q = s + (i * 0x38 + 0x7C8);
+                q[0x27] = q[0x2B] = q[0x2F] = q[0x33] = (u32)(t * 255.0f);
+            }
+            NW(0xA4) |= 0x20;
+            NW(0x100) |= 0x20;
+        }
+        node = (void **)(s + 0x4C);
+        n = list[0];
+        *(void **)(s + 0x4C) = n;
+        if (n != NULL) {
+            n[1] = node;
+        }
+        NW(0x50) = 0;
+        __asm__("");
+        list[0] = node;
+        if ((u16)(type - 0xD) < 2) {
+            buildVwingRenderMatrices(list, t);
+        }
+        n = list[0];
+        *(void **)s = n;
+        if (n != NULL) {
+            n[1] = s;
+        }
+        NW(4) = 0;
+        list[0] = s;
+    } else {
+        s[0x1500] = 0xFF;
+        NF(0x14F4) = zero;
+    }
+    a = floatModulo(NF(0x14F0) + 270.0f + 0.0402777791f, 360.0f);
+    idx = (u32)(a / 360.0f * 29.0f + 0.75f);
+    if (idx >= 29) {
+        idx -= 29;
+    }
+    old = s[0x1500];
+    if (idx != old) {
+        if (old != 0xFF) {
+            computeNabooBankingOrientation(s, s[0x1500], 1.0f);
+            bsearchFactor5TableByU16Key(0x7A, 0x6E, 0x40);
+        }
+        s[0x1500] = idx;
+        NF(0x14F4) = 0.0f;
+    }
+    if (flag) {
+        w = (sinf(NF(0x14F4) * 6.2f) * 0.2f + 0.1f) * t + 1.0f;
+    } else {
+        w = 1.0f;
+    }
+    computeNabooBankingOrientation(s, idx, w);
+    NF(0x14F4) += dt;
+    return idx;
+}
 
 void bsearchFactor5TableByU16Key(s32, s32, s32);
 typedef struct {
