@@ -741,7 +741,143 @@ void handleLevelSelectStartConfirm(void) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", tickMenuTransitionState);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", runScriptedCraftCinematicEvent);
+extern f32 D_menu_overlay_800CDB08;
+s16 rand(void);
+void activateAnimationKeyframe(s32, s32, u8);
+
+void runScriptedCraftCinematicEvent(f32 dt) {
+    f32 glow;
+    f32 base;
+    f32 wave;
+    f32 w;
+    f32 h;
+    f32 a;
+    f32 b;
+    f32 lim;
+    f32 alpha;
+    f32 t;
+    f32 b04;
+    u32 i;
+    struct xy_offset *pos;
+    f32 *hs;
+    f32 *ws;
+    struct ui_element *bp;
+
+    D_menu_overlay_800CDD74->rgba.a = 0xD2;
+    D_menu_overlay_800CDD78->rgba.a = 0x8C;
+    if (bridgeMenuState == 2 || bridgeMenuState == 3) {
+        bridgeDisplayFlickerTimer = bridgeDisplayFlickerTimer - dt;
+        if (bridgeDisplayFlickerTimer < 0.0f) {
+            if (bridgeDisplayFlickerTimer + dt >= 0.0f) {
+                bsearchFactor5TableByU16Key(0x2D, 0x50, 0x40);
+            }
+            D_menu_overlay_800CDD78->rgba.a = rand() % 63 + 0x50;
+            if (bridgeDisplayFlickerTimer < -0.4f) {
+                bridgeDisplayFlickerTimer = (rand() & 7) + 2.0f;
+            }
+        }
+    }
+    glow = sinf(D_menu_overlay_800CDB18 * 0.125f) * 0.3f + 0.6f;
+    if ((bridgeTransitionState == 1 || bridgeTransitionState == 3) && bridgeMenuState != 4) {
+        glow *= D_menu_overlay_800CDAF0;
+    }
+    D_menu_overlay_800CDB20[2].f2C = glow;
+    D_menu_overlay_800CDB20[3].f10 = D_menu_overlay_800CDAE4;
+    D_menu_overlay_800CDB20[2].f24 = glow * 0.25f;
+    D_menu_overlay_800CDB20[2].f28 = glow * 0.4f;
+    if (bridgeTransitionState != 2 && bridgeMenuState != 4) {
+        applyFlagsToMeshTreeOrList(csModels[0].mesh, 0, 0x20, 0x100000);
+        applyFlagsToMeshTreeOrList(csModels[1].mesh, 0, 0x20, 0x100000);
+        applyFlagsToMeshTreeOrList(csModels[2].mesh, 0, 0x20, 0x100000);
+        applyFlagsToMeshTreeOrList(csModels[3].mesh, 0, 0x20, 0x100000);
+        D_menu_overlay_800CDB18 += dt * 30.0f;
+    } else {
+        applyFlagsToMeshTreeOrList(csModels[0].mesh, 0, 0, 0x20);
+        applyFlagsToMeshTreeOrList(csModels[1].mesh, 0, 0, 0x20);
+        applyFlagsToMeshTreeOrList(csModels[2].mesh, 0, 0, 0x20);
+        applyFlagsToMeshTreeOrList(csModels[3].mesh, 0, 0, 0x20);
+    }
+    wave = sinf(D_menu_overlay_800CDB14 / 3.0f);
+    base = (quadraticEaseInOut(D_menu_overlay_800CDAF0) * 0.85f + 0.15f) * 0.9f;
+    D_menu_overlay_800CDD74->rgba.r = wave * 24.0f + 200.0f;
+    D_menu_overlay_800CDD74->rgba.g = wave * 24.0f + 200.0f;
+    D_menu_overlay_800CDD74->rgba.b = wave * 25.0f + 230.0f;
+    w = sinf(D_menu_overlay_800CDB14 / 13.0f) * 0.03f + base;
+    h = sinf(D_menu_overlay_800CDB14 / 19.0f) * 0.03f + base;
+    D_menu_overlay_800CDD74->width_scale = w;
+    D_menu_overlay_800CDD74->xpos = w * -160.0f;
+    D_menu_overlay_800CDD74->height_scale = h;
+    D_menu_overlay_800CDD74->ypos = h * -105.0f - 45.0f;
+    if (bridgeDisplayFlickerTimer < 0.0f) {
+        w += (rand() & 0xF) / 100.0f;
+        h += (rand() & 0xF) / 100.0f;
+        wave = (rand() & 0xF) / 15.0f;
+    }
+    D_menu_overlay_800CDD78->rgba.r = wave * 25.0f + 230.0f;
+    D_menu_overlay_800CDD78->rgba.b = wave * 24.0f + 200.0f;
+    D_menu_overlay_800CDD78->rgba.g = wave * 24.0f + 200.0f;
+    D_menu_overlay_800CDD78->xpos = w * -160.0f + (rand() & 3);
+    D_menu_overlay_800CDD78->ypos = h * -105.0f - 45.0f + (rand() & 1);
+    D_menu_overlay_800CDD78->width_scale = w;
+    D_menu_overlay_800CDD78->height_scale = h;
+    if (D_menu_overlay_800CDAC7 == 1) {
+        if (D_menu_overlay_800CDB08 > 0.09f) {
+            D_menu_overlay_800CDB08 = D_menu_overlay_800CDB08 - dt;
+            if (D_menu_overlay_800CDB08 < 0.09f) {
+                D_menu_overlay_800CDB08 = 0.09f;
+            }
+        }
+    } else {
+        if (D_menu_overlay_800CDB08 < 0.8f) {
+            D_menu_overlay_800CDB08 = D_menu_overlay_800CDB08 + dt;
+            if (D_menu_overlay_800CDB08 > 0.8f) {
+                D_menu_overlay_800CDB08 = 0.8f;
+            }
+        }
+    }
+    t = D_menu_overlay_800CDB08;
+    D_menu_overlay_800CDD74->rgba.a = D_menu_overlay_800CDD74->rgba.a * D_menu_overlay_800CDAF0 * quadraticEaseInOut(D_menu_overlay_800CDB04) * t;
+    D_menu_overlay_800CDD78->rgba.a = D_menu_overlay_800CDD78->rgba.a * D_menu_overlay_800CDAF0 * quadraticEaseInOut(D_menu_overlay_800CDB04) * t;
+    b04 = D_menu_overlay_800CDB04;
+    __asm__("" :: "f"(b04));
+    if (D_menu_overlay_800CDAC7 != 1) {
+        wave = 0.0f;
+    } else {
+        wave = D_menu_overlay_800CDAF0 * 245.0f * b04;
+        if (bridgeDisplayFlickerTimer < 0.0f) {
+            wave = D_menu_overlay_800CDAF0 * ((s16)(rand() % 63) + 0x50);
+        }
+    }
+    for (i = 0; i < 9; i++) {
+        if (getAvailablePlayerCraftFlagsIgnoreUnlocks(bridgeMenuDesiredLevel) & (1 << i)) {
+            bridgeShipBlueprints[i].rgba.a = wave;
+            bridgeShipBlueprints[i].width_scale = w * bridgeShipBlueprintWidthScales[i];
+            bridgeShipBlueprints[i].height_scale = h * bridgeShipBlueprintHeightScales[i];
+            bridgeShipBlueprints[i].xpos = D_menu_overlay_800CDF80[i].x - (bridgeShipBlueprints[i].width_scale * 64.0f - 64.0f) * 0.5f;
+            bridgeShipBlueprints[i].ypos = D_menu_overlay_800CDF80[i].y - (bridgeShipBlueprints[i].height_scale * 64.0f - 64.0f) * 0.5f;
+            setLookupEntryField5ByKey((struct some_ui_list_root *)D_menu_overlay_800CDCDC, &bridgeShipBlueprints[i], wave != 0.0f);
+        }
+    }
+    a = 1.0f - (D_menu_overlay_800CDB08 - 0.09f) * 1.4084506f;
+    if (a < 0.0f) {
+        a = 0.0f;
+    }
+    if (a > 1.0f) {
+        a = 1.0f;
+    }
+    if (bridgeMenuState == 4) {
+        a *= D_menu_overlay_800CDAF0;
+    }
+    b = (D_menu_overlay_800CDB04 - 0.3f) * 1.4285715f;
+    if (b < 0.0f) {
+        b = 0.0f;
+    }
+    if (b > 1.0f) {
+        b = 1.0f;
+    }
+    a *= b;
+    activateAnimationKeyframe(2, 1, (u8)(a * 255.0f));
+}
 
 struct HobBlk { u8 b[0xFC]; };
 extern struct HobBlk bridgeBlueLightHobs[7];
