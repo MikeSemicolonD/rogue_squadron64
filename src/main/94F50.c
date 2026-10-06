@@ -13,7 +13,271 @@ extern struct D_main_bss_80149A00_type  D_main_bss_80149A00[8];
 extern struct D_main_bss_80149A00_type *D_main_bss_801529C0;
 extern struct D_main_bss_801511C0_type *D_main_bss_801529C4;
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", startSongSequence);
+typedef struct {
+    u16 h0;
+    u8 b2;
+    u8 b3;
+    u8 b4;
+    u8 b5;
+    u8 pad6[2];
+} SsEnt;
+
+typedef struct {
+    s32 a;
+    s32 b;
+    s32 c;
+    s32 d;
+} SsTrk;
+
+typedef struct {
+    s32 a;
+    s32 b;
+    s32 c;
+    s32 d;
+    s32 e;
+    u8 pad14[0x10];
+} SsChan;
+
+typedef struct {
+    u32 handle;
+    SsEnt *tblA;
+    u8 mapA[0x80];
+    SsEnt *tblB;
+    u8 mapB[0x80];
+    u32 *sng;
+    s32 unk110[6];
+    SsTrk trk[0x40];
+    u8 vol[0x40];
+    SsChan ch[0x40];
+    s32 E68;
+    s32 E6C;
+    s32 E70;
+    s32 E74;
+    s32 E78;
+    s32 E7C;
+    s32 prog[0x10];
+    u8 EC0;
+    u8 EC1;
+    u16 EC2;
+    u8 EC4;
+    u8 EC5;
+    u16 EC6;
+    u8 padEC8[0x2C];
+    u8 EF4;
+    u8 padEF5[3];
+} SsSlot;
+
+typedef struct {
+    s32 flags;
+    s32 x4;
+    s32 x8;
+    u16 hC;
+    u16 hE;
+    u8 b10;
+    u8 pad11;
+    u8 b12;
+    u8 pad13;
+    u8 *p14;
+    u8 b18;
+    u8 pad19[3];
+    u8 *p1C;
+} SsCfg;
+
+extern SsSlot D_ss_slots[8] __asm__("D_main_bss_80149A00");
+extern u8 D_ss_fader[] __asm__("D_main_bss_80141AD8");
+extern u32 D_ss_nextHandle __asm__("D_main_bss_801499F0");
+void ssSetTrackVoiceTickBudget(u32, u8) __asm__("setTrackVoiceTickBudget");
+void ssResetChannelStateRecord(u8, u8) __asm__("resetChannelStateRecord");
+void ssDispatchAudioCommand(u8, u16, u8, u8, s32) __asm__("dispatchAudioCommand");
+void ssSetAudioFaderState(u8, s32) __asm__("setAudioFaderState");
+void ssSetChannelNoteCell(u8, u8, u8, u8) __asm__("setChannelNoteCell");
+
+static __inline__ void ssInitMap(u8 *map, SsEnt *e) {
+    u8 j;
+
+    for (j = 0; j < 0x80; j++) {
+        map[j] = 0xFF;
+    }
+    j = 0;
+    while (e->b5 != 0xFF) {
+        map[e->b5] = j;
+        e++;
+        j++;
+    }
+}
+
+static __inline__ void ssSetProg(SsSlot *s, u8 pr, u8 ch) {
+    SsEnt *e;
+
+    if (ch != 9) {
+        pr = s->mapA[pr];
+        if (pr != 0xFF) {
+            s->prog[ch] = (((SsEnt *)(pr * 8 + (s32)s->tblA))->h0 << 16) | (((SsEnt *)(pr * 8 + (s32)s->tblA))->b2 << 8) | ((SsEnt *)(pr * 8 + (s32)s->tblA))->b3;
+        }
+    } else {
+        pr = s->mapB[pr];
+        if (pr != 0xFF) {
+            s->prog[9] = (((SsEnt *)(pr * 8 + (s32)s->tblB))->h0 << 16) | (((SsEnt *)(pr * 8 + (s32)s->tblB))->b2 << 8) | ((SsEnt *)(pr * 8 + (s32)s->tblB))->b3;
+        }
+    }
+}
+
+static __inline__ u32 ssCheck(u32 h) {
+    u32 k;
+
+    for (k = 0; k < 8; k++) {
+        if (D_ss_slots[k].EC1 == 0 && D_ss_slots[k].handle == h) {
+            h = -1;
+            break;
+        }
+    }
+    return h;
+}
+
+static __inline__ u32 ssAssignHandle(u32 idx) {
+    u32 h;
+
+    do {
+        u32 t = D_ss_nextHandle;
+        D_ss_nextHandle = (t + 1) & 0x7FFFFFFF;
+        h = ssCheck(t);
+    } while (h == -1);
+    D_ss_slots[idx].handle = h;
+    idx = h;
+    return idx;
+}
+
+s32 startSongSequence(SsEnt *tblA, SsEnt *tblB, u8 *ci, u32 *sng, SsCfg *cfg) {
+    u32 i;
+    SsSlot *s;
+    s32 j;
+    s32 pass;
+    SsEnt *tbl;
+    u8 *map;
+    s32 *p;
+    u32 h;
+    u32 k;
+    u32 *offs;
+
+    for (i = 0; i < 8; i++) {
+        if (D_ss_slots[i].EC1 != 0) {
+            break;
+        }
+    }
+    if (i != 8) {
+    s = &D_ss_slots[i];
+    s->tblA = tblA;
+    s->EF4 = 0;
+    s->tblB = tblB;
+    s->sng = sng;
+    ssInitMap(s->mapA, s->tblA);
+    ssInitMap(s->mapB, s->tblB);
+    s->EC4 = i + 0x17;
+    for (j = 0; j < 0x40; j++) {
+        s->vol[j] = s->EC4;
+    }
+    if (cfg == NULL) {
+        s->unk110[0] = -1;
+        s->unk110[1] = -1;
+        s->EC2 = 0x100;
+    } else {
+        if (cfg->flags & 1) {
+            s->unk110[0] = cfg->x4;
+            s->unk110[1] = cfg->x8;
+        } else {
+            s->unk110[0] = -1;
+            s->unk110[1] = -1;
+        }
+        if (cfg->flags & 2) {
+            s->EC2 = cfg->hC;
+        } else {
+            s->EC2 = 0x100;
+        }
+        if (cfg->flags & 8) {
+            for (j = 0; j < cfg->b12; j++) {
+                s->vol[cfg->p14[j * 2]] = cfg->p14[j * 2 + 1];
+                ssSetAudioFaderState(cfg->p14[j * 2 + 1], 0);
+            }
+        }
+        if (cfg->flags & 4) {
+            ssDispatchAudioCommand(cfg->b10, cfg->hE, s->EC4, 0, 0);
+            for (j = 0; j < cfg->b18; j++) {
+                ssDispatchAudioCommand(cfg->b10, cfg->hE, cfg->p1C[j], 0, 0);
+            }
+        }
+    }
+    {
+        u32 b = sng[4];
+        s->unk110[5] = b;
+        ssSetTrackVoiceTickBudget(b, i);
+    }
+    s->E6C = s->E68 = sng[3] + (s32)sng;
+    s->E70 = 0;
+    s->E74 = 0;
+    s->EC5 = 0;
+    offs = (u32 *)(sng[0] + (s32)sng);
+    for (j = 0; j < 0x40; j++) {
+        u32 off;
+
+        D_ss_fader[j] = 0x7F;
+        s->trk[j].c = 0;
+        s->trk[j].d = 0;
+        s->ch[j].c = 0;
+        s->ch[j].d = 0;
+        s->ch[j].e = 0;
+        off = offs[j];
+        if (off != 0) {
+            s->trk[j].b = s->trk[j].a = off + (s32)sng;
+        } else {
+            s->trk[j].b = s->trk[j].a = 0;
+        }
+    }
+    s->E78 = 0;
+    s->E7C = 0;
+    for (j = 0; j < 0x10; j++) {
+        ssResetChannelStateRecord(j, i);
+    }
+    {
+        s32 m = -1;
+        j = 0xF;
+        do {
+            s->prog[j] = m;
+        } while (--j >= 0);
+    }
+    tbl = s->tblA;
+    map = s->mapA;
+    for (pass = 0; pass < 2; pass++) {
+        for (j = 0; j < 0x80; j++) {
+            u8 v = map[j];
+            if (v != 0xFF) {
+                SsEnt *e = (SsEnt *)(v * 8 + (s32)tbl);
+                if (e->b4 != 0xFF) {
+                    s->prog[e->b4] = (e->h0 << 16) | (e->b2 << 8) | e->b3;
+                }
+            }
+        }
+        tbl = s->tblB;
+        map = s->mapB;
+    }
+    if (ci != NULL) {
+        for (j = 0; j < 0x10; j++) {
+            ssSetProg(s, ci[j * 8 + 4], j);
+            ssSetChannelNoteCell(7, j, i, ci[j * 8 + 5]);
+            ssSetChannelNoteCell(10, j, i, ci[j * 8 + 6]);
+            ssSetChannelNoteCell(0x5B, j, i, ci[j * 8 + 7]);
+            ssSetChannelNoteCell(0x5D, j, i, ci[j * 8 + 8]);
+        }
+    }
+    s->EC6 = 0;
+    if (cfg == NULL || !(cfg->flags & 0x10)) {
+        s->EC0 = 1;
+    }
+    h = ssAssignHandle(i);
+    s->EC1 = 0;
+    return h;
+    }
+    return -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/94F50", stepActiveSongTracks);
 
