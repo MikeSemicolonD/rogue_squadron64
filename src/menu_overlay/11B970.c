@@ -979,7 +979,209 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setupMenuData);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", handleGameSettingsMenu);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateMenuPerFrame);
+typedef struct {
+    u8 pad0[4];
+    u8 unk4;
+    u8 pad5[0x23];
+    u8 unk28[8];
+    u8 pad30[0x64];
+    u8 unk94;
+    u8 unk95;
+    u8 pad96[2];
+    u16 unk98;
+    u8 pad9A[2];
+    f32 unk9C;
+    f32 unkA0;
+    u8 padA4[0xC];
+    f32 animX[8];
+    f32 animY[8];
+    f32 unkF0;
+} MenuAnimView;
+
+extern struct rgba mainMenuBrightYellowColor;
+extern struct rgba mainMenuDimYellowColor;
+extern u8 mainMenuBlackColor[];
+extern u8 D_menu_overlay_800CF047;
+extern s32 D_menu_overlay_800CF108;
+void *getStructField0xC(s32);
+void setPlayerSlotEntryRGB(u16, u16, void *);
+
+#define CLAMP_COLOR(v) (((s16)(v) >= 0) ? (((s16)(v) >= 0x100) ? 0xFF : (v)) : 0)
+
+static __inline__ s32 clampColor(s32 v) {
+    if ((s16)v >= 0) {
+        if ((s16)v >= 0x100) {
+            return 0xFF;
+        }
+        return v;
+    }
+    return 0;
+}
+void updateMenuPerFrameU8(void *argp, f32 arg1, f32 arg2, s32 arg3, u8 arg4) __asm__("updateMenuPerFrame");
+void updateMenuPerFrameU8(void *argp, f32 arg1, f32 arg2, s32 arg3, u8 arg4)
+{
+  register MenuAnimView *arg0 asm("$20") = argp;
+  struct rgba col;
+  register struct ui_element *e asm("$17");
+  struct ui_element *e2;
+  f32 t;
+  f32 fs1;
+  f32 fs0;
+  f32 v;
+  f32 fa;
+  f32 fa2;
+  f32 nv;
+  f32 x;
+  s32 r;
+  s32 g;
+  s32 b;
+  u8 fp;
+  u8 dir;
+  u32 i;
+  s32 s5;
+  u32 idx;
+  u8 sel;
+  void *c;
+  f32 *new_var;
+  u8 cr;
+  u8 cg;
+  s32 cb;
+  t = arg0->unkA0 + (2.0f * arg1);
+  arg0->unkA0 = t;
+  v = sinf((t * 3.1415927f) + 3.1415927f);
+  r = (((f32) mainMenuBrightYellowColor.r) + ((arg2 * v) * 20.0f)) - 20.0f;
+  v = sinf((arg0->unkA0 * 3.1415927f) + 3.1415927f);
+  g = (((f32) mainMenuBrightYellowColor.g) + ((arg2 * v) * 55.0f)) - 55.0f;
+  v = sinf((arg0->unkA0 * 3.1415927f) + 3.1415927f);
+  b = ((f32) mainMenuBrightYellowColor.b) + ((arg2 * v) * 10.0f);
+  cb = clampColor(r);
+  cr = cb;
+  cb = clampColor(g);
+  g = cb;
+  cb = clampColor(b);
+  col.r = cr;
+  col.g = g;
+  col.b = cb;
+  fs1 = 250.0f;
+  dir = 0;
+  fp = (u32) (quadraticEaseInOut(arg2) * 254.0f);
+  if (arg4 == 1)
+  {
+    do
+    {
+      e = (struct ui_element *) getPlayerSlotFieldAt34(5, 9);
+      {
+        f32 one = 1.0f;
+        f32 w;
+        asm("" : "+f"(one));
+        w = quadraticEaseInOut(one - arg2);
+        x = arg0->unkF0;
+        if (dir)
+        {
+          w = -w;
+        }
+        e->xpos = (*(new_var = &x)) + (w * fs1);
+      }
+    }
+    while (0);
+    dir ^= 1;
+    fs1 += 50.0f;
+    if (arg0->unk4 == 8)
+    {
+      fa = 1.0f;
+      if (D_menu_overlay_800CF047 == 0)
+      {
+        fa = arg2;
+      }
+      fs0 = (1.0f - (quadraticEaseInOut(fa) / 1.75f)) * 255.0f;
+      {
+        struct ui_element *e3 = getStructField0xC(D_menu_overlay_800CF108);
+        e3->flags |= 2;
+        e3->rgba.r = (u32) fs0;
+        e3->rgba.g = (u32) fs0;
+        e3->rgba.b = (u32) fs0;
+        e3->rgba.a = 0xFF;
+      }
+    }
+  }
+  i = 0;
+  if (arg0->unk95 != 0)
+  {
+    do
+    {
+      idx = i & 0xFFFF;
+      if ((arg0->unk98 >> idx) & 1)
+      {
+        sel = arg0->unk94;
+        c = &mainMenuDimYellowColor;
+        if (idx == sel)
+        {
+          c = &col;
+        }
+        if (arg0->unk28[idx] == 0)
+        {
+          c = &mainMenuBrightYellowColor;
+        }
+        if (arg0->unk4 == 1)
+        {
+          if (sel == 0)
+          {
+            if (idx == 1)
+            {
+              c = &col;
+            }
+          }
+        }
+        setPlayerSlotEntryRGB(5, (u16) i, c);
+        if (((u8) arg3) == 1)
+        {
+          activateAnimationKeyframe(5, (u16) i, fp);
+          if (arg4 == ((u8) arg3))
+          {
+            e = (struct ui_element *) getPlayerSlotFieldAt34(5, (u16) i);
+            {
+              f32 w = quadraticEaseInOut(1.0f - arg2);
+              x = arg0->animX[(u16) i];
+              if (dir)
+              {
+                w = -w;
+              }
+              e->xpos = x + (w * fs1);
+            }
+ do { fs1 += 50.0f; dir ^= 1; } while (0);
+          }
+        }
+      }
+      i++;
+    }
+    while (((u16) i) < arg0->unk95);
+  }
+  if (((fa2 = arg0->unk9C) < 5.0f) || (arg2 < 1.0f))
+  {
+    nv = fa2 + (arg1 * 14.0f);
+    arg0->unk9C = nv;
+    if (nv >= 5.0f)
+    {
+      arg0->unk9C = 5.0f;
+    }
+    e = (struct ui_element *) getPlayerSlotFieldAt34(5, 0xA);
+    e2 = (struct ui_element *) getPlayerSlotFieldAt34(5, 9);
+    zmemcpy(e, e2, 0x30);
+    v = arg2 * 5.0f;
+    e->xpos = e2->xpos + v;
+    e->ypos = e2->ypos + v;
+    e->rgba = *((struct rgba *) mainMenuBlackColor);
+    e = (struct ui_element *) getPlayerSlotFieldAt34(5, 8);
+    e2 = (struct ui_element *) getPlayerSlotFieldAt34(5, arg0->unk94);
+    zmemcpy(e, e2, 0x30);
+    e->xpos = e2->xpos + arg0->unk9C;
+    e->ypos = e2->ypos + arg0->unk9C;
+    e->rgba = *((struct rgba *) mainMenuBlackColor);
+  }
+  activateAnimationKeyframe(5, 8, (u32) ((arg2 * 85.0f) * (((f32) ((struct ui_element *) getPlayerSlotFieldAt34(5, arg0->unk94))->rgba.a) / 255.0f)));
+  activateAnimationKeyframe(5, 0xA, (u32) (arg2 * 85.0f));
+  activateAnimationKeyframe(5, 9, fp);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", driveFalconAnimationKeyframes);
 
