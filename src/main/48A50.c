@@ -333,7 +333,51 @@ void teardownGridLayerWorker(void) {
     teardownAssetDma(D_main_bss_80138920, D_main_bss_80137A48);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/48A50", hudDisplayUpdateWorker);
+void *recvServiceMessage(s32);
+u8 *getTextureDataByMaterialId(u16);
+u8 *getTextureTlutEntry(u16);
+void setupAssetDma(s32, s32, s32, s32, u32, void *);
+s32 returnOne_80023334(u16, void *);
+s32 returnOne_8002335C(u16, void *);
+extern u8 D_main_bss_80137A20[];
+
+typedef struct {
+    u8 pad0[4];
+    u16 mat;
+    u16 tlut;
+    u8 pad8[2];
+    u8 bA;
+} HdTex;
+
+typedef struct {
+    u8 pad0[0x14];
+    HdTex *tex;
+    s32 idx;
+    u8 b1C;
+} HdMsg;
+
+void hudDisplayUpdateWorker(s32 *arg0) {
+    HdMsg *msg;
+    u8 *tex;
+    u32 *tl;
+    s32 i;
+    u32 sz;
+
+    while (1) {
+        sz = 0x820;
+        msg = recvServiceMessage(*arg0);
+        tex = getTextureDataByMaterialId(msg->tex->mat);
+        tl = (u32 *)getTextureTlutEntry(msg->tex->tlut);
+        setupAssetDma(*arg0, 0, D_main_bss_80137A48, msg->idx * 0x820, sz, tex);
+        for (i = 0; i < 8; i++) {
+            tl[i] = ((u32 *)(tex + 0x800))[i];
+        }
+        returnOne_80023334(msg->tex->mat, tex);
+        returnOne_8002335C(msg->tex->tlut, tl);
+        msg->tex->bA = 1;
+        D_main_bss_80137A20[msg->b1C] = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/48A50", fake_func_800496F4);
 
