@@ -1095,7 +1095,169 @@ s32 attachedAudioVisualEmitterNpcHandler(u8 *arg0, u16 action, u8 *arg2) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcShieldGeneratorUpdate);
+typedef struct {
+    AvVec3 pos;
+    AvVec3 fwd;
+    AvVec3 up;
+    AvVec3 vel;
+    u8 *mesh;
+    s32 obj;
+    f32 radius;
+    f32 scale;
+    f32 mat[12];
+    u16 link;
+    u16 pad72[3];
+    u16 slot78;
+    u16 slot7A;
+    s16 state;
+    u16 pad7E;
+    u8 audio[0x44];
+    u8 flagC4;
+} SgObj;
+void npcSpawnInitMarkActive(u8 *, s32, u8 *);
+void play3DSoundEventVariant(void *, void *, void *, f32, f32, s32, s32, s32, s32, s32);
+void factor5RemoveListNode(void *);
+void updateActive3DAudioSource(void *, void *, void *, s32);
+void composeRandomRotationMatrix(f32 *, f32 *, f32, s32, s32, s32);
+void scaleVec3ByRandomRange(f32 *, f32, f32);
+void spawnDebris1Npc(f32 *, f32 *, f32, f32, f32);
+void distanceAndDopplerNpcHelper(f32 *, f32, f32);
+void spawnOrientedNpc(s32, void *, s32, s32, f32, f32, f32, f32);
+
+s32 npcShieldGeneratorUpdate(u8 *arg0, u16 action, u8 *arg2) {
+    SgObj *s2 = *(SgObj **)(arg0 + 4);
+    f32 sp[80];
+
+    switch (action) {
+    case 1:
+        {
+            u8 *a1c = arg2;
+            s2->mesh = walkMeshdef0List("shldgen");
+            *(AvBlk *)s2 = *(AvBlk *)a1c;
+            s2->vel.x = s2->vel.y = s2->vel.z = 0.0f;
+            {
+                f32 sc = (1.0f / *(f32 *)(*(u8 **)s2->mesh + 0x34)) * *(f32 *)(a1c + 0x30);
+                s2->scale = sc;
+                mat34CrossRowsAndCopyPos(s2->mesh + 0x28, s2, sc);
+            }
+            *(SgObj **)(arg0 + 8) = s2;
+            *(u8 **)(arg0 + 0xC) = s2->mesh;
+            {
+                u8 *b = (u8 *)D_main_bss_80139560;
+                s2->slot78 = popNpcSlotFromTail(*(u16 *)(b + 0x1C), arg0);
+                s2->slot7A = popNpcSlotFromTail(D_main_bss_80139560[0xC / 2], arg0);
+            }
+            s2->radius = *(f32 *)(*(u8 **)s2->mesh + 0x44) * s2->scale;
+            createAndInitObject(&s2->obj, 0, arg0, npcSpawnInitMarkActive, (s32)a1c);
+            s2->link = *(u16 *)(a1c + 0x44);
+            {
+                u8 *p = getNpcContextField8(*(u16 *)(a1c + 0x44));
+                mat34CrossRowsAndCopyPos(sp, p, 1.0f);
+                sp[11] = 0.0f;
+                sp[10] = 0.0f;
+                sp[9] = 0.0f;
+                mat3x3InverseInto(&sp[12], sp);
+                sp[24] = s2->pos.x - *(f32 *)(p + 0);
+                sp[25] = s2->pos.y - *(f32 *)(p + 4);
+                sp[26] = s2->pos.z - *(f32 *)(p + 8);
+                transformVec3ByMat34(&sp[12], &sp[24], &sp[28]);
+                transformVec3ByMat34(&sp[12], &s2->fwd, &sp[31]);
+                transformVec3ByMat34(&sp[12], &s2->up, &sp[34]);
+                mat34CrossRowsAndCopyPos(s2->mat, &sp[28], 1.0f);
+            }
+            s2->flagC4 = 1;
+            play3DSoundEventVariant(s2->audio, s2, &s2->vel, 18.0f, 0.6f, 7, 0x66, 1, 0x7D, 0x50);
+            return 1;
+        }
+    case 2:
+        if (s2->flagC4 == 1) {
+            factor5RemoveListNode(s2->audio);
+        }
+        clearPendingAndDestroyChildNpc(&s2->obj);
+        releaseMeshAsset(s2->mesh);
+        return 1;
+    case 3:
+        {
+            u8 *p = getNpcContextField8(s2->link);
+            mat34CrossRowsAndCopyPos(&sp[40], p, 1.0f);
+            mat3x4Multiply(&sp[40], s2->mat, &sp[52]);
+            extractOrthonormalFrameFromStruct(s2, &sp[52]);
+            s2->vel = *(AvVec3 *)(p + 0x24);
+            switch (s2->state) {
+            case 0:
+                break;
+            case 1:
+                {
+                    s32 i;
+                    s32 n = (s16)(rand() % 3) + 7;
+                    for (i = 0; i < n; i++) {
+                        f32 a;
+                        f32 b;
+                        f32 c;
+                        composeRandomRotationMatrix(&sp[64], &sp[68], s2->radius / 3.0f, 0x3C, 0, 0);
+                        sp[64] += s2->pos.x;
+                        sp[65] += s2->pos.y;
+                        sp[66] += s2->pos.z;
+                        scaleVec3ByRandomRange(&sp[68], 1.5f, 3.0f);
+                        a = AVABSF(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
+                        b = AVABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f) + 1.5f;
+                        c = AVABSF(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.2f;
+                        spawnDebris1Npc(&sp[64], &sp[68], a, b, c);
+                        distanceAndDopplerNpcHelper(&sp[64], 0.1f, 2.0f);
+                    }
+                    spawnOrientedNpc(2, s2, 0, 0, s2->scale * 25.0f, s2->scale * 30.0f, 1.0f, 1.0f);
+                    spawnOrientedNpc(3, s2, 0, 0, s2->scale * 22.0f, s2->scale * 34.0f, 1.0f, 0.8f);
+                    spawnNpcType0xAFromTemplate(s2, s2->radius * 4.0f);
+                    play3DSoundEvent(0, s2, &s2->vel, 24.0f, 0.7f, 0, 0x22, 0x7F, 0x50);
+                    destroyNpcSlotByIndex(*(u16 *)(arg0 + 0x16));
+                    return 1;
+                }
+            }
+            destroyObjectOwnedNpcSlot(s2->obj);
+            return 1;
+        }
+    case 4:
+        mat34CrossRowsAndCopyPos(s2->mesh + 0x28, s2, s2->scale);
+        addNpcToVisibilityBucket(*(s32 *)arg2, s2->mesh, s2, s2->radius);
+        if (s2->flagC4) {
+            updateActive3DAudioSource(s2->audio, s2, &s2->vel, 0x7D);
+            return 1;
+        }
+        break;
+    case 5:
+        {
+            u8 *a5 = arg2;
+            if (*(u16 *)(arg2 + 4) != 7 || getNpcCurrentHealth(s2->obj) >= 0) {
+                extrapolateNpcPositionForCurrentMode(arg2);
+                play3DSoundEvent(0, s2, &s2->vel, 20.0f, 0.4f, 0, 0x2A, 0x78, 0x3C);
+                if (dealDamageToNpc(s2->obj, *(u16 *)(arg2 + 6)) <= 0) {
+                    s2->state = 1;
+                    unregisterAndFreeNpcSlot(s2->slot78, arg0);
+                    unregisterAndFreeNpcSlot(s2->slot7A, arg0);
+                    popNpcSlotFromTail(D_main_bss_80139574, arg0);
+                    setObjectFlagBit4(arg0);
+                    ((AvMsg *)&sp[72])->type = 0xF;
+                    ((AvMsg *)&sp[72])->id = *(u16 *)(arg0 + 0x16);
+                    ((AvMsg *)&sp[72])->zero = 1;
+                    slotDispatcherIter(s2->link, 9, &sp[72]);
+                    if (s2->flagC4 == 1) {
+                        factor5RemoveListNode(s2->audio);
+                    }
+                    s2->flagC4 = 0;
+                }
+            }
+            if (*(u16 *)a5 != 0xFFFF) {
+                destroyNpcSlotByIndex(*(u16 *)a5);
+                return 1;
+            }
+            return 1;
+        }
+    case 7:
+        dispatchSlotAction5IfActive(arg0, arg2);
+        break;
+    }
+    return 1;
+}
 
 typedef struct { s32 w[12]; } VxBlk;
 typedef struct { s32 a, b, c; } VxBlk3;
