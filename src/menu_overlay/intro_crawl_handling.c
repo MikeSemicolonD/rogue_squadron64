@@ -83,7 +83,131 @@ void initModelViewer(void) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", buildModelViewerTextPage);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", runModelViewerSoundDemo);
+typedef struct {
+    u16 h0;
+    u16 h2;
+    u8 pad4[0xE];
+    u8 b12;
+    u8 pad13[7];
+    u8 b1A;
+    u8 b1B;
+    u8 b1C;
+    u8 pad1D;
+    u16 h1E;
+    u16 h20;
+    u16 h22;
+    u16 h24;
+} MvSndCfg;
+
+extern MvSndCfg D_menu_overlay_800CFFE0;
+extern s32 D_main_bss_80138920;
+extern s32 D_menu_overlay_800D00A8;
+extern u8 D_menu_overlay_800D0020[];
+extern u8 gPostIntroCrawlNumCraft[];
+extern u8 D_menu_overlay_800D0120[][0x90];
+extern u8 D_menu_overlay_800CFFB0[];
+extern u8 D_menu_overlay_800D039C[];
+void parseLoadedSndSection(s32);
+void loadSongAssetByName(s32, s32);
+void playSimpleAudioCmd(s32, s32, s32);
+void syncMusyXIfActive(void *);
+s32 findAudioChannelById(s32);
+s32 playSongById(s32, s32, s32, s32);
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+void addVec3At0x24(void *, f32, f32, f32);
+void mat3x3InverseInto(void *, void *);
+void play3DSoundEvent(void *, void *, void *, f32, f32, s32, s32, s32, s32);
+void play3DSoundEventVariant(void *, void *, void *, f32, f32, s32, s32, s32, s32, s32);
+void register3DAudioListenerNode(void *, void *, void *, void *, void *, f32, f32, f32, s32, s32);
+
+static __inline__ f32 *mvXform(f32 y) {
+    initVec4TripletFromArgs(D_menu_overlay_800CFFB0, 0.625f, 0.625f, 1.0f);
+    addVec3At0x24(D_menu_overlay_800CFFB0, 0.0f, y, 0.0f);
+    mat3x3InverseInto(D_menu_overlay_800D039C, D_menu_overlay_800CFFB0);
+    return (f32 *)D_menu_overlay_800CFFB0;
+}
+
+void runModelViewerSoundDemo(u8 craft) {
+    f32 v1[4];
+    f32 v2[4];
+    f32 v3[4];
+    f32 vel[3];
+    f32 *m;
+    u8 *pos;
+    char *name;
+    u8 i;
+
+    rs_memset((u8 *)vel, 0, 0xC);
+    parseLoadedSndSection(2);
+    loadSongAssetByName(D_main_bss_80138920, 2);
+    playSimpleAudioCmd(0x7F, 0x32, 0xFE);
+    playSimpleAudioCmd(0x78, 0x32, 0xFD);
+    D_menu_overlay_800CFFE0.h0 = 0xA0;
+    D_menu_overlay_800CFFE0.b1A = 1;
+    D_menu_overlay_800CFFE0.b12 = 0x78;
+    D_menu_overlay_800CFFE0.b1B = 0x32;
+    D_menu_overlay_800CFFE0.h1E = 0x51E;
+    D_menu_overlay_800CFFE0.h20 = 0xF5C;
+    D_menu_overlay_800CFFE0.h2 = 0xA0;
+    D_menu_overlay_800CFFE0.h22 = 0x1999;
+    D_menu_overlay_800CFFE0.b1C = 1;
+    D_menu_overlay_800CFFE0.h24 = 0x800;
+    syncMusyXIfActive(&D_menu_overlay_800CFFE0);
+    D_menu_overlay_800D00A8 = playSongById(2, 2, findAudioChannelById(2), 0);
+    m = NULL;
+    for (i = 0; i < gPostIntroCrawlNumCraft[craft]; i++) {
+        pos = D_menu_overlay_800D0120[i] + 0x50;
+        m = mvXform(0.0f);
+        name = gPostIntroCrawlCraftObjectNames[craft][i];
+        if (name == NULL) {
+            break;
+        }
+        switch (name[0]) {
+        case 'a':
+            play3DSoundEvent(D_menu_overlay_800D0120[i] + 8, pos, vel, 10.0f, 0.3f, 15, 15, 0, 0);
+            D_menu_overlay_800D0120[i][0x4C] = 0x78;
+            break;
+        case 'x':
+            play3DSoundEvent(D_menu_overlay_800D0120[i] + 8, pos, vel, 10.0f, 0.5f, 15, 0xE, 0, 0);
+            D_menu_overlay_800D0120[i][0x4C] = 0x78;
+            break;
+        case 's':
+            play3DSoundEvent(D_menu_overlay_800D0120[i] + 8, pos, vel, 10.0f, 0.0f, 15, 0x13, 0x78, 0);
+            D_menu_overlay_800D0120[i][0x4C] = 0x5A;
+            break;
+        case 'v':
+            play3DSoundEvent(D_menu_overlay_800D0120[i] + 8, pos, vel, 10.0f, 0.3f, 15, 0x12, 0x78, 0);
+            D_menu_overlay_800D0120[i][0x4C] = 0x64;
+            break;
+        case 'y':
+            play3DSoundEvent(D_menu_overlay_800D0120[i] + 8, pos, vel, 10.0f, 0.3f, 15, 0x11, 0x78, 0);
+            D_menu_overlay_800D0120[i][0x4C] = 0x64;
+            break;
+        case 't':
+            play3DSoundEventVariant(D_menu_overlay_800D0120[i] + 8, pos, vel, 21.0f, 0.6f, 15, 7, 1, 0x7F, 0x28);
+            D_menu_overlay_800D0120[i][0x4C] = 0x7F;
+            break;
+        case 'f':
+            play3DSoundEvent(D_menu_overlay_800D0120[i] + 8, pos, vel, 12.0f, 0.6f, 15, 0x2E, 0x78, 0);
+            D_menu_overlay_800D0120[i][0x4C] = 0x78;
+            break;
+        case 'k':
+            play3DSoundEvent(D_menu_overlay_800D0120[i] + 8, pos, vel, 10.0f, 0.7f, 15, 0x6F, 0x5A, 0);
+            D_menu_overlay_800D0120[i][0x4C] = 0x6E;
+            break;
+        }
+    }
+    v1[0] = m[9];
+    v1[1] = m[10];
+    v1[2] = m[11];
+    v2[0] = m[2];
+    v2[1] = m[5];
+    v2[2] = m[8];
+    v3[0] = -m[1];
+    v3[1] = -m[4];
+    v3[2] = -m[7];
+    register3DAudioListenerNode(D_menu_overlay_800D0020, v1, v2, v2, v3, 2.0f, 2.0f, 50.0f, 0, 0x7F);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", updateModelViewerAudioSource);
 
