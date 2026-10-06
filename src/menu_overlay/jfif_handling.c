@@ -132,7 +132,51 @@ void freeJfifDecodeState(u8 *arg0) {
     rs_free(arg0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifSOIMarker);
+typedef struct {
+    u8 pad0[0x30];
+    u8 *base;
+    u8 *cur;
+} SoiSt;
+
+s32 parseJfifSOIMarker(SoiSt *s) {
+    u8 soi[2];
+    char id[5];
+    u32 i;
+    s32 len;
+    s32 len2;
+    u8 xt;
+    u8 yt;
+
+    soi[0] = 0xFF;
+    soi[1] = 0xE0;
+    { char *ip = id; __builtin_memcpy(ip, "JFIF", 5); }
+    for (i = 0; i < 2; i++) {
+        if (*s->cur++ != soi[i]) {
+            return 3;
+        }
+    }
+    { s32 hi = s->cur[0] << 8; len = s->cur[1] | hi; }
+    s->cur += 2;
+    for (i = 0; i < 5; i++) {
+        if (*s->cur++ != id[i]) {
+            return 3;
+        }
+    }
+    { s32 hi = s->cur[0] << 8; len2 = s->cur[1] | hi; }
+    s->cur += 2;
+    if (len2 != 0x101) {
+        return 4;
+    }
+    for (i = 0; i < 5; i++) {
+        s->cur++;
+    }
+    xt = *s->cur++;
+    yt = *s->cur++;
+    if (xt != 0 || yt != 0) {
+        return 7;
+    }
+    return (s->cur - s->base != len + 4) ? 8 : 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifSOF0Marker);
 
