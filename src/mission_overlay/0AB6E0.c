@@ -360,7 +360,225 @@ void tickEffectObjectMotionAndOrientation(TeTarget *tgt, TeObj *obj) {
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0AB6E0", D_mission_overlay_800A536C);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AB6E0", tickCinematicEffectObject);
+typedef struct {
+    s32 object;
+    f32 v4[3];
+    u8 p10[0xB6 - 0x10];
+    u16 hB6;
+    s32 wB8;
+    u8 pBC[0x160 - 0xBC];
+    f32 f160;
+    f32 f164;
+    u8 p168[0x180 - 0x168];
+    u16 h180;
+    u8 p182[0x1C8 - 0x182];
+    s32 w1C8;
+    u8 p1CC[0x2A0 - 0x1CC];
+} CtPl;
+typedef struct {
+    f32 x, y, z;
+} CtV3;
+typedef struct {
+    s32 idx;
+    u8 p4[0x2C - 4];
+    u8 b2C;
+    u8 b2D;
+    u8 b2E;
+    u8 b2F;
+    CtV3 v30;
+    u8 p3C[0x54 - 0x3C];
+    u8 x54[0xF0 - 0x54];
+    u16 hF0;
+    u8 pF2[2];
+    u8 xF4[4];
+    f32 fF8;
+    CtV3 vFC;
+    u8 x108[2];
+    u8 b10A;
+    u8 p10B;
+    u16 h10C;
+    u8 p10E[2];
+    u8 x110[0x11C - 0x110];
+    u8 b11C;
+} CtObj;
+typedef struct {
+    u8 p0[0x1A];
+    u16 h1A;
+    u16 h1C;
+    u8 p1E[0x24 - 0x1E];
+} CtBtn;
+typedef struct {
+    u16 h;
+    u8 p2[2];
+    s32 w;
+    u8 p8[0x18 - 8];
+    u8 b18;
+    u8 p19[0x20 - 0x19];
+} CtArgs;
+extern CtPl ctPl[] __asm__("D_main_bss_80137DBC");
+extern char D_mission_overlay_800A536C[];
+extern f32 D_mission_overlay_801096B0;
+extern u8 gGameSettings;
+extern s32 D_mission_overlay_8010CA1C;
+extern void ctLookupHmt(s32, char *, s32, void *, s32, s32) __asm__("lookupHmtTextureByName");
+extern void ctUpdateCam(void *, void *, f32) __asm__("updateCinematicCameraStateMachine");
+extern void ctTickAnim(s32, f32) __asm__("tickCraftAnimationSlot");
+extern u16 findNearestNpcWithinRange(f32, void *, void *, void *);
+extern void playSpeechClipOncePerLevel(s32, s32);
+extern void resetSpeechOncePerLevelFlag(s32);
+extern s32 isCameraTransitionIdle(void);
+extern void beginCameraViewTransition(void *, s32, void *);
+extern void scheduleSceneFormatMessageTimed(void *, s32);
+extern void initEffectObjectDefaults(s32, u16);
+extern s32 slotDispatcherIter(u16, s32, void *);
+extern void bsearchFactor5TableByU16Key(s32, s32, s32);
+extern void requestCameraSnapToTrackedAnchor(void);
+extern void releaseEffectObjectNpcSlots(s32, s32, s32);
+extern void submitActiveEffectObjectRender(s32, f32);
+extern s32 emitEffectParticlesAlongPath(void *, void *, void *, f32, void *);
+extern void playSpeechClipOncePerChange(s32, s32);
+extern s32 getEffectModelPoolHandle(void);
+extern void beginCameraTrackedTransition(void);
+extern s32 rand(void);
+extern void requestCinematicNodeEvent(s32);
+extern void tickHudInstanceTargetingAndSpawns(s32, f32, void *, s32, s32, u16 *, s32);
+extern u16 findLockOnTarget(void *, void *, u16, f32, f32, f32);
+extern void ctTeMove(void *, void *, s32) __asm__("tickEffectObjectMotionAndOrientation");
+void ctTick(CtObj *o, f32 dt) __asm__("tickCinematicEffectObject");
+
+static __inline__ f32 ctAbs(f32 x) {
+    f32 r;
+    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+    return r;
+}
+
+void ctTick(CtObj *o, f32 dt) {
+    u8 sp28[0x30];
+    CtArgs args;
+    s32 sp78;
+    u16 sp7C;
+    CtPl *pl;
+    void *q;
+    void *q3;
+    u16 r;
+    s32 *p78;
+
+    pl = &ctPl[o->idx];
+    if (*(u16 *)((s32)ctPl + pl->wB8 * 0x2A0 + 0x180) & 1) {
+        if (pl->f160 > 0.0f) {
+            pl->f160 -= dt;
+        } else if (D_main_bss_80130B88[o->idx][0] & ((CtBtn *)D_mission_overlay_8010BE18)[o->idx].h1A) {
+            pl->f160 += pl->f164;
+            ctTeMove(o, pl, *(s32 *)&pl->f164);
+        }
+        ctLookupHmt(pl->object, D_mission_overlay_800A536C, 0, sp28, 0, 0);
+        if (o->b2C == 0 && D_mission_overlay_801096B0 <= 0.0f) {
+            if ((o->hF0 = findNearestNpcWithinRange(2.5f, &sp78, &o->v30, o->xF4)) != 0xFFFF) {
+                playSpeechClipOncePerLevel(gGameSettings != 0xF ? 0x125 : 0x209, 9);
+            } else {
+                resetSpeechOncePerLevelFlag(gGameSettings != 0xF ? 0x125 : 0x209);
+            }
+        }
+        if (D_main_bss_80130B88[o->idx][0] & ((CtBtn *)D_mission_overlay_8010BE18)[o->idx].h1C) {
+            if (o->b11C == 0) {
+                o->b11C = 1;
+                if (o->b2C == 0) {
+                    if (isCameraTransitionIdle() & 0xFF) {
+                        if (o->b2F != 0) {
+                            p78 = &sp78;
+                            __asm__("" :: "r"(p78));
+                            if ((o->hF0 = findNearestNpcWithinRange(2.5f, p78, q = &o->v30, o->xF4)) != 0xFFFF && ctAbs(o->v30.y - pl->v4[1]) <= 1.5f) {
+                                beginCameraViewTransition(sp28, 0, o->x108);
+                                o->b2C = 1;
+                                o->b2D = 1;
+                                o->b2E = 0;
+                                o->fF8 = 0.0f;
+                                o->b10A = 0;
+                                o->vFC = *(CtV3 *)pl->v4;
+                                play3DSoundEvent(0, q, o->x54, 0x41A00000, 0.2f, 0, 0x6A, 0x78, 0x3C);
+                                scheduleSceneFormatMessageTimed(pl, 9);
+                                initEffectObjectDefaults(pl->wB8, o->hF0);
+                                args.b18 = 0xC;
+                                slotDispatcherIter(o->hF0, 9, &args);
+                                if (o->b2F != 0xFF) {
+                                    o->b2F--;
+                                }
+                            } else {
+                                o->b2D = 0;
+                            }
+                        }
+                        bsearchFactor5TableByU16Key(0x67, 0x5A, 0xFF);
+                    } else if (o->b2C != 0) {
+                        goto end_tr;
+                    } else {
+                        goto skip;
+                    }
+                } else {
+end_tr:
+                    if (o->b2D != 0) {
+                        args.b18 = 0xD;
+                        slotDispatcherIter(o->hF0, 9, &args);
+                        scheduleSceneFormatMessageTimed(pl, 0xA);
+                    }
+                    requestCameraSnapToTrackedAnchor();
+                    o->b2C = 0;
+                    o->b2D = 0;
+                    releaseEffectObjectNpcSlots(pl->wB8, pl->w1C8, 1);
+                    D_mission_overlay_8010CA1C &= ~0x100;
+                }
+            }
+        } else {
+            o->b11C = 0;
+        }
+        if (o->b2C != 0) {
+            submitActiveEffectObjectRender(pl->wB8, dt);
+        }
+skip:
+        {
+            u8 *cb = sp28;
+            __asm__("" :: "r"(cb));
+            q = &o->v30;
+            ctUpdateCam(cb, q, dt);
+        }
+        if (o->b2D != 0) {
+            if (!(emitEffectParticlesAlongPath(pl->v4, o->x108, q, 3.2f, &o->b10A) & 0xFF)
+                || ctAbs(o->vFC.y - pl->v4[1]) > 2.6f) {
+                goto end_tr;
+            }
+            if (o->b10A >= 3) {
+                o->fF8 += dt;
+            }
+            if (o->b10A == 2 && o->b2E == 0) {
+                o->b2E = 1;
+                playSpeechClipOncePerChange(gGameSettings != 0xF ? 0x12A : 0x20E, 9);
+            }
+            if (o->fF8 > 0.5f) {
+                args.b18 = 0xE;
+                args.h = pl->hB6;
+                args.w = getEffectModelPoolHandle();
+                slotDispatcherIter(o->hF0, 9, &args);
+                beginCameraTrackedTransition();
+                o->b2C = 0;
+                o->b2D = 0;
+                rand();
+                playSpeechClipOncePerChange(gGameSettings != 0xF ? 0x128 : 0x20C, 9);
+                scheduleSceneFormatMessageTimed(pl, 0xA);
+                requestCinematicNodeEvent(pl->wB8);
+                D_mission_overlay_8010CA1C &= ~0x100;
+            }
+        }
+    }
+    q3 = pl->v4;
+    tickHudInstanceTargetingAndSpawns(0, dt, q3, pl->object, 0, &sp7C, pl->hB6);
+    r = findLockOnTarget(q3, o->x110, o->h10C, 10.0f, 0.987f, 12.5f);
+    sp7C = r;
+    if (r != 0xFFFF) {
+        o->h10C = r;
+    } else {
+        o->h10C = 0xFFFF;
+    }
+    ctTickAnim(0, dt);
+}
 
 extern u8 *D_mission_overlay_8010B6D0;
 typedef struct {
