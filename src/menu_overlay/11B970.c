@@ -2599,7 +2599,188 @@ void initInteractiveSceneContext(void) {
     allocAndInitParticlePool();
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setupCraftPreviewModel);
+typedef struct CpNode {
+    struct CpNode *next;
+    struct CpNode *prev;
+} CpNode;
+
+typedef struct {
+    u8 padC[0xC];
+    CpNode node;
+    u8 pad14[0x14];
+    u8 mtx[0x30];
+} CpMesh;
+
+typedef struct {
+    u8 state;
+    u8 idx;
+    u8 pad2[2];
+    f32 timer;
+    f32 fade;
+    f32 angle;
+    CpMesh *mesh;
+    s16 *anim;
+    u8 dat[4];
+} CpState;
+
+typedef struct {
+    u8 pad0[4];
+    s32 *name;
+    f32 scale;
+    f32 yoff;
+} CpAsset;
+
+typedef struct {
+    CpNode **head;
+    s32 *ptrs[4];
+    u8 pad14[4];
+    f32 v18[3];
+    u8 pad24[0x24];
+    void *p48;
+} CpCam;
+
+typedef struct {
+    s32 f0;
+    s32 f4;
+    s32 f8;
+    s32 fC;
+    void *p10;
+    s32 f14;
+} CpObj;
+
+typedef struct {
+    s32 f0;
+    s32 f4;
+    s32 f8;
+    s32 fC;
+    s32 f10;
+    s32 f14;
+    s32 f18;
+    u8 pad1C[4];
+    s32 f20;
+} CpObj2;
+
+extern s32 D_menu_overlay_800CFF40[];
+extern CpCam D_menu_overlay_800CFE40;
+extern CpObj2 D_menu_overlay_800CFE90;
+extern CpObj D_menu_overlay_800CFEF0;
+extern CpAsset cpAssets[] __asm__("D_menu_overlay_800CD184");
+extern char strMenuImpShuttle[];
+void extractOrthonormalFrameFromStruct(void *, void *);
+void setVec3At0x24(void *, f32, f32, f32);
+void clearStructPair2C30(void *);
+void updateAnimatedTextureStreaming(s16 *, f32 *, f32);
+void walkDatTreeAndScaleLeafByFloat(void *, void *, f32);
+void walkDatTreeAndVisitChildren(void *, void *, void *);
+void releaseMeshAsset(void *);
+void rs_free(void *);
+s32 cpRand(void) __asm__("rand");
+CpMesh *cpWalk(s32 *) __asm__("walkMeshdef0List");
+s16 *allocAndSetupModelInstance(CpMesh *);
+void dispatchDatSubtypeByRandomIndex(void *, void *);
+void composeInterpolatedNodeMatrices(void *, void *, void *, void *, f32);
+
+void setupCraftPreviewModel(CpNode **head, CpState *s, f32 scale, f32 dt) {
+    f32 m[12];
+    f32 v[3];
+    void *xa;
+    void *xb;
+    void *a;
+    void *b;
+    u8 *mtx;
+    u8 i;
+    f32 sc;
+    CpNode *nx;
+
+    for (i = 0; i < 4; i++) {
+        D_menu_overlay_800CFF40[i] = 0;
+        D_menu_overlay_800CFE40.ptrs[i] = &D_menu_overlay_800CFF40[i];
+    }
+    D_menu_overlay_800CFE40.head = head;
+    D_menu_overlay_800CFE40.p48 = &D_menu_overlay_800CFE90;
+    clearVec4QuadStruct(m);
+    extractOrthonormalFrameFromStruct(D_menu_overlay_800CFE40.v18, m);
+    D_menu_overlay_800CFEF0.f0 = D_menu_overlay_800CFEF0.f4 = D_menu_overlay_800CFEF0.f8 = D_menu_overlay_800CFEF0.fC = 0;
+    D_menu_overlay_800CFEF0.f14 = 0;
+    D_menu_overlay_800CFEF0.p10 = &D_menu_overlay_800CFE90;
+    setVec3At0x24((u8 *)&D_menu_overlay_800CFEF0 + 0x1C, D_menu_overlay_800CFE40.v18[0], D_menu_overlay_800CFE40.v18[1], D_menu_overlay_800CFE40.v18[2]);
+    D_menu_overlay_800CFE90.f0 = D_menu_overlay_800CFE90.f4 = D_menu_overlay_800CFE90.f8 = 0;
+    D_menu_overlay_800CFE90.fC = 0x49000000;
+    D_menu_overlay_800CFE90.f10 = 0;
+    D_menu_overlay_800CFE90.f14 = D_menu_overlay_800CFE90.f18 = 0;
+    D_menu_overlay_800CFE90.f20 = 0;
+    clearStructPair2C30(&D_menu_overlay_800CFE90);
+    switch (s->state) {
+    case 0:
+        s->fade += dt;
+        if (1.0f < s->fade) {
+            s->fade = 1.0f;
+            s->state = 1;
+        }
+        break;
+    case 1:
+        if (s->anim != NULL) {
+            v[0] = cosf(gMvPhase * 1.1f * 3.1415927f / 180.0f) * 0.4f;
+            v[1] = sinf(gMvPhase * 1.3f * 3.1415927f / 180.0f) * 0.4f;
+            v[2] = sinf(gMvPhase * 3.1415927f / 180.0f) * 0.1f + 8.0f;
+            updateAnimatedTextureStreaming(s->anim, v, 3.0f);
+        }
+        if (s->dat[0] != 0xFF) {
+            walkDatTreeAndScaleLeafByFloat(s->dat, s->mesh, dt);
+            walkDatTreeAndVisitChildren(s->dat, s->mesh, &D_menu_overlay_800CFE40);
+        }
+        s->timer += dt;
+        if (15.0f < s->timer || (getControllerNewButtonsPressed(0) & 0x2000)) {
+            s->state = 2;
+        }
+        break;
+    case 2:
+        s->fade -= dt;
+        if (s->fade < 0.0f) {
+            if (s->mesh != NULL) {
+                releaseMeshAsset(s->mesh);
+            }
+            if (s->anim != NULL) {
+                rs_free(s->anim);
+                s->anim = NULL;
+            }
+            s->idx += (cpRand() & 1) + 1;
+            s->idx %= 18;
+            s->mesh = cpWalk(cpAssets[s->idx].name);
+            s->anim = allocAndSetupModelInstance(s->mesh);
+            if (s->anim[1] < 0) {
+                rs_free(s->anim);
+                s->anim = NULL;
+            }
+            dispatchDatSubtypeByRandomIndex(s->dat, s->mesh);
+            if (rs_strcmp(strMenuImpShuttle, cpAssets[s->idx].name) == 0) {
+                a = lookupHmtMaterialByName((s32)s->mesh, (s32 *)"wngrot_a", (s32)&xa);
+                b = lookupHmtMaterialByName((s32)s->mesh, (s32 *)"wngrot_b", (s32)&xb);
+                composeInterpolatedNodeMatrices(a, b, xa, xb, 115.0f);
+            }
+            s->fade = 0.0f;
+            s->timer = 0.0f;
+            s->state = 0;
+        }
+        break;
+    }
+    s->angle += dt * 30.0f;
+    if (0.05f < s->fade * scale) {
+        sc = cpAssets[s->idx].scale * quadraticEaseInOut(s->fade) * 0.2f * scale;
+        mtx = s->mesh->mtx;
+        initVec4TripletFromArgs(mtx, sc, sc, sc);
+        composeRotationMatrixSlot1(mtx, s->angle);
+        composeRotationMatrixSlot0(mtx, sinf(gMvPhase) * 10.0f + 5.0f);
+        composeRotationMatrixSlot2(mtx, sinf(gMvPhase * 0.5f) * 2.5f);
+        addVec3At0x24(mtx, 0.0f, cpAssets[s->idx].yoff + 0.1f, 7.0f);
+        s->mesh->node.next = nx = *head;
+        if (nx != NULL) {
+            s->mesh->node.next->prev = &s->mesh->node;
+        }
+        s->mesh->node.prev = NULL;
+        *head = &s->mesh->node;
+    }
+}
 
 char *getPlayerRankString(s32 arg0) {
     return getGameOrFrontText(arg0 + 0x92);
