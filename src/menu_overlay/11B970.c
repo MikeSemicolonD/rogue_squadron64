@@ -1152,7 +1152,121 @@ s32 spawnTieInterceptorParticles(void) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", playerTieInterceptorMainUpdate);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initControllerSettingsStructs);
+extern void normalize_vector(f32 *);
+extern void vec3Cross(f32 *, f32 *, f32 *);
+extern u8 D_menu_overlay_800CCAA0[];
+
+typedef struct {
+    u8 a, b, c, d;
+} Rgba4;
+
+#define P0 (base + n * 0x1B8)
+void *initControllerSettingsStructs(void) {
+    f32 sp10[4];
+    f32 sp20[4];
+    f32 sp30[4];
+    f32 sp40[4];
+    f32 sp50[4];
+    u8 *base;
+    u8 *p;
+    u8 *src;
+    u8 *s1;
+    u8 *s0;
+    u8 *q;
+    u32 n;
+    s32 i;
+    s32 off;
+    s16 t1;
+    s16 t0;
+    s16 a3;
+    s16 w;
+    f32 zero = 0.0f;
+    s32 k9e;
+
+    base = rs_malloc(0x1810, 0);
+    rs_memset(base, 0, 0x1810);
+    n = 0;
+    do {
+        src = D_menu_overlay_800CCAA0 + n * 0x18;
+        s1 = P0 + 0x54;
+        clearVec4QuadStruct(s1);
+        *(u8 **)(P0 + 0x48) = P0 + 0x84;
+        s0 = P0 + 0x158;
+        *(u8 **)(P0 + 0xA4) = P0 + 0xE0;
+        *(u8 **)(P0 + 0xA8) = s0;
+        *(s32 *)(P0 + 0x98) = 8;
+        *(u8 **)(P0 + 0xE8) = P0 + 0xF0;
+        *(s32 *)(P0 + 0x90) = 0x60009;
+        *(s32 *)(P0 + 0xEC) = 2;
+        *(f32 *)(P0 + 0x30) = *(f32 *)(src + 0);
+        p = P0;
+        *(f32 *)(p + 0x34) = *(f32 *)(src + 4) - 224.0f + 64.0f;
+        *(f32 *)(p + 0x28) = *(f32 *)(src + 8);
+        *(f32 *)(p + 0x2C) = *(f32 *)(src + 0xC);
+        *(f32 *)(p + 0x20) = *(f32 *)(src + 0x10);
+        *(f32 *)(p + 0x24) = *(f32 *)(src + 0x14);
+        sp40[0] = *(f32 *)(p + 0x20);
+        sp40[1] = *(f32 *)(p + 0x24);
+        sp40[2] = 0;
+        sp50[0] = *(f32 *)(p + 0x30) * 0.015625f + *(f32 *)(p + 0x28);
+        sp50[1] = *(f32 *)(p + 0x34) * 0.03125f + *(f32 *)(p + 0x2C);
+        sp50[2] = 0;
+        sp20[0] = sp50[0] - sp40[0];
+        sp20[1] = sp50[1] - sp40[1];
+        sp20[2] = zero;
+        sp20[0] = sp20[0] * 0.35664f;
+        sp20[1] = sp20[1] * 0.14275f;
+        normalize_vector(sp20);
+        sp30[0] = zero;
+        sp30[1] = zero;
+        sp30[2] = 1.0f;
+        vec3Cross(sp10, sp20, sp30);
+        sp10[0] = sp10[0] * 0.005f;
+        sp10[1] = sp10[1] * 0.005f;
+        sp10[2] = sp10[2] * 0.005f;
+        sp10[0] = sp10[0] * 2.803948f;
+        sp10[1] = sp10[1] * 7.0052543f;
+        *(f32 *)(p + 0x188) = sp40[0] - sp10[0];
+        { u8 *r = p + 0x188;
+        *(f32 *)(r + 4) = sp40[1] - sp10[1];
+        *(f32 *)(r + 0xC) = sp40[0] + sp10[0];
+        *(f32 *)(r + 0x10) = sp40[1] + sp10[1];
+        *(f32 *)(r + 0x18) = sp50[0] - sp10[0];
+        *(f32 *)(r + 0x1C) = sp50[1] - sp10[1];
+        *(f32 *)(r + 0x24) = sp50[0] + sp10[0];
+        *(f32 *)(r + 0x28) = sp50[1] + sp10[1];
+        }
+        *(f32 *)(p + 0x158) = *(f32 *)(p + 0x20) - 0.04f;
+        *(f32 *)(s0 + 4) = *(f32 *)(p + 0x24) - 0.08f;
+        *(f32 *)(s0 + 0xC) = *(f32 *)(p + 0x20) + 0.04f;
+        *(f32 *)(s0 + 0x10) = *(f32 *)(p + 0x24) - 0.08f;
+        *(f32 *)(s0 + 0x18) = *(f32 *)(p + 0x20) - 0.04f;
+        *(f32 *)(s0 + 0x1C) = *(f32 *)(p + 0x24) + 0.08f;
+        *(f32 *)(s0 + 0x24) = *(f32 *)(p + 0x20) + 0.04f;
+        *(f32 *)(s0 + 0x28) = *(f32 *)(p + 0x24) + 0.08f;
+        initVec4TripletFromArgs(s1, 0.35664f, 0.14275f, 1.0f);
+        addVec3At0x24(s1, zero, 0.083333336f, 2.41421f);
+        for (i = 0; (u32)i < 2; i++) {
+            k9e = 0x9E;
+            q = &p[i * 0x34 + 0xF0];
+            *(s16 *)(q + 0xE) = i * 4 + 1;
+            *(s16 *)(q + 0x10) = i * 4 + 3;
+            *(s16 *)(q + 0x12) = i * 4 + 2;
+            *(s32 *)(q + 0) = k9e;
+            *(s32 *)(q + 4) = 0x0D0C9005;
+            *(volatile s32 *)(q + 8) = 0;
+            *(s32 *)(q + 8) = 0;
+            *(s16 *)(q + 0xC) = i * 4;
+            *(s32 *)(q + 0) &= ~0x14;
+            *(Rgba4 *)(q + 0x30) = *(Rgba4 *)mainMenuGreyColor;
+            *(Rgba4 *)(q + 0x2C) = *(Rgba4 *)(q + 0x30);
+            *(Rgba4 *)(q + 0x28) = *(Rgba4 *)(q + 0x2C);
+            *(Rgba4 *)(q + 0x24) = *(Rgba4 *)(q + 0x28);
+        }
+        n++;
+    } while (n < 0xE);
+    return base;
+}
 
 void setMenuOverlayHeaderState(s32, s32, s32);
 typedef struct {
