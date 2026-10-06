@@ -4,7 +4,162 @@
 
 INCLUDE_ASM("asm/nonmatchings/main/544B0", trackResourceListWithMappingTables);
 
-INCLUDE_ASM("asm/nonmatchings/main/544B0", dispatchOverlaySetupByParentAssetName);
+typedef struct {
+    u8 pad0[0xC];
+    u32 flags;
+    u8 pad10[0x14];
+    s32 src;
+} OvlMdlNode;
+
+typedef struct {
+    u8 pad0[2];
+    s16 type;
+    s32 root;
+    OvlMdlNode **wnd;
+    OvlMdlNode **crmA;
+    OvlMdlNode **crmB;
+    OvlMdlNode **eng[2];
+    s32 engBuf[2];
+    s16 engFlag[2];
+    u8 pad28[4];
+    f32 f2C;
+    f32 f30;
+} OvlSetupDst;
+
+extern OvlMdlNode **findModelChildNodeByName(s32, char *);
+extern s32 rs_strcmp(s32, char *);
+extern void setMaterialFlagByIdInMeshTree(OvlMdlNode *, s32, u16);
+extern int sprintf(char *, const char *, ...);
+extern void zmemcpy(s32, s32, s32);
+extern s32 rs_malloc(s32, s32);
+extern u16 D_main_bss_80137C70;
+
+void dispatchOverlaySetupV(s32, s32, s32) __asm__("dispatchOverlaySetupByParentAssetName");
+
+void dispatchOverlaySetupV(s32 a0, s32 a1, s32 arg2) {
+    s32 *arg0 = (s32 *)a0;
+    char buf[16];
+    s16 t;
+    s16 t2;
+    s32 i;
+    OvlSetupDst *arg1 = (OvlSetupDst *)a1;
+    s32 name;
+    OvlSetupDst *p1;
+    OvlSetupDst *p0;
+    OvlMdlNode **n;
+
+    name = *arg0;
+    if (rs_strcmp(name, "awing") != 0) {
+        if (rs_strcmp(name, "vwing") != 0) {
+            if (rs_strcmp(name, "xwing") != 0) {
+                if (rs_strcmp(name, "ywing") != 0) {
+                    if (rs_strcmp(name, "snowspeeder") != 0) {
+                        if (rs_strcmp(name, "falcon") != 0) {
+                            if (rs_strcmp(name, "tie_inter") != 0) {
+                                if (rs_strcmp(name, "koelsch") != 0) {
+                                    if (rs_strcmp(name, "t16") == 0) {
+                                        t = 7;
+                                    } else {
+                                        t = -1;
+                                    }
+                                } else {
+                                    t = 8;
+                                }
+                            } else {
+                                t = 6;
+                            }
+                        } else {
+                            t = 5;
+                        }
+                    } else {
+                        t = 4;
+                    }
+                } else {
+                    t = 3;
+                }
+            } else {
+                t = 2;
+            }
+        } else {
+            t = 1;
+        }
+    } else {
+        t = 0;
+    }
+    arg1->type = t;
+    if (t < 0) {
+        return;
+    }
+    arg1->root = (s32)arg0;
+    n = findModelChildNodeByName((s32)arg0, "wnd_a");
+    arg1->wnd = n;
+    if (n != 0) {
+        (*n)->flags &= ~8;
+        setMaterialFlagByIdInMeshTree(*arg1->wnd, 0xFFFF, D_main_bss_80137C70);
+    }
+    arg1->crmA = 0;
+    arg1->crmB = 0;
+    for (i = 0; i < 2; i++) {
+        arg1->engBuf[i] = rs_malloc(0x80, 0);
+        sprintf(buf, "eng_%c", i + 0x61);
+        n = findModelChildNodeByName((s32)arg0, buf);
+        arg1->eng[i] = n;
+        if (n != 0) {
+            (*n)->flags &= ~8;
+            zmemcpy(arg1->engBuf[i], (*arg1->eng[i])->src, 0x80);
+            arg1->engFlag[i] = 0;
+        } else {
+            arg1->engFlag[i] = 0;
+        }
+    }
+    {
+        switch (arg1->type) {
+        case 0:
+            arg1->f2C = 3.0f;
+            arg1->f30 = 5.625f;
+            break;
+        case 1:
+            arg1->f2C = 3.0f;
+            arg1->f30 = 4.5f;
+            break;
+        case 2:
+            arg1->f2C = 1.875f;
+            arg1->f30 = 3.75f;
+            break;
+        case 3:
+            arg1->f2C = 2.25f;
+            arg1->f30 = 3.375f;
+            break;
+        case 4:
+            arg1->f2C = 2.625f;
+            arg1->f30 = 3.5625f;
+            break;
+        case 5:
+            arg1->f2C = 2.25f;
+            arg1->f30 = 5.625f;
+            break;
+        case 6:
+            arg1->f2C = 2.625f;
+            arg1->f30 = 4.5f;
+            break;
+        case 8:
+            n = findModelChildNodeByName((s32)arg0, "crm_a");
+            arg1->crmA = n;
+            if (n != 0) {
+                (*n)->flags &= ~8;
+            }
+            n = findModelChildNodeByName((s32)arg0, "crm_b");
+            arg1->crmB = n;
+            if (n != 0) {
+                (*n)->flags &= ~8;
+            }
+        case 7:
+            arg1->f2C = 2.25f;
+            arg1->f30 = 6.0f;
+            break;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/544B0", updateAnimatedTextureStreaming);
 
