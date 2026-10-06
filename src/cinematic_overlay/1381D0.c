@@ -650,7 +650,88 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", spawnNpcBurstAlongSegment);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", processCutsceneActions);
+typedef struct { s32 a, b, c, d; } Str16;
+typedef struct { s32 a, b, c, d, e; s16 f; } Str22;
+typedef struct { s32 a, b, c, d; s8 e; } Str17;
+typedef struct { s32 a, b; s16 c; } Str10;
+typedef struct { s32 a, b, c; s16 d; } Str14;
+typedef struct { s32 a, b, c, d; s16 e; } Str18;
+extern char strCinPlCraftsVwing[];
+extern char D_cinematic_overlay_800A518C[];
+extern u16 D_cinematic_overlay_800B0B24;
+extern u8 D_cinematic_overlay_800B0B1E;
+extern u8 D_main_bss_80130B38;
+
+void processCutsceneActions(u8 *arg0, s32 arg1) {
+    u32 i;
+    u32 kind;
+    u8 *a3;
+    s32 a2;
+    s32 v1;
+    u8 *dst;
+
+    i = 0;
+    if (*(u16 *)(arg0 + 0x4E) != 0) {
+        kind = arg1 & 0xFF;
+        do {
+            a3 = arg0 + i * 0x18;
+            if (*(s32 *)(a3 + 0x58) == 0x15) {
+                D_cinematic_overlay_800B0B24 = *(u16 *)(a3 + 0x62);
+            }
+            if (D_main_bss_80130B38 != 0 && D_cinematic_overlay_800B0B1E == 0) {
+                if (*(s32 *)(a3 + 0x58) == 6 && *(s32 *)(a3 + 0x60) == 0x1B) {
+                    *(s32 *)(a3 + 0x58) = 7;
+                }
+                if (*(s32 *)(a3 + 0x58) == 0) {
+                    *(s32 *)(a3 + 0x58) = 7;
+                    *(s32 *)(a3 + 0x60) = 0x1B;
+                }
+            }
+            if (*(s32 *)(a3 + 0x58) == 0x12) {
+                a2 = *(s32 *)(a3 + 0x64);
+                v1 = *(s32 *)(a3 + 0x60);
+                if (a2 != 0 && kind == 5) {
+                    v1 = a2;
+                    if (v1 == 0x63) {
+                        return;
+                    }
+                }
+                {
+                    switch (kind) {
+                    case 0:
+                        *(Str16 *)(arg0 + v1 * 0x4C + 0x13D8) = *(Str16 *)"pl_crafts/xwing";
+                        break;
+                    case 1:
+                        *(Str16 *)(arg0 + v1 * 0x4C + 0x13D8) = *(Str16 *)"pl_crafts/ywing";
+                        break;
+                    case 2:
+                        *(Str16 *)(arg0 + v1 * 0x4C + 0x13D8) = *(Str16 *)"pl_crafts/awing";
+                        break;
+                    case 3:
+                        *(Str16 *)(arg0 + v1 * 0x4C + 0x13D8) = *(Str16 *)strCinPlCraftsVwing;
+                        break;
+                    case 4:
+                        { s32 *d = (s32 *)(v1 * 0x4C + (s32)arg0 + 0x13D8); const s32 *sr = (const s32 *)"pl_crafts/snowspeeder"; __builtin_memcpy(d, sr, 22); }
+                        break;
+                    case 5:
+                        { s32 *d = (s32 *)(v1 * 0x4C + (s32)arg0 + 0x13D8); const s32 *sr = (const s32 *)"pl_crafts/falcon"; __builtin_memcpy(d, sr, 17); }
+                        break;
+                    case 6:
+                        { s32 *d = (s32 *)(v1 * 0x4C + (s32)arg0 + 0x13D8); const s32 *sr = (const s32 *)"tie_inter"; __builtin_memcpy(d, sr, 10); }
+                        break;
+                    case 7:
+                        { s32 *d = (s32 *)(v1 * 0x4C + (s32)arg0 + 0x13D8); const s32 *sr = (const s32 *)D_cinematic_overlay_800A518C; __builtin_memcpy(d, sr, 14); }
+                        break;
+                    case 8:
+                        { s32 *d = (s32 *)(v1 * 0x4C + (s32)arg0 + 0x13D8); const s32 *sr = (const s32 *)"pl_crafts/koelsch"; __builtin_memcpy(d, sr, 18); }
+                        break;
+                    }
+                }
+            }
+            i += 1;
+        } while (i < *(u16 *)(arg0 + 0x4E));
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", computeCutsceneScreenScale);
 
