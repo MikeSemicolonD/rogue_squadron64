@@ -239,7 +239,117 @@ u16 decodeRdpSizeFlags(u16 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", parseImageFile);
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", loadTextureToMemory);
+typedef struct { u8 b[4]; } LtC4;
+void *parseImageFile(void *, s32, s32, s32, s32, s32, void *);
+
+static __inline__ u16 lttTlut(u16 tl, u32 arg0, u16 fl, u32 *key) {
+    u16 n;
+    u16 ret;
+
+    switch (fl & 0xF) {
+    case 0:
+        n = 0x10;
+        break;
+    case 1:
+        n = 0x100;
+        break;
+    default:
+        ret = 0xFFFF;
+        goto done;
+    }
+    if ((arg0 & 0xFF000000) != 0x80000000) {
+        ret = arg0;
+        goto done;
+    }
+    if (tl == 0xFFFF) {
+        for (tl = 0; tl < D_main_bss_80128F04; tl++) {
+            if (D_main_bss_80128EFC[tl] == NULL) {
+                break;
+            }
+        }
+        if (tl == D_main_bss_80128F04) {
+            ret = 0xFFFF;
+            goto done;
+        }
+        D_main_bss_8011A7D0 -= n * 2;
+        D_main_bss_80128EFC[tl] = (u16 *)D_main_bss_8011A7D0;
+        packTlutEntriesRgba5551((u16 *)D_main_bss_8011A7D0, fl, (u8 *)arg0, n, (u8 *)key);
+    } else {
+        packTlutEntriesRgba5551(D_main_bss_80128EFC[tl], fl, (u8 *)arg0, n, (u8 *)key);
+    }
+    ret = tl;
+done:
+    return ret;
+}
+
+u16 lttImpl(void *tex, u32 plte, u16 w, u16 h, u16 flags, u8 one, u8 depth, u16 idx, u32 *transp, u8 *name) __asm__("loadTextureToMemory");
+u16 lttImpl(void *tex, u32 plte, u16 w, u16 h, u16 flags, u8 one, u8 depth, u16 idx, u32 *transp, u8 *name) {
+    s32 i;
+    u8 *end;
+    u8 *data;
+    struct D_main_bss_80128F08 *e;
+
+    if (idx == 0xFFFF) {
+        for (i = 0; i < D_main_bss_80128EF0; i++) {
+            if (D_main_bss_80128F08[i].unk00 != 0) {
+                if (rs_strncmp(D_main_bss_80128F08[i].texture_name, name, 0x10) == 0) {
+                    return i;
+                }
+            }
+        }
+        for (i = 0; i < D_main_bss_80128EF0; i++) {
+            if (D_main_bss_80128F08[i].unk00 == 0) {
+                break;
+            }
+        }
+        data = (u8 *)D_main_bss_8011A7D8;
+    } else {
+        i = idx;
+        data = D_main_bss_80128F08[i].texture_data;
+    }
+    if (i != D_main_bss_80128EF0) {
+    rs_strncpy(D_main_bss_80128F08[i].texture_name, name, 0x10);
+    D_main_bss_80128F08[i].unk02 = one;
+    D_main_bss_80128F08[i].unk00 = decodeRdpSizeFlags(flags);
+    D_main_bss_80128F08[i].width = w;
+    D_main_bss_80128F08[i].height = h;
+    D_main_bss_80128F08[i].texture_data = data;
+    D_main_bss_80128F08[i].unk03 = depth;
+    if (transp != NULL) {
+        *(LtC4 *)&D_main_bss_80128F08[i].unk04 = *(LtC4 *)transp;
+    }
+    end = parseImageFile(data, flags, w, h, one, (s32)tex, transp);
+    if (flags & 0x800) {
+        end = parseImageFile(end, 4, (u16)(w >> depth), (u16)(h >> depth), 1, (s32)tex + 4, NULL);
+    } else if (flags & 0x400) {
+        end = parseImageFile(end, 5, (u16)(w >> depth), (u16)(h >> depth), 1, (s32)tex + 4, NULL);
+    }
+    data = (u8 *)(((u32)end + 0xF) & ~0xF);
+    if (flags & 0x20) {
+        switch (flags & 0xF) {
+        case 0:
+            data += 0x20;
+            break;
+        case 1:
+            data += 0x200;
+            break;
+        }
+    }
+    {
+        struct D_main_bss_80128F08 *b = D_main_bss_80128F08;
+        e = (struct D_main_bss_80128F08 *)(i * sizeof(struct D_main_bss_80128F08) + (s32)b);
+    }
+    e->texture_size = data - e->texture_data;
+    if (idx == 0xFFFF) {
+        D_main_bss_8011A7D8 = (s32)data;
+        D_main_bss_80128F08[i].unk0E = lttTlut(0xFFFF, plte, flags, transp);
+    } else {
+        lttTlut(e->unk0E, plte, flags, transp);
+    }
+    return i;
+    }
+    return 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", loadTextureTile);
 
