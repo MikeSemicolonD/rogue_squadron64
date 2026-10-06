@@ -2098,7 +2098,7 @@ extern u8 *D_main_bss_8010E090[];
 extern PsnDlEntry D_main_bss_80116400[];
 extern PsnSortEntry D_main_bss_80117C08[];
 s32 renderUnlitMeshFaces(f32 *, f32 *, u8 *);
-s32 renderLitTexturedMeshFaces(f32 *, f32 *, u8 *);
+s32 renderLitTexturedMeshFacesCall(f32 *, f32 *, u8 *) __asm__("renderLitTexturedMeshFaces");
 s32 renderFlatMeshFaceGroup(f32 *, f32 *, u8 *);
 s32 renderLitMeshFaceGroup(f32 *, f32 *, u8 *);
 s32 submitSceneNodeRenderR(f32 *, f32 *, void *, void *, s32) __asm__("submitSceneNodeRender");
@@ -2218,7 +2218,7 @@ s32 processSceneNode(f32 *arg0, f32 *arg1, u8 *arg2, u8 *arg3) {
                     }
                     r = renderUnlitMeshFaces(arg0, arg1, arg2) & 0xFF;
                 } else {
-                    r = renderLitTexturedMeshFaces(arg0, arg1, s0) & 0xFF;
+                    r = renderLitTexturedMeshFacesCall(arg0, arg1, s0) & 0xFF;
                 }
                 if (r == 0) {
                     return 0;
@@ -2262,7 +2262,7 @@ s32 processSceneNode(f32 *arg0, f32 *arg1, u8 *arg2, u8 *arg3) {
                 }
                 r = renderUnlitMeshFaces(arg0, arg1, arg2) & 0xFF;
             } else {
-                r = renderLitTexturedMeshFaces(arg0, arg1, arg2) & 0xFF;
+                r = renderLitTexturedMeshFacesCall(arg0, arg1, arg2) & 0xFF;
             }
             s0 = arg2;
             if (r != 0) {
