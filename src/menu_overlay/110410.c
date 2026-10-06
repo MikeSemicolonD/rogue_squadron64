@@ -90,7 +90,122 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarInitialize);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", runHangarSelectionFrame);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", composeNpcOrientationMatrix);
+typedef struct { f32 x, y, z; } HV3;
+typedef struct {
+    s32 unk0;
+    u8 **unk4;
+    u8 pad8[4];
+    HV3 pos;
+    f32 rx, ry, rz;
+    u8 pad24[0x1C];
+    u16 flags;
+    u8 pad42[6];
+    s32 link[2];
+    u8 pad50[0x14];
+    u8 mtx[0x8C];
+    u8 rest[0x188];
+} HEnt;
+extern u8 D_menu_overlay_800CC518[];
+extern f32 D_menu_overlay_800CDA20[];
+extern HV3 D_menu_overlay_800CC52C[];
+extern u16 D_menu_overlay_800CDA42;
+extern u8 hangarMap1ToCraftIdMap[];
+extern u8 hangarTieInterceptorAvailable;
+extern u8 hangarNabooStarfighterAvailable;
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+void composeRotationMatrixSlot0(void *, f32);
+void composeRotationMatrixSlot1(void *, f32);
+void composeRotationMatrixSlot2(void *, f32);
+void addVec3At0x24(void *, f32, f32, f32);
+void setByteAcrossEntryList(u8 *, u8);
+u8 transformVec3ToNpcLocalWithScale(void *, s32, HV3 *, f32, void *);
+
+void composeNpcOrientationMatrix(void) {
+    HV3 pos;
+    s32 buf[2];
+    u8 i;
+    u8 idx;
+    s32 *p;
+    u8 *m;
+    f32 sx, sz, sc;
+    s32 *head;
+    u8 c;
+    HEnt *ent;
+    s32 **hp;
+
+    for (i = 0; i < 8; i++) {
+        idx = D_menu_overlay_800CC518[i];
+        ent = &((HEnt *)gCutAssetEnts)[idx];
+        pos = ent->pos;
+        p = ent->link;
+        if (D_menu_overlay_800CDA20[i] != pos.y) {
+            setByteAcrossEntryList((u8 *)&((HEnt *)gCutAssetEnts)[idx] + 0xF0, (u32)((pos.y - 26.0f) / 3.3500004f * 128.0f + 130.0f));
+            D_menu_overlay_800CDA20[i] = pos.y;
+        }
+        m = (u8 *)p + 0x1C;
+        sx = D_menu_overlay_800CC52C[i].x;
+        sz = D_menu_overlay_800CC52C[i].z;
+        pos.y = 29.35f;
+        initVec4TripletFromArgs(m, sx, 1.0f, sz);
+        composeRotationMatrixSlot2(m, -((HEnt *)gCutAssetEnts)[idx].rz);
+        composeRotationMatrixSlot1(m, ((HEnt *)gCutAssetEnts)[idx].ry + 180.0f);
+        addVec3At0x24(m, pos.x, pos.y, pos.z);
+        if (transformVec3ToNpcLocalWithScale(&gCutAssetHead, 0, &pos, sx > sz ? sx : sz, buf)) {
+            c = hangarMap1ToCraftIdMap[idx];
+            if (c == 6 && !hangarTieInterceptorAvailable) {
+                continue;
+            }
+            if (c == 8 && !hangarNabooStarfighterAvailable) {
+                continue;
+            }
+            head = gCutAssetHead;
+            p[0] = (s32)head;
+            if (head) {
+                head[1] = (s32)p;
+            }
+            p[1] = 0;
+            gCutAssetHead = p;
+        }
+    }
+    for (i = 0; i < D_menu_overlay_800CDA42; i++) {
+        HEnt *e;
+        u8 *q;
+        u8 *m2;
+                u16 fl;
+        if (((HEnt *)gCutAssetEnts)[i].flags & 0xC0) {
+            pos = ((HEnt *)gCutAssetEnts)[i].pos;
+            e = (HEnt *)(i * sizeof(HEnt) + (s32)gCutAssetEnts);
+            q = *e->unk4;
+            __asm__ volatile("abs.s %0, %1" : "=f"(sx) : "f"(*(f32 *)(q + 0x68) - *(f32 *)(q + 0x5C)));
+            __asm__ volatile("abs.s %0, %1" : "=f"(sz) : "f"(*(f32 *)(q + 0x70) - *(f32 *)(q + 0x64)));
+            fl = e->flags;
+            p = e->link;
+            if (fl & 0x100) {
+                sx *= 2.5f;
+                sz *= 2.5f;
+            }
+            m2 = e->mtx;
+            if (fl & 0x1000) {
+                sx *= 0.35f;
+                sz *= 0.35f;
+            }
+            initVec4TripletFromArgs(m2, sx, 1.0f, sz);
+            composeRotationMatrixSlot0(m2, ((HEnt *)gCutAssetEnts)[i].rx);
+            composeRotationMatrixSlot1(m2, ((HEnt *)gCutAssetEnts)[i].ry);
+            composeRotationMatrixSlot2(m2, ((HEnt *)gCutAssetEnts)[i].rz);
+            addVec3At0x24(m2, pos.x, 29.35f, pos.z);
+            if (projectModelBoundsToScreen(&gCutAssetHead, m2, *((HEnt *)gCutAssetEnts)[i].unk4 + 0x5C, *((HEnt *)gCutAssetEnts)[i].unk4 + 0x68, 0, 0)) {
+                head = gCutAssetHead;
+                e->link[0] = (s32)head;
+                if (head) {
+                    head[1] = (s32)p;
+                }
+                p[1] = 0;
+                gCutAssetHead = p;
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", updateHangarBayScene);
 
