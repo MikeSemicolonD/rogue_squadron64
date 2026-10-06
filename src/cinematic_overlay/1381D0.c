@@ -565,7 +565,8 @@ void tickCutsceneActionSlots(f32 arg0) {
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A54CC);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", applyNamedEffectParameterDefault);
+static const char D_cinematic_overlay_800A54D8[16] = "i_gtu_hi_dst";
+static const char D_cinematic_overlay_800A54E8[12] = "i_mtu_hi";
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A54F4);
 
@@ -587,11 +588,124 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5560);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A556C);
+typedef struct { char c[13]; } AnS13;
+typedef struct { char c[11]; } AnS11;
+typedef struct { char c[10]; } AnS10;
+typedef struct { char c[12]; } AnS12;
+extern char D_cinematic_overlay_800A54CC[];
+extern char D_cinematic_overlay_800A54F4[];
+extern char D_cinematic_overlay_800A550C[];
+extern char D_cinematic_overlay_800A5524[];
+extern AnS11 D_cinematic_overlay_800A5500;
+extern AnS10 D_cinematic_overlay_800A5518;
+extern AnS10 D_cinematic_overlay_800A5530;
+extern AnS10 D_cinematic_overlay_800A553C;
+extern AnS10 D_cinematic_overlay_800A5548;
+extern AnS10 D_cinematic_overlay_800A5554;
+extern AnS12 D_cinematic_overlay_800A5560;
+extern u8 D_cinematic_overlay_800B0B1F;
+extern u16 D_cinematic_overlay_800B0B24;
+extern u8 gGameSettings;
+s32 rs_strcmp(char *, char *);
+void scaleVec3ByRandomRange(f32 *, s32, s32);
+void scaleVec3ByRandomRangeF(f32 *, f32, f32) __asm__("scaleVec3ByRandomRange");
+void spawnNpcBurstAlongSegment(s32, s32, s32, f32 *);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5570);
+u8 applyNamedEffectParameterDefault(char *name, u8 *dst, s32 arg2, u8 arg3) {
+    f32 v[3];
+    u8 found = 0;
+    u8 flag = 0;
+    u8 ok;
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5574);
+    if (D_cinematic_overlay_800B0B24 != 0) {
+        if (rs_strcmp(D_cinematic_overlay_800A54CC, name) == 0) {
+            if (dst != NULL) {
+                *(AnS13 *)dst = *(AnS13 *)D_cinematic_overlay_800A54D8;
+            }
+            found = 1;
+        }
+        if (rs_strcmp((char *)D_cinematic_overlay_800A54E8, name) == 0) {
+            if (dst != NULL) {
+                *(AnS13 *)dst = *(AnS13 *)D_cinematic_overlay_800A54D8;
+            }
+            found = 1;
+        }
+        if (rs_strcmp(D_cinematic_overlay_800A54F4, name) == 0) {
+            if (dst != NULL) {
+                *(AnS11 *)dst = D_cinematic_overlay_800A5500;
+            }
+            found = 1;
+        }
+        if (rs_strcmp(D_cinematic_overlay_800A550C, name) == 0) {
+            if (dst != NULL) {
+                *(AnS10 *)dst = D_cinematic_overlay_800A5518;
+            }
+            found = 1;
+        }
+        if (rs_strcmp(D_cinematic_overlay_800A5524, name) == 0) {
+            if (dst != NULL) {
+                *(AnS10 *)dst = D_cinematic_overlay_800A5530;
+            }
+            found = 1;
+        }
+        ok = 1;
+        if (gGameSettings != 7) {
+            goto check;
+        }
+        if (found) {
+            goto check;
+        }
+        switch ((u8)arg3) {
+        case 1:
+            if (dst != NULL) {
+                *(AnS10 *)dst = D_cinematic_overlay_800A553C;
+            }
+            flag = 1;
+            found = flag;
+            break;
+        case 2:
+            if (dst != NULL) {
+                *(AnS10 *)dst = D_cinematic_overlay_800A5548;
+            }
+            flag = 1;
+            found = flag;
+            break;
+        case 3:
+            if (dst != NULL) {
+                *(AnS10 *)dst = D_cinematic_overlay_800A5554;
+            }
+            flag = 1;
+            found = flag;
+            break;
+        case 4:
+            if (dst != NULL) {
+                *(AnS12 *)dst = D_cinematic_overlay_800A5560;
+            }
+            flag = 1;
+            found = flag;
+            break;
+        default:
+            ok = 1;
+            goto check;
+        }
+    }
+    ok = 1;
+check:
+    if (flag) {
+        D_cinematic_overlay_800B0B1F++;
+        ok = (D_cinematic_overlay_800B0B1F & 1) ^ 1;
+    }
+    if (found) {
+        if (arg2 != 0 && ok) {
+            v[0] = 0.3f;
+            v[1] = 1.0f;
+            v[2] = 0.2f;
+            { union { s32 i; f32 f; } u, w; u.i = 0x3FC00000; w.i = 0x3F4CCCCD; scaleVec3ByRandomRangeF(v, w.f, u.f); }
+            spawnNpcBurstAlongSegment(0, 5, arg2, v);
+        }
+    }
+    return found;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5578);
 
