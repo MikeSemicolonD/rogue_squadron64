@@ -122,7 +122,87 @@ INCLUDE_ASM("asm/nonmatchings/main/738F0", npcWaterSprayUpdate);
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnDestructionEffectBurst);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnDistanceScaledDebrisBurst);
+typedef struct { s32 x, y, z; } BurstV3;
+typedef struct {
+    f32 f0;
+    BurstV3 v4;
+    f32 f10, f14, f18, f1C;
+    s32 w20, w24;
+    f32 f28, f2C;
+    s32 w30, w34;
+    f32 f38;
+    s16 h3C, h3E;
+    f32 f40, f44, f48, f4C, f50, f54, f58, f5C;
+    s32 w60;
+    u8 *w64;
+    s32 w68;
+    u8 b6C, b6D;
+    u8 pad6E[2];
+    s16 h70, h72, h74, h76;
+    s32 w78;
+    u16 h7C;
+} BurstCtx;
+extern s32 D_main_bss_80130C04;
+extern u8 *D_main_bss_80130C08;
+extern s32 gCurrentLevel;
+f32 distanceFromCameraToPoint(f32 *);
+extern s32 spawnRandomBurstNpcVariantWrapper(void *);
+extern void attachChildNpcByIndex(s32, void *);
+
+s32 spawnDistanceScaledDebrisBurstImpl(f32 *arg0, f32 scale, f32 speed) __asm__("spawnDistanceScaledDebrisBurst");
+s32 spawnDistanceScaledDebrisBurstImpl(f32 *arg0, f32 scale, f32 speed0)
+{
+  f32 speed = speed0;
+  BurstCtx c;
+  s32 id;
+  f32 lo;
+  f32 hi;
+  scale = scale * (distanceFromCameraToPoint(arg0) / 4.5f);
+  lo = scale * 0.5f;
+  hi = (scale * 3.0f) * 0.5f;
+  c.f0 = 5.0f;
+  c.v4 = *((BurstV3 *) arg0);
+  c.f10 = 0.0f;
+  c.f14 = -speed;
+  c.f18 = 0.0f;
+  c.f1C = 0.0f;
+  c.w20 = 0;
+  c.w24 = 0;
+  c.f28 = 1.0f;
+  c.f2C = 1.0f;
+  c.w30 = 0;
+  c.w34 = 0;
+  c.f38 = 0.025f;
+  c.h3C = 0x1E;
+  c.h3E = 0x1E;
+  c.f40 = 60.0f;
+  c.f44 = 0.0f;
+  c.f48 = 0.0f;
+  c.f4C = 0.5f;
+  c.f50 = 0.0f;
+  c.f54 = 0.05f;
+  c.f58 = 1.0f;
+  c.f5C = 0.0f;
+  c.w64 = D_main_bss_80130C08 + 0x1C;
+  c.b6C = 1;
+  if (gCurrentLevel == 4)
+  {
+    c.w68 = D_main_bss_80130C04 + 0xC0;
+  }
+  else
+  {
+    c.w68 = D_main_bss_80130C04 + 0x80;
+  }
+  c.b6D = 0x10;
+  c.h70 = (u32) ((lo * 256.0f) + 1.0f);
+  c.h72 = (u32) ((hi * 256.0f) + 1.0f);
+  c.h74 = 0x14;
+  c.w78 = 0x09000000;
+  c.h7C = 3;
+  id = spawnRandomBurstNpcVariantWrapper(&c) & 0xFFFF;
+  attachChildNpcByIndex(id, &D_main_bss_8013A8C0);
+  return id;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnDirectionalDebrisBurst);
 
