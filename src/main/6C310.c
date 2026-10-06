@@ -58,7 +58,82 @@ loop_2:
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", applyCentripetalBankingToNpcCorners);
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", allocateAndInitCraftNpcContext);
+extern u8 D_main_800A09C0[];
+extern void clearStructPair2C30(void *);
+extern void zmemcpy(void *, void *, u32);
+
+u8 *allocateAndInitCraftNpcContext(f32 x, f32 y, u16 craft) {
+    u8 *p;
+    u16 id;
+    u32 k;
+    u32 t;
+    s32 c;
+    u8 *q;
+    s32 v;
+
+    p = rs_malloc(0x1E4, 0);
+    k = craft & 0xF;
+    loadCraftShadowTextures(k);
+    c = 0x02960001;
+    t = (u32)D_main_bss_8013A528;
+    {
+        register u32 tm asm("$16") = k * 2;
+        k = tm + t;
+    }
+    id = *(u16 *)k;
+    *(s32 *)(p + 0x80) = 9;
+    *(u8 **)(p + 0x8C) = p + 0xC8;
+    *(s32 *)(p + 0x2C) = 0;
+    *(s32 *)(p + 0x28) = 0;
+    *(s32 *)(p + 0x24) = 0;
+    *(s32 *)(p + 0x20) = 0;
+    *(u8 **)(p + 0x30) = p + 0x6C;
+    *(s32 *)(p + 0x34) = 0;
+    *(s32 *)(p + 0x70) = 0;
+    *(s32 *)(p + 0x6C) = 0;
+    *(s32 *)(p + 0x74) = 0;
+    *(s32 *)(p + 0x78) = c;
+    *(s32 *)(p + 0x88) = 0;
+    *(s32 *)(p + 0x7C) = 0;
+    *(s32 *)(p + 0x84) = 0;
+    *(u8 **)(p + 0x90) = p + 0x178;
+    *(s32 *)(p + 0x94) = 0;
+    clearStructPair2C30(p + 0x6C);
+    *(s32 *)(p + 0xCC) = 0;
+    *(s32 *)(p + 0xC8) = 0;
+    *(u8 **)(p + 0xD0) = p + 0xD8;
+    *(s32 *)(p + 0xD4) = 4;
+    zmemcpy(p + 0xD8, D_main_800A09C0, 0xA0);
+    v = id << 16;
+    *(s32 *)(p + 0x158) = v;
+    *(s32 *)(p + 0x130) = v;
+    *(s32 *)(p + 0x108) = v;
+    *(s32 *)(p + 0xE0) = v;
+    if (id == D_main_bss_8013A528[5] || id == D_main_bss_8013A528[0xC]) {
+        *(u16 *)(p + 0x168) = 0x800;
+        *(u16 *)(p + 0x164) = 0x800;
+        *(u16 *)(p + 0x148) = 0x800;
+        *(u16 *)(p + 0x144) = 0x800;
+        *(u16 *)(p + 0x118) = 0x800;
+        *(u16 *)(p + 0x114) = 0x800;
+        *(u16 *)(p + 0xF8) = 0x800;
+        *(u16 *)(p + 0xF4) = 0x800;
+        *(u16 *)(p + 0x170) = 0x1000;
+        *(u16 *)(p + 0x16C) = 0x1000;
+        *(u16 *)(p + 0x120) = 0x1000;
+        *(u16 *)(p + 0x11C) = 0x1000;
+    }
+    q = p;
+    *(f32 *)(q + 8) = x;
+    *(f32 *)(q + 0xC) = y;
+    *(u16 *)(q + 0x1C) = 0;
+    *(u16 *)(q + 0x1E) = 0xFF;
+    *(f32 *)(q + 0) = *(f32 *)(q + 4) = 0.0f;
+    *(f32 *)(q + 0x14) = 2.0f;
+    *(f32 *)(q + 0x18) = 1.0f;
+    *(f32 *)(q + 0x10) = 0.5f;
+    return q;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/6C310", advanceNpcOnCurvedPath);
 
