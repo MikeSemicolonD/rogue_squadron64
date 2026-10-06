@@ -726,7 +726,40 @@ u16 getTextureLUTFieldAtA(u16 arg0) {
     return D_main_bss_80128F08[arg0].height;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", releaseTextureLutEntry);
+extern u16 D_main_bss_8011A8B4;
+
+s32 releaseTextureLutEntry(u16 arg0) {
+    struct D_main_bss_8011A444 *e;
+    u16 tex;
+    u16 t;
+    s32 i;
+
+    if (arg0 != 0) {
+        e = (struct D_main_bss_8011A444 *)(arg0 * 4 + (s32)D_main_bss_8011A444);
+        t = e->material_type;
+        if (t != 0) {
+            e->material_type = 0;
+            if (t & 1) {
+                tex = e->D_80128F08_index;
+                i = 0;
+                if (D_main_bss_8011A8B4 != 0) {
+                    do {
+                        struct D_main_bss_8011A444 *e2 = (struct D_main_bss_8011A444 *)((i & 0xFFFF) * 4 + (s32)D_main_bss_8011A444);
+                        if (e2->material_type != 0 && e2->D_80128F08_index == tex) {
+                            return 1;
+                        }
+                        i++;
+                    } while ((u16)i < D_main_bss_8011A8B4);
+                }
+                freeTextureDataSlot(tex);
+                return 1;
+            }
+            __asm__("");
+            return 1;
+        }
+    }
+    return 0;
+}
 
 extern s32 D_main_bss_8011A850;
 extern s32 D_main_bss_8011A854;
