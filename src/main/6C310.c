@@ -135,7 +135,136 @@ u8 *allocateAndInitCraftNpcContext(f32 x, f32 y, u16 craft) {
     return q;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", advanceNpcOnCurvedPath);
+extern u8 D_main_bss_80138058[];
+extern u8 *D_main_bss_80136E08;
+extern u8 *D_main_bss_80138D1C;
+extern s32 D_main_bss_8013A524;
+extern s32 D_main_bss_8013889C;
+extern u16 D_main_bss_8013A520;
+f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+s32 transformVec3ToNpcLocalWithScale(s32, s32, f32 *, f32, s32);
+s32 sampleTerrainAtNpcPosition(f32 *, f32 *, void *, s32);
+void setVec3At0x24(void *, f32, f32, f32);
+s32 rand(void);
+void acbCall(f32 *, u8 *, f32 *, f32, f32) __asm__("applyCentripetalBankingToNpcCorners");
+
+static __inline__ void anSetB27(u8 *l, s32 v) {
+    register s32 vv asm("$6") = v;
+    u8 *e = *(u8 **)(l + 8);
+    u32 i;
+
+    for (i = 0; i < *(u32 *)(l + 0xC); i++) {
+        e[0x27] = vv;
+        e += 0x28;
+    }
+}
+
+void anocV(u8 **list, s32 obj, f32 *m, u8 *npc) __asm__("advanceNpcOnCurvedPath");
+void anocV(u8 **list, s32 obj, f32 *m, u8 *npc) {
+    f32 v[3];
+    f32 d[3];
+    f32 t;
+    f32 r;
+    s16 h;
+    register s32 a asm("$3");
+    u8 *l;
+    u8 *e;
+    u32 i;
+
+    if (m != NULL) {
+        v[0] = m[0] + m[3] * ((f32 *)npc)[1] + (m[7] * m[5] - m[8] * m[4]) * ((f32 *)npc)[0];
+        v[2] = m[2] + m[5] * ((f32 *)npc)[1] + (m[6] * m[4] - m[7] * m[3]) * ((f32 *)npc)[0];
+        v[1] = wrapAngleToCyclicRange(v[0], v[2], D_main_bss_80138058, 0);
+        t = (v[1] - m[1]) * ((f32 *)npc)[4];
+        v[0] += *(f32 *)(D_main_bss_80136E08 + 0x10) * t;
+        v[2] += *(f32 *)(D_main_bss_80136E08 + 0x18) * t;
+        v[1] = wrapAngleToCyclicRange(v[0], v[2], D_main_bss_80138058, 0);
+    } else {
+        v[0] = *(f32 *)(npc + 0x60);
+        v[1] = *(f32 *)(npc + 0x64);
+        v[2] = *(f32 *)(npc + 0x68);
+    }
+    if (list == NULL || (u8)transformVec3ToNpcLocalWithScale(obj, 0, v, 1.0f, 0)) {
+        if ((s16)--*(s16 *)(npc + 0x1C) <= 0) {
+            if (D_main_bss_8013A524 != D_main_bss_8013889C) {
+                D_main_bss_8013A524 = D_main_bss_8013889C;
+                D_main_bss_8013A520 = 0;
+            }
+            if (D_main_bss_8013A520 < 3) {
+                d[0] = *(f32 *)(D_main_bss_80138D1C + 0x4C) - v[0];
+                d[1] = *(f32 *)(D_main_bss_80138D1C + 0x50) - v[1];
+                d[2] = *(f32 *)(D_main_bss_80138D1C + 0x54) - v[2];
+                D_main_bss_8013A520++;
+                if (sampleTerrainAtNpcPosition(v, d, D_main_bss_80138058, 0)) {
+                    s32 x = *(s16 *)(npc + 0x1E);
+                    if (x < 0) {
+                        x = -x;
+                    }
+                    *(s16 *)(npc + 0x1E) = -x;
+                } else if (*(s16 *)(npc + 0x1E) <= 0) {
+                    if (*(s16 *)(npc + 0x1E) != 0) {
+                        *(s16 *)(npc + 0x1E) = -*(s16 *)(npc + 0x1E);
+                    } else {
+                        *(s16 *)(npc + 0x1E) = 1;
+                    }
+                }
+                *(s16 *)(npc + 0x1C) = (rand() & 7) + 4;
+            } else {
+                *(s16 *)(npc + 0x1C) = rand() & 7;
+            }
+        }
+        if (*(s16 *)(npc + 0x1E) != 0) {
+            if (*(s16 *)(npc + 0x1E) < 0) {
+                *(s16 *)(npc + 0x1E) += 0x20;
+                if (*(s16 *)(npc + 0x1E) >= 0) {
+                    *(s16 *)(npc + 0x1E) = 0;
+                }
+            } else {
+                *(s16 *)(npc + 0x1E) += 0x20;
+                if (*(s16 *)(npc + 0x1E) >= 0x100) {
+                    *(s16 *)(npc + 0x1E) = 0xFF;
+                }
+            }
+            if (m == NULL) {
+                h = *(s16 *)(npc + 0x1E);
+                t = *(f32 *)(npc + 0x18);
+                if (h >= 0) {
+                    a = (u32)(t * (f32)h);
+                } else {
+                    a = (u32)(t * (f32)-h);
+                }
+                anSetB27(npc + 0xC8, a);
+            } else {
+                r = 1.0f - (v[1] - m[1]) / *(f32 *)(npc + 0x14);
+                if (r < 0.0f) {
+                    return;
+                }
+                if (1.0f < r) {
+                    r = 1.0f;
+                }
+                h = *(s16 *)(npc + 0x1E);
+                r = r * *(f32 *)(npc + 0x18);
+                if (h >= 0) {
+                    a = (u32)(r * (f32)h);
+                } else {
+                    a = (u32)(r * (f32)-h);
+                }
+                anSetB27(npc + 0xC8, a);
+                acbCall(v, npc, m, 0.5f, 0.5f);
+                setVec3At0x24(npc + 0x3C, v[0], v[1], v[2]);
+            }
+            if (list != NULL) {
+                e = *list;
+                *(u8 **)(npc + 0x20) = e;
+                if (e != NULL) {
+                    *(u8 **)(e + 4) = npc + 0x20;
+                }
+                *list = npc + 0x20;
+                *(s32 *)(npc + 0x24) = 0;
+            }
+        }
+    }
+}
 
 extern u16 D_main_bss_80139594;
 u8 *allocateAndInitCraftNpcContext(f32, f32, u16);
