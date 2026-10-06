@@ -69,7 +69,194 @@ s32 spawnDestructionDebris(s32 arg0, s32 arg1, f32 arg2, f32 arg3, f32 arg4) {
     return (u16)r;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", npcDebris1Update);
+typedef struct {
+    f32 x, y, z;
+} DbV3;
+
+typedef struct {
+    f32 x, y, z;
+    DbV3 fwd;
+    DbV3 up;
+    DbV3 vel;
+    u8 *mesh;
+    f32 axis[3];
+    f32 spin;
+    f32 f44;
+    f32 f48;
+    f32 f4C;
+    f32 f50;
+    f32 f54;
+    f32 f58;
+    u16 h5C;
+} DbObj;
+
+typedef struct {
+    DbV3 *pos;
+    DbV3 *vel;
+    f32 f8;
+    f32 fC;
+    f32 f10;
+} DbArgs;
+
+extern u16 D_main_bss_80139574;
+extern u8 D_main_bss_80138058[];
+f32 dbNormalize(void *) __asm__("normalize_vector");
+f32 dbWrap(f32, f32, void *, void *) __asm__("wrapAngleToCyclicRange");
+s32 dbBlocked(f32, f32, void *) __asm__("isTerrainCellBlockedAtWorldXz");
+f32 dbNormInto(void *, void *) __asm__("vec3NormalizeInto");
+void dbTod(void *, void *, s32, s32) __asm__("triggerObjectDestructionEffects");
+void dbQuat(f32 *, void *, f32) __asm__("quatFromAxisAngle");
+void dbRot(f32 *, void *, void *) __asm__("rotateVec3ByQuat");
+void dbOrtho(void *) __asm__("orthonormalizeFrame");
+void dbM34(void *, void *, f32) __asm__("mat34CrossRowsAndCopyPos");
+void dbVis(s32, void *, void *, f32) __asm__("addNpcToVisibilityBucket");
+void *dbWalk(char *) __asm__("walkMeshdef0List");
+void dbRelease(void *) __asm__("releaseMeshAsset");
+void dbPop(u16, void *) __asm__("popNpcSlotFromTail");
+void dbDestroy(u16) __asm__("destroyNpcSlotByIndex");
+s32 dbRand(void) __asm__("rand");
+
+s32 dbImpl(u8 *npc, u16 action, void *arg) __asm__("npcDebris1Update");
+s32 dbImpl(u8 *npc, u16 action, void *arg) {
+    DbObj *d;
+    DbV3 v18;
+    f32 buf[10];
+    f32 q[4];
+
+    d = *(DbObj **)(npc + 4);
+    switch (action) {
+    case 1: {
+        DbArgs *a = arg;
+        f32 zero;
+        *(DbV3 *)d = *a->pos;
+        d->vel = *a->vel;
+        d->fwd = d->vel;
+        d->fwd.z = 0.0f;
+        if (d->fwd.x == d->fwd.z) {
+            d->fwd.x = 0.0f;
+            d->fwd.y = 0.0f;
+            d->fwd.z = 1.0f;
+            d->spin = 360.0f;
+        } else {
+            d->spin = dbNormalize(&d->fwd) * 360.0f;
+        }
+        d->up.x = 0.0f;
+        d->up.z = 0.0f;
+        d->up.y = 1.0f;
+        *(DbObj **)(npc + 8) = d;
+        d->axis[1] = 0.0f;
+        d->axis[0] = -d->vel.z;
+        d->axis[2] = d->vel.x;
+        if (d->axis[0] == 0.0f && d->axis[2] == 0.0f) {
+            d->axis[0] = 1.0f;
+        }
+        dbNormalize(d->axis);
+        d->f50 = 0.0f;
+        d->f44 = 0.0f;
+        d->f4C = 4.0f;
+        d->f48 = 0.5f;
+        d->f54 = 2.0f;
+        d->f58 = a->f10 * 0.05f;
+        zero = 0.0f;
+        if (d->f58 < zero || !(dbRand() & 3)) {
+            if (d->f58 < zero) {
+                a->f10 = -a->f10;
+            }
+            d->f4C = zero;
+            d->mesh = NULL;
+            d->f50 = 0.8f;
+            d->f54 = d->f54 * 0.5f;
+        } else {
+            d->mesh = dbWalk("debris1");
+        }
+        dbPop(D_main_bss_80139574, npc);
+        d->h5C = spawnDestructionDebris(*(u16 *)(npc + 0x16), *(s32 *)(npc + 8), d->mesh == NULL ? -a->f8 : a->f8, a->fC, a->f10);
+        break;
+    }
+    case 2:
+        if (d->mesh != NULL) {
+            dbRelease(d->mesh);
+        }
+        return 1;
+    case 3: {
+        f32 dt = *(f32 *)arg;
+        f32 zero;
+        f32 kk;
+        f32 dot;
+        f32 dd;
+        f32 a54;
+        f32 a44;
+        f32 a;
+
+        if (d->f54 >= 0.0f) {
+            d->f54 -= dt;
+            if (d->f54 < 0.0f) {
+                dbDestroy(*(u16 *)(npc + 0x16));
+                return 1;
+            }
+        }
+        d->f44 += dt;
+        if (dbWrap(d->x, d->z, D_main_bss_80138058, buf) < d->y) {
+            if (dbBlocked(d->x, d->z, NULL) == 1) {
+                dbTod(d, &d->fwd, 0xFFFF, 0);
+                d->f54 = 0.0f;
+                break;
+            }
+            kk = dbNormInto(&v18, &d->vel);
+            dot = v18.x * buf[3] + v18.y * buf[4] + v18.z * buf[5];
+            dd = dot + dot;
+            zero = 0.0f;
+            if (zero < dd) {
+                if (d->f44 < 0.25f) {
+                    if (d->vel.x * d->vel.x + d->vel.z * d->vel.z < 0.040000003f) {
+                        kk = zero;
+                    }
+                }
+                kk *= d->f48;
+                d->f44 = 0.0f;
+                if (kk < 0.01f) {
+                    d->vel.x = d->vel.y = d->vel.z = d->f44;
+                } else {
+                    a54 = d->f54;
+                    a44 = d->f44;
+                    if (a54 < a44) {
+                        a = a54 + 1.0f;
+                        d->f54 = a;
+                        if (a44 <= a) {
+                            d->f54 = a44;
+                            break;
+                        }
+                    }
+                    d->vel.x = (v18.x - dd * buf[3]) * kk;
+                    d->vel.y = (v18.y - dd * buf[4]) * kk;
+                    d->vel.z = (v18.z - dd * buf[5]) * kk;
+                }
+            }
+        }
+        d->x += d->vel.x * dt;
+        d->y += d->vel.y * dt;
+        d->z += d->vel.z * dt;
+        d->vel.y += d->f4C * dt;
+        d->vel.x -= d->vel.x * d->f50 * dt;
+        d->vel.y -= d->vel.y * d->f50 * dt;
+        d->vel.z -= d->vel.z * d->f50 * dt;
+        dbQuat(q, d->axis, d->spin * dt);
+        v18 = d->fwd;
+        dbRot(q, &v18, &d->fwd);
+        v18 = d->up;
+        dbRot(q, &v18, &d->up);
+        dbOrtho(d);
+        return 1;
+    }
+    case 4:
+        if (d->mesh != NULL) {
+            dbM34(d->mesh + 0x28, d, d->f58);
+            dbVis(*(s32 *)arg, d->mesh, d, 1.0f);
+        }
+        break;
+    }
+    return 1;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/700B0", strShockSph);
 
