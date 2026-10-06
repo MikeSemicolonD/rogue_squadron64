@@ -292,6 +292,6 @@ void inflate_set_dictionary(inflate_blocks_statef *s, const u8 *d, u32 n) {
     s->read = s->write = s->window + n;
 }
 
-INCLUDE_ASM("asm/nonmatchings/zlib/infblock", fake_func_8002851C);
+__asm__(".word 0xC4640018");
 
 INCLUDE_RODATA("asm/nonmatchings/zlib/infblock", junk_80000AD8);

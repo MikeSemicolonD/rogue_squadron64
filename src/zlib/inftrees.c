@@ -344,4 +344,4 @@ void *falloc(void *arg0, u32 arg1, u32 arg2) {
     return fixed_mem + *(s32*)arg0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/zlib/inftrees", fake_func_80029B14);
+__asm__(".word 0x46041082, 0x46020001, 0xE4400008");

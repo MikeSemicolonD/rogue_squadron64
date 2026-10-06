@@ -27,4 +27,4 @@ void zcfree(void *arg0, void *arg1) {
     rs_zcfree(arg1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/zlib/zutil", fake_func_80029D14);
+__asm__(".word 0xC4221D2C, 0x46001001, 0xE4400010");

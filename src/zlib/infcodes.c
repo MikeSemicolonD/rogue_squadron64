@@ -156,7 +156,7 @@ void inflate_codes_free(inflate_codes_statef *c, z_stream *z) {
     ZFREE(z, c);
 }
 
-INCLUDE_ASM("asm/nonmatchings/zlib/infcodes", fake_func_80028D58);
+__asm__(".word 0xE4800024, 0xE4600008");
 
 // DO NOT DELTE ME I AM REQUIRED FOR MATCHING
 const u32 rodata_junk_infcodes[] = {

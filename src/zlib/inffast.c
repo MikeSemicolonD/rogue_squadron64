@@ -132,4 +132,4 @@ s32 inflate_fast(u32 bl, u32 bd, inflate_huft *tl, inflate_huft *td, inflate_blo
     return Z_OK;
 }
 
-INCLUDE_ASM("asm/nonmatchings/zlib/inffast", fake_func_800290D8);
+__asm__(".word 0x8FC30028, 0x8FC40028");

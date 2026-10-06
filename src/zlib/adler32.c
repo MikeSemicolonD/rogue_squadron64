@@ -37,4 +37,4 @@ u32 adler32(u32 adler, u8* buf, u32 len) {
     return (s2 << 16) | s1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/zlib/adler32", fake_func_80026B98);
+__asm__(".word 0xAC440040, 0x97C20034");
