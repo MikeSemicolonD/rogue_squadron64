@@ -287,7 +287,188 @@ void releaseEffectObjectNpcSlotsVariant(s32 idx, s32 view, u8 copy)
   }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", buildEffectObjectWorldTransform);
+typedef struct {
+    u16 flags;
+    u16 f2;
+    u16 type;
+    u16 f6;
+    s32 f8;
+    s32 idx;
+    u8 pad10[0x18];
+    f32 m28[9];
+    f32 f4C;
+    f32 f50;
+    f32 f54;
+    u8 pad58[0x18];
+    void *f70;
+    u8 pad74[0x5C];
+    f32 fD0;
+    f32 fD4;
+    f32 fD8;
+    f32 fDC;
+    f32 fE0;
+    f32 fE4;
+    f32 fE8;
+} BeObj;
+typedef struct {
+    u8 pad0[0xB8];
+    u16 craft;
+    u8 padBA[0xCA];
+    u16 f184;
+    u8 pad186[0x11A];
+} BePlayer;
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} BeV3;
+typedef struct {
+    f32 x;
+    f32 y;
+} BeStick;
+typedef struct {
+    u8 pad0[6];
+    u16 mask;
+    u8 pad8[0x1C];
+} BeBind;
+typedef struct {
+    s32 pad[3];
+    s32 f;
+} BeGs;
+extern BePlayer bePlayers[] __asm__("gPlayers");
+extern BeV3 D_mission_overlay_8010A144[];
+extern BeStick D_8010BDD8[];
+extern BeBind D_8010BE18[];
+extern u16 D_main_bss_80130B88[][3];
+extern s32 D_8010CA20;
+extern u8 D_main_bss_80138838;
+extern u8 D_main_bss_80137CF4;
+extern s32 beGs[] __asm__("gGameSettings");
+u8 getHudSecondaryWeponCount(void);
+u8 isHudSecondaryWeaponActive(void);
+f32 getConfigFloatValue(void);
+void buildTransformMatrixFromEulerAngles(void *, f32, f32, f32);
+void mat3x4Multiply(void *, void *, void *);
+static __inline__ f32 beAbs(f32 x) {
+    f32 r;
+    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+    return r;
+}
+
+void buildEffectObjectWorldTransform(BeObj *o, f32 dt) {
+    f32 m[12];
+    f32 sv[3];
+    s32 t;
+
+    if (o->type == 3) {
+        o->fD4 = D_mission_overlay_8010A144[bePlayers[o->idx].craft].x;
+        o->fE4 = D_mission_overlay_8010A144[bePlayers[o->idx].craft].y;
+        o->fE8 = D_mission_overlay_8010A144[bePlayers[o->idx].craft].z;
+    } else {
+        o->fD4 = 80.0f;
+        o->fE4 = -45.0f;
+        o->fE8 = 45.0f;
+    }
+    if (o->flags & 0x10) {
+        return;
+    }
+    if (D_main_bss_80138838 != 0) {
+        return;
+    }
+    if (!(bePlayers[o->idx].f184 & 1)) {
+        return;
+    }
+    if (D_8010CA20 == 0 && (t = o->type) < 4 && t != 0) {
+        if (D_main_bss_80130B88[o->idx][0] & D_8010BE18[o->idx].mask) {
+            if (D_8010BDD8[o->idx].x != 0.0f || D_8010BDD8[o->idx].y != 0.0f) {
+                if (D_8010BDD8[o->idx].x != 0.0f) {
+                    o->fD0 += -D_8010BDD8[o->idx].x * 90.0f * dt;
+                }
+                if (D_8010BDD8[o->idx].y != 0.0f) {
+                    o->fE0 += D_8010BDD8[o->idx].y * 90.0f * dt;
+                }
+            }
+            if (D_main_bss_80130B88[o->idx][0] & D_8010BE18[o->idx].mask) {
+            if (D_8010BDD8[o->idx].x != 0.0f || D_8010BDD8[o->idx].y != 0.0f) {
+                if (*(u16 *)((u8 *)D_main_bss_80138D18[o->idx].unk4 + 4) == 3) {
+                    if (o->fE0 < o->fE4) {
+                        o->fE0 = o->fE4;
+                    }
+                } else if (beAbs(o->fE0) > beAbs(o->fE4)) {
+                    if (o->fE0 < 0.0f) {
+                        o->fE0 = o->fE4;
+                    } else {
+                        o->fE0 = -o->fE4;
+                    }
+                }
+                if (beAbs(o->fD0) > o->fD4) {
+                    if (0.0f < o->fD0) {
+                        o->fD0 = o->fD4;
+                    } else {
+                        o->fD0 = -o->fD4;
+                    }
+                }
+            }
+            }
+        }
+        if (o->fE0 > o->fE8) {
+            o->fE0 = o->fE8;
+        }
+        if ((((BeGs *)&beGs[o->idx])->f & 0x100) || *(u16 *)((u8 *)D_main_bss_80138D18[o->idx].unk4 + 4) != 3) {
+            if (!(D_main_bss_80130B88[o->idx][0] & D_8010BE18[o->idx].mask) || D_8010BDD8[o->idx].x == 0.0f) {
+                if (0.0f < o->fD0) {
+                    o->fD0 -= dt * 90.0f;
+                    if (o->fD0 < 0.0f) {
+                        o->fD0 = 0.0f;
+                    }
+                } else {
+                    o->fD0 += dt * 90.0f;
+                    if (0.0f < o->fD0) {
+                        o->fD0 = 0.0f;
+                    }
+                }
+            }
+            if (!(D_main_bss_80130B88[o->idx][0] & D_8010BE18[o->idx].mask) || D_8010BDD8[o->idx].y == 0.0f) {
+                if (0.0f < o->fE0) {
+                    o->fE0 -= dt * 90.0f;
+                    if (o->fE0 < 0.0f) {
+                        o->fE0 = 0.0f;
+                    }
+                } else {
+                    o->fE0 += dt * 90.0f;
+                    if (0.0f < o->fE0) {
+                        o->fE0 = 0.0f;
+                    }
+                }
+            }
+        }
+        if (bePlayers[o->idx].craft == 1 && getHudSecondaryWeponCount() != 0
+            && *(u16 *)((u8 *)D_main_bss_80138D18[o->idx].unk4 + 4) == 3) {
+            if (0.0f < getConfigFloatValue() || isHudSecondaryWeaponActive() != 0) {
+                o->fE0 = 45.0f;
+            }
+        }
+    }
+    sv[0] = o->f4C;
+    sv[1] = o->f50;
+    sv[2] = o->f54;
+    o->f4C = 0.0f;
+    o->f50 = 0.0f;
+    o->f54 = 0.0f;
+    if (*(u16 *)((u8 *)D_main_bss_80138D18[o->idx].unk4 + 4) == 3) {
+        buildTransformMatrixFromEulerAngles(m, o->fD0, o->fE0, o->f54);
+        mat3x4Multiply(o->f70, m, o->m28);
+    } else if (D_main_bss_80137CF4 == 0) {
+        {
+        f32 z = o->f54;
+        buildTransformMatrixFromEulerAngles(m, o->fD0, z, z);
+        mat3x4Multiply(o->m28, m, o->m28);
+        }
+    }
+    o->f4C = sv[0];
+    o->f50 = sv[1];
+    o->f54 = sv[2];
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", destroyEffectObjectTypeNpcSlots);
 
