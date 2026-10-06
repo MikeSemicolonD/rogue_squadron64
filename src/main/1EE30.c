@@ -895,7 +895,58 @@ done:
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", texPackTlutSlotOrAlloc);
+u16 texPackTlutSlotOrAlloc(u16 slot, u8 *src, u8 sz, u8 fb, u8 *e) {
+    u16 flags;
+    s32 t;
+    u16 cnt;
+    u16 ret;
+    u16 i;
+    u16 *dst;
+
+    t = sz != 0x10;
+    flags = t;
+    if (e != 0) {
+        flags = t | 0x4000;
+    }
+    if (fb != 0) {
+        flags |= 0x8000;
+    }
+    i = slot;
+    switch (flags & 0xF) {
+    case 0:
+        cnt = 0x10;
+        break;
+    case 1:
+        cnt = 0x100;
+        break;
+    default:
+        ret = 0xFFFF;
+        goto out;
+    }
+    ret = (u32)src;
+    if (((u32)src & 0xFF000000) == 0x80000000) {
+        if (i == 0xFFFF) {
+            for (i = 0; i < D_main_bss_80128F04; i++) {
+                if (D_main_bss_80128EFC[i] == 0) {
+                    break;
+                }
+            }
+            if (i == D_main_bss_80128F04) {
+                ret = 0xFFFF;
+                goto out;
+            }
+            dst = (u16 *)(D_main_bss_8011A7D0 - cnt * 2);
+            D_main_bss_8011A7D0 = (s32)dst;
+            D_main_bss_80128EFC[i] = dst;
+            packTlutEntriesRgba5551(dst, flags, src, cnt, e);
+        } else {
+            packTlutEntriesRgba5551(D_main_bss_80128EFC[i], flags, src, cnt, e);
+        }
+        ret = i;
+    }
+out:
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1EE30", texPackTlutAtIndex);
 
