@@ -1214,7 +1214,27 @@ void playSpeechClipOncePerChange(s32 arg0, s32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", playSpeechClipOncePerLevel);
+s32 psImpl(s32 clip, s32 flag) __asm__("playSpeechClipOncePerLevel");
+s32 psImpl(s32 clip, s32 flag) {
+    s32 i;
+    if (clip == 0x28C) return 0;
+    for (i = 0; i < 14; i++) {
+        if (D_mission_overlay_8010B740[i] == clip) {
+            i += (s32)D_mission_overlay_8010B780;
+            if (*(u8 *)i != 0) return 0;
+            *(u8 *)i = 1;
+            break;
+        }
+    }
+    if ((gGameSettings != 0xF) ? (clip == 0x104) : (clip == 0x28C)) {
+        playSpeechClip(clip, 0x78, 0, flag);
+    } else {
+        playSpeechClip(clip, 0x73, 0, flag);
+    }
+    D_mission_overlay_801096B4 = clip;
+    D_mission_overlay_801096B0 = 5.0f;
+    return 1;
+}
 
 extern s32 D_mission_overlay_8010B740[];
 extern u8 D_mission_overlay_8010B780[];
