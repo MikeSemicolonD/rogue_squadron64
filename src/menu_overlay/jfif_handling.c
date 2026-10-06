@@ -252,7 +252,64 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", emitDebrisCellFaces);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", computeCellGridIndices);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", buildDebrisCellBitfield);
+extern s32 allocCellBitGroup(void *, u8);
+extern s32 findFreeBitsL(void *, u8) __asm__("findFreeCellBitSlot");
+extern void rs_memset(u8 *, u8, u32);
+
+static __inline__ s32 extendAcBits(u8 *s, s32 sz) {
+    s32 b = findFreeBitsL(s, sz);
+    return b < (1 << (sz - 1)) ? b + ((-1 << sz) + 1U) : b;
+}
+
+void buildDebrisCellBitfield(u8 *s, u8 idx, s32 blkArg) {
+    register s16 *blk asm("$21") = (s16 *)blkArg;
+    s32 diff;
+    s32 sz;
+    register s32 run asm("$3");
+    s32 k;
+    s32 bits;
+    s16 sbits;
+    u8 acTbl;
+    u8 dc;
+    u8 *t;
+
+    rs_memset((u8 *)blk, 0, 0x80);
+    diff = 0;
+    t = s + idx * 0x2C;
+    dc = (t[0x6FC] << 1) & 0xFE;
+    acTbl = (t[0x6FD] << 1) | 1;
+    sz = allocCellBitGroup(s, dc);
+    if (sz != 0) {
+        bits = findFreeBitsL(s, sz);
+        {
+            s32 v = (s16)bits < (1 << (sz - 1)) ? bits + ((-1 << sz) + 1) : bits;
+            diff = v;
+        }
+    }
+    k = 1;
+    {
+        u8 *t2 = s + idx * 0x2C;
+        s32 pred = *(u16 *)(t2 + 0x6FE) + diff;
+        *(u16 *)(t2 + 0x6FE) = pred;
+        blk[0] = pred;
+    }
+    do {
+        sz = allocCellBitGroup(s, acTbl);
+        run = sz >> 4;
+        sz &= 0xF;
+        if (sz != 0) {
+            k += run;
+            bits = extendAcBits(s, sz);
+            blk[D_menu_overlay_800A76E0[k]] = bits;
+        } else {
+            if (run != 15) {
+                break;
+            }
+            k += 15;
+        }
+        k++;
+    } while (k < 64);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", decodeDeltaCellCounts);
 
