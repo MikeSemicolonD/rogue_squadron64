@@ -359,8 +359,162 @@ void buildGridCellMesh(GCell *c) {
 
 INCLUDE_ASM("asm/nonmatchings/main/4A300", getGridCellFromWorldPos);
 
-INCLUDE_ASM("asm/nonmatchings/main/4A300", byteAnimatedDebrisNpcHandler);
-__asm__(".section .rodata\n.globl D_main_8003A8B4\nD_main_8003A8B4:\n.word 0x3F000000\n.word 0x2E020010\n.word 0x1440FFFA\n.section .text");
+typedef struct {
+    f32 pos[3];
+    u8 unkC;
+    u8 padD;
+    u8 unkE;
+    u8 padF;
+    f32 f10;
+    f32 f14;
+    f32 f18;
+    f32 f1C;
+    u16 links[64];
+    s32 flags;
+    u8 *frames;
+    u8 frameStart;
+    u8 frameEnd;
+    u8 padAA[2];
+    f32 rate;
+    f32 frame;
+} BadObj;
+
+typedef struct {
+    f32 f0;
+    f32 f4;
+    f32 f8;
+    f32 fC;
+    u16 flags;
+    u8 pad12[2];
+    union {
+        u8 *frames;
+        u8 rgb[3];
+    } u14;
+    u8 frameStart;
+    u8 frameEnd;
+    u8 pad1A[2];
+    f32 rate;
+} BadArg;
+
+typedef struct {
+    u8 pad0[4];
+    BadObj *obj;
+    u8 pad8[0xE];
+    u16 slot;
+} BadNpc;
+
+typedef struct {
+    u8 pad0[8];
+    u16 *heads;
+    u8 padC[8];
+    f32 x;
+    f32 y;
+    f32 z;
+} BadGrid;
+
+extern BadGrid sBadGrid __asm__("D_main_bss_80136DC0");
+extern u16 D_main_bss_80136FC0;
+extern u16 D_main_bss_80139596;
+void getGridCellFromWorldPos(BadObj *, u16 *);
+u16 popNpcSlotFromTail(u16, void *);
+void destroyNpcSlotByIndex(u16);
+
+#define BAD_UNLINK_ALL(obj)                                             for (i = 0; i < 64; i++) {                                              n = (obj)->links[i];                                                if (n == 0xFFFF) {                                                      break;                                                          }                                                                   nx = gDoublyLinkedNodePool12[n].next;                               pv = gDoublyLinkedNodePool12[n].unk0;                               if (nx != 0xFFFF) {                                                     gDoublyLinkedNodePool12[nx].unk0 = pv;                          }                                                                   if (pv != 0xFFFF) {                                                     gDoublyLinkedNodePool12[pv].next = nx;                          } else {                                                                sBadGrid.heads[gDoublyLinkedNodePool12[n].pad6] = nx;           }                                                                   fh = D_main_bss_80136FC0; gDoublyLinkedNodePool12[n].next = fh; nx = fh; if (nx != 0xFFFF) { gDoublyLinkedNodePool12[nx].unk0 = n; }                                                                   D_main_bss_80136FC0 = n;                                        }                                                                   gDoublyLinkedNodePool12[D_main_bss_80136FC0].unk0 = 0xFFFF;
+
+s32 byteAnimatedDebrisNpcHandler(BadNpc *arg0, u16 a1, BadArg *arg2) {
+    s32 arg1 = a1;
+    BadObj *obj = arg0->obj;
+    f32 scale;
+    f32 f;
+    f32 g;
+    s32 i;
+    s32 n;
+    s32 nx;
+    s32 pv;
+    u16 fh;
+    u8 *tbl;
+
+    switch (arg1) {
+    case 1:
+        popNpcSlotFromTail(D_main_bss_80139596, arg0);
+        obj->flags = 0;
+        obj->links[0] = 0xFFFF;
+        obj->unkC = arg1;
+        obj->unkE = 0;
+        if (arg2 != NULL) {
+            arg2->flags |= 3;
+            byteAnimatedDebrisNpcHandler(arg0, 0x1000, arg2);
+            return 1;
+        }
+        obj->flags = 0x10000;
+        break;
+    case 0x1000:
+        if (arg2 != NULL) {
+            if (arg2->flags & 1) {
+                scale = 0.5f;
+                obj->f10 = (arg2->f0 - sBadGrid.x) * scale;
+                obj->f14 = (arg2->f4 - sBadGrid.y) * scale;
+                obj->f18 = (arg2->f8 - sBadGrid.z) * scale;
+                obj->f1C = arg2->fC * scale;
+                obj->flags |= 1;
+            }
+            if (arg2->flags & 2) {
+                if (arg2->flags & 0x100) {
+                    obj->frames = arg2->u14.frames;
+                    obj->frameStart = arg2->frameStart;
+                    obj->frameEnd = arg2->frameEnd;
+                    obj->rate = arg2->rate;
+                    obj->frame = obj->frameStart;
+                    obj->pos[0] = obj->frames[obj->frameStart * 4 + 0];
+                    obj->pos[1] = obj->frames[obj->frameStart * 4 + 1];
+                    obj->pos[2] = obj->frames[obj->frameStart * 4 + 2];
+                    obj->flags |= arg2->flags & 0x300;
+                } else {
+                    obj->pos[0] = arg2->u14.rgb[0];
+                    obj->pos[1] = arg2->u14.rgb[1];
+                    obj->pos[2] = arg2->u14.rgb[2];
+                }
+            }
+        }
+        break;
+    case 2:
+        BAD_UNLINK_ALL(obj);
+        break;
+    case 3:
+        if (obj->flags & 0x100) {
+            f = obj->frame + arg2->f0 * obj->rate;
+            i = f;
+            obj->frame = f;
+            if (i >= obj->frameEnd) {
+                if (obj->flags & 0x200) {
+                    destroyNpcSlotByIndex(arg0->slot);
+                    return 1;
+                }
+                g = f - (f32)i + (f32)obj->frameStart;
+                i = g;
+                obj->frame = g;
+            }
+            obj->pos[0] = obj->frames[i * 4 + 0];
+            obj->pos[1] = obj->frames[i * 4 + 1];
+            obj->pos[2] = obj->frames[i * 4 + 2];
+        }
+        if (obj->flags & 1) {
+            obj->flags &= ~1;
+            BAD_UNLINK_ALL(obj);
+            getGridCellFromWorldPos(obj, obj->links);
+        }
+        break;
+    case 4:
+        break;
+    default:
+        return 1;
+    }
+    return 1;
+}
+__asm__(".section .rodata
+.word 0x2E020010
+.word 0x1440FFFA
+.section .text");
 
 
 #include "common_types.h"
