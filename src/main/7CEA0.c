@@ -223,7 +223,99 @@ s32 npcTexturedEffectUpdateConditionalAlt(void *arg0, s32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcTexturedEffectUpdateWithSlotChain);
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", aimOrientNpcTowardTarget);
+#include "main/1D000.h"
+#include "main/192E0.h"
+#include "main/5A750.h"
+typedef struct { f32 x, y, z; } AimV3;
+u8 aimIsPendingChildNpcActive(s32) __asm__("isPendingChildNpcActive");
+u8 computeActorAnchorDeltaAfterLOS(s32);
+f32 *getObjectMeshTransformOrLocal(s32, void *);
+void computeAnchorRelativePositionByDistanceRatio(Vec3f, Mat4x3, f32, Vec3f);
+void aimClearPendingChildNpc(s32) __asm__("clearPendingChildNpc");
+
+void aimOrientNpcTowardTarget(void *arg0, f32 dt) {
+    u8 *npc = arg0;
+    f32 m[12];
+    f32 inv[12];
+    AimV3 dir;
+    AimV3 loc;
+    AimV3 rel;
+    f32 meshBuf[12];
+    AimV3 axis;
+    f32 q[4];
+    AimV3 cr;
+    AimV3 a;
+    AimV3 b;
+    f32 ang;
+    f32 lim;
+    f32 d;
+    f32 l1;
+
+    if (aimIsPendingChildNpcActive(*(s32 *)(npc + 0x38)) == 1 && computeActorAnchorDeltaAfterLOS(*(s32 *)(npc + 0x38)) == 1) {
+        computeAnchorRelativePositionByDistanceRatio((f32 *)npc, (void *)getObjectMeshTransformOrLocal(*(s32 *)(npc + 0x38), meshBuf), D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[6], (f32 *)&rel);
+        mat34CrossRowsAndCopyPos((void *)m, (void *)npc, 1.0f);
+        mat3x3InverseInto((void *)inv, (void *)m);
+        transformVec3ByMat34((void *)inv, (f32 *)&rel, (f32 *)&loc);
+        loc.x += D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[0] * *(f32 *)(npc + 0x84);
+        loc.y += D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[1] * *(f32 *)(npc + 0x84);
+        loc.z += D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[2] * *(f32 *)(npc + 0x84);
+        vec3NormalizeInto((f32 *)&dir, (f32 *)&loc);
+        buildRotationMatrixSlot0((void *)m, *(f32 *)(npc + 0x90));
+        composeRotationMatrixSlot1((void *)m, *(f32 *)(npc + 0x8C));
+        transformVec3ByMat34((void *)m, D_main_800A0D90, (f32 *)&loc);
+        ang = constMinusSinfApprox(vec3Dot((f32 *)&loc, (f32 *)&dir)) * 57.29578f;
+        if (ang > 0.001f) {
+            lim = *(f32 *)(npc + 0x94) * dt;
+            if (lim < ang) {
+                ang = lim;
+            }
+            vec3Cross((f32 *)&axis, (f32 *)&loc, (f32 *)&dir);
+            normalize_vector((f32 *)&axis);
+            quatFromAxisAngle(q, (f32 *)&axis, ang);
+            rotateVec3ByQuat(q, (f32 *)&loc, (f32 *)&dir);
+            axis.y = 0.0f;
+            axis.x = dir.x;
+            axis.z = dir.z;
+            d = vec3Dot(D_main_800A0D90, (f32 *)&axis);
+            l1 = vec3Length(D_main_800A0D90) * vec3Length((f32 *)&axis);
+            ang = constMinusSinfApprox(d / l1) * 57.29578f;
+            a = *(AimV3 *)D_main_800A0D90;
+            a.y = 0.0f;
+            b = axis;
+            b.y = 0.0f;
+            vec3Cross((f32 *)&cr, (f32 *)&a, (f32 *)&b);
+            if (!(0.0f <= cr.y)) {
+                ang = -ang;
+            }
+            buildRotationMatrixSlot1((void *)m, -ang);
+            transformVec3ByMat34((void *)m, (f32 *)&dir, (f32 *)&axis);
+            axis.x = 0.0f;
+            *(f32 *)(npc + 0x8C) = ang;
+            {
+                f32 d2 = vec3Dot(D_main_800A0D90, (f32 *)&axis);
+                f32 l2 = vec3Length(D_main_800A0D90) * vec3Length((f32 *)&axis);
+                f32 r;
+                r = constMinusSinfApprox(d2 / l2) * 57.29578f;
+                if (!(axis.y <= 0.0f)) {
+                    r = -r;
+                }
+                *(f32 *)(npc + 0x90) = r;
+            }
+            if (D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[8] < *(f32 *)(npc + 0x8C)) {
+                *(f32 *)(npc + 0x8C) = D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[8];
+            } else if (*(f32 *)(npc + 0x8C) < D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[7]) {
+                *(f32 *)(npc + 0x8C) = D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[7];
+            }
+            if (D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[10] < *(f32 *)(npc + 0x90)) {
+                *(f32 *)(npc + 0x90) = D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[10];
+            } else if (*(f32 *)(npc + 0x90) < D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[9]) {
+                *(f32 *)(npc + 0x90) = D_main_800A0D9C[*(s16 *)(npc + 0xA4)].block_o_floats[9];
+            }
+        }
+    } else {
+        aimClearPendingChildNpc(*(s32 *)(npc + 0x38));
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", spawnDatDrivenAudioVisualEmitters);
 
