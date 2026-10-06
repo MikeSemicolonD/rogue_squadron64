@@ -25,7 +25,80 @@ INCLUDE_ASM("asm/nonmatchings/main/463D0", initGridLayerFromLevelData);
 
 INCLUDE_ASM("asm/nonmatchings/main/463D0", updateGridLayerScroll);
 
-INCLUDE_ASM("asm/nonmatchings/main/463D0", selectGridCellTileVariant);
+typedef struct { u8 pad[5]; u8 bytes[0x19]; } GridTileEnt;
+typedef struct { GridTileEnt e[4]; } GridTileSet;
+typedef struct {
+    u16 *cells;
+    GridTileEnt *tiles;
+    u8 pad8[0x30];
+    u16 width;
+} TerrainGridHdr;
+typedef struct {
+    u8 pad0[0xA];
+    u16 unkA;
+    u16 unkC;
+    u16 unkE;
+    u16 unk10;
+    u16 unk12;
+    u16 flags;
+    u8 pad16[2];
+    s16 x;
+    s16 y;
+    u8 pad1C[0x28];
+    u8 *tile;
+} SelCell;
+typedef struct { u8 pad[0xA]; u16 a; u16 b; u16 c; u16 d; u16 e; u8 pad2[0xB8 - 0x14]; } GridVariantSrc;
+#define HDR ((TerrainGridHdr *)&D_main_bss_80136DC0)
+extern u8 *D_main_bss_80137148[];
+extern u8 D_main_bss_80137151;
+extern s32 D_main_bss_80137168;
+extern GridVariantSrc D_main_bss_80137170[];
+extern GridTileSet D_main_bss_801374D0[];
+extern s32 D_main_bss_801375C0;
+extern s32 D_main_8009DEC0;
+
+void selectGridCellTileVariant(SelCell *arg0) {
+    s32 i = 0;
+    s32 q;
+    u8 *dst;
+    s8 *src;
+    s8 *p;
+    u8 v;
+    GridVariantSrc *vs;
+    u8 *alt;
+
+    if (arg0->flags & 0x40) {
+        q = ((arg0->y & 1) * 2) + (arg0->x & 1);
+        arg0->tile = D_main_bss_801374D0[D_main_bss_80137151].e[q].bytes;
+        arg0->tile = D_main_bss_801374D0[D_main_bss_80137151].e[q].bytes;
+        arg0->unkA = D_main_bss_80137170[q].a;
+        arg0->unkC = D_main_bss_80137170[q].b;
+        arg0->unkE = D_main_bss_80137170[q].c;
+        arg0->unk10 = D_main_bss_80137170[q].d;
+        arg0->unk12 = D_main_bss_80137170[q].e;
+        return;
+    }
+    dst = D_main_bss_80137148[D_main_bss_80137151] + (D_main_bss_80137168 * 0x19);
+    src = (s8 *)HDR->tiles[HDR->cells[arg0->x + (arg0->y * HDR->width)] & 0x1FFF].bytes;
+    alt = D_main_bss_801374D0[D_main_bss_80137151].e[((arg0->y & 1) * 2) + (arg0->x & 1)].bytes;
+
+    do {
+        u8 *d = dst + i;
+        if (src[i] < D_main_bss_801375C0) {
+            v = src[i];
+        } else {
+            v = alt[i];
+        }
+        *d = v;
+        i++;
+
+    } while (i < 0x19);
+    arg0->tile = dst;
+    D_main_bss_80137168++;
+    if (D_main_8009DEC0 < D_main_bss_80137168) {
+        D_main_8009DEC0 = D_main_bss_80137168;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/463D0", buildGridCellLabel);
 
