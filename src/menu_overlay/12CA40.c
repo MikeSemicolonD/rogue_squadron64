@@ -11,7 +11,232 @@
 
 #include "menu_overlay/12CA40.h"
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/12CA40", menuOverlayInit);
+#include "game_config.h"
+typedef struct {
+    u16 f0;
+    u16 f2;
+    u16 f4;
+    u16 f6;
+    u8 f8;
+    u8 f9;
+    u8 fA;
+    u8 pB;
+    u16 fC;
+    u16 fE;
+    u16 f10;
+    u16 f12;
+    u16 f14;
+    u16 f16;
+    u8 f18;
+    u8 p19;
+} MenuOvlEnt;
+extern MenuOvlEnt D_menu_overlay_800CD2B0[];
+extern u16 D_menu_overlay_800CFF50;
+extern u8 D_menu_overlay_800CFF60[];
+extern u8 D_main_bss_80130B3A;
+extern s32 D_main_bss_80137CFC;
+extern u8 dLevelByDemoId[];
+extern u8 missionStats[];
+void zmemcpy(u8 *, u8 *, u32);
+void initNewAndPreviousButtonsPressed(void);
+void tickMusyXIfActive(void);
+u8 anyAudioSlotActive(void);
+void runVideoFrameTick(void *, void *, void *);
+void clearSceneBssRegion(s32);
+s32 findManifestEntryByName(char *);
+void loadSndFiles(void);
+void loadGameOrFrontTxtFile(u8 *);
+void registerSaveService(s32);
+void initTextTextureTarget(void);
+u8 moRunHangarMenuFromOverlay(u8 *, s32, s32) __asm__("runHangarMenuFromOverlay");
+u8 moDrawRadarIcon(u8 *, s32) __asm__("drawRadarIcon");
+u8 getLevelIntroCrawlId(u8);
+u8 runResultsTextScreenLoop(s32, char *);
+void menuControllerInput(s32, u8);
+void runModelViewerLoop(s32, u8);
+void runMenuRandomBackdropScreen(s32, void *, u8, u8);
+void runMenuShipSelectScreen(s32);
+void runMenuModelViewerScreen(s32);
+void menuSubtype02Handler(s32);
+void bufferArbiterProducerScanWait(void);
+void waitForAnyAudioSlot(void);
+void freeTxtFile(void);
+s32 freeManifestSegmentAssets(s32);
+void stopSaveServiceWorker(void);
+void clearDeferredClearRequest(void);
+u8 getSecondaryWeaponForLevelAndCraft(u8, u8, u8);
+#define bc ((MOBoot *)&gBootConfig)
+typedef struct {
+    u8 p0[0x12];
+    u16 f12;
+    u16 f14;
+    u16 f16;
+    u8 f18;
+    u8 p19[3];
+    s32 f1C;
+    u8 f20;
+    u8 f21;
+    u8 f22;
+    u8 p23;
+    u16 f24;
+    u8 p26[0xA];
+    s32 f30;
+    s32 f34;
+    s32 f38;
+    u16 f3C;
+    u16 f3E;
+    u16 f40;
+    u16 f42;
+    s32 f44;
+    u8 p48[8];
+} MOBoot;
+
+void menuOverlayInit(u8 *arg0, u8 arg1, s32 arg2) {
+    MenuOvlEnt *tbl = D_menu_overlay_800CD2B0;
+    MenuOvlEnt *e;
+    u16 t;
+
+    D_menu_overlay_800CFF50 = arg1;
+    D_main_bss_80130B3A = 1;
+    zmemcpy(D_menu_overlay_800CFF60, (u8 *)bc, 0x50);
+    initNewAndPreviousButtonsPressed();
+    do {
+        tickMusyXIfActive();
+        while (!anyAudioSlotActive()) {
+        }
+        e = (MenuOvlEnt *)(D_menu_overlay_800CFF50 * sizeof(MenuOvlEnt) + (s32)tbl);
+        bc->f12 = e->f0;
+        bc->f14 = e->f2;
+        bc->f16 = 0x10;
+        bc->f40 = e->f4;
+        bc->f42 = e->f6;
+        bc->f38 = e->f10 << 10;
+        bc->f30 = e->f12 << 10;
+        t = e->f14;
+        bc->f34 = t << 10;
+        bc->f44 = e->f16;
+        bc->f20 = e->f8;
+        bc->f21 = e->f9;
+        bc->f22 = e->fA;
+        bc->f1C = e->fC;
+        bc->f18 = e->f18;
+        bc->f24 = e->fE;
+        bc->f3C = 0x400;
+        bc->f3E = 0x200;
+        if (arg0[0x23] == 1) {
+            bc->f34 = t << 11;
+        }
+        runVideoFrameTick((u8 *)bc + 0x10, (u8 *)bc + 0x2C, (u8 *)bc + 0x1C);
+        clearSceneBssRegion(1);
+        D_main_bss_80137CFC = findManifestEntryByName("data");
+        loadSndFiles();
+        loadGameOrFrontTxtFile("front_TXT");
+        registerSaveService(6);
+        initTextTextureTarget();
+        switch (D_menu_overlay_800CFF50) {
+        case 0:
+            if (!moRunHangarMenuFromOverlay(arg0, 0, arg0[0])) {
+                D_menu_overlay_800CFF50 = 1;
+            } else {
+            crawl:
+                if (getLevelIntroCrawlId(arg0[0]) != 0xFF) {
+                    D_menu_overlay_800CFF50 = 6;
+                    break;
+                }
+                D_menu_overlay_800CFF50 = 11;
+            }
+            break;
+        case 1:
+            if (!moDrawRadarIcon(arg0, 0)) {
+                D_menu_overlay_800CFF50 = 2;
+            } else if (arg0[0] == 0x10) {
+                gGameSettings.vehicleId = 7;
+                goto crawl;
+            } else {
+                D_menu_overlay_800CFF50 = 0;
+            }
+            break;
+        case 4:
+            arg0[2] = runResultsTextScreenLoop(3, "CHOOSE DIFFICULTY:");
+            D_menu_overlay_800CFF50 = 5;
+            break;
+        case 5:
+            arg0[5] = runResultsTextScreenLoop(4, "CHOOSE CONTROLLER STYLE:");
+            D_menu_overlay_800CFF50 = 0;
+            break;
+        case 2:
+            menuControllerInput(0, arg2);
+            gGameSettings.unk24 = 0;
+            if (arg2 == 11) {
+                D_menu_overlay_800CFF50 = 12;
+            } else if (gGameSettings.unlockAndSettingsFlags[1] & 0x20) {
+                gGameSettings.currentLevel = dLevelByDemoId[gGameSettings.demoId];
+                gGameSettings.vehicleId = dDefaultCraftForLevel[gGameSettings.currentLevel];
+                gGameSettings.unk02 = 0;
+                gMissionState.unk20 = 0;
+                D_menu_overlay_800CFF50 = 12;
+            } else if (gGameSettings.unlockAndSettingsFlags[1] & 0x200) {
+                gGameSettings.unlockAndSettingsFlags[1] &= ~0x200;
+                gMissionState.unk20 = 0;
+                D_menu_overlay_800CFF50 = 10;
+            } else if (gGameSettings.cheatCodeFlags[0] & 0x200000) {
+                gMissionState.unk20 = 0;
+                D_menu_overlay_800CFF50 = 8;
+            } else if (gGameSettings.cheatCodeFlags[0] & 0x2000000) {
+                gMissionState.unk20 = 0;
+                D_menu_overlay_800CFF50 = 12;
+            } else {
+                gMissionState.unk20 = 0;
+                gMissionState.unk22 = 0;
+                gMissionState.unk23 = 0;
+                D_menu_overlay_800CFF50 = 1;
+            }
+            arg2 = 0;
+            break;
+        case 6:
+            runModelViewerLoop(0, getLevelIntroCrawlId(arg0[0]));
+            D_menu_overlay_800CFF50 = 11;
+            break;
+        case 3:
+            runMenuRandomBackdropScreen(0, missionStats, arg0[0], arg2);
+            D_menu_overlay_800CFF50 = 12;
+            break;
+        case 8:
+            runMenuShipSelectScreen(0);
+            D_menu_overlay_800CFF50 = 12;
+            if (gGameSettings.cheatCodeFlags[0] & 0x200000) {
+                gGameSettings.cheatCodeFlags[0] &= ~0x200000;
+                D_menu_overlay_800CFF50 = 2;
+            }
+            break;
+        case 9:
+            runMenuModelViewerScreen(0);
+            D_menu_overlay_800CFF50 = 12;
+            break;
+        case 7:
+            arg0[0x2D] = runResultsTextScreenLoop(5, "CHOOSE CUTSCENE TYPE:");
+            D_menu_overlay_800CFF50 = 11;
+            break;
+        case 10:
+            menuSubtype02Handler(0);
+            D_menu_overlay_800CFF50 = 2;
+            gGameSettings.cheatCodeFlags[0] &= ~0x20;
+            if (gGameSettings.unlockAndSettingsFlags[1] & 0x400) {
+                D_menu_overlay_800CFF50 = 12;
+            }
+            break;
+        }
+        bufferArbiterProducerScanWait();
+        waitForAnyAudioSlot();
+        freeTxtFile();
+        freeManifestSegmentAssets(D_main_bss_80137CFC);
+        stopSaveServiceWorker();
+        clearDeferredClearRequest();
+    } while (D_menu_overlay_800CFF50 != 11 && D_menu_overlay_800CFF50 != 12);
+    arg0[3] = getSecondaryWeaponForLevelAndCraft(arg0[0], arg0[1], 0);
+    zmemcpy((u8 *)&gBootConfig, D_menu_overlay_800CFF60, 0x50);
+    D_main_bss_80130B3A = 0;
+}
 
 extern u8 D_main_bss_80130B2F;
 void initCraftSelectScreen(s32, s32, s32, s32);
