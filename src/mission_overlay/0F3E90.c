@@ -9,7 +9,242 @@ extern ModelAnimSlot24 D_mission_overlay_8010C4A0[];
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", resolveScriptedNameTokenList);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", computeRandomizedOrientationFrame);
+#include "main/1D000.h"
+#include "main/5A750.h"
+
+typedef struct {
+    f32 v[3];
+} RoV3;
+
+typedef struct {
+    f32 v[4];
+} RoQ4;
+
+typedef struct {
+    u8 pad0[0x14];
+    f32 f14;
+    u8 pad18[0x30];
+    f32 f48;
+    u8 pad4C[0x14];
+    f32 f60;
+    f32 f64;
+    f32 f68;
+    f32 f6C;
+    f32 f70;
+    f32 f74;
+    f32 f78;
+    f32 f7C;
+    f32 f80;
+    f32 f84;
+    f32 f88;
+    f32 f8C;
+    f32 f90;
+    f32 f94;
+    f32 f98;
+    f32 f9C;
+    f32 fA0;
+    f32 fA4;
+    f32 fA8;
+    f32 fAC;
+    f32 fB0;
+    f32 fB4;
+    f32 fB8;
+    RoQ4 quat;
+    f32 fCC;
+} RandOrient;
+
+f32 floatModulo(f32, f32);
+void vec3Cross(f32 *, f32 *, f32 *);
+u16 rand(void);
+
+void computeRandomizedOrientationFrame(f32 *arg0, RandOrient *o, f32 (*m)[3], f32 dt) {
+    f32 sp10[4];
+    f32 sp20[4];
+    f32 sp30[4];
+    f32 sp40[4];
+    f32 sp50[4];
+    f32 sp60[4];
+    RoQ4 sp70;
+    RoQ4 sp80;
+    f32 target;
+    f32 t88;
+    f32 t84;
+    f32 f8c;
+    f32 tA0;
+    f32 tm;
+    f32 c80;
+    f32 c98;
+    f32 fa4;
+    f32 h;
+    f32 r;
+    f32 *axis;
+    f32 x;
+
+    if (o->f60 != 0.0f || (t88 = o->f64) != 0.0f || o->f68 != 0.0f) {
+        t88 = o->f64;
+        target = t88;
+        if (target == 0.0f) {
+            target = o->f60;
+        }
+        if (o->f68 != target) {
+            f32 rate;
+            f32 cur;
+            f32 nv;
+            if (o->f6C == 0.0f) {
+                if (o->f70 != 0.0f) {
+                    rate = fabsf(target - o->f68) / o->f70;
+                } else {
+                    rate = 100000.0f;
+                }
+                o->f6C = rate;
+            }
+            if (o->f68 < target) {
+                o->f68 += o->f6C * dt;
+                if ((target - 0.01f) < o->f68) {
+                    o->f68 = target;
+                    o->f6C = 0.0f;
+                }
+            } else {
+                o->f68 -= o->f6C * dt;
+                if (o->f68 < (target + 0.01f)) {
+                    o->f68 = target;
+                    o->f6C = 0.0f;
+                }
+            }
+        }
+        t88 = o->f88 - dt;
+        o->f88 = t88;
+        if (t88 <= 0.0f) {
+            o->f88 = 120.0f;
+            {
+                f32 q = ((f32)(rand() & 0x7F) - 64.0f) / 160.0f;
+                f32 ab;
+                register f32 k asm("$f4") = 0.1f;
+                __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(q));
+                r = r + k;
+            }
+            if (o->f90 > 0.0f) {
+                t84 = o->f84 - r;
+                o->f84 = t84;
+                if (t84 < 0.0f) {
+                    o->f84 = 0.0f;
+                }
+            } else {
+                t84 = o->f84 + r;
+                o->f84 = t84;
+                if (t84 > 1.0f) {
+                    o->f84 = 1.0f;
+                }
+            }
+            c80 = o->f80;
+            o->f8C = 0.0f;
+            o->f94 = c80;
+            o->f90 = o->f84 - c80;
+        }
+        if (o->f80 != o->f84) {
+            f8c = o->f8C + o->f74 * (o->f48 * 0.25f);
+            o->f8C = f8c;
+            if (f8c >= 1.0f) {
+                o->f88 = 0.0f;
+                o->f80 = o->f84;
+            } else {
+                o->f80 = o->f94 + (1.0f - cosf(f8c * 3.1415927f)) * 0.5f * o->f90;
+            }
+        } else {
+            o->f88 = 0.0f;
+        }
+        tA0 = o->fA0 - dt;
+        o->fA0 = tA0;
+        if (tA0 <= 0.0f) {
+            f32 d;
+            f32 ten;
+            o->fA0 = 120.0f;
+            ten = 10.0f;
+            if (o->fA8 < 0.0f) {
+                d = fabsf(((f32)(rand() & 0x7F) - 64.0f) / 0.3764706f) + ten;
+            } else {
+                d = -(fabsf(((f32)(rand() & 0x7F) - 64.0f) / 0.3764706f) + ten);
+            }
+            d = d * (o->f48 * 0.25f);
+            o->f9C = floatModulo(o->f98 + d + 360.0f, 360.0f);
+            c98 = o->f98;
+            o->fA4 = 0.0f;
+            o->fAC = c98;
+            x = o->f9C - c98;
+            __asm__ volatile("abs.s %0, %1" : "=f"(d) : "f"(x));
+            if (d > 180.0f) {
+                d = 360.0f - d;
+            }
+            tm = floatModulo(c98 + d, 360.0f);
+            if ((tm < (o->f9C - 1.0f)) || ((o->f9C + 1.0f) < tm)) {
+                d = -d;
+            }
+            o->fA8 = d;
+        }
+        if (o->f98 != o->f9C) {
+            fa4 = o->fA4 + o->f78;
+            o->fA4 = fa4;
+            if (fa4 >= 1.0f) {
+                o->fA0 = 0.0f;
+                o->f98 = o->f9C;
+            } else {
+                o->f98 = o->fAC + (1.0f - cosf(fa4 * 3.1415927f)) * 0.5f * o->fA8;
+            }
+        } else {
+            o->fA0 = 0.0f;
+        }
+        o->f98 = floatModulo(o->f98, 360.0f);
+        sp30[0] = 0.0f;
+        sp30[1] = cosf(o->f80 * 3.1415927f) * o->f68 * 0.25f;
+        h = o->f14 * (o->f7C * (o->f48 * 0.25f));
+        if (h < 90.0f) {
+            sp30[1] *= cosf(h * 0.017453292f);
+        } else {
+            sp30[1] = 0.0f;
+        }
+        sp30[1] *= o->f48 * 0.25f;
+        sp30[2] = 0.0f;
+        axis = m[1];
+        quatFromAxisAngle(sp10, axis, -o->f98);
+        rotateVec3ByQuat(sp10, sp30, sp20);
+        m[0][0] += sp20[0];
+        m[0][1] += sp20[1];
+        m[0][2] += sp20[2];
+        sp50[0] = m[3][0] + sp20[0];
+        sp50[1] = m[3][1] + sp20[1];
+        sp50[2] = m[3][2] + sp20[2];
+        sp40[0] = sp50[0] - o->fB0;
+        sp40[1] = sp50[1] - o->fB4;
+        sp40[2] = sp50[2] - o->fB8;
+        o->fB0 = sp50[0];
+        o->fB4 = sp50[1];
+        o->fB8 = sp50[2];
+        if ((vec3Length(sp50) > 0.00001f) && (vec3Length(sp40) > 0.00001f)) {
+            f32 ang;
+            normalize_vector(sp50);
+            normalize_vector(sp40);
+            vec3Cross(sp60, sp40, axis);
+            ang = constMinusSinfApprox(vec3Dot(sp50, axis)) * 57.29578f;
+            ang = ang * (o->f48 * 0.25f);
+            quatFromAxisAngle((f32 *)&sp70, sp60, -ang);
+            if (o->fCC < ang) {
+                slerpQuaternions((f32 *)&o->quat, (f32 *)&sp70, o->fCC / ang, (f32 *)&sp80);
+                sp70 = sp80;
+            }
+            o->quat = sp70;
+            rotateVec3ByQuat((f32 *)&sp70, axis, sp40);
+            *(RoV3 *)m[1] = *(RoV3 *)sp40;
+            rotateVec3ByQuat((f32 *)&sp70, m[2], sp40);
+            *(RoV3 *)m[2] = *(RoV3 *)sp40;
+            orthonormalizeFrame(m);
+        }
+    } else {
+        quatFromCardinalAxis((f32 *)&o->quat, 2, 0.0f);
+        o->fB0 = 0.0f;
+        o->fB4 = 0.0f;
+        o->fB8 = 0.0f;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", updateNpcEffectIntensity);
 
