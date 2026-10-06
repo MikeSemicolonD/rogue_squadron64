@@ -720,7 +720,62 @@ u8 *createMeshInstanceFromSource(u8 *src, u8 *inst) {
     return inst;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", setMeshInstanceLodAndRebuildNodes);
+typedef struct MlNode {
+    struct MlNode *next;
+    struct MlNode *prev;
+    void *data;
+    u8 padC[0x50];
+} MlNode;
+
+typedef struct {
+    u8 pad0[0x10];
+    MlNode *head;
+    u8 pad14[0x38];
+} MlEnt;
+
+void setMeshInstanceLodAndRebuildNodes(u8 *inst, s32 lod) {
+    u8 *def = *(u8 **)inst;
+    u16 *ld = ((u16 **)((s32)def + (lod << 2)))[6];
+    u16 *hdr;
+    void **src;
+    MlNode *nd;
+    MlNode *prev;
+    MlEnt *e;
+    s32 i;
+    s32 n;
+
+    if (ld == NULL) {
+        return;
+    }
+    nd = *(MlNode **)(def + 0x14);
+    src = (void **)(ld + 2);
+    if (((u16 *)nd)[1] < ld[1]) {
+        return;
+    }
+    n = ((u16 *)nd)[0];
+    nd = (MlNode *)(inst + (n * 0x4C + 0xC));
+    e = (MlEnt *)(inst + 0xC);
+    for (i = 0; i < n; i++, e++, src++) {
+        __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
+        if (*src != NULL) {
+            prev = NULL;
+            e->head = nd;
+        loop:
+            ld = (u16 *)((src[1] != NULL) ? nd + 1 : NULL);
+            nd->next = (MlNode *)ld;
+            nd->prev = prev;
+            prev = nd;
+            __asm__("" :: "r"(prev));
+            nd->data = *src;
+            nd++;
+            src++;
+            if (*src != NULL) goto loop;
+        } else {
+            e->head = NULL;
+        }
+    }
+    inst[0xA] = lod;
+}
 
 extern s32 transformVec3ToNpcLocalWithScale(void *, s32, void *, void *, void *);
 
