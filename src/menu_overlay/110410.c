@@ -88,7 +88,113 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/110410", strMenuETatooine);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarInitialize);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", runHangarSelectionFrame);
+extern f32 D_menu_overlay_800CD604;
+extern f32 D_menu_overlay_800CD608;
+extern s32 D_menu_overlay_800CD66C;
+extern s32 D_menu_overlay_800CD6D4;
+extern f32 D_menu_overlay_800CD6E0;
+extern u8 D_menu_overlay_800CDA10;
+extern u8 D_menu_overlay_800CDA11;
+extern f32 D_menu_overlay_800CDA14;
+extern s32 D_menu_overlay_800CDA18;
+extern u16 D_menu_overlay_800CDA42;
+extern u16 D_menu_overlay_800CDA4A;
+extern u16 D_menu_overlay_800CDA4C;
+extern u16 D_menu_overlay_800CDA54;
+extern s32 D_menu_overlay_800CD668;
+extern s32 D_menu_overlay_800CD6DC;
+extern u8 hangarBaytoMap1Map[];
+extern u8 hangarBaytoCraftNameMap[];
+extern u8 hangarDesiredBay;
+f32 advanceWrappingPhaseAccumulator(void);
+void waitForPrevFrameDone(void);
+void frameStartReset(void);
+void advancePlayerAnimationPhase(s32, s32, f32);
+void activateAnimationKeyframe(s32, s32, u8);
+u8 tickMultiPartVoiceLine(s32, f32);
+void tickWrappingTimerAccumulatorList(f32);
+void hangarUpdateSecWeaponIfChanged(u8, u8, f32);
+void updateHangarBayScene(u8);
+void composeNpcOrientationMatrix(void);
+void setupCameraMatrices(void *);
+void initRenderStateArrays(void);
+s32 rebuildActiveDisplayObjectListI(s32) __asm__("rebuildActiveDisplayObjectList");
+void hangarTickCameraOrbit(void);
+void drawFrameProfilerBars(void);
+void submitGfxFrame(void);
+u8 isPlayerShipActiveB(void) __asm__("isPlayerShipActive");
+void playSimpleAudioCmd(s32, s32, s32);
+void setVoiceLineLoopFlag(s32);
+void updateTextOverlayLookupEntry(s32, void *, f32);
+u8 accumulateShipThrottleCharge(s32, void *, f32);
+
+s32 runHangarSelectionFrame(s32 arg0) {
+    s32 i;
+    f32 t;
+
+    D_menu_overlay_800CD604 = advanceWrappingPhaseAccumulator();
+    pollControllerInputs();
+    setNewAndPreviousButtonsPressed();
+    D_menu_overlay_800CD608 += D_menu_overlay_800CD604 * 30.0f;
+    waitForPrevFrameDone();
+    frameStartReset();
+    advancePlayerAnimationPhase(D_menu_overlay_800CD66C, D_menu_overlay_800CD6DC, D_menu_overlay_800CD604);
+    activateAnimationKeyframe(0, 0, (u32)(*(f32 *)&D_menu_overlay_800CD6DC * 255.0f));
+    activateAnimationKeyframe(2, 0, (u32)(D_menu_overlay_800CD6E0 * *(f32 *)&D_menu_overlay_800CD6DC * 255.0f));
+    if (D_menu_overlay_800CDA18 != 0 && tickMultiPartVoiceLine(D_menu_overlay_800CDA18, D_menu_overlay_800CD604) == 1) {
+        D_menu_overlay_800CDA18 = 0;
+        if (hangarBaytoMap1Map[hangarDesiredBay] != D_menu_overlay_800CDA11) {
+            t = 3.0f;
+            if (D_menu_overlay_800CDA10 != 0) {
+                t = 5.0f;
+            }
+            D_menu_overlay_800CDA14 = t;
+            D_menu_overlay_800CDA10 = 0;
+        }
+    }
+    tickWrappingTimerAccumulatorList(D_menu_overlay_800CD604);
+    hangarUpdateSecWeaponIfChanged((u8)arg0, hangarBaytoCraftNameMap[hangarDesiredBay], D_menu_overlay_800CD604);
+    updateHangarBayScene((u8)arg0);
+    ((s32 *)&gCutAssetHead)[0] = 0;
+    ((s32 *)&gCutAssetHead)[2] = 0;
+    composeNpcOrientationMatrix();
+    loadCutsceneAssetsByIndex(D_menu_overlay_800CDA4A);
+    loadCutsceneAssetsByIndex(D_menu_overlay_800CDA4C);
+    if (D_menu_overlay_800CDA42 == 0x30) {
+        loadCutsceneAssetsByIndex(D_menu_overlay_800CDA54);
+    }
+    for (i = 0; i < D_menu_overlay_800CDA42; i++) {
+        if ((*(s32 *)&gCutAssetEnts[i].flags & 0x08040000) == 0x40000) {
+            loadCutsceneAssetsByIndex(i);
+        }
+    }
+    setupCameraMatrices(&gCutAssetHead);
+    initRenderStateArrays();
+    ((s32 *)&gCutAssetHead)[0] = 0;
+    ((s32 *)&gCutAssetHead)[2] = rebuildActiveDisplayObjectListI(D_menu_overlay_800CD668);
+    hangarTickCameraOrbit();
+    for (i = 0; i < D_menu_overlay_800CDA42; i++) {
+        if ((*(s32 *)&gCutAssetEnts[i].flags & 0x08060000) == 0x20000) {
+            loadCutsceneAssetsByIndex(i);
+        }
+    }
+    setupCameraMatrices(&gCutAssetHead);
+    drawFrameProfilerBars();
+    submitGfxFrame();
+    if ((getControllerNewButtonsPressed(D_menu_overlay_800CD6D0) & 0x4000) && !isPlayerShipActiveB()) {
+        playSimpleAudioCmd(0, 0x190, 0xFD);
+        playSimpleAudioCmd(0, 0x190, 0xFE);
+        D_menu_overlay_800CD6D4 = 0xFFFFFE;
+        if (D_menu_overlay_800CDA18 != 0) {
+            setVoiceLineLoopFlag(D_menu_overlay_800CDA18);
+        }
+        updateTextOverlayLookupEntry(D_menu_overlay_800CD668, &gCutAssetHead, 24.0f);
+    }
+    if (accumulateShipThrottleCharge(D_menu_overlay_800CD668, &gCutAssetHead, D_menu_overlay_800CD604)) {
+        return D_menu_overlay_800CD6D4;
+    }
+    return 0xFFFFFF;
+}
 
 typedef struct { f32 x, y, z; } HV3;
 typedef struct {
