@@ -914,7 +914,113 @@ void applyCraftCapabilityFlags(u8 *arg0) {
     D_mission_overlay_8010BFA8[*(s32 *)(arg0 + 0xB8)] |= D_mission_overlay_8010BE18[*(s32 *)(arg0 + 0xB8)].unk1E;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", initPlayerCraftMovementMode);
+typedef struct { u8 p[0x198]; s32 f198; s32 f19C; s32 f1A0; } IpA;
+typedef struct { u8 p[0x184]; u16 f184; } IpP;
+typedef struct { s32 pad[3]; s32 f; } GsArr;
+#define F(t,o) (*(t *)((u8 *)arg0 + (o)))
+#define GS ((s32 *)&gGameSettings)
+extern f32 D_mission_overlay_801096B0;
+extern s32 D_mission_overlay_801096B4;
+extern u8 D_mission_overlay_801096B8;
+extern u8 D_mission_overlay_801096B9;
+extern s32 D_mission_overlay_8010BC6C;
+extern s32 D_mission_overlay_8010BC70;
+extern s32 D_mission_overlay_8010CA1C;
+extern s32 D_main_bss_80130B18;
+extern u16 getNextSlotNpcTypeId(u16);
+extern void destroyNpcSlotByIndex(u16);
+extern void destroyNpcSlotChain(u16);
+extern void factor5RemoveListNode(void *);
+extern u16 allocateNpcSlot(s32);
+extern void dispatchEffectObjectBehavior(s32, u16, f32 *);
+void applyCraftCapabilityFlagsV(void *) __asm__("applyCraftCapabilityFlags");
+void populateCutsceneSubtitleTextIdsV(void) __asm__("populateCutsceneSubtitleTextIds");
+void initPlayerCraftTrailBuffersV(void *) __asm__("initPlayerCraftTrailBuffers");
+
+void initPlayerCraftMovementMode(struct inner_player_struct *arg0)
+{
+  u8 *gs;
+  struct player_struct *pp;
+  struct player_struct *pl;
+  D_mission_overlay_801096B0 = 0.0f;
+  D_mission_overlay_801096B4 = -1;
+  arg0->unk028 = 0.0f;
+  arg0->unk02C = 0.0f;
+  arg0->unk030 = 0.0f;
+  D_mission_overlay_801096B8 = 1;
+  pl = gPlayers;
+  pp = &pl[arg0->unk0B8];
+  if (!(((IpP *)pp)->f184 & 0x40))
+  {
+    *((s32 *) (((u8 *) arg0) + 0x1C8)) = 2;
+    *((s32 *) (((u8 *) arg0) + 0x184)) = 0;
+    arg0->fire_mode = 0;
+    *((u16 *) (((u8 *) arg0) + 0x1CC)) = 0xFFFF;
+  }
+  else
+  {
+    *((f32 *) (((u8 *) arg0) + 0x184)) = 2.0f;
+  }
+  if ((*((u16 *) (((u8 *) arg0) + 0x1CC))) != 0xFFFF)
+  {
+    u16 a;
+    while ((a = getNextSlotNpcTypeId(*((u16 *) (((u8 *) arg0) + 0x1CC)))) != 0xFFFF)
+    {
+      destroyNpcSlotByIndex(a);
+    }
+
+    destroyNpcSlotChain(*((u16 *) (((u8 *) arg0) + 0x1CC)));
+    *((u16 *) (((u8 *) arg0) + 0x1CC)) = 0xFFFF;
+  }
+  if ((*((u8 *) (((u8 *) arg0) + 0x24C))) != 0)
+  {
+    *((u8 *) (((u8 *) arg0) + 0x24C)) = 0;
+    factor5RemoveListNode(((u8 *) arg0) + 0x208);
+  }
+  *((u16 *) (((u8 *) arg0) + 0x1CC)) = allocateNpcSlot(0);
+  ;
+  if ((((GsArr *)((s32 *)&gGameSettings + arg0->unk0B8))->f) & 0x200)
+  {
+    arg0->blasterDamageMultiplier = 2.0f;
+  }
+  else
+  {
+    arg0->blasterDamageMultiplier = 1.0f;
+  }
+  {
+    f32 f = 0.0f;
+    if (D_main_bss_80130B18 & 0x10000)
+    {
+      f = 1.0f;
+    }
+    arg0->advancedShieldTimer = f;
+  }
+  *((s32 *) (((u8 *) arg0) + 0x188)) = 0;
+  *((s32 *) (((u8 *) arg0) + 0x18C)) = 0;
+  *((s32 *) (((u8 *) arg0) + 0x17C)) = 0;
+  dispatchEffectObjectBehavior(arg0->unk0B8, arg0->unk0B4, &arg0->posX);
+  D_mission_overlay_8010BC6C = 0;
+  D_mission_overlay_8010BC70 = 0;
+  ((IpA *)arg0)->f1A0 = 0;
+  ((IpA *)arg0)->f19C = 0;
+  ((IpA *)arg0)->f198 = 0;
+  D_mission_overlay_8010CA1C &= ~0x100;
+  applyCraftCapabilityFlagsV(arg0);
+  populateCutsceneSubtitleTextIdsV();
+  switch (arg0->unk0B4)
+  {
+    case 3:
+    case 4:
+      ((GsArr *)((s32 *)&gGameSettings + arg0->unk0B8))->f &= 0xFEFFFFFF;
+      break;
+    default:
+      ((GsArr *)((s32 *)&gGameSettings + arg0->unk0B8))->f |= 0x01000000;
+      break;
+  }
+  initPlayerCraftTrailBuffersV(arg0);
+  D_mission_overlay_801096B9 = 0;
+  *((u8 *) (((u8 *) arg0) + 0x1BC)) = 0;
+}
 
 typedef struct {
     u8 pad0[4];
