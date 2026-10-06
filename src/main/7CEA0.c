@@ -323,7 +323,155 @@ INCLUDE_ASM("asm/nonmatchings/main/7CEA0", spawnNamedTexturedEmitterNpc);
 
 INCLUDE_RODATA("asm/nonmatchings/main/7CEA0", D_main_8003D708);
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcQuatOrientedMultiPhaseUpdate);
+typedef struct { f32 x, y, z; } NqV3;
+f32 sinf(f32);
+
+void npcQuatOrientedMultiPhaseUpdate(u8 *npc, f32 dt) {
+    f32 m[12];
+    f32 qt[4];
+    NqV3 tmp;
+    NqV3 a;
+    NqV3 b;
+    register f32 *q asm("$16");
+    f32 x;
+    f32 ang;
+    u8 v;
+
+    mat34CrossRowsAndCopyPos((void *)m, (void *)npc, 1.0f);
+    switch (*(s16 *)(npc + 0xFA)) {
+    case 0:
+        break;
+    case 1:
+        npc[0xD8] = npc[0xF9];
+        v = npc[0xF9];
+        if (v & 5) {
+            if (v & 1) {
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xB4), (f32 *)&a);
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xCC), (f32 *)&b);
+            } else {
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xB4), (f32 *)&b);
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xCC), (f32 *)&a);
+            }
+        } else {
+            if (v & 2) {
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xA8), (f32 *)&b);
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xC0), (f32 *)&a);
+            } else {
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xA8), (f32 *)&a);
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xC0), (f32 *)&b);
+            }
+        }
+        *(f32 *)(npc + 0x90) = b.x - a.x;
+        *(f32 *)(npc + 0x94) = b.y - a.y;
+        *(f32 *)(npc + 0x98) = b.z - a.z;
+        *(f32 *)(npc + 0x60) += dt * *(f32 *)(npc + 0x64);
+        if (*(f32 *)(npc + 0x60) > 0.5f) {
+            *(f32 *)(npc + 0x60) = 0.5f;
+        }
+        q = (f32 *)(npc + 0x70);
+        *(f32 *)(npc + 0x5C) = sinf(*(f32 *)(npc + 0x60) * 3.1415927f) * *(f32 *)(npc + 0x68);
+        quatFromAxisAngleSafe(q, (f32 *)(npc + 0x90), *(f32 *)(npc + 0x5C));
+        rotateVec3ByQuat(q, (f32 *)(npc + 0xC), (f32 *)&tmp);
+        *(NqV3 *)(npc + 0xC) = tmp;
+        rotateVec3ByQuat(q, (f32 *)(npc + 0x18), (f32 *)&tmp);
+        *(NqV3 *)(npc + 0x18) = tmp;
+        break;
+    case 2:
+        switch (npc[0xF9]) {
+        case 3:
+            transformVec3ByMat34((void *)m, (f32 *)(npc + 0xA8), (f32 *)&b);
+            transformVec3ByMat34((void *)m, (f32 *)(npc + 0xB4), (f32 *)&a);
+            npc[0xD9] = 1;
+            break;
+        case 12:
+            transformVec3ByMat34((void *)m, (f32 *)(npc + 0xA8), (f32 *)&a);
+            transformVec3ByMat34((void *)m, (f32 *)(npc + 0xB4), (f32 *)&b);
+            npc[0xD9] = 1;
+            break;
+        case 6:
+            transformVec3ByMat34((void *)m, (f32 *)(npc + 0xB4), (f32 *)&a);
+            transformVec3ByMat34((void *)m, (f32 *)(npc + 0xC0), (f32 *)&b);
+            npc[0xD9] = 1;
+            break;
+        case 9:
+            transformVec3ByMat34((void *)m, (f32 *)(npc + 0xB4), (f32 *)&b);
+            transformVec3ByMat34((void *)m, (f32 *)(npc + 0xC0), (f32 *)&a);
+            npc[0xD9] = 1;
+            break;
+        case 5:
+            if (npc[0xD8] & 1) {
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xA8), (f32 *)&a);
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xC0), (f32 *)&b);
+            } else {
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xA8), (f32 *)&b);
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xC0), (f32 *)&a);
+            }
+            break;
+        case 10:
+            if (npc[0xD8] & 2) {
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xB4), (f32 *)&b);
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xCC), (f32 *)&a);
+            } else {
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xB4), (f32 *)&a);
+                transformVec3ByMat34((void *)m, (f32 *)(npc + 0xCC), (f32 *)&b);
+            }
+            break;
+        }
+        *(f32 *)(npc + 0x90) = b.x - a.x;
+        *(f32 *)(npc + 0x94) = b.y - a.y;
+        *(f32 *)(npc + 0x98) = b.z - a.z;
+        *(f32 *)(npc + 0x60) += dt * *(f32 *)(npc + 0x64);
+        if (*(f32 *)(npc + 0x60) > 0.5f) {
+            if (npc[0xD9] != 0) {
+                *(f32 *)(npc + 0x60) = 0.5f;
+            } else {
+                *(f32 *)(npc + 0x60) -= 2.0f;
+            }
+        }
+        ang = sinf(*(f32 *)(npc + 0x60) * 3.1415927f) * *(f32 *)(npc + 0x68);
+        *(f32 *)(npc + 0x5C) = ang;
+        *(f32 *)(npc + 0x6C) += dt * *(f32 *)(npc + 0x64);
+        if (*(f32 *)(npc + 0x6C) < 1.0f) {
+            q = (f32 *)(npc + 0x80);
+            quatFromAxisAngleSafe(q, (f32 *)(npc + 0x90), ang);
+            slerpQuaternions((f32 *)(npc + 0x70), q, *(f32 *)(npc + 0x6C), qt);
+            q = qt;
+        } else {
+            q = (f32 *)(npc + 0x70);
+            quatFromAxisAngleSafe(q, (f32 *)(npc + 0x90), *(f32 *)(npc + 0x5C));
+        }
+        rotateVec3ByQuat(q, (f32 *)(npc + 0xC), (f32 *)&tmp);
+        *(NqV3 *)(npc + 0xC) = tmp;
+        rotateVec3ByQuat(q, (f32 *)(npc + 0x18), (f32 *)&tmp);
+        *(NqV3 *)(npc + 0x18) = tmp;
+        break;
+    case 3:
+    case 4:
+        npc[0xD9] = 1;
+        *(f32 *)(npc + 0x60) += dt * *(f32 *)(npc + 0x64);
+        if (*(f32 *)(npc + 0x60) > 0.5f) {
+            *(f32 *)(npc + 0x60) = 0.5f;
+        }
+        ang = sinf(*(f32 *)(npc + 0x60) * 3.1415927f) * *(f32 *)(npc + 0x68);
+        *(f32 *)(npc + 0x5C) = ang;
+        *(f32 *)(npc + 0x6C) += dt * *(f32 *)(npc + 0x64);
+        if (*(f32 *)(npc + 0x6C) < 1.0f) {
+            q = (f32 *)(npc + 0x80);
+            quatFromAxisAngleSafe(q, (f32 *)(npc + 0x90), ang);
+            slerpQuaternions((f32 *)(npc + 0x70), q, *(f32 *)(npc + 0x6C), qt);
+            q = qt;
+        } else {
+            q = (f32 *)(npc + 0x70);
+            quatFromAxisAngleSafe(q, (f32 *)(npc + 0x90), *(f32 *)(npc + 0x5C));
+        }
+        rotateVec3ByQuat(q, (f32 *)(npc + 0xC), (f32 *)&tmp);
+        *(NqV3 *)(npc + 0xC) = tmp;
+        rotateVec3ByQuat(q, (f32 *)(npc + 0x18), (f32 *)&tmp);
+        *(NqV3 *)(npc + 0x18) = tmp;
+        orthonormalizeFrame((void *)npc);
+        break;
+    }
+}
 
 typedef struct { s32 x, y, z; } SpV3;
 typedef struct {
