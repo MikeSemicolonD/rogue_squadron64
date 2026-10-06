@@ -316,7 +316,149 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanSpawnBurstEffec
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A7954);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanSteerToward);
+typedef struct {
+    f32 x, y, z;
+    f32 fwd[3];
+    f32 up[3];
+    f32 vx, vy, vz;
+    u8 *p30;
+    s32 p34;
+    s32 obj;
+    s32 p3C;
+    u8 pad40[4];
+    s32 i44;
+    u8 pad48[8];
+    u16 h50;
+    u8 pad52[2];
+    f32 f54;
+    f32 f58;
+    u8 b5C;
+    u8 pad5D[3];
+    f32 f60;
+    f32 f64;
+} WsObj;
+
+typedef struct {
+    f32 v[3];
+} WsV3;
+
+extern WsV3 D_mission_overlay_800A7954;
+extern u8 D_main_bss_80138058[];
+extern u8 spawnNpcAnchoredEffectSlot(s32, f32, s32);
+f32 wsWrap(f32, f32, void *, void *) __asm__("wrapAngleToCyclicRange");
+void wsM34(void *, void *, s32) __asm__("mat34CrossRowsAndCopyPos");
+void initActorRenderDescriptorWithNpcVelocity(s32, s32);
+f32 vec3Dot(f32 *, f32 *);
+f32 vec3Length(f32 *);
+f32 constMinusSinfApprox(f32);
+void vec3Cross(f32 *, f32 *, f32 *);
+void quatFromCardinalAxis(f32 *, s32, f32);
+void quatFromAxisAngleSafe(f32 *, f32 *, f32);
+void quatMultiply(f32 *, f32 *, f32 *);
+extern void rotateVec3ByQuat(f32 *, void *, void *);
+extern void quatFromAxisAngle(f32 *, void *, f32);
+void orthonormalizeFrame(void *);
+
+s32 wsImpl(WsObj *o, f32 dt) __asm__("npcWingmanSteerToward");
+s32 wsImpl(WsObj *o, f32 dt) {
+    WsV3 up;
+    f32 hit[10];
+    f32 q60[4];
+    f32 v70[4];
+    f32 q80[4];
+    f32 q90[4];
+    WsObj *p;
+    f32 ang;
+    f32 a;
+    f32 h;
+    f32 f58;
+
+    up = D_mission_overlay_800A7954;
+    p = o;
+    if (o->b5C == 2) {
+        o->vy += dt * 1.2f;
+        ang = constMinusSinfApprox(vec3Dot(up.v, o->fwd)) * 57.29578f;
+        if (ang > 67.5f) {
+            vec3Cross(v70, o->fwd, up.v);
+            if (vec3Length(v70) > 0.0001f) {
+                quatFromCardinalAxis(q80, 2, 2.0f);
+                quatFromAxisAngleSafe(q90, v70, (ang > 0.6f) ? 0.6f : ang);
+                quatMultiply(q90, q80, q60);
+                rotateVec3ByQuat(q60, o->fwd, o->fwd);
+                rotateVec3ByQuat(q60, o->up, o->up);
+            }
+        }
+        p->x += p->vx * dt;
+        p->y += p->vy * dt;
+        p->z += p->vz * dt;
+        spawnNpcAnchoredEffectSlot(o->obj, dt, 10);
+        orthonormalizeFrame(o);
+        ang = wsWrap(p->x, p->z, D_main_bss_80138058, hit);
+        if (ang <= p->y - o->f58) {
+            o->f64 = ang;
+            p->y = ang - o->f58;
+            o->b5C = 3;
+            *(s32 *)&o->f54 = 0;
+            play3DSoundEvent(0, o, &o->vx, 14.0f, 0.2f, 0, 0xC, 0x73, 0x28);
+            o->f60 = 0.5f;
+            if (o->h50 != 0xFFFF) {
+                destroyNpcSlotByIndex(o->h50);
+                o->h50 = 0xFFFF;
+            }
+            if (o->p3C != 0) {
+                rs_free(o->p3C);
+                o->p3C = 0;
+            }
+        }
+    } else {
+        o->f54 += dt;
+        if (o->f54 < 3.0f) {
+            f32 zero;
+            o->x += o->vx * dt;
+            o->z += o->vz * dt;
+            o->y = wsWrap(o->x, o->z, D_main_bss_80138058, hit) - o->f58;
+            if (o->y < o->f64) {
+                if (o->f54 < 2.0f) {
+                    quatFromAxisAngle(q60, o->up, 2.0f);
+                    rotateVec3ByQuat(q60, o->fwd, o->fwd);
+                    rotateVec3ByQuat(q60, o->up, o->up);
+                    orthonormalizeFrame(o);
+                }
+                o->vx *= 0.9f;
+                o->vz *= 0.9f;
+                o->f64 = o->y;
+            } else {
+                o->vx *= 0.96f;
+                o->vz *= 0.96f;
+            }
+            ang = constMinusSinfApprox(vec3Dot(&hit[3], o->up)) * 57.29578f;
+            if (ang > 2.0f) {
+                vec3Cross(q80, o->up, &hit[3]);
+                if (vec3Length(q80) > 0.0001f) {
+                    quatFromAxisAngleSafe(q60, q80, (ang > 5.0f) ? 5.0f : ang);
+                    rotateVec3ByQuat(q60, o->fwd, o->fwd);
+                    rotateVec3ByQuat(q60, o->up, o->up);
+                    orthonormalizeFrame(o);
+                }
+            }
+            o->f60 -= dt;
+            zero = 0.0f;
+            if (o->f60 <= zero) {
+                o->f60 = 0.5f;
+                play3DSoundEvent(0, o, &o->vx, 14.0f, 0.2f, 0, 0xC, 0x73, 0x28);
+            }
+            if (spawnNpcAnchoredEffectSlot(o->obj, dt, 10) == 1) {
+                o->f54 = zero;
+            }
+        } else {
+            initActorRenderDescriptorWithNpcVelocity(o->obj, o->p34);
+            o->b5C = 4;
+            play3DSoundEvent(0, o, &o->vx, 24.0f, 0.5f, 0, 0x22, 0x7E, 0x32);
+        }
+    }
+    wsM34(o->p30 + 0x28, o, o->i44);
+    return 0;
+}
 
 s32 buildRotationMatrixSlot2(s32, f32);
 f32 cosf(f32);
