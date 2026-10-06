@@ -130,7 +130,195 @@ INCLUDE_ASM("asm/nonmatchings/main/738F0", distanceAndDopplerNpcHelper);
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D088);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", explosionEffectNpcHandler);
+typedef struct { f32 x, y, z; } ExpVec;
+typedef struct { u8 a, b, c, d; } ExpU4;
+typedef struct ExpLink {
+    struct ExpLink *next;
+    struct ExpLink *prev;
+} ExpLink;
+typedef struct {
+    f32 pos[3];
+    f32 dir[3];
+    f32 axis[3];
+    f32 vel[3];
+    ExpLink link;
+    s16 h38;
+    s16 h3A;
+    s16 h3C;
+    u8 p3E[2];
+    u16 h40;
+    u16 h42;
+    u8 p44[8];
+    f32 f4C;
+    f32 f50;
+    f32 f54;
+    s16 h58;
+    s16 h5A;
+    ExpU4 w5C;
+    ExpU4 w60;
+    f32 f64;
+    f32 f68;
+} ExpNode;
+typedef struct {
+    ExpVec *pos;
+    ExpU4 *p4;
+    ExpU4 *p8;
+    f32 fC;
+} ExpSpawn;
+typedef struct {
+    f32 dt;
+    u8 p4[0x14];
+    f32 f18;
+    f32 f1C;
+    f32 f20;
+    u8 p24[0x24];
+    struct { u8 p[0x20]; ExpLink *head; } *unk48;
+} ExpTick;
+typedef struct {
+    f32 *vec;
+    void *parent;
+    void *p8;
+    f32 fC;
+    f32 f10;
+    f32 f14;
+    f32 f18;
+    u16 h1C;
+    u16 h1E;
+    f32 v[3];
+} ExpSpray;
+typedef struct { u8 p0[4]; ExpNode *unk04; u8 p8[0xE]; u16 unk16; } ExpSelf;
+#include "main/192E0.h"
+#include "main/1D000.h"
+#include "main/5A750.h"
+#include "main/700B0.h"
+extern void composeRandomRotationMatrix(f32 *, f32 *, f32, s32, s32, s32);
+extern f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+extern u8 transformVec3ToNpcLocalWithScale(void *, s32, void *, f32, s32);
+extern void popNpcSlotFromTail(u16, void *);
+extern void destroyNpcSlotByIndex(u16);
+extern void npcWaterSprayUpdate(void);
+extern u16 D_main_bss_80139574;
+extern u8 *D_main_bss_80138D1C;
+extern u8 *D_main_bss_80130C08;
+extern u8 D_main_bss_80138058[];
+extern ExpVec D_main_8003D088;
+
+s32 explosionEffectNpcHandler(ExpSelf *self, u16 action, void *arg2) {
+    ExpNode *n = self->unk04;
+    ExpSpawn *sp = arg2;
+    ExpTick *tk = arg2;
+    f32 s18[3];
+    ExpVec s28;
+    ExpSpray spray;
+    ExpSpray *sprp;
+    ExpVec *ps;
+    f32 w;
+    ExpU4 *pw;
+    f32 dt;
+    f32 ang;
+    f32 *dir;
+    f32 *cam;
+    ExpLink *head;
+
+    switch (action) {
+    case 1:
+        n->h40 = 0x201;
+        n->w5C = *sp->p4;
+        n->h5A = 0;
+        n->h58 = 0;
+        n->f50 = sp->fC;
+        n->f54 = sp->fC;
+        n->f4C = 0.0f;
+        *(ExpVec *)n->pos = *sp->pos;
+        n->f68 = 0.0f;
+        n->w60 = *sp->p8;
+        composeRandomRotationMatrix(n->axis, n->dir, 0.0f, 0x32, 0, 0);
+        n->axis[0] = 1.0f - n->dir[0];
+        n->axis[1] = 1.0f - n->dir[1];
+        n->axis[2] = 1.0f - n->dir[2];
+        orthonormalizeFrame((void *)n);
+        *(ExpVec *)n->vel = *(ExpVec *)n->dir;
+        scaleVec3ByRandomRange(n->vel, 0.8f, 3.5f);
+        *(volatile f32 *)&n->f64 = 0.0f;
+        popNpcSlotFromTail(D_main_bss_80139574, self);
+        return 1;
+    case 2:
+        break;
+    case 3:
+        s28 = D_main_8003D088;
+        dt = tk->dt;
+        n->pos[0] = n->pos[0] + n->vel[0] * dt;
+        n->pos[1] = n->pos[1] + n->vel[1] * dt;
+        n->pos[2] = n->pos[2] + n->vel[2] * dt;
+        n->vel[1] = n->vel[1] + dt * 5.0f;
+        dir = n->dir;
+        vec3NormalizeInto(dir, n->vel);
+        ang = constMinusSinfApprox(vec3Dot((f32 *)&s28, dir));
+        cam = (f32 *)(D_main_bss_80138D1C + 0x28);
+        s28.x = n->pos[0] - cam[9];
+        s28.y = n->pos[1] - cam[10];
+        s28.z = n->pos[2] - cam[11];
+        ang = ang * 57.29578f;
+        vec3Cross(s18, (f32 *)&s28, dir);
+        if (s18[1] >= 0.0f) {
+            n->f4C = -ang + 45.0f;
+        } else {
+            n->f4C = ang + 45.0f;
+        }
+        if (n->vel[1] > 0.0f) {
+            n->f68 = n->f68 + dt * 10.0f;
+            if (n->f68 > 5.0f) {
+                n->f68 = 5.0f;
+            }
+        }
+        ang = wrapAngleToCyclicRange(n->pos[0], n->pos[2], D_main_bss_80138058, 0);
+        if (ang < n->pos[1]) {
+            sprp = &spray;
+            ps = &s28;
+            pw = &n->w60;
+            s28.x = n->pos[0];
+            s28.y = ang - 0.2f;
+            s28.z = n->pos[2];
+            w = 0.05f;
+            if (D_main_bss_8013A944 != 0) {
+                f32 cb = 2.0f; f32 cc = 0.15f; f32 ca = 0.4f; 
+                sprp->v[1] = 0.2f;
+                sprp->v[0] = w;
+                sprp->v[2] = w;
+                sprp->h1C = 0xFFFF;
+                sprp->h1E = 3;
+                sprp->parent = ps;
+                spray.vec = spray.v;
+                sprp->f18 = ca;
+                sprp->f10 = cb;
+                sprp->fC = cc;
+                spray.p8 = pw;
+                spawnNpcOfType(npcWaterSprayUpdate, sprp, 1, 0xF);
+            }
+            destroyNpcSlotByIndex(self->unk16);
+            return 1;
+        }
+        break;
+    case 4:
+        if (transformVec3ToNpcLocalWithScale(*(void **)tk, 0, n, 1.0f, 0)) {
+            n->h42 = *(u16 *)(D_main_bss_80130C08 + (s32)n->f68 * 2 + 0xC);
+            n->h38 = (s32)((n->pos[0] - tk->f18) * 256.0f);
+            n->h3A = (s32)((n->pos[1] - tk->f1C) * 256.0f);
+            n->h3C = (s32)((n->pos[2] - tk->f20) * 256.0f);
+            head = tk->unk48->head;
+            n->link.next = head;
+            if (head != NULL) {
+                head->prev = &n->link;
+            }
+            n->link.prev = NULL;
+            tk->unk48->head = &n->link;
+        }
+        break;
+    default:
+        return 1;
+    }
+    return 1;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D0C8);
 
