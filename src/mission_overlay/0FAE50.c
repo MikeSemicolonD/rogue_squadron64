@@ -3,7 +3,204 @@
 
 #include "mission_overlay/0FAE50.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800FA250);
+typedef struct {
+    u8 currentLevel; u8 vehicleId; u8 unk02; u8 pad3[9]; u32 flags0; u32 flags1;
+} Fa250Settings;
+extern Fa250Settings gGS250 __asm__("gGameSettings");
+extern u32 gLevel250 __asm__("gCurrentLevel");
+extern struct { u8 pad[0x16]; s16 unk16; } gBootConfig;
+extern s32 gObjectiveCounts[0x80];
+extern u8 gObjectiveBooleans[0x80];
+extern f32 gObjectiveTimers[8];
+typedef struct {
+    u32 completion_time; u32 shots_fired; u32 shots_landed; u16 enemies_destroyed; u8 friendlies_saved; u8 bonus_collected;
+} Fa250Stats;
+void setRngSeed(s32);
+void initNpcSlotList(void);
+void allocNpcContextArrays(void);
+void allocAllInitialNpcSlots(void);
+void initNpcBookkeepingTables(void);
+void setMissionLevelInitByte(s32);
+void allocAnimationPhasePool(s32);
+void resetTextureAnimSlots(void);
+void loadSndFiles(void);
+void reset_model_animations(void);
+void resetObjectContextPool(void);
+void initializeObjectiveHandles(void);
+void allocAndInitParticlePool(void);
+void clearTrackedNpcSlots(void);
+void selectRenderPresetByIndex(s32);
+void selectSecondaryPresetByIndex(s32);
+void loadGameOrFrontTxtFile(char *);
+void initVoiceSubtitleSystem(void);
+void setSubtitleOverlayScreenPos(s32, s32);
+void initPlayerMissionStateFromSettings(void);
+void gatherActiveUnlockFlags(void);
+void rs_memset(void *, s32, s32);
+void initPlayerStructs(void);
+void initAllPlayersHudTracking(void);
+void resetSceneNodeShakeStateArray(void);
+void initPlayerVehicleStateTables(void);
+void initTransformNodeFromVectors(u8 *, void *, void *);
+void loadWeaponsHobObjects(void);
+s32 getLevelExpansionMemoryBudget(void);
+void loadLevelAssets(s32);
+void cutsceneActorNpcHandler(void);
+s16 spawnNpcOfType(void *, s32, s32, s32);
+void choosePlayerCraftAssets(s32 *);
+void spawnHudNpc(void);
+void initSpeechSubsystem(s32, u8);
+void initAudioListenerFromCamera(void);
+void initLevelMusicBank(void);
+void preloadSceneSongsWrapper(void);
+void playSimpleAudioCmd(s32, s32, s32);
+void broadcastSceneShutdownAndCleanup(void);
+
+void initializeObjectiveTracking(void);
+void initWaterSprayEffectAndSfx(void);
+void loadLevelTextureCache(s32);
+extern s32 D_mission_overlay_8010CA1C;
+extern s32 D_mission_overlay_8010C9E8;
+extern s32 D_mission_overlay_8010C9E4;
+extern s32 D_main_bss_80137CE4;
+extern u8 D_main_bss_80137CF4;
+extern u8 D_main_bss_80138890;
+extern u8 D_main_bss_80138925;
+extern u8 D_main_bss_80138838;
+extern u8 D_main_bss_80138839;
+extern u8 D_main_bss_80138927;
+extern u8 D_main_bss_80138924;
+extern s32 D_main_bss_80138D10;
+extern s32 D_main_bss_8013889C;
+extern s16 D_main_bss_80130BA2;
+extern u8 gVecs250[] __asm__("D_main_8009EC10");
+extern u8 D_main_bss_80130B62;
+extern f32 D_main_bss_80130BA4;
+typedef struct { u16 unk0; u16 unk2; u16 unk4; u8 pad6[0x18]; u16 unk1E; u16 pad20; u16 unk22; } Fa250Hud;
+extern Fa250Hud gHud250[] __asm__("D_mission_overlay_8010BE18");
+extern u16 D_mission_overlay_8010BFA8[];
+typedef struct { u8 b[0x2A0]; } Fa250Mat;
+typedef struct { u16 unk0; u16 unk2; u8 pad4[0x70]; void *unk74; u8 pad78[0x5D0 - 0x78]; } Fa250Cam;
+typedef struct { u8 unk0; u8 pad[0x143]; } Fa250Pl;
+extern Fa250Mat D_main_bss_8013800C[];
+extern Fa250Cam D_main_bss_80138268[];
+extern Fa250Pl D_main_bss_80138D18[];
+extern Fa250Stats missionStatsS __asm__("missionStats");
+void func_mission_overlay_800FA250(void) {
+    s32 pad[20];
+    s32 craft[2];
+    s32 i;
+    u16 v;
+
+    if (gGS250.flags1 & 0x60) {
+        setRngSeed(1);
+    }
+    initNpcSlotList();
+    allocNpcContextArrays();
+    allocAllInitialNpcSlots();
+    initNpcBookkeepingTables();
+    setMissionLevelInitByte(1);
+    allocAnimationPhasePool(0x10);
+    resetTextureAnimSlots();
+    loadSndFiles();
+    reset_model_animations();
+    resetObjectContextPool();
+    initializeObjectiveHandles();
+    allocAndInitParticlePool();
+    clearTrackedNpcSlots();
+    selectRenderPresetByIndex(1);
+    if (gBootConfig.unk16 >= 0x11) {
+        selectRenderPresetByIndex(0);
+        selectSecondaryPresetByIndex(0);
+    }
+    loadGameOrFrontTxtFile("game_TXT");
+    initVoiceSubtitleSystem();
+    setSubtitleOverlayScreenPos(gGS250.vehicleId == 4 ? 0 : 0x24, -0xA);
+    D_mission_overlay_8010CA20 = 0;
+    D_mission_overlay_8010CA1C = 0;
+    D_mission_overlay_8010C9E0 = 0;
+    D_mission_overlay_8010C9E8 = 0;
+    D_main_bss_80137CE4 = gGS250.unk02;
+    gLevel250 = gGS250.currentLevel;
+    initPlayerMissionStateFromSettings();
+    gatherActiveUnlockFlags();
+    if (gLevel250 == 0xA) {
+        D_mission_overlay_8010CA1C |= 0x200;
+    }
+    if (gLevel250 == 0x14) {
+        D_mission_overlay_8010CA1C |= 0x800;
+    }
+    if (gGS250.flags0 & 8) {
+        D_mission_overlay_8010CA1C &= ~0x80;
+    } else {
+        D_mission_overlay_8010CA1C |= 0x80;
+    }
+    D_main_bss_80137CF4 = 0;
+    D_main_bss_80138890 = 0;
+    D_main_bss_80138925 = 0;
+    D_main_bss_80138838 = 0;
+    D_main_bss_80138839 = 0;
+    D_main_bss_80138927 = 0;
+    D_main_bss_80138924 = 0;
+    D_main_bss_80138D10 = 0;
+    D_main_bss_8013889C = 0;
+    rs_memset(gObjectiveCounts, 0, 0x200);
+    rs_memset(gObjectiveBooleans, 0, 0x80);
+    initPlayerStructs();
+    initAllPlayersHudTracking();
+    for (i = 0; i < 1; i++) {
+        D_mission_overlay_8010BFA8[i] |= gHud250[i].unk0;
+        D_mission_overlay_8010BFA8[i] |= gHud250[i].unk4;
+        D_mission_overlay_8010BFA8[i] |= gHud250[i].unk2;
+        D_mission_overlay_8010BFA8[i] |= gHud250[i].unk1E;
+        if (gGS250.vehicleId != 1) {
+            D_mission_overlay_8010BFA8[i] |= gHud250[i].unk22;
+        }
+    }
+    resetSceneNodeShakeStateArray();
+    initPlayerVehicleStateTables();
+    for (i = 0; i < 1; i++) {
+        if (D_main_bss_80138D18[i].unk0 != 0) {
+            D_main_bss_80138268[i].unk0 &= 0xFFFE;
+            D_main_bss_80138268[i].unk74 = &D_main_bss_8013800C[i];
+            initTransformNodeFromVectors((u8 *)&D_main_bss_80138268[i], gVecs250 + 0x34, gVecs250 + 0x34);
+            D_main_bss_80138268[i].unk2 = 2;
+        }
+    }
+    loadWeaponsHobObjects();
+    loadLevelAssets(getLevelExpansionMemoryBudget());
+    D_main_bss_80130BA2 = spawnNpcOfType(cutsceneActorNpcHandler, 0, 4, 0x64);
+    i = 0;
+    do {
+        craft[i] = gGS250.vehicleId;
+    } while (--i >= 0);
+    choosePlayerCraftAssets(craft);
+    spawnHudNpc();
+    initSpeechSubsystem(0, D_main_bss_80130B62);
+    initAudioListenerFromCamera();
+    initLevelMusicBank();
+    preloadSceneSongsWrapper();
+    playSimpleAudioCmd(0x7A, 0x3E8, 0xFE);
+    D_main_bss_80130BA4 = 0.0f;
+    D_mission_overlay_8010C9E4 = 0;
+    i = 7;
+    do {
+        gObjectiveTimers[i] = 0.0f;
+    } while (--i >= 0);
+    missionStatsS.completion_time = 0;
+    missionStatsS.shots_fired = 0;
+    missionStatsS.shots_landed = 0;
+    missionStatsS.enemies_destroyed = 0;
+    missionStatsS.friendlies_saved = 0;
+    missionStatsS.bonus_collected = 0;
+    broadcastSceneShutdownAndCleanup();
+    getLevelDatItemByName("player_StartPosition");
+    initializeObjectiveTracking();
+    initWaterSprayEffectAndSfx();
+    if (gLevel250 != 0xA) {
+        loadLevelTextureCache(0x1000);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", func_mission_overlay_800FA6A4);
 
