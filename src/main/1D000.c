@@ -477,7 +477,60 @@ void convertMat3x4ToQuat(Mat4x3 arg0, Vec4f arg1) {
     arg1[temp_t0 + 1] = (arg0[temp_t0][var_t1] + arg0[var_t1][temp_t0]) * temp_ft1_5;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/1D000", convertMat3x4ToQuat);
+extern u8 D_main_80037840[];
+
+void convertMat3x4ToQuat(Mat4x3 arg0, Vec4f arg1) {
+    f32 tr;
+    f32 a;
+    f32 b;
+    f32 c;
+    f32 s;
+    f32 inv;
+    register u8 i asm("$9");
+    s32 nv;
+    u8 j;
+    u8 k;
+    f32 *q;
+    f32 *ri;
+    f32 *rj;
+    f32 *rk;
+
+    a = arg0[0][0];
+    b = arg0[1][1];
+    c = arg0[2][2];
+    tr = a + b + c;
+    if (tr > 0.0f) {
+        SQRTF_ASM(s, tr + 1.0f);
+        arg1[0] = s * 0.5f;
+        s = 0.5f / s;
+        arg1[1] = (arg0[2][1] - arg0[1][2]) * s;
+        arg1[2] = (arg0[0][2] - arg0[2][0]) * s;
+        arg1[3] = (arg0[1][0] - arg0[0][1]) * s;
+        return;
+    }
+    i = 0;
+    q = arg1 + 1;
+    if (a < b) {
+        i = 1;
+    }
+    {
+        s32 rr = i * 12 + (s32)arg0;
+        if (*(f32 *)(i * 4 + rr) < c) {
+            i = 2;
+        }
+    }
+    j = D_main_80037840[i];
+    nv = j * 12;
+    k = D_main_80037840[j];
+    ri = (f32 *)(i * 12 + (s32)arg0);
+    rj = (f32 *)(nv + (s32)arg0);
+    SQRTF_ASM(s, (ri[i] - (rj[j] + (rk = (f32 *)(k * 12 + (s32)arg0))[k])) + 1.0f);
+    q[i] = s * 0.5f;
+    s = 0.5f / s;
+    arg1[0] = (arg0[k][j] - rj[k]) * s;
+    q[j] = (rj[i] + ri[j]) * s;
+    q[k] = (arg0[k][i] + ri[k]) * s;
+}
 #endif
 
 #if 0
