@@ -555,7 +555,130 @@ s32 setActiveRenderListPtr(s32 arg0) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", emitColorFillRect);
+extern Gfx *D_main_bss_8011DC58;
+extern s16 D_main_bss_8011A848;
+extern s32 D_main_bss_8011A838;
+extern s32 D_main_bss_8011A83C;
+extern u16 D_A880u __asm__("D_main_bss_8011A880");
+extern u16 D_A882u __asm__("D_main_bss_8011A882");
+extern u16 D_A884u __asm__("D_main_bss_8011A884");
+extern u16 D_main_bss_8011A886;
+extern u8 D_main_bss_8011A888;
+extern u8 D_main_bss_8011A889;
+extern u8 D_main_bss_8011A88A;
+
+#define CFR_ENSURE()                                                                 \
+    if (D_main_bss_8011DC58 >= D_main_bss_801163D4) {                                \
+        struct DisplayListBuffer *chunk;                                             \
+        struct DisplayListBuffer *tail;                                              \
+        struct DisplayListBuffer *buf;                                               \
+        D_main_bss_8011DC58->words.w0 = 0xB5000000;                                  \
+        D_main_bss_8011DC58->words.w1 = 0;                                           \
+        chunk = D_main_bss_801163B0;                                                 \
+        if (chunk == NULL) {                                                         \
+            chunk = findAndUnlinkSmallestEntry();                                    \
+            if (chunk != NULL) {                                                     \
+                tail = chunk;                                                        \
+                while (tail->next != NULL) {                                         \
+                    tail = tail->next;                                               \
+                }                                                                    \
+                tail->next = D_main_bss_801163B0;                                    \
+                if (D_main_bss_801163B0 != NULL) {                                   \
+                    D_main_bss_801163B0->prev = tail;                                \
+                }                                                                    \
+                D_main_bss_801163B0 = chunk;                                         \
+                chunk->prev = NULL;                                                  \
+            }                                                                        \
+            chunk = D_main_bss_801163B0;                                             \
+        }                                                                            \
+        D_main_bss_801163B0 = D_main_bss_801163B0->next;                             \
+        if (D_main_bss_801163B0 != NULL) {                                           \
+            D_main_bss_801163B0->prev = NULL;                                        \
+        }                                                                            \
+        buf = chunk;                                                                 \
+        if (*D_main_bss_801163FC == NULL) {                                          \
+            *D_main_bss_801163FC = buf;                                              \
+        } else {                                                                     \
+            (*D_main_bss_8011A7DC)->next = buf;                                      \
+            buf->prev = *D_main_bss_8011A7DC;                                        \
+        }                                                                            \
+        buf->next = NULL;                                                            \
+        *D_main_bss_8011A7DC = buf;                                                  \
+        D_main_bss_801163D4 = &buf->displayList[0x1F];                               \
+        D_main_bss_8011DC58 = buf->displayList;                                      \
+    }
+
+void emitColorFillRect(void) {
+    u8 r = D_main_bss_8011A888;
+    u8 gr = D_main_bss_8011A889;
+    u8 b = D_main_bss_8011A88A;
+
+    CFR_ENSURE();
+    {
+        Gfx *g = D_main_bss_8011DC58++;
+        g->words.w0 = 0xE7000000;
+        g->words.w1 = 0;
+    }
+    CFR_ENSURE();
+    {
+        Gfx *g = D_main_bss_8011DC58++;
+        g->words.w0 = 0xB900031D;
+        g->words.w1 = 0x0F0A4000;
+    }
+    CFR_ENSURE();
+    {
+        Gfx *g = D_main_bss_8011DC58++;
+        g->words.w0 = 0xBA001402;
+        g->words.w1 = 0x300000;
+    }
+    CFR_ENSURE();
+    if (D_main_bss_8011A848 >= 0x18) {
+        Gfx *g = D_main_bss_8011DC58++;
+        g->words.w0 = 0xF7000000;
+        g->words.w1 = (r << 24) | (gr << 16) | (b << 8) | 0xFF;
+    } else {
+        Gfx *g = D_main_bss_8011DC58++;
+        s32 c;
+        g->words.w0 = 0xF7000000;
+        c = ((r << 8) & 0xF800) | ((gr << 3) & 0x7C0) | ((b >> 2) & 0x3E);
+        g->words.w1 = ((c | 1) << 16) | (c | 1);
+    }
+    if (D_A882u != 0) {
+        CFR_ENSURE();
+        {
+            Gfx *g = D_main_bss_8011DC58++;
+            g->words.w0 = 0xF6000000 | ((D_main_bss_8011A838 & 0x3FF) << 14) | ((D_A882u & 0x3FF) << 2);
+            g->words.w1 = 0;
+        }
+    }
+    if (D_main_bss_8011A886 < (u32)D_main_bss_8011A83C) {
+        CFR_ENSURE();
+        {
+            Gfx *g = D_main_bss_8011DC58;
+            ((u32 *)g)[0] = 0xF6000000 | ((D_main_bss_8011A838 & 0x3FF) << 14) | ((D_main_bss_8011A83C & 0x3FF) << 2);
+            D_main_bss_8011DC58 = g + 1;
+            g->words.w1 = (D_main_bss_8011A886 & 0x3FF) << 2;
+        }
+    }
+    if (D_A880u != 0) {
+        CFR_ENSURE();
+        {
+            Gfx *g = D_main_bss_8011DC58;
+            ((u32 *)g)[0] = 0xF6000000 | ((D_A880u & 0x3FF) << 14) | ((D_main_bss_8011A886 & 0x3FF) << 2);
+            D_main_bss_8011DC58 = g + 1;
+            g->words.w1 = (D_A882u & 0x3FF) << 2;
+        }
+    }
+    if (D_A884u < (u32)D_main_bss_8011A838) {
+        CFR_ENSURE();
+        {
+            Gfx *g = D_main_bss_8011DC58;
+            ((u32 *)g)[0] = 0xF6000000 | ((D_main_bss_8011A838 & 0x3FF) << 14) | ((D_main_bss_8011A886 & 0x3FF) << 2);
+            D_main_bss_8011DC58 = g + 1;
+            g->words.w1 = ((D_A884u & 0x3FF) << 14) | ((D_A882u & 0x3FF) << 2);
+        }
+    }
+}
 
 extern s8 D_main_bss_8011A88C;
 extern s16 D_main_bss_8011A880;
