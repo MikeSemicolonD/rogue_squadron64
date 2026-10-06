@@ -603,7 +603,102 @@ void tickStructureWithDestructionAndChildren(TsdOwner *s) {
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E5080", D_mission_overlay_800A8304);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", npcWaterCraftHandleDestruction);
+typedef struct { u8 r, g, b, a; } WcCol;
+typedef struct {
+    f32 x, y, z;
+    u8 padC[0x18];
+    f32 vel[3];
+    s32 part;
+    u8 pad34[0x38];
+    f32 f6C;
+    f32 f70;
+    u8 pad74[0x25];
+    u8 b99;
+} WcObj;
+extern WcCol D_mission_overlay_800A8304;
+s16 wcRand(void) __asm__("rand");
+void transformMeshPartIntoWorld(s32, void *);
+void spawnNpcType0xAFromTemplate(void *, f32);
+void spawnByteAnimDebrisDefault(void *);
+void composeRandomRotationMatrix(void *, void *, f32, s32, s32, s32);
+void scaleVec3ByRandomRange(void *, f32, f32);
+void spawnDebris1Npc(void *, void *, f32, f32, f32);
+void spawnOrientedNpc(s32, void *, s32, void *, f32, f32, f32, f32);
+void spawnWaterSprayDebrisAndBurst(void *, f32, f32, f32, f32, f32);
+#define WC_ABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
+
+void npcWaterCraftHandleDestruction(WcObj *o) {
+    f32 p[3];
+    f32 v[3];
+    f32 pos[3];
+    WcCol col;
+    f32 sc;
+    s32 i;
+    s32 n;
+    f32 a, b;
+
+    col = D_mission_overlay_800A8304;
+    switch (o->b99) {
+    case 0:
+        transformMeshPartIntoWorld(o->part, pos);
+        sc = o->f70 * 13.333f;
+        spawnNpcType0xAFromTemplate(pos, o->f6C * 2.5f);
+        spawnByteAnimDebrisDefault(o);
+        switch (o->b99) {
+        case 0:
+            play3DSoundEvent(0, o, o->vel, 24.0f, 0.5f, 0, 0x21, 0x7D, 0x50);
+            break;
+        case 1:
+            play3DSoundEvent(0, o, o->vel, 24.0f, 0.7f, 0, 0x21, 0x7D, 0x50);
+            break;
+        }
+        n = (s16)(wcRand() % 3) + 4;
+        for (i = 0; i < n; i++) {
+            composeRandomRotationMatrix(p, v, o->f6C * 0.5f, 0x3C, 0, 0);
+            p[0] += pos[0];
+            p[1] += pos[1];
+            p[2] += pos[2];
+            scaleVec3ByRandomRange(v, 2.0f, 3.0f);
+            a = WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) / 12.8f);
+            a = a + 12.0f;
+            b = WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) * 0.015625f);
+            b = b + 1.0f;
+            spawnDebris1Npc(p, v, a, b, WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
+        }
+        spawnWaterSprayDebrisAndBurst(o, sc * 1.5f, sc * 2.5f, sc * 3.0f, sc * 6.0f, 1.0f);
+        break;
+    case 1:
+        transformMeshPartIntoWorld(o->part, pos);
+        sc = o->f70 * 40.0f;
+        spawnNpcType0xAFromTemplate(pos, o->f6C * 2.5f);
+        spawnByteAnimDebrisDefault(o);
+        switch (o->b99) {
+        case 0:
+            play3DSoundEvent(0, o, o->vel, 24.0f, 0.5f, 0, 0x21, 0x7D, 0x50);
+            break;
+        case 1:
+            play3DSoundEvent(0, o, o->vel, 24.0f, 0.7f, 0, 0x21, 0x7D, 0x50);
+            break;
+        }
+        spawnOrientedNpc(0x8002, pos, 0, 0, sc * 0.75f, sc * 1.2f, 1.0f, 0.6f);
+        spawnOrientedNpc(0x8001, pos, 0, &col, sc * 0.5f, sc * 0.7f, 1.0f, 0.4f);
+        n = (s16)(wcRand() % 5) + 10;
+        for (i = 0; i < n; i++) {
+            composeRandomRotationMatrix(p, v, o->f6C * 0.5f, 0x3C, 0, 0);
+            p[0] += pos[0];
+            p[1] += pos[1];
+            p[2] += pos[2];
+            scaleVec3ByRandomRange(v, 2.0f, 3.0f);
+            a = WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) / 12.8f);
+            a = a + 12.0f;
+            b = WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) * 0.03125f);
+            b = b + 2.5f;
+            spawnDebris1Npc(p, v, a, b, WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
+        }
+        spawnWaterSprayDebrisAndBurst(o, sc * 4.0f, sc * 6.0f, sc * 5.0f, sc * 10.0f, 2.0f);
+        break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E5080", npcWaterCraftUpdate);
 
