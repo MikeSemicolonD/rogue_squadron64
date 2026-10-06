@@ -498,7 +498,119 @@ void tickTrainCarStateMachine(u8 *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", buildDebrisTransformStack);
+typedef struct {
+    u8 pad0[0x4C];
+    u32 flags;
+    f32 pos[3];
+    f32 scale[3];
+    f32 quat[4];
+    f32 off[3];
+} DebrisCfg;
+
+typedef struct {
+    u8 pad0[0x84];
+    f32 f84;
+    u8 pad88[8];
+} DebrisRow;
+
+extern DebrisRow D_debrisRows[] __asm__("D_mission_overlay_8010AC90");
+extern void clearVec4QuadStruct(void *);
+extern void addVec3At0x24(void *, f32, f32, f32);
+extern void applyScaleToMat3x4(void *, f32, f32, f32);
+extern void composeQuatToMat3x4(void *, void *);
+void composeRotationMatrixSlot0(void *, s32);
+void composeRotationMatrixSlot1(void *, s32);
+s32 getNpcCurrentHealth(s32);
+extern void mat34CrossRowsAndCopyPos(void *, void *, f32);
+
+void buildDebrisTransformStack(void *argv, f32 dt) {
+    u8 *arg0 = argv;
+    u8 *p;
+    s32 i;
+    u8 *s5;
+    u8 *m;
+    DebrisCfg *c;
+    u32 fl;
+
+    s5 = *(u8 **)(*(u8 **)(arg0 + 0x38) + 0x1A8);
+    if (getNpcCurrentHealth(*(s32 *)(arg0 + 0x38)) > 0) {
+        for (i = 0; i < 3; i++) {
+            if (*(s32 *)(arg0 + i * 4 + 0x3C) != 0) {
+                m = *(u8 **)(arg0 + i * 4 + 0x3C) + 0x1C;
+                c = *(DebrisCfg **)(arg0 + i * 4 + 0x60);
+                clearVec4QuadStruct(m);
+                if (c->flags & 1) {
+                    addVec3At0x24(m, -c->pos[0], -c->pos[1], -c->pos[2]);
+                }
+                if (c->flags & 2) {
+                    applyScaleToMat3x4(m, c->scale[0], c->scale[1], c->scale[2]);
+                }
+                if (c->flags & 4) {
+                    composeQuatToMat3x4(m, c->quat);
+                }
+                composeRotationMatrixSlot1(m, *(s32 *)(arg0 + i * 4 + 0x8C));
+                fl = c->flags;
+                if ((fl & 9) == 9) {
+                    addVec3At0x24(m, c->off[0] + c->pos[0], c->off[1] + c->pos[1], c->off[2] + c->pos[2]);
+                } else if ((fl & 9) == 8) {
+                    addVec3At0x24(m, c->off[0], c->off[1], c->off[2]);
+                } else if (fl & 1) {
+                    addVec3At0x24(m, c->pos[0], c->pos[1], c->pos[2]);
+                }
+            }
+            if (*(s32 *)(arg0 + i * 4 + 0x48) != 0) {
+                m = *(u8 **)(arg0 + i * 4 + 0x48) + 0x1C;
+                c = *(DebrisCfg **)(arg0 + i * 4 + 0x6C);
+                clearVec4QuadStruct(m);
+                if (c->flags & 1) {
+                    addVec3At0x24(m, -c->pos[0], -c->pos[1], -c->pos[2]);
+                }
+                if (c->flags & 2) {
+                    applyScaleToMat3x4(m, c->scale[0], c->scale[1], c->scale[2]);
+                }
+                if (c->flags & 4) {
+                    composeQuatToMat3x4(m, c->quat);
+                }
+                if (*(s32 *)(arg0 + i * 4 + 0x54) == 0) {
+                    addVec3At0x24(m, 0.0f, 0.0f, -*(f32 *)(s5 + (i << 2) + 0x1C) * ((DebrisRow *)&((u8 *)D_debrisRows)[arg0[0xB2] * 0x90 + i * 4])->f84);
+                }
+                composeRotationMatrixSlot0(m, *(s32 *)(arg0 + i * 4 + 0x98));
+                fl = c->flags;
+                if ((fl & 9) == 9) {
+                    addVec3At0x24(m, c->off[0] + c->pos[0], c->off[1] + c->pos[1], c->off[2] + c->pos[2]);
+                } else if ((fl & 9) == 8) {
+                    addVec3At0x24(m, c->off[0], c->off[1], c->off[2]);
+                } else if (fl & 1) {
+                    addVec3At0x24(m, c->pos[0], c->pos[1], c->pos[2]);
+                }
+            }
+            if (*(s32 *)(arg0 + i * 4 + 0x54) != 0) {
+                m = *(u8 **)(arg0 + i * 4 + 0x54) + 0x1C;
+                c = *(DebrisCfg **)(arg0 + i * 4 + 0x78);
+                clearVec4QuadStruct(m);
+                if (c->flags & 1) {
+                    addVec3At0x24(m, -c->pos[0], -c->pos[1], -c->pos[2]);
+                }
+                if (c->flags & 2) {
+                    applyScaleToMat3x4(m, c->scale[0], c->scale[1], c->scale[2]);
+                }
+                if (c->flags & 4) {
+                    composeQuatToMat3x4(m, c->quat);
+                }
+                addVec3At0x24(m, 0.0f, 0.0f, -*(f32 *)(s5 + (i << 2) + 0x1C) * ((DebrisRow *)&((u8 *)D_debrisRows)[arg0[0xB2] * 0x90 + i * 4])->f84);
+                fl = c->flags;
+                if ((fl & 9) == 9) {
+                    addVec3At0x24(m, c->off[0] + c->pos[0], c->off[1] + c->pos[1], c->off[2] + c->pos[2]);
+                } else if ((fl & 9) == 8) {
+                    addVec3At0x24(m, c->off[0], c->off[1], c->off[2]);
+                } else if (fl & 1) {
+                    addVec3At0x24(m, c->pos[0], c->pos[1], c->pos[2]);
+                }
+            }
+        }
+    }
+    mat34CrossRowsAndCopyPos(*(u8 **)(arg0 + 0x30) + 0x28, arg0, *(f32 *)(arg0 + 0x88));
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A805C);
 
