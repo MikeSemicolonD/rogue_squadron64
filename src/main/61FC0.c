@@ -6,7 +6,193 @@
 
 __asm__(".section .rodata\n.align 2\n.globl D_main_8003B410\nD_main_8003B410:\n.word 0x72000000\n.align 2\n.globl D_main_8003B414\nD_main_8003B414:\n.word 0x746D0000\n.align 2\n.globl strMGold\nstrMGold:\n.word 0x6D5F676F\n.word 0x6C640000\n.align 2\n.globl strMSilver\nstrMSilver:\n.word 0x6D5F7369\n.word 0x6C766572\n.word 0x00000000\n.align 2\n.globl strMBronze\nstrMBronze:\n.word 0x6D5F6272\n.word 0x6F6E7A65\n.word 0x00000000\n.align 2\n.globl strYellowBnt\nstrYellowBnt:\n.word 0x79656C6C\n.word 0x6F775F62\n.word 0x6E740000\n.align 2\n.globl strItalic35\nstrItalic35:\n.word 0x6974616C\n.word 0x69633335\n.word 0x00000000\n.align 2\n.globl D_main_8003B450\nD_main_8003B450:\n.word 0x41424344\n.word 0x45464748\n.word 0x494A4B4C\n.word 0x4D4E4F50\n.word 0x51525354\n.word 0x55565758\n.word 0x59303132\n.word 0x33343536\n.word 0x3738393B\n.word 0x3A5F272F\n.word 0x26225A2C\n.word 0x213F2D3C\n.word 0x3E7B7DC4\n.word 0xD6DC0000\n.align 2\n.globl strNormal10\nstrNormal10:\n.word 0x6E6F726D\n.word 0x616C3130\n.word 0x00000000\n.align 2\n.globl D_main_8003B494\nD_main_8003B494:\n.word 0x41424344\n.word 0x45464748\n.word 0x494A4B4C\n.word 0x4D4E4F50\n.word 0x51525354\n.word 0x55565758\n.word 0x595A3031\n.word 0x32333435\n.word 0x36373839\n.word 0x2123262A\n.word 0x28295F2D\n.word 0x3D2B5C2F\n.word 0x2C2E3B3A\n.word 0x27C4D6DC\n.word 0x00000000\n.word 0x6E6F726D\n.word 0x616C3131\n.word 0x00000000\n.align 2\n.globl D_main_8003B4DC\nD_main_8003B4DC:\n.word 0x41424344\n.word 0x45464748\n.word 0x494A4B4C\n.word 0x4D4E4F50\n.word 0x51525354\n.word 0x55565758\n.word 0x595A3031\n.word 0x32333435\n.word 0x36373839\n.word 0x21232622\n.word 0x2728295F\n.word 0x2D3F2F5C\n.word 0x2C3F2E3A\n.word 0xC4D6DC00\n.align 2\n.globl strStarwars50\nstrStarwars50:\n.word 0x73746172\n.word 0x77617273\n.word 0x35300000\n.align 2\n.globl D_main_8003B520\nD_main_8003B520:\n.word 0x41424344\n.word 0x45464748\n.word 0x494A4B4C\n.word 0x4D4E4F50\n.word 0x51525354\n.word 0x55565758\n.word 0x595A6162\n.word 0x63646566\n.word 0x6768696A\n.word 0x6B6C6D6E\n.word 0x6F707172\n.word 0x73747576\n.word 0x7778797A\n.word 0x30313233\n.word 0x34353637\n.word 0x3839213F\n.word 0x2C2E3A3B\n.word 0x272F5C2D\n.word 0x5F2829C4\n.word 0xD6DCE4F6\n.word 0xFCDFE2E0\n.word 0xE1E8E9EC\n.word 0xEDEEEFEB\n.word 0xEAF3F4FA\n.word 0xFBA1BFC7\n.word 0xE7000000\n.align 2\n.globl strSubtitle8\nstrSubtitle8:\n.word 0x73756274\n.word 0x69746C65\n.word 0x38000000\n.align 2\n.globl D_main_8003B594\nD_main_8003B594:\n.word 0x41424344\n.word 0x45464748\n.word 0x494A4B4C\n.word 0x4D4E4F50\n.word 0x51525354\n.word 0x55565758\n.word 0x595A3031\n.word 0x32333435\n.word 0x36373839\n.word 0x213F2E2C\n.word 0x22272324\n.word 0xC4D6DCD1\n.word 0xBFA12D00\n.word 0x73756274\n.word 0x69746C65\n.word 0x31320000\n.align 2\n.globl strSubtitle20\nstrSubtitle20:\n.word 0x73756274\n.word 0x69746C65\n.word 0x32300000\n.align 2\n.globl D_main_8003B5E0\nD_main_8003B5E0:\n.word 0x41424344\n.word 0x45464748\n.word 0x494A4B4C\n.word 0x4D4E4F50\n.word 0x51525354\n.word 0x55565758\n.word 0x595A3031\n.word 0x32333435\n.word 0x36373839\n.word 0x3A3B2E2C\n.word 0x3F212D27\n.word 0x2324C4D6\n.word 0xDCD1BFA1\n.word 0x00000000\n.align 2\n.globl strHatten13\nstrHatten13:\n.word 0x68617474\n.word 0x656E3133\n.word 0x00000000\n.align 2\n.globl D_main_8003B624\nD_main_8003B624:\n.word 0x41424344\n.word 0x45464748\n.word 0x494A4B4C\n.word 0x4D4E4F50\n.word 0x51525354\n.word 0x55565758\n.word 0x595A3031\n.word 0x32333435\n.word 0x36373839\n.word 0x3A3B2E2C\n.word 0x3F212D27\n.word 0x2628292F\n.word 0x25C4D6DC\n.word 0x00000000\n.align 2\n.globl strCredits\nstrCredits:\n.word 0x63726564\n.word 0x69747300\n.align 2\n.globl D_main_8003B664\nD_main_8003B664:\n.word 0x41424344\n.word 0x45464748\n.word 0x494A4B4C\n.word 0x4D4E4F50\n.word 0x51525354\n.word 0x55565758\n.word 0x595A6162\n.word 0x63646566\n.word 0x6768696A\n.word 0x6B6C6D6E\n.word 0x6F707172\n.word 0x73747576\n.word 0x7778797A\n.word 0x30313233\n.word 0x34353637\n.word 0x38392C2E\n.word 0x2F2A2722\n.word 0x3A3B4028\n.word 0x29262D24\n.word 0x255EC4D6\n.word 0xDCE4F6FC\n.word 0xE9000000\n.globl D_main_8003B6BC\nD_main_8003B6BC:\n.word 0x00010000\n.word 0x3F800000\n.word 0x3F800000\n.word 0x00000000\n.word 0x00000000\n.word 0x5F5F5F00\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.align 2\n.globl D_main_8003B6E0\nD_main_8003B6E0:\n.word 0x5F5F5F00\n.globl D_main_8003B6E4\nD_main_8003B6E4:\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x8003B6E0\n.word 0x00000000\n.word 0x01000004\n.word 0x00000000\n.section .text");
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", loadCharTextureSet);
+#include "textures.h"
+extern struct material_entry D_main_8003B6BC;
+extern struct texture_entry D_main_8003B6E4;
+extern s32 D_main_bss_80138920;
+extern s32 D_main_bss_80137CFC;
+void *rs_malloc(s32, s32);
+void rs_memset(void *, s32, s32);
+void rs_free(void *);
+s32 registerHmtTextureInTable(struct material_entry *, struct texture_entry *, u8);
+s32 sprintf(char *, const char *, ...);
+s32 get_asset_size_extra(s32, char *);
+s32 findAssetAcrossSegments(s32, s32, s32, char *, s32);
+void setupAssetDma(s32, s32, s32, s32, s32, void *);
+void teardownAssetDma(s32, s32);
+void zmemcpy(u8 *, u8 *, u32);
+
+void loadCharTextureSet(s32 arg0, u16 arg1, u16 arg2, u16 arg3) {
+    char path[0x40];
+    struct material_entry mat;
+    struct texture_entry tex;
+    u8 *bufs[8];
+    char suffix[8];
+    u8 nm;
+    u32 c;
+    u32 k2;
+    u32 n;
+    u32 cnt;
+    u32 tmp;
+    struct someFontThing *f;
+    struct someFontThing *g;
+    u32 i;
+    u32 j;
+    u8 v;
+    s32 size;
+    s32 h;
+
+    nm = 0;
+    mat = D_main_8003B6BC;
+    tex = D_main_8003B6E4;
+    f = D_main_8009FC10[arg1];
+    g = D_main_8009FC10[(u8)arg1];
+    g->unk020 = rs_malloc(0x100, 0);
+    for (c = 0; c < 0x100; c++) {
+        v = 0xFF;
+        if (c - 1 < 6) {
+            v = 0;
+        } else {
+            for (k2 = 0; k2 < g->symbolCount; k2++) {
+                if (g->symbolList[k2] == c) {
+                    v = k2;
+                    break;
+                }
+            }
+        }
+        ((u8 *)g->unk020)[c] = v;
+    }
+    f->unk028 = rs_malloc(f->symbolCount * 2, 0);
+    f->unk024 = rs_malloc(f->symbolCount * 2, 0);
+    for (i = 0; i < 8; i++) {
+        bufs[i] = NULL;
+    }
+    i = 0;
+    if (f->unk01D != 0) {
+        do {
+            suffix[0] = 0;
+            if (i != 0) {
+                sprintf(suffix, "_mm%ld", i);
+            }
+            sprintf(path, "fonts/%s%s", f->fontName, suffix);
+            size = get_asset_size_extra(-1, path);
+            if (size == -1) {
+                break;
+            }
+            if (size == 0) {
+                break;
+            }
+            bufs[i] = rs_malloc(size, 0);
+            h = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, path, 0);
+            setupAssetDma(D_main_bss_80138920, 0, h, 0, size, bufs[i]);
+            teardownAssetDma(D_main_bss_80138920, h);
+            nm = i + 1;
+            i++;
+        } while (i < f->unk01D);
+    }
+    ((u8 *)&tex.transparency_color)[0] = bufs[0][8];
+    ((u8 *)&tex.transparency_color)[1] = bufs[0][9];
+    ((u8 *)&tex.transparency_color)[2] = bufs[0][10];
+    tex.height = f->unk006;
+    ((u8 *)tex.texture_name_offset)[0] = *(u8 *)&f->unk0F8;
+    mat.material_name[0] = *(u8 *)&f->unk0F8;
+    i = 0;
+    if (f->symbolCount != 0) {
+        n = nm;
+        do {
+
+        mat.material_name[1] = f->symbolList[i];
+        ((u8 *)tex.texture_name_offset)[1] = f->symbolList[i];
+        for (j = 0; j < n; j++) {
+            u32 o = (((u16)f->unk002 / (1U << j) + 1) >> 1) * (u16)f->unk004 / (1U << j) * i + 0xC;
+            tex.pixel_offsets[j] = (u32)bufs[j] + o;
+        }
+        if (n == 1 && arg1 != 3) {
+            u16 w;
+            u16 k;
+
+            w = f->unk018[i];
+            if (arg1 == 0 || arg1 == 5) {
+                w += 3;
+                if ((u16)f->unk002 < w) {
+                    w = f->unk002;
+                }
+            }
+            w = (w + 1) & 0xFFFE;
+            for (k = 0; k < (u16)f->unk006; k++) {
+                zmemcpy((u8 *)tex.pixel_offsets[0] + (s32)(k * w) / 2, (u8 *)tex.pixel_offsets[0] + (s32)(k * (u16)f->unk002) / 2, (u16)(w >> 1));
+            }
+            tex.width = w;
+        } else {
+            tex.width = f->unk002;
+        }
+        tex.one = nm;
+        if (f->unk01F == 1) {
+            mat.material_name[2] = 'S';
+            ((u8 *)tex.texture_name_offset)[2] = 'S';
+            tex.flags_type = 0x4004;
+            f->unk028[i] = registerHmtTextureInTable(&mat, &tex, 0);
+        } else {
+            f->unk028[i] = 0xFFFF;
+        }
+        if (f->unk01E == 1) {
+            mat.material_name[2] = 'A';
+            ((u8 *)tex.texture_name_offset)[2] = 'A';
+            tex.flags_type = 0x2004;
+            f->unk024[i] = registerHmtTextureInTable(&mat, &tex, 0);
+        } else {
+            f->unk024[i] = 0xFFFF;
+        }
+        } while (++i < f->symbolCount);
+    }
+    for (i = 0; i < 8; i++) {
+        if (bufs[i] != NULL) {
+            rs_free(bufs[i]);
+            bufs[i] = NULL;
+        }
+    }
+    for (i = 0; i < 0x14; i++) {
+        f->unk084[i] = 1;
+        f->unk034[i] = NULL;
+    }
+    i = 0;
+    tmp = arg2;
+    if (tmp != 0) {
+        cnt = tmp;
+        do {
+            f->unk034[i] = rs_malloc(0x30, 0);
+        } while (++i < cnt);
+    }
+    i = 0;
+    if (arg2 != 0) {
+        do {
+        u8 *e = (u8 *)f->unk034[i];
+
+        rs_memset(e, 0, 0x30);
+        *(u16 *)(e + 0xA) = 1;
+        *(u16 *)(e + 0x8) = 1;
+        *(f32 *)(e + 0x24) = 1.0f;
+        *(f32 *)(e + 0x28) = 1.0f;
+        *(s32 *)(e + 0x14) = 0x12;
+        e[0x2C] = 0xFF;
+        e[0x2D] = 0xFF;
+        e[0x2E] = 0xFF;
+        e[0x2F] = 0xFF;
+        } while (++i < arg2);
+    }
+    {
+    register u32 a asm("$17") = arg3;
+    register u32 b asm("$16") = arg2;
+    *(u16 *)&f->unk02C = arg2;
+    f->unk030 = 0;
+    f->unk0F4 = (void *)arg0;
+    f->unk0FC = 0;
+    *(u16 *)&f->unk0E8 = arg3;
+    f->unk0EC = rs_malloc(a * (b << 2), 0);
+    f->unk0F0 = rs_malloc(a * (b *= 2), 0);
+    }
+    f->unk102 = f->unk01F;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", loadFontAsset);
 
