@@ -261,7 +261,76 @@ s32 setupMissionTransitionScreenOverlay(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", tickMissionTransitionAndTeardown);
+extern s32 D_main_bss_80137F3C;
+extern u8 D_main_bss_80130B41;
+extern struct {
+    u8 pad0[0x180];
+    u32 f180;
+} D_main_bss_80137DBC;
+void resetTransientPlayerStateFlags(u32);
+void loadPlayerStartPosition(void *, void *);
+void deactivateEffectObject(s32);
+void disableScreenColorOverlay(void);
+
+s32 tickMissionTransitionAndTeardown(void) {
+    s8 t;
+    u32 flags;
+    u32 mode;
+    s32 x;
+    Bss80138D20 *p;
+
+    if (D_main_bss_80137F3C & 0x380000) {
+        t = gMissionState[D_mission_overlay_8010CA18] - 1;
+        gMissionState[D_mission_overlay_8010CA18] = t;
+        if (t == 0) {
+            gMissionState[4] = 3;
+            D_mission_overlay_8010C9E0 |= 1;
+            return 1;
+        }
+    }
+    flags = D_mission_overlay_8010C9E0;
+    if (flags & 0xC) {
+        mode = 3;
+        if (flags & 4) {
+            mode = 4;
+        }
+        D_mission_overlay_8010CA20 = mode;
+{ s32 y = flags; y &= ~4; D_mission_overlay_8010C9E0 = y & ~8; }
+        D_mission_overlay_8010C9F0 = 0;
+        D_mission_overlay_8010C9EC = 0.0f;
+        return 1;
+    }
+    D_mission_overlay_8010CA1C &= ~8;
+    resetTransientPlayerStateFlags(flags);
+    despawnCraftAnimationSlotNpcs(0);
+    loadPlayerStartPosition(&D_main_bss_80137DBC, (u8 *)&D_main_bss_80137DBC + 4);
+    deactivateEffectObject(0);
+    p = &D_main_bss_80138D20;
+    setGridLayerScrollX(1.0f);
+    p->f14 = getBootConfigField14() & 0xFFFF;
+    p->f20 = 65.0f;
+    disableScreenColorOverlay();
+    x = 0;
+    if (D_main_bss_80130B41 != 4) {
+        x = 0x24;
+    }
+    setSubtitleOverlayScreenPos(x, -10);
+    D_mission_overlay_8010CA20 = 0;
+    D_mission_overlay_8010C9F0 = 0;
+    { s32 y = D_mission_overlay_8010CA1C & ~4; D_mission_overlay_8010CA1C = y & ~0x100; }
+    D_mission_overlay_8010C9EC = 0.0f;
+    D_mission_overlay_8010C9E8 = 3;
+    buildGridCellAdjacencyTable();
+    releaseFlaggedMeshInstanceMeshes(0);
+    if (D_main_bss_80137DBC.f180 & 0x780000) {
+        resetSecondaryWeaponCount();
+        D_mission_overlay_8010CA20 = 1;
+        D_mission_overlay_8010C9F0 = 1;
+        D_mission_overlay_8010C9EC = 0.0f;
+        D_mission_overlay_8010C9E0 &= ~2;
+    }
+    return 1;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A8FE4);
 
