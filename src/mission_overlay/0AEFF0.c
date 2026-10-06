@@ -603,7 +603,128 @@ void spawnNpcDestructionDebris(NpcDebrisObj *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", updateSplineCraftTransform);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", computeOrientedTransformFromQuat);
+extern u8 Cot800C[][0x2A0] __asm__("D_main_bss_8013800C");
+extern u8 D_main_bss_8013803C[][0x2A0];
+extern u8 D_main_bss_80138058[];
+typedef struct { u8 pad0[4]; void *unk4; u8 pad8[0x13C]; } CotNode;
+extern CotNode CotD18[] __asm__("D_main_bss_80138D18");
+extern u32 D_mission_overlay_8010C9E0;
+extern u8 D_mission_overlay_8010CA18;
+extern u32 D_mission_overlay_8010CA20;
+typedef struct { s32 a, b, c; } CotV3;
+extern void orthonormalizeFrame(f32 *);
+f32 wrapAngleToCyclicRangeF(f32, f32, void *, f32 *) __asm__("wrapAngleToCyclicRange");
+extern void scaleVec3ByScalar(f32 *, f32, f32 *);
+
+
+extern void quatFromAxisAngleSafe(f32 *, f32 *, s32);
+extern void rotateVec3ByQuat(f32 *, f32 *, f32 *);
+extern void mat34CrossRowsAndCopyPos(void *, f32 *, f32);
+extern void initVec4TripletFromArgs(f32 *, s32, s32, s32);
+extern void mat3x4Multiply(void *, f32 *, f32 *);
+
+void initVec4F(f32 *, f32, f32, f32) __asm__("initVec4TripletFromArgs");
+static __inline__ void cotScale(f32 *m, s32 type) {
+    register f32 c asm("$5") = 0.0125f;
+    if (type == 5) {
+        c = 0.021875f;
+    }
+    initVec4F(m, c, c, c);
+}
+void computeOrientedTransformFromQuat(u8 *arg0, f32 dt)
+{
+  f32 q[4];
+  f32 w[3];
+  f32 pad[5];
+  f32 m[12];
+  u8 *pl;
+  u8 *pl2;
+  f32 f;
+  f32 t;
+  f32 g;
+  s32 sc;
+  u16 ty;
+  CotNode *node;
+  CotNode *base;
+  t = (*((f32 *) (arg0 + 0x184))) - dt;
+  pl = Cot800C[*((s32 *) (arg0 + 0xB8))];
+  *((f32 *) (arg0 + 0x184)) = t;
+  if (t <= 0.0f)
+  {
+    *((u16 *) (arg0 + 0x180)) |= 0x100;
+    if (!((*((u16 *) (Cot800C[*((s32 *) (arg0 + 0xB8))] - 0xD0))) & 0x20))
+    {
+      *((u16 *) (arg0 + 0x180)) = ((*((u16 *) (arg0 + 0x180))) & 0xFFE6) | 0x20;
+      *((f32 *) (arg0 + 0xC0)) = 0.0f;
+      *((f32 *) (arg0 + 0x184)) = 20.0f;
+      orthonormalizeFrame((f32 *) (arg0 + 4));
+      wrapAngleToCyclicRangeF(*((f32 *) (arg0 + 4)), *((f32 *) (arg0 + 0xC)), D_main_bss_80138058, w);
+      if (w[1] <= (*((f32 *) (arg0 + 8))))
+      {
+        *((f32 *) (arg0 + 8)) = w[1] - 0.125f;
+      }
+      if (D_mission_overlay_8010CA20 == 0)
+      {
+        D_mission_overlay_8010CA18 = arg0[0xBB];
+        D_mission_overlay_8010C9E0 |= 2;
+      }
+    }
+  }
+  else
+  {
+    if (((*((f32 *) (arg0 + 0x28))) > 0.0f) || ((*((f32 *) (arg0 + 0x30))) > 0.0f))
+    {
+      *((f32 *) (arg0 + 4)) += (*((f32 *) (arg0 + 0x28))) * dt;
+      *((f32 *) (arg0 + 0xC)) += (*((f32 *) (arg0 + 0x30))) * dt;
+      scaleVec3ByScalar((f32 *) (arg0 + 0x28), 0.75f, (f32 *) (arg0 + 0x28));
+      if (vec3Length((f32 *) (arg0 + 0x28)) < 0.025f)
+      {
+        *((f32 *) (arg0 + 0x28)) = 0.0f;
+        *((f32 *) (arg0 + 0x2C)) = 0.0f;
+        *((f32 *) (arg0 + 0x30)) = 0.0f;
+        *((f32 *) (arg0 + 0xE8)) = 0.0f;
+      }
+    }
+    wrapAngleToCyclicRangeF(*((f32 *) (arg0 + 4)), *((f32 *) (arg0 + 0xC)), D_main_bss_80138058, w);
+    if (w[1] <= (*((f32 *) (arg0 + 8))))
+    {
+      *((f32 *) (arg0 + 8)) = w[1] - 0.125f;
+    }
+    clampVec3ToUnitIfLongerThan((f32 *) (arg0 + 0x10));
+    quatFromAxisAngleSafe(q, (f32 *) (arg0 + 0x10), 0);
+    rotateVec3ByQuat(q, (f32 *) (arg0 + 0x1C), (f32 *) (arg0 + 0x1C));
+    clampVec3ToUnitIfLongerThan((f32 *) (arg0 + 0x1C));
+    orthonormalizeFrame((f32 *) (arg0 + 4));
+do { mat34CrossRowsAndCopyPos(pl, (f32 *) (arg0 + 4), 1.0f); pl2 = Cot800C[*((s32 *) (arg0 + 0xB8))]; *((f32 *) (pl2 + 0x24)) = *((f32 *) (arg0 + 4)); *((f32 *) (pl2 + 0x28)) = *((f32 *) (arg0 + 8)); *((f32 *) (pl2 + 0x2C)) = *((f32 *) (arg0 + 0xC)); ty = *((u16 *) (arg0 + 0xB4)); } while (0);
+cotScale(m, ty);
+    mat3x4Multiply(pl2, m, (f32 *) ((*((u8 **) arg0)) + 0x28));
+    *((CotV3 *) D_main_bss_8013803C[*((s32 *) (arg0 + 0xB8))]) = *((CotV3 *) (arg0 + 0xCC));
+    base = CotD18;
+    node = &base[*((s32 *) (arg0 + 0xB8))];
+    if ((*((u16 *) (((u8 *) node->unk4) + 4))) == 4)
+    {
+      f = *((f32 *) (((u8 *) node->unk4) + 0xD8));
+      if (f < 0.0f)
+      {
+        g = f + 0.5f;
+        *((f32 *) (((u8 *) node->unk4) + 0xD8)) = g;
+        if (g > 0.0f)
+        {
+          *((f32 *) (((u8 *) base[*((s32 *) (arg0 + 0xB8))].unk4) + 0xD8)) = 0.0f;
+        }
+      }
+      else
+      {
+        g = f - 0.5f;
+        *((f32 *) (((u8 *) node->unk4) + 0xD8)) = g;
+        if (g < 0.0f)
+        {
+          *((f32 *) (((u8 *) base[*((s32 *) (arg0 + 0xB8))].unk4) + 0xD8)) = 0.0f;
+        }
+      }
+    }
+  }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", tickCinematicObjectStateMachine);
 
