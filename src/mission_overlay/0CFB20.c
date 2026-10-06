@@ -252,7 +252,129 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A7060);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", npcAtStHandleDestruction);
+extern void scaleVec3ByRandomRange(f32 *, f32, f32);
+extern u8 *getNpcContextByIndex(u16);
+extern void mat34CrossRowsAndCopyPos(void *, void *, f32);
+extern s32 play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+typedef struct { u8 a, b, c, d; } AtStRgba;
+typedef struct { s32 a, b, c; } V3i;
+extern AtStRgba D_mission_overlay_800A705C;
+extern char D_mission_overlay_800A7060[];
+extern u8 D_main_bss_80130B63;
+extern s32 gCurrentLevel;
+extern void clearModelAnimChannelEntry(s32);
+extern void releaseModelAnimSlot(s32);
+extern void transformMeshPartIntoWorld(s32, f32 *);
+extern void spawnNpcType0xAFromTemplate(void *, f32);
+extern void spawnByteAnimDebrisDefault(void *);
+extern void spawnOrientedNpc(s32, f32 *, s32, void *, f32, f32, f32, f32);
+extern void spawnDestructionEffectBurst(f32 *, s32, f32, f32, f32, f32);
+extern void composeRandomRotationMatrix(f32 *, f32 *, f32, s32, s32, s32);
+extern void spawnDebris1Npc(f32 *, f32 *, f32, f32, f32);
+extern void spawnSplineWalkerCraft(void *, f32, f32, s32);
+extern void *walkMeshdef0List(char *);
+extern void releaseMeshAsset(void *);
+extern void initActorRenderDescriptorWithNpcVelocity(s32, s32);
+s16 randS(void) __asm__("rand");
+#define FABS(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
+
+typedef struct {
+    f32 x, y, z;
+    u8 pad0C[0x24 - 0x0C];
+    f32 f24;
+    u8 pad28[0x30 - 0x28];
+    s32 mesh30;
+    s32 u34;
+    s32 u38;
+    u8 pad3C[0x50 - 0x3C];
+    f32 f50, f54;
+    u8 pad58[0x80 - 0x58];
+    s32 u80;
+    u8 pad84[0x8C - 0x84];
+    s32 u8C, u90;
+    u8 pad94[0xFA - 0x94];
+    u8 uFA;
+} AtStNpc;
+
+void npcAtStHandleDestruction(void *npcv) {
+    AtStNpc *npc = npcv;
+    f32 mtx[3];
+    f32 vel[3];
+    f32 *p;
+    f32 pos[3];
+    AtStRgba color;
+    f32 big;
+    f32 fa;
+    f32 fb;
+    f32 fc;
+    s32 i;
+    s32 n;
+    s32 k;
+
+    color = D_mission_overlay_800A705C;
+    if (npc->u80 != 0) {
+        npc->u80 = 0;
+        clearModelAnimChannelEntry(npc->u90);
+        releaseModelAnimSlot(npc->u8C);
+    }
+    *(V3i *)pos = *(V3i *)npc;
+    if (*(s32 *)(npc->u34 + 0xA8) == 0) {
+        p = pos;
+        transformMeshPartIntoWorld(npc->mesh30, p);
+    }
+    big = npc->f54 + npc->f54;
+    spawnNpcType0xAFromTemplate(pos, npc->f50 * 4.0f);
+    spawnByteAnimDebrisDefault(npc);
+    play3DSoundEvent(0, npc, &npc->f24, 24.0f, 0.7f, 0, 0x21, 0x7D, 0x50);
+    if (D_main_bss_80130B63 != 0) {
+spawn:
+        spawnOrientedNpc(0x8002, pos, 0, NULL, big * 0.75f, big * 1.2f, 1.0f, 0.6f);
+        spawnOrientedNpc(0x8001, pos, 0, &color, big * 0.75f, big * 0.9f, 1.0f, 0.4f);
+    } else {
+        switch (gCurrentLevel) {
+        case 3:
+        case 6:
+        case 9:
+        case 0xD:
+            break;
+        default:
+            goto spawn;
+        }
+    }
+    big = big * 0.5f;
+    spawnDestructionEffectBurst(pos, 0xFFFF, 1.6f, big, 1.5f, 1.0f);
+    n = (s16)(randS() % 3) + 5;
+    for (i = 0; i < n; i++) {
+        {
+            composeRandomRotationMatrix(mtx, vel, npc->f50 * 0.5f, 0x3C, 0, 0);
+            mtx[0] += pos[0];
+            mtx[1] += pos[1];
+            mtx[2] += pos[2];
+            scaleVec3ByRandomRange(vel, 3.0f, 4.0f);
+            fa = FABS(((f32)(randS() & 0x7F) - 64.0f) / 12.8f);
+            fa = fa + 12.0f;
+            fb = FABS(((f32)(randS() & 0x7F) - 64.0f) * 0.0078125f) + 1.8f;
+            spawnDebris1Npc(mtx, vel, fa, fb, FABS(((f32)(randS() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
+        }
+    }
+    switch (*(s32 *)(npc->u34 + 0xA8)) {
+    case 0:
+        releaseMeshAsset((void *)npc->mesh30);
+        npc->mesh30 = (s32)walkMeshdef0List(D_mission_overlay_800A7060);
+        mat34CrossRowsAndCopyPos((void *)(npc->mesh30 + 0x28), npc, npc->f54);
+        *(s32 *)((u8 *)getNpcContextByIndex(*(u16 *)(npc->u38 + 0x198)) + 0xC) = npc->mesh30;
+        npc->uFA = 2;
+        initActorRenderDescriptorWithNpcVelocity(npc->u38, npc->u34);
+        break;
+    case 1:
+        { register f32 sc asm("$f0") = npc->f54; spawnSplineWalkerCraft(npc, sc * 1.75f, sc * 2.25f, 0xC); }
+        npc->uFA = 3;
+        break;
+    default:
+        npc->uFA = 3;
+        break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", advanceAtStDeathAnimPhase);
 
