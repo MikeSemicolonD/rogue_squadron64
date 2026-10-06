@@ -934,7 +934,75 @@ s32 heavyRandomBurstNpcHandler(void *selfp, u16 action, void *arg2) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", buildNpcAnchoredCameraEffectTransform);
+typedef struct { f32 x, y, z; } BnV3;
+
+void buildNpcAnchoredCameraEffectTransform(u16 id, void *out, s32 dst, f32 scale) {
+    Vec3f d;
+    Vec3f j;
+    Vec3f p;
+    Mat4x3 m;
+    u8 *cam;
+    f32 *ctx;
+    f32 len;
+    f32 dot2;
+    f32 dot3;
+
+    cam = D_main_bss_80138D1C;
+    ctx = getNpcContextField8(id);
+    d[0] = ctx[0] - *(f32 *)(cam + 0x4C);
+    d[1] = ctx[1] - *(f32 *)(cam + 0x50);
+    d[2] = ctx[2] - *(f32 *)(cam + 0x54);
+    len = vec3Length(d);
+    if (len == 0.0f) {
+        *(BnV3 *)out = *(BnV3 *)ctx;
+        return;
+    }
+    d[0] /= len;
+    d[1] /= len;
+    d[2] /= len;
+    len = vec3Dot(ctx + 3, d);
+    dot2 = vec3Dot(ctx + 6, d);
+    vec3Cross(j, ctx + 6, ctx + 3);
+    dot3 = vec3Dot(j, d);
+    transformLimbStrideAnchorsLocal(id, d, p);
+    switch (rand() % 3) {
+    case 0:
+        j[0] = ((rand() & 0x7F) - 64.0f) / (64.0f / (d[0] * 0.5f * scale));
+        j[1] = ((rand() & 0x7F) - 64.0f) / (64.0f / (d[1] * 0.5f * scale));
+        if (len >= 0.0f) {
+            j[2] = d[2] * -0.5f * scale;
+        } else {
+            j[2] = d[2] * 0.5f * scale;
+        }
+        break;
+    case 1:
+        j[0] = ((rand() & 0x7F) - 64.0f) / (64.0f / (d[0] * 0.5f * scale));
+        if (dot2 >= 0.0f) {
+            j[1] = d[1] * -0.5f * scale;
+        } else {
+            j[1] = d[1] * 0.5f * scale;
+        }
+        j[2] = ((rand() & 0x7F) - 64.0f) / (64.0f / (d[2] * 0.5f * scale));
+        break;
+    case 2:
+        if (dot3 >= 0.0f) {
+            j[0] = d[0] * -0.5f * scale;
+        } else {
+            j[0] = d[0] * 0.5f * scale;
+        }
+        j[1] = ((rand() & 0x7F) - 64.0f) / (64.0f / (d[1] * 0.5f * scale));
+        j[2] = ((rand() & 0x7F) - 64.0f) / (64.0f / (d[2] * 0.5f * scale));
+        break;
+    }
+    j[0] = p[0] + j[0];
+    j[1] = p[1] + j[1];
+    j[2] = p[2] + j[2];
+    if (dst != 0) {
+        *(BnV3 *)dst = *(BnV3 *)j;
+    }
+    mat34CrossRowsAndCopyPos(m, (void *)ctx, 1.0f);
+    transformVec3ByMat34(m, j, out);
+}
 
 void computeWalkerLimbStrideTargets(u16 id, f32 *base, f32 *outA, f32 *outB, f32 k) {
     f32 a[4];
