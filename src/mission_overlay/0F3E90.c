@@ -985,7 +985,158 @@ void buildSineWaveEffectGeometryB(s32 mode, SineWaveIn *in, f32 base, SineWaveOu
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", renderNpcAnchoredProceduralEffect);
+void rs_memset(u8 *, u8, u32);
+void rotateVec3ByMat3x3(Mat4x3, Vec3f, Vec3f);
+void buildSineWaveEffectGeometryA(s32, SineWaveIn *, f32, SineWaveOut *);
+f32 raycastTerrainAndNpcs(f32 *, f32 *, u16, u16 *, f32, s32, f32 *, f32 *, s32, u8 *);
+
+typedef struct { f32 m[12]; } RnMat;
+typedef struct {
+    f32 ang;
+    f32 ang2;
+    f32 range;
+    f32 padC;
+    u8 b[0x18];
+} RnFx;
+
+void renderNpcAnchoredProceduralEffect(u8 *arg0) {
+    f32 m28[12];
+    f32 inv[12];
+    f32 q0[4];
+    f32 q1[4];
+    f32 qa[4];
+    f32 qb[4];
+    f32 hit[3][3];
+    f32 dir[4];
+    f32 axis[4];
+    f32 m[12];
+    f32 dist[4];
+    u8 fl[8];
+    u16 id;
+    u8 *s;
+    u8 crossed;
+    RnFx *e;
+    s32 i;
+    f32 d;
+    f32 *p;
+    RnMat *src;
+    u8 one;
+
+    crossed = 0;
+    s = arg0 + 8;
+    e = (RnFx *)(arg0 + 0x50);
+    src = getNpcContextField8(*(u16 *)(arg0 + 0x198));
+    p = m;
+    *(RnMat *)p = *src;
+    mat34CrossRowsAndCopyPos((Vec3f *)m28, (Vec3f *)p, 1.0f);
+    mat3x3InverseInto((Vec3f *)inv, (Vec3f *)m28);
+    rs_memset(&e->b[0], 0xFF, 0x15);
+    if (!(*(u16 *)(arg0 + 0x110) & 0x40)) {
+        d = raycastTerrainAndNpcs(p, &p[3], *(u16 *)(arg0 + 0x198), &id, e->range, 0, &dist[0], hit[0], 1, &fl[0]);
+        one = 1;
+        e->b[0xA] = (u32)(d * (255.0f / e->range));
+        quatFromAxisAngle(q0, &p[6], e->ang * -0.6666667f);
+        rotateVec3ByQuat(q0, &p[3], dir);
+        d = raycastTerrainAndNpcs(p, dir, *(u16 *)(arg0 + 0x198), &id, e->range, 0, &dist[1], hit[1], one, &fl[1]);
+        e->b[0x4] = (u32)(d * (255.0f / e->range));
+        quatFromAxisAngle(q1, &p[6], e->ang * 0.6666667f);
+        rotateVec3ByQuat(q1, &p[3], dir);
+        d = raycastTerrainAndNpcs(p, dir, *(u16 *)(arg0 + 0x198), &id, e->range, 0, &dist[2], hit[2], one, &fl[2]);
+        e->b[0x10] = (u32)(d * (255.0f / e->range));
+        for (i = 0; i < 3; i++) {
+            if (fl[i] & 1) {
+                rotateVec3ByMat3x3((Vec3f *)inv, hit[i], hit[i]);
+                buildSineWaveEffectGeometryA(i, (SineWaveIn *)hit[i], dist[i], (SineWaveOut *)e);
+                continue;
+            }
+            switch (i) {
+            case 0:
+                if (!crossed) {
+                    crossed = 1;
+                    vec3Cross(axis, &p[6], &p[3]);
+                    quatFromAxisAngle(qa, axis, -e->ang2);
+                }
+                rotateVec3ByQuat(qa, &p[3], dir);
+                d = raycastTerrainAndNpcs(p, dir, *(u16 *)(arg0 + 0x198), &id, e->range, 0, &dist[0], hit[0], one, &fl[0]);
+                e->b[0xB] = (u32)(d * (255.0f / e->range));
+                if (fl[i] & 1) {
+                    rotateVec3ByMat3x3((Vec3f *)inv, hit[i], hit[i]);
+                    buildSineWaveEffectGeometryB(i, (SineWaveIn *)hit[i], dist[i], (SineWaveOut *)e);
+                }
+                break;
+            case 1:
+                if (!crossed) {
+                    crossed = 1;
+                    vec3Cross(axis, &p[6], &p[3]);
+                    quatFromAxisAngle(qa, axis, -e->ang2);
+                }
+                quatMultiply(q0, qa, qb);
+                rotateVec3ByQuat(qb, &p[3], dir);
+                d = raycastTerrainAndNpcs(p, dir, *(u16 *)(arg0 + 0x198), &id, e->range, 0, &dist[1], hit[1], one, &fl[1]);
+                e->b[0x5] = (u32)(d * (255.0f / e->range));
+                if (fl[i] & 1) {
+                    rotateVec3ByMat3x3((Vec3f *)inv, hit[i], hit[i]);
+                    buildSineWaveEffectGeometryB(i, (SineWaveIn *)hit[i], dist[i], (SineWaveOut *)e);
+                }
+                break;
+            case 2:
+                if (!crossed) {
+                    crossed = 1;
+                    vec3Cross(axis, &p[6], &p[3]);
+                    quatFromAxisAngle(qa, axis, -e->ang2);
+                }
+                quatMultiply(q1, qa, qb);
+                rotateVec3ByQuat(qb, &p[3], dir);
+                d = raycastTerrainAndNpcs(p, dir, *(u16 *)(arg0 + 0x198), &id, e->range, 0, &dist[2], hit[2], one, &fl[2]);
+                e->b[0x11] = (u32)(d * (255.0f / e->range));
+                if (fl[i] & 1) {
+                    rotateVec3ByMat3x3((Vec3f *)inv, hit[i], hit[i]);
+                    buildSineWaveEffectGeometryB(i, (SineWaveIn *)hit[i], dist[i], (SineWaveOut *)e);
+                }
+                break;
+            default:
+                continue;
+            }
+        }
+    }
+    if (*(u16 *)(arg0 + 0x110) & 0x80) {
+        return;
+    }
+    if (!crossed) {
+        vec3Cross(axis, &p[6], &p[3]);
+    }
+    d = raycastTerrainAndNpcs(p, &p[3], *(u16 *)(arg0 + 0x198), &id, e->b[0xA] * (e->range / 255.0f), 0, NULL, NULL, 2, &fl[0]);
+    if (fl[0] & 2) {
+        e->b[0xA] = (u32)(d * (255.0f / e->range));
+        *(u16 *)(s + 0xF0) = id;
+    } else {
+        *(u16 *)(s + 0xF0) = 0xFFFF;
+    }
+    quatFromAxisAngle(qb, axis, e->ang2);
+    rotateVec3ByQuat(qb, &p[3], dir);
+    d = raycastTerrainAndNpcs(p, dir, *(u16 *)(arg0 + 0x198), &id, e->b[0x9] * (e->range / 255.0f), 0, NULL, NULL, 2, &fl[0]);
+    if (fl[0] & 2) {
+        e->b[0x9] = (u32)(d * (255.0f / e->range));
+    }
+    quatFromAxisAngle(qb, axis, -e->ang2);
+    rotateVec3ByQuat(qb, &p[3], dir);
+    d = raycastTerrainAndNpcs(p, dir, *(u16 *)(arg0 + 0x198), &id, e->b[0xB] * (e->range / 255.0f), 0, NULL, NULL, 2, &fl[0]);
+    if (fl[0] & 2) {
+        e->b[0xB] = (u32)(d * (255.0f / e->range));
+    }
+    quatFromAxisAngle(qb, &p[6], e->ang * -0.33333334f);
+    rotateVec3ByQuat(qb, &p[3], dir);
+    d = raycastTerrainAndNpcs(p, dir, *(u16 *)(arg0 + 0x198), &id, e->b[0x7] * (e->range / 255.0f), 0, NULL, NULL, 2, &fl[0]);
+    if (fl[0] & 2) {
+        e->b[0x7] = (u32)(d * (255.0f / e->range));
+    }
+    quatFromAxisAngle(qb, &p[6], e->ang * 0.33333334f);
+    rotateVec3ByQuat(qb, &p[3], dir);
+    d = raycastTerrainAndNpcs(p, dir, *(u16 *)(arg0 + 0x198), &id, e->b[0xD] * (e->range / 255.0f), 0, NULL, NULL, 2, &fl[0]);
+    if (fl[0] & 2) {
+        e->b[0xD] = (u32)(d * (255.0f / e->range));
+    }
+}
 
 typedef struct {
     f32 f0;
