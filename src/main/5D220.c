@@ -466,7 +466,130 @@ s32 sprayEffectEmitterNpcHandler(u8 *arg0, s32 action, u8 *arg2) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/5D220", dispatchCueByCategory);
+extern s32 D_main_bss_80137CE4;
+extern s32 D_main_bss_8013961C;
+extern struct { s32 t; s32 shots; } msStats __asm__("missionStats");
+u16 spawnNpcOfType(void *, void *, u32, u8);
+void noopHandler(s32);
+s32 audioCueDispatcherNpcHandler();
+s32 guidedEffectNpcHandler();
+
+typedef struct {
+    f32 v[3];
+    s32 a2;
+    f32 a5;
+    s32 a0;
+    s16 a1;
+    s16 a4;
+    u16 val;
+} CueArgs;
+
+#define CUE_TBL(o) (((u16 *)D_main_bss_8013961C)[D_main_bss_80137CE4 + (o)])
+
+u16 dispatchCueByCategory(s32 arg0, s32 arg1, s32 arg2, f32 *arg3, s32 arg4, f32 arg5, f32 arg6) {
+    CueArgs st;
+    s32 who = arg1;
+    f32 k;
+
+    if (D_main_bss_80130B39 == 0 && (u16)who == (u16)getPlayerField2(0)) {
+        msStats.shots++;
+    }
+    st.a5 = arg5;
+    st.a4 = arg4;
+    st.a2 = arg2;
+    st.a0 = arg0;
+    st.a1 = who;
+    switch (arg0) {
+    case 9:
+        if (D_main_bss_80130B39 == 0) {
+            noopHandler(0xFA);
+        }
+    case 8:
+        st.val = CUE_TBL(8);
+        st.v[0] = st.v[1] = st.v[2] = 0.1f;
+        break;
+    case 6:
+        if (D_main_bss_80130B39 == 0) {
+            noopHandler(0xFA);
+        }
+        st.v[0] = arg3[0] * 0.25f;
+        st.v[1] = arg3[1] * 0.25f;
+        st.v[2] = arg3[2] * 0.25f;
+        st.val = CUE_TBL(4);
+        break;
+    case 11:
+        if (D_main_bss_80130B39 == 0) {
+            noopHandler(0xFA);
+        }
+    case 10:
+        st.val = CUE_TBL(12);
+        st.v[0] = st.v[1] = st.v[2] = 0.25f;
+        break;
+    case 14:
+        st.val = CUE_TBL(12);
+        st.v[0] = arg3[0] * 0.25f;
+        st.v[1] = arg3[1] * 0.25f;
+        st.v[2] = arg3[2] * 0.25f;
+        break;
+    case 13:
+        st.val = CUE_TBL(20);
+        st.v[0] = st.v[1] = st.v[2] = 0.25f;
+        break;
+    case 12:
+        st.val = CUE_TBL(16);
+        goto vec;
+    case 2:
+    case 3:
+    case 4:
+    case 5:
+        if (D_main_bss_80130B39 == 0) {
+            noopHandler(0xFA);
+        }
+    default:
+        if ((u16)who == (u16)getPlayerField2(0)) {
+            st.val = CUE_TBL(28);
+        } else {
+            st.val = CUE_TBL(0);
+        }
+    vec:
+        if (arg3 != NULL) {
+            st.v[0] = arg3[0] * 0.25f;
+            st.v[1] = arg3[1] * 0.25f;
+            st.v[2] = arg3[2] * 0.25f;
+        } else {
+            k = 0.25f;
+            st.v[2] = k;
+            st.v[1] = k;
+            st.v[0] = k;
+        }
+        break;
+    }
+    st.val = (u32)((f32)st.val * arg6);
+    { u16 r;
+    switch (arg0) {
+    case 11:
+        r = spawnNpcOfType(guidedEffectNpcHandler, &st, 2, 0xC); break;
+    case 10:
+    case 13:
+    case 14:
+        r = spawnNpcOfType(guidedEffectNpcHandler, &st, 2, 0x23); break;
+    case 9:
+        r = spawnNpcOfType(sprayEffectEmitterNpcHandler, &st, 4, 0xC); break;
+    case 8:
+        r = spawnNpcOfType(sprayEffectEmitterNpcHandler, &st, 4, 0x23); break;
+    case 12:
+        r = spawnNpcOfType(audioCueDispatcherNpcHandler, &st, 2, 0x23); break;
+    case 4:
+    case 5:
+        r = spawnNpcOfType(audioCueDispatcherNpcHandler, &st, 4, 0xC); break;
+    case 1:
+        r = spawnNpcOfType(audioCueDispatcherNpcHandler, &st, 4, 0x23); break;
+    default:
+        r = spawnNpcOfType(audioCueDispatcherNpcHandler, &st, 2, arg0 == 0 ? 0x23 : 0xC); break;
+    }
+    return r;
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/5D220", D_main_8003B168);
 
