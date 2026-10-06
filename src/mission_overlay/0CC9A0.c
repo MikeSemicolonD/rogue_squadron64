@@ -79,7 +79,186 @@ s32 tickActorTexturedSoundEffect(u8 *arg0, s32 arg1) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", tickAtAtBodyTransform);
+typedef struct { s32 x, y, z; } AbV3i;
+typedef struct {
+    u8 pad0[0x38];
+    s32 obj;
+    u8 pad3C[0x18];
+    f32 f54;
+    f32 f58;
+    f32 f5C;
+    u8 pad60[0x33];
+    u8 b93;
+    u8 audio[0x64];
+    f32 fF8;
+} AbNpc;
+extern f32 D_mission_overlay_8010A618[];
+void factor5RemoveListNode(void *);
+void play3DSoundEventVariant(void *, void *, void *, f32, f32, s32, s32, s32, s32, s32);
+u8 isPendingU8(s32) __asm__("isPendingChildNpcActive");
+u8 computeActorAnchorDeltaAfterLOS(s32);
+void *getObjectMeshTransformOrLocal(s32, void *);
+void computeAnchorRelativePositionByDistanceRatio(void *, void *, f32, void *);
+void mat34CrossRowsAndCopyPos(void *, void *, f32);
+void mat3x3InverseInto(void *, void *);
+void transformVec3ByMat34(void *, void *, void *);
+void vec3NormalizeInto(void *, void *);
+void buildRotationMatrixSlot0(void *, f32);
+void buildRotationMatrixSlot1(void *, f32);
+void composeRotationMatrixSlot1(void *, f32);
+f32 vec3Dot(void *, void *);
+f32 vec3Length(void *);
+f32 constMinusSinfApprox(f32);
+void vec3Cross(void *, void *, void *);
+void normalize_vector(void *);
+void quatFromAxisAngle(void *, void *, f32);
+void rotateVec3ByQuat(void *, void *, void *);
+
+void tickAtAtBodyTransform(void *arg0, f32 dt) {
+    register AbNpc *npc asm("$20") = arg0;
+    f32 mtx[12];
+    f32 inv[12];
+    f32 dir[3];
+    f32 v80[3];
+    f32 v90[3];
+    f32 meshbuf[12];
+    f32 deg;
+    f32 ang;
+    f32 lim;
+    f32 a;
+    f32 b;
+
+    if (isPendingU8(npc->obj) == 1 && computeActorAnchorDeltaAfterLOS(npc->obj) == 1) {
+        f32 axis[4];
+        f32 q[4];
+        f32 cr[4];
+        f32 t1[4];
+        f32 t2[4];
+
+        computeAnchorRelativePositionByDistanceRatio(npc, getObjectMeshTransformOrLocal(npc->obj, meshbuf), 10.0f, v90);
+        mat34CrossRowsAndCopyPos(mtx, npc, 1.0f);
+        mat3x3InverseInto(inv, mtx);
+        transformVec3ByMat34(inv, v90, v80);
+        v80[0] += npc->f54 * -0.851765f;
+        v80[1] += npc->f54 * 55.2586f;
+        v80[2] += npc->f54 * -33.5938f;
+        vec3NormalizeInto(dir, v80);
+        buildRotationMatrixSlot0(mtx, npc->f5C);
+        composeRotationMatrixSlot1(mtx, npc->f58);
+        transformVec3ByMat34(mtx, D_mission_overlay_8010A618, v80);
+        ang = constMinusSinfApprox(vec3Dot(v80, dir)) * 57.29578f;
+        if (0.001f < ang) {
+            if (5.0f < ang) {
+                if (npc->b93 == 0) {
+                    npc->b93 = 1;
+                    play3DSoundEventVariant(npc->audio, npc, (u8 *)npc + 0x24, 9.0f, 0.1f, 7, 0x49, 1, 0x6E, 0x28);
+                }
+            } else if (npc->b93 == 1) {
+                npc->b93 = 0;
+                factor5RemoveListNode(npc->audio);
+            }
+            lim = npc->fF8 * dt;
+            if (lim < ang) {
+                ang = lim;
+            }
+            vec3Cross(axis, v80, dir);
+            normalize_vector(axis);
+            quatFromAxisAngle(q, axis, ang);
+            rotateVec3ByQuat(q, v80, dir);
+            axis[1] = 0.0f;
+            axis[0] = dir[0];
+            axis[2] = dir[2];
+            ang = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A618, axis) / (vec3Length(D_mission_overlay_8010A618) * vec3Length(axis))) * 57.29578f;
+            *(AbV3i *)t1 = *(AbV3i *)D_mission_overlay_8010A618;
+            t1[1] = 0.0f;
+            *(AbV3i *)t2 = *(AbV3i *)axis;
+            t2[1] = 0.0f;
+            vec3Cross(cr, t1, t2);
+            if (!(0.0f <= cr[1])) {
+                ang = -ang;
+            }
+            buildRotationMatrixSlot1(mtx, -ang);
+            transformVec3ByMat34(mtx, dir, axis);
+            axis[0] = 0.0f;
+            npc->f58 = ang;
+            b = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A618, axis) / (vec3Length(D_mission_overlay_8010A618) * vec3Length(axis))) * 57.29578f;
+            if (!(axis[1] <= 0.0f)) {
+                b = -b;
+            }
+            npc->f5C = b;
+            if (22.0f < npc->f58) {
+                npc->f58 = 22.0f;
+            } else if (npc->f58 < -22.0f) {
+                npc->f58 = -22.0f;
+            }
+            if (30.0f < npc->f5C) {
+                npc->f5C = 30.0f;
+            } else if (npc->f5C < -30.0f) {
+                npc->f5C = -30.0f;
+            }
+        } else if (npc->b93 == 1) {
+            npc->b93 = 0;
+            factor5RemoveListNode(npc->audio);
+        }
+    } else {
+        f32 m[12];
+        f32 r[4];
+        f32 v[4];
+        f32 axis[4];
+        f32 q[4];
+        f32 cr[4];
+        f32 t1[4];
+        f32 t2[4];
+
+        buildRotationMatrixSlot0(m, npc->f5C);
+        composeRotationMatrixSlot1(m, npc->f58);
+        transformVec3ByMat34(m, D_mission_overlay_8010A618, v);
+        ang = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A618, v)) * 57.29578f;
+        if (0.001f < ang) {
+            if (5.0f < ang) {
+                if (npc->b93 == 0) {
+                    npc->b93 = 1;
+                    play3DSoundEventVariant(npc->audio, npc, (u8 *)npc + 0x24, 9.0f, 0.1f, 7, 0x49, 1, 0x6E, 0x28);
+                }
+            } else if (npc->b93 == 1) {
+                npc->b93 = 0;
+                factor5RemoveListNode(npc->audio);
+            }
+            lim = npc->fF8 * dt;
+            if (lim < ang) {
+                ang = lim;
+            }
+            vec3Cross(axis, v, D_mission_overlay_8010A618);
+            normalize_vector(axis);
+            quatFromAxisAngle(q, axis, ang);
+            rotateVec3ByQuat(q, v, r);
+            axis[1] = 0.0f;
+            axis[0] = r[0];
+            axis[2] = r[2];
+            ang = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A618, axis) / (vec3Length(D_mission_overlay_8010A618) * vec3Length(axis))) * 57.29578f;
+            *(AbV3i *)t1 = *(AbV3i *)D_mission_overlay_8010A618;
+            t1[1] = 0.0f;
+            *(AbV3i *)t2 = *(AbV3i *)axis;
+            t2[1] = 0.0f;
+            vec3Cross(cr, t1, t2);
+            if (!(0.0f <= cr[1])) {
+                ang = -ang;
+            }
+            buildRotationMatrixSlot1(m, -ang);
+            transformVec3ByMat34(m, r, axis);
+            axis[0] = 0.0f;
+            npc->f58 = ang;
+            b = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A618, axis) / (vec3Length(D_mission_overlay_8010A618) * vec3Length(axis))) * 57.29578f;
+            if (!(axis[1] <= 0.0f)) {
+                b = -b;
+            }
+            npc->f5C = b;
+        } else if (npc->b93 == 1) {
+            npc->b93 = 0;
+            factor5RemoveListNode(npc->audio);
+        }
+    }
+}
 
 extern void clearModelAnimChannelEntry(s32);
 extern void releaseModelAnimSlot(s32);
