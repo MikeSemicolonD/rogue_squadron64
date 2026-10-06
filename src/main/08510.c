@@ -1633,7 +1633,222 @@ s32 processMeshdef1ForLod(u8 *arg0, u8 *arg1, u8 *arg2) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", processSceneNode);
+typedef struct {
+    s32 a;
+    s32 b;
+    u8 *c;
+} PsnDlEntry;
+
+typedef struct PsnSortEntry {
+    struct PsnSortEntry *next;
+    s32 dl;
+    s32 mtx;
+    u8 *node;
+    u8 flag;
+} PsnSortEntry;
+
+extern s32 D_main_bss_8011A894;
+extern u8 *D_main_bss_8010E090[];
+extern PsnDlEntry D_main_bss_80116400[];
+extern PsnSortEntry D_main_bss_80117C08[];
+s32 renderUnlitMeshFaces(f32 *, f32 *, u8 *);
+s32 renderLitTexturedMeshFaces(f32 *, f32 *, u8 *);
+s32 renderFlatMeshFaceGroup(f32 *, f32 *, u8 *);
+s32 renderLitMeshFaceGroup(f32 *, f32 *, u8 *);
+s32 submitSceneNodeRenderR(f32 *, f32 *, void *, void *, s32) __asm__("submitSceneNodeRender");
+
+static __inline__ void psnLod(u8 *n) {
+    f32 t;
+    f32 v;
+
+    t = *(f32 *)(n + 0x1C);
+    if (t <= D_main_bss_8011A8CC) {
+        t = D_main_bss_8011A8CC * 256.0f;
+    } else {
+        t = t * 256.0f;
+    }
+    v = (((D_main_bss_8011A7D4 * t + D_main_bss_801163C0) / t) * 511.0f + 511.0f) * 32.0f;
+    D_main_bss_8011D088 = (f32)(u16)(u32)v;
+}
+
+static __inline__ void psnComputeLod(u8 *n) {
+    f32 t;
+    f32 v;
+
+    if (*(u32 *)(n + 0xC) & 0x80000) {
+        t = *(f32 *)(n + 0x1C);
+        if (t <= D_main_bss_8011A8CC) {
+            t = D_main_bss_8011A8CC * 256.0f;
+        } else {
+            t = t * 256.0f;
+        }
+        v = (((D_main_bss_8011A7D4 * t + D_main_bss_801163C0) / t) * 511.0f + 511.0f) * 32.0f;
+        D_main_bss_8011D088 = (f32)(u16)(u32)v;
+    }
+}
+
+static __inline__ void psnAddDl(s32 a, u8 *node) {
+    s32 i = D_main_bss_80128C6C;
+
+    D_main_bss_80116400[i].a = a;
+    D_main_bss_80116400[i].b = D_main_bss_8011DC5C;
+    D_main_bss_80128C6C = i + 1;
+    D_main_bss_80116400[i].c = node;
+}
+
+static __inline__ void psnAddSort(u8 *m, u8 *node, s32 c) {
+    s32 i;
+    s32 *slot;
+    s32 dl;
+
+    i = D_main_bss_801143A0;
+    D_main_bss_80117C08[i].next = (PsnSortEntry *)D_main_bss_8011D498[D_main_bss_80117C00].a[c];
+    D_main_bss_8011D498[D_main_bss_80117C00].a[c] = (s32)&D_main_bss_80117C08[i];
+    dl = *(s32 *)(m + 0x38);
+    D_main_bss_80117C08[i].mtx = D_main_bss_8011DC5C;
+    D_main_bss_80117C08[i].node = node;
+    D_main_bss_80117C08[i].dl = dl;
+    dl = *(s32 *)(m + 0x34) == 0;
+    D_main_bss_801143A0 = i + 1;
+    D_main_bss_80117C08[i].flag = dl;
+}
+
+static __inline__ void psnQueue(f32 *mtx, u8 *m, u8 *node) {
+    s32 a;
+    s32 c;
+    s32 i;
+    s32 lod;
+    s32 *slot;
+
+    if (*(s32 *)(m + 0x34) != 0) {
+        psnAddDl(*(s32 *)(m + 0x34), node);
+    }
+    if (*(s32 *)(m + 0x38) == 0) {
+        return;
+    }
+    lod = (s32)(mtx[0x2C / 4] * 256.0f) / 512;
+    if (lod >= 0) {
+        c = 0x3F;
+        if (lod < 0x40) {
+            c = lod;
+        }
+    } else {
+        c = 0;
+    }
+    psnAddSort(m, node, c);
+}
+
+s32 processSceneNode(f32 *arg0, f32 *arg1, u8 *arg2, u8 *arg3) {
+    u8 *s0;
+    s32 ret;
+    s32 flags;
+    s32 r;
+    s32 lod;
+    s32 *slot;
+    s32 i;
+    s32 a;
+    s32 c;
+    u16 idx;
+
+    flags = *(s32 *)(arg2 + 0xC);
+    ret = 1;
+    if (flags & 4) {
+        s0 = *(u8 **)(arg2 + 8);
+        if (D_main_bss_8011A894 == *(s32 *)(s0 + 0x30)) {
+        queue:
+            psnQueue(arg0, s0, arg2);
+            return ret;
+        }
+        idx = D_main_bss_8010DFD4;
+        D_main_bss_8010E090[idx] = s0;
+        flags = *(s32 *)(s0 + 0xC);
+        D_main_bss_8010DFD4 = idx + 1;
+        if (flags & 0x10) {
+            if (flags & 0x260) {
+                *(u32 *)(s0 + 0x2C) &= ~0x40000000;
+                if (*(u32 *)(s0 + 0xC) & 0xC0000000) {
+                    if (*(s32 *)(arg2 + 0xC) >= 0) {
+                        goto set;
+                    }
+                    r = renderUnlitMeshFaces(arg0, arg1, arg2) & 0xFF;
+                } else {
+                    r = renderLitTexturedMeshFaces(arg0, arg1, s0) & 0xFF;
+                }
+                if (r == 0) {
+                    return 0;
+                }
+            set:
+                *(u32 *)(s0 + 0x2C) |= 0x20000000;
+            }
+            goto queue;
+        }
+        if (flags & 0x80000) {
+            psnLod(s0);
+        }
+        flags = *(s32 *)(s0 + 0xC);
+        if (flags < 0) {
+            ret = renderFlatMeshFaceGroup(arg0, arg1, s0);
+        } else if (flags & 0x40000000) {
+            ret = renderLitMeshFaceGroup(arg0, arg1, s0);
+        } else {
+            ret = submitSceneNodeRenderR(arg0, arg1, s0, arg3, 1);
+        }
+        if (ret & 0xFF) {
+            *(u32 *)(s0 + 0x2C) |= 0x20000000;
+        }
+        return ret & 0xFF;
+    }
+    if (!(flags & 8)) {
+        goto p3;
+    }
+    if (flags & 0x10) {
+        if (flags & 0x260) {
+            u32 v = *(u32 *)(arg2 + 0x2C);
+            if (v & 0x20000000) {
+                *(u32 *)(arg2 + 0x2C) = v & ~0x20000000;
+                return 1;
+            }
+            *(u32 *)(arg2 + 0x2C) = v & ~0x40000000;
+            if (*(u32 *)(arg2 + 0xC) & 0xC0000000) {
+                s0 = arg2;
+                if (*(s32 *)(arg2 + 0xC) >= 0) {
+                    goto queue;
+                }
+                r = renderUnlitMeshFaces(arg0, arg1, arg2) & 0xFF;
+            } else {
+                r = renderLitTexturedMeshFaces(arg0, arg1, arg2) & 0xFF;
+            }
+            s0 = arg2;
+            if (r != 0) {
+                goto queue;
+            }
+            return 0;
+        }
+        s0 = arg2;
+        goto queue;
+    }
+p3:
+    {
+        u32 v = *(u32 *)(arg2 + 0x2C);
+        if (v & 0x20000000) {
+            *(u32 *)(arg2 + 0x2C) = v & ~0x20000000;
+            if (D_main_bss_8011A894 == *(s32 *)(arg2 + 0x30)) {
+                s0 = *(u8 **)(arg2 + 8);
+                goto queue;
+            }
+        }
+    }
+    psnComputeLod(arg2);
+    flags = *(s32 *)(arg2 + 0xC);
+    if (flags < 0) {
+        r = renderFlatMeshFaceGroup(arg0, arg1, arg2) & 0xFF;
+    } else if (flags & 0x40000000) {
+        r = renderLitMeshFaceGroup(arg0, arg1, arg2) & 0xFF;
+    } else {
+        r = submitSceneNodeRenderR(arg0, arg1, arg2, arg3, 1) & 0xFF;
+    }
+    return r;
+}
 
 extern f32 D_main_bss_80112AF0[12];
 extern u8 *D_main_bss_80112B20;
