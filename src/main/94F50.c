@@ -515,7 +515,59 @@ void setSongParamPairCmdLocked(s32 arg0, s32 arg1, s32 arg2) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", queueAudioVoiceCmdLocked);
+extern void dispatchAudioCommand(u8, u16, u8, u8, s32);
+
+void queueAudioVoiceCmdLocked(u8 arg0, u16 arg1, s32 arg2, u8 arg3) {
+    s32 h;
+    s32 idx;
+    u32 i;
+    u32 end;
+
+    h = arg2;
+    for (i = 0; i < 8; i++) {
+        if (D_main_bss_80149A00[i].unkEC1 == 0 && D_main_bss_80149A00[i].unk000 == (arg2 & 0x7FFFFFFF)) {
+            arg2 = i | (arg2 & 0x80000000);
+            goto found;
+        }
+    }
+    arg2 = -1;
+found:
+    if (arg2 != -1) {
+        if (arg2 >= 0) {
+            idx = arg2;
+            dispatchAudioCommand(arg0, arg1, D_main_bss_80149A00[idx].unkEC4, arg3, h);
+            {
+                s32 o = idx * sizeof(D_main_bss_80149A00[0]);
+                i = (u32)D_main_bss_80149A00 + o + 0x528;
+                end = i + 0x40;
+                do {
+                    if (*(u8 *)i != *(u8 *)((u8 *)D_main_bss_80149A00 + o + 0xEC4)) {
+                        dispatchAudioCommand(arg0, arg1, *(u8 *)i, 0, 0);
+                    }
+                    i++;
+                } while (i < end);
+            }
+        } else {
+            idx = arg2 & 0x7FFFFFFF;
+            switch (arg3 & 0xF) {
+            case 0:
+                *(u8 *)&D_main_bss_80149A00[idx].unkEC8[6] = arg0;
+                break;
+            case 1:
+                D_main_bss_80149A00[idx].unkEF0[0] = 0;
+                break;
+            case 2:
+                *(u8 *)&D_main_bss_80149A00[idx].unkEC8[6] = arg0;
+                D_main_bss_80149A00[idx].unkEEE |= 8;
+                break;
+            case 3:
+                *(u8 *)&D_main_bss_80149A00[idx].unkEC8[6] = arg0;
+                D_main_bss_80149A00[idx].unkEEE |= 0x80;
+                break;
+            }
+        }
+    }
+}
 
 void queueAudioVoiceCmdLocked(u8, u16, s32, u8);
 void queueAudioVoiceCmd(u8 arg0, u16 arg1, s32 arg2, u8 arg3) {
