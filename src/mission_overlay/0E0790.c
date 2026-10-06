@@ -391,7 +391,700 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", tickWalkerCraftWithLimbsAndDestruction);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", npcTrainCarUpdate);
+typedef struct { f32 x, y, z; } TcVec3;
+typedef struct {
+    TcVec3 pos;
+    TcVec3 fwd;
+    TcVec3 up;
+    TcVec3 vel;
+    u8 *mesh;
+    u8 *rec;
+    s32 obj;
+    u8 *node0[3];
+    u8 *node1[3];
+    u8 *node2[3];
+    u8 *mat0[3];
+    u8 *mat1[3];
+    u8 *mat2[3];
+    f32 radius;
+    f32 scale;
+    u8 pad8C[0x18];
+    u8 *ctx;
+    u16 slotA8;
+    u16 slotAA;
+    u16 slotAC;
+    u16 slotAE;
+    s8 outCount;
+    u8 flagB1;
+    u8 type;
+    s8 cntB3;
+    s16 mode;
+    u16 padB6;
+    f32 fB8;
+    f32 fBC;
+    f32 timer;
+    u8 bC4;
+    u8 bC5;
+    u8 bC6;
+    u8 bC7;
+    s16 assetC8;
+    u16 ids[16];
+    u8 live[16];
+    s16 count;
+    u8 bFC;
+    u8 bFD;
+} TcObj;
+typedef struct {
+    f32 phase;
+    f32 rate;
+    u8 pad8[4];
+    s32 iC;
+    f32 aDC[3];
+    f32 aE4[3];
+    u8 audio0[0x44];
+    u8 audio1[0x44];
+    u8 on0;
+    u8 on1;
+    u8 vol;
+} TcSub;
+typedef struct {
+    f32 f0;
+    f32 f4;
+    f32 f8;
+    f32 fC;
+    f32 f10;
+    f32 f14;
+    u16 u18;
+    u16 u1A;
+} TcParam;
+extern TcParam D_mission_overlay_8010AB14[];
+typedef struct { s32 a[3]; s32 b[3]; s32 c[3]; u8 pad[0x6C]; } TcNames;
+extern TcNames D_mission_overlay_8010AC90[];
+extern s32 D_mission_overlay_8010AB00[];
+extern u16 D_main_bss_80139560[];
+extern u8 D_main_bss_80130B39;
+extern f32 D_main_bss_80130BA4;
+extern f32 D_mission_overlay_8010C0B0_f __asm__("D_mission_overlay_8010C0B0");
+extern f32 D_mission_overlay_8010C0B4_f __asm__("D_mission_overlay_8010C0B4");
+extern s32 gObjectiveCounts[];
+extern u8 gObjectiveBooleans[];
+extern char D_mission_overlay_800A8084[];
+extern char D_mission_overlay_800A8090[];
+s16 rand(void);
+f32 sinf(f32);
+u8 *walkMeshdef0List(char *);
+s16 loadAssetIntoNewSlot(char *, char *);
+void composeEulerRotationXYZ(void *, s32, s32, s32);
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+void composeRotationMatrixSlot0(void *, s32);
+void composeRotationMatrixSlot1(void *, s32);
+void composeRotationMatrixSlot2(void *, s32);
+void addVec3At0x24(void *, f32, f32, f32);
+u16 popNpcSlotFromTail(u16, void *);
+u8 *lookupHmtMaterialByName(void *, s32, void *);
+void createAndInitObject(void *, s32, void *, void *, s32);
+s32 getLevelDatItemByName(char *);
+void initActorAsType1(s32, s32, s32, s32, f32, f32, s32);
+void updateObjectFlags110(s32, s32, s32);
+void play3DSoundEventVariant(void *, void *, void *, f32, f32, s32, s32, s32, s32, s32);
+u8 *allocateAndInitCraftNpcContext(f32, f32, u16);
+void factor5RemoveListNode(void *);
+void rs_free(void *);
+s32 getNpcCurrentHealth(s32);
+void initActorRenderDescriptorIfUninit(s32, s32, void *, s32, void *);
+void clearPendingAndDestroyChildNpc(void *);
+void releaseMeshAsset(void *);
+void func_mission_overlay_800AA6D0(void *, f32, void *);
+void dispatchEffectByActorType(s32, f32);
+void buildDebrisTransformStack(void *, f32);
+u8 *getNpcContextByIndex(u16);
+s32 func_mission_overlay_800EFDE0(s32, s32, s32, f32);
+void tickCraftSplineOrientationDual(void *, f32);
+void transformCraftAnchorsAndApplySubFx(void *, f32);
+void tickWalkerCraftWithLimbsAndDestruction(void *);
+void spawnNpcType0xAFromTemplate(void *, f32);
+void mat34CrossRowsAndCopyPos(void *, void *, f32);
+u8 slerpFrameTowardTargetAxis(void *, f32);
+void composeRandomRotationMatrix(void *, void *, f32, s32, s32, s32);
+void scaleVec3ByRandomRange(void *, f32, f32);
+void spawnDebris1Npc(void *, void *, f32, f32, f32);
+void spawnDestructionEffectBurst(void *, s32, f32, f32, f32, f32);
+void zmemcpy(void *, void *, s32);
+void transformLimbStrideAnchorsLocal(u16, void *, void *);
+void gameStateByteGatedNpcHelper(s32, void *, s32, f32, f32, f32);
+void destroyNpcSlotByIndex(u16);
+s32 isNpcWithinActiveReferenceRange(void *);
+void destroyObjectOwnedNpcSlot(s32);
+void updateActive3DAudioSource(void *, void *, void *, s32);
+s32 addNpcToVisibilityBucket(s32, void *, void *, f32);
+void advanceNpcOnCurvedPath(s32, s32, void *, void *);
+s32 getPlayerField2(s32);
+void playSpeechClip(s32, s32, f32, s32);
+void vec3ExtrapolateFirstOrder(s32, s32, void *, f32);
+void spawnRandomScaleColoredEffectAltVariant(void *, f32);
+void extrapolateNpcPositionForCurrentMode(void *);
+s32 getObjectDetailLevel(s32);
+void func_mission_overlay_800EFD6C(s32);
+void datItemSetObjectiveBooleanCount(s32, s32, s32, s32, s32, s32);
+void spawnRandomParticleWithParent(s32, u16, f32, s32);
+s32 dealDamageToNpc(s32, u16);
+void unregisterAndFreeNpcSlot(u16, void *);
+void tallyMidDetailObject(void *);
+s32 clearPendingChildNpc(s32);
+void setObjectFlagBit4(void *);
+void setType1ActorParams(s32, s32, u8, u8, u8, s32);
+void updateType1AnimRamp(s32, s32, s32, s32, s32);
+void dispatchSlotAction5IfActive(void *, void *);
+#define TCABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
+
+s32 npcTrainCarUpdate(u8 *arg0, u16 action, u8 *arg2) {
+    TcObj *s2 = *(TcObj **)(arg0 + 4);
+    f32 sp[20];
+    u8 *rec;
+    u8 *a5;
+    u8 *a9;
+    TcSub *sub;
+    f32 dt;
+    char *name;
+    s32 i;
+    s32 *hp;
+
+    switch (action) {
+    case 1:
+        rec = arg2;
+        s2->rec = arg2;
+        switch (*(u16 *)rec) {
+        default:
+        case 0x2F:
+            s2->type = 0;
+            name = "tr_engine";
+            break;
+        case 0x30:
+            s2->type = 1;
+            name = "tr_defense";
+            break;
+        case 0x31:
+            s2->type = 2;
+            name = "tr_container";
+            break;
+        case 0x34:
+            s2->type = 3;
+            name = "r_tr_engine";
+            break;
+        case 0x35:
+            s2->type = 4;
+            name = "r_tr_cargo";
+            break;
+        }
+        s2->mesh = walkMeshdef0List(name);
+        *(s32 **)(s2->mesh + 4) = D_mission_overlay_8010AB00;
+        if (s2->type == 0) {
+            s2->assetC8 = loadAssetIntoNewSlot("trn_eng_topmain", "imp_stuff/trainhatch");
+        }
+        s2->pos.x = *(f32 *)(rec + 0x10);
+        s2->pos.y = *(f32 *)(rec + 0x14);
+        s2->pos.z = *(f32 *)(rec + 0x18);
+        composeEulerRotationXYZ(s2, *(s32 *)(rec + 0x1C), *(s32 *)(rec + 0x20), *(s32 *)(rec + 0x24));
+        s2->vel.x = s2->vel.y = s2->vel.z = 0.0f;
+        {
+            f32 inv = 1.0f / *(f32 *)(*(u8 **)s2->mesh + 0x34);
+            s2->scale = inv * *(f32 *)(rec + 0x28);
+            initVec4TripletFromArgs(s2->mesh + 0x28, inv * *(f32 *)(rec + 0x28), inv * *(f32 *)(rec + 0x2C), inv * *(f32 *)(rec + 0x30));
+        }
+        composeRotationMatrixSlot0(s2->mesh + 0x28, *(s32 *)(rec + 0x1C));
+        composeRotationMatrixSlot1(s2->mesh + 0x28, *(s32 *)(rec + 0x20));
+        composeRotationMatrixSlot2(s2->mesh + 0x28, *(s32 *)(rec + 0x24));
+        addVec3At0x24(s2->mesh + 0x28, s2->pos.x, s2->pos.y, s2->pos.z);
+        s2->radius = *(f32 *)(*(u8 **)s2->mesh + 0x44) * s2->scale;
+        *(TcObj **)(arg0 + 8) = s2;
+        *(u8 **)(arg0 + 0xC) = s2->mesh;
+        s2->outCount = 0;
+        for (i = 0; i < 3; i++) {
+            s32 n = D_mission_overlay_8010AC90[s2->type].a[i];
+            if (n != 0) {
+                s2->node0[i] = lookupHmtMaterialByName(s2->mesh, n, &s2->mat0[i]);
+            } else {
+                s2->node0[i] = NULL;
+            }
+            n = D_mission_overlay_8010AC90[s2->type].b[i];
+            if (n != 0) {
+                s2->node1[i] = lookupHmtMaterialByName(s2->mesh, n, &s2->mat1[i]);
+            } else {
+                s2->node1[i] = NULL;
+            }
+            n = D_mission_overlay_8010AC90[s2->type].c[i];
+            if (n != 0) {
+                s2->node2[i] = lookupHmtMaterialByName(s2->mesh, n, &s2->mat2[i]);
+            } else {
+                s2->node2[i] = NULL;
+            }
+        }
+        {
+            u8 *b = (u8 *)D_main_bss_80139560;
+            s32 o;
+            s2->slotA8 = popNpcSlotFromTail(*(u16 *)(b + 0x1C), arg0);
+            o = 0x2C;
+            if (*(s32 *)(rec + 0xA4) == 1) {
+                o = 0x2E;
+            }
+            s2->slotAA = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+            o = 0x12;
+            if (*(s32 *)(rec + 0xA4) == 1) {
+                o = 0xE;
+            }
+            s2->slotAC = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+            if (*(s32 *)(rec + 0xA8) != 0) {
+                o = 0x18;
+                if (*(s32 *)(rec + 0xA4) == 1) {
+                    o = 0x1A;
+                }
+                s2->slotAE = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+            } else {
+                s2->slotAE = 0xFFFF;
+            }
+        }
+        createAndInitObject(&s2->obj, 0xE0, arg0, applyCraftAnimAndDetailParams, 0);
+        {
+            TcSub *sb1 = *(TcSub **)(s2->obj + 0x1A8);
+            sb1->phase = TCABSF(((f32)(rand() & 0x7F) - 64.0f) / 320.0f);
+            sb1->on0 = 0;
+            sb1->on1 = 0;
+            sb1->rate = 1.0f;
+            name = (char *)(*(s32 *)(rec + 0x8C) + (s32)rec);
+            if (*name != '-') {
+                s32 item = getLevelDatItemByName(name);
+                u8 *r = s2->rec;
+                initActorAsType1(s2->obj, item, sb1->iC, *(s32 *)(r + 0x9C), *(f32 *)(r + 0x94), *(f32 *)(s2->rec + 0x98), 0);
+                updateObjectFlags110(s2->obj, 3, 0);
+                {
+                    TcSub *p = *(TcSub **)(s2->obj + 0x1A8);
+                    if (s2->type == 0 || s2->type == 3) {
+                        p->on1 = 1;
+                        p->vol = 0x78;
+                        play3DSoundEventVariant(p->audio1, s2, &s2->vel, 10.0f, 0.6f, 0xF, 0x45, 1, 0x78, 0);
+                    }
+                }
+            }
+        }
+        {
+            TcParam *t = D_mission_overlay_8010AB14;
+            s2->ctx = allocateAndInitCraftNpcContext(t[s2->type].fC * s2->scale, t[s2->type].f8 * s2->scale, t[s2->type].u1A);
+            *(f32 *)(s2->ctx + 0x14) = t[s2->type].f0;
+            *(f32 *)(s2->ctx + 4) = t[s2->type].f10 * s2->scale;
+            *(f32 *)(s2->ctx + 0x10) = t[s2->type].f4;
+            *(f32 *)(s2->ctx + 0x18) = t[s2->type].f14;
+        }
+        break;
+    case 2:
+        {
+            TcSub *p = *(TcSub **)(s2->obj + 0x1A8);
+            if (p->on0 == 1) {
+                p->on0 = 0;
+                factor5RemoveListNode(p->audio0);
+            }
+        }
+        {
+            TcSub *p = *(TcSub **)(s2->obj + 0x1A8);
+            if (p->on1 == 1) {
+                p->on1 = 0;
+                factor5RemoveListNode(p->audio1);
+            }
+        }
+        if (s2->ctx != NULL) {
+            rs_free(s2->ctx);
+        }
+        initActorRenderDescriptorIfUninit(s2->obj, getNpcCurrentHealth(s2->obj) < 1, s2->rec, 0, s2->rec + 0x70);
+        clearPendingAndDestroyChildNpc(&s2->obj);
+        releaseMeshAsset(s2->mesh);
+        return 1;
+    case 3:
+        dt = *(f32 *)arg2;
+        sub = *(TcSub **)(s2->obj + 0x1A8);
+        {
+            f32 inc = dt * 4.0f;
+            s32 j;
+            for (j = 0; j < 3; j++) {
+                if (sub->aDC[j] < 1.0f) {
+                    sub->aDC[j] += inc;
+                    if (1.0f < sub->aDC[j]) {
+                        sub->aDC[j] = 1.0f;
+                        sub->aE4[j] = 0.0f;
+                    } else if (sub->aDC[j] < 0.2f) {
+                        sub->aE4[j] = sub->aDC[j] * 5.0f;
+                    } else {
+                        sub->aE4[j] = 1.0f - (sub->aDC[j] - 0.2f) * 1.25f;
+                    }
+                }
+            }
+        }
+        switch (s2->mode) {
+        case 0:
+            s2->mode = 1;
+        case 1:
+            func_mission_overlay_800AA6D0(s2, dt, s2->rec + 0x34);
+            dispatchEffectByActorType(s2->obj, dt);
+            {
+                TcSub *p = *(TcSub **)(s2->obj + 0x1A8);
+                p->phase += dt * p->rate;
+                if (p->phase > 1.0f) {
+                    p->phase -= 2.0f;
+                }
+                s2->pos.y += sinf(p->phase * 3.1415927f) * *(f32 *)(s2->rec + 0xA0) * 0.25f;
+            }
+            buildDebrisTransformStack(s2, dt);
+            switch (s2->type) {
+            case 3:
+                tickTrainCarStateMachine((u8 *)s2);
+                if ((s2->type == 0 || s2->type == 3) && s2->bFD == 1) {
+                    s32 k;
+                    for (k = s2->count - 1; k >= 0; k--) {
+                        if (s2->live[k] == 1) {
+                            if (getNpcCurrentHealth(*(s32 *)(getNpcContextByIndex(s2->ids[k]) + 0x10)) > 0) {
+                                break;
+                            }
+                            ((u8 *)sp)[0x18] = 0xA;
+                            s2->live[k] = 0;
+                            slotDispatcherIter(s2->ids[k], 9, sp);
+                        }
+                    }
+                }
+                break;
+            case 0:
+                tickTrainCarStateMachine((u8 *)s2);
+                if ((s2->type == 0 || s2->type == 3) && s2->bFD == 1) {
+                    s32 k;
+                    for (k = s2->count - 1; k >= 0; k--) {
+                        if (s2->live[k] == 1) {
+                            if (getNpcCurrentHealth(*(s32 *)(getNpcContextByIndex(s2->ids[k]) + 0x10)) > 0) {
+                                break;
+                            }
+                            ((u8 *)sp)[0x18] = 0xA;
+                            s2->live[k] = 0;
+                            slotDispatcherIter(s2->ids[k], 9, sp);
+                        }
+                    }
+                }
+            case 1:
+                if (s2->flagB1 == 0) {
+                    func_mission_overlay_800EFDE0(s2->obj, *(s32 *)(s2->rec + 0xC8), *(s32 *)(s2->rec + 0xCC), dt);
+                    tickCraftSplineOrientationDual(s2, dt);
+                    transformCraftAnchorsAndApplySubFx(s2, dt);
+                }
+                break;
+            }
+            break;
+        case 2:
+            dispatchEffectByActorType(s2->obj, dt);
+            {
+                TcSub *p = *(TcSub **)(s2->obj + 0x1A8);
+                p->phase += dt * p->rate;
+                if (p->phase > 1.0f) {
+                    p->phase -= 2.0f;
+                }
+                s2->pos.y += sinf(p->phase * 3.1415927f) * *(f32 *)(s2->rec + 0xA0) * 0.25f;
+            }
+            buildDebrisTransformStack(s2, dt);
+            if (s2->bC5 == 0) {
+                s2->bC5 = 1;
+                tickWalkerCraftWithLimbsAndDestruction(s2);
+            } else {
+                s2->timer -= dt;
+                if (s2->timer <= 0.0f) {
+                    s2->timer = (s16)(rand() % 4) * 0.033333335f;
+                    if (--s2->cntB3 > 0) {
+                        sp[0] = s2->pos.x + ((f32)(rand() & 0x7F) - 64.0f) / 640.0f;
+                        sp[1] = s2->pos.y - 0.6f;
+                        sp[2] = s2->pos.z + ((f32)(rand() & 0x7F) - 64.0f) * 0.015625f;
+                        spawnNpcType0xAFromTemplate(sp, TCABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f) + 1.0f);
+                        play3DSoundEvent(0, s2, &s2->vel, 24.0f, 0.4f, 0, 0x2A, 0x6E, 0x50);
+                    } else {
+                        spawnNpcType0xAFromTemplate(s2, s2->radius * 3.0f);
+                        play3DSoundEvent(0, s2, &s2->vel, 24.0f, 0.5f, 0, 0x23, 0x7D, 0x50);
+                        if (s2->type == 0 || s2->type == 3) {
+                            s2->bC6 = 1;
+                        } else {
+                            releaseMeshAsset(s2->mesh);
+                            if (s2->type == 3 || s2->type == 4) {
+                                s2->mesh = walkMeshdef0List(D_mission_overlay_800A8084);
+                            } else {
+                                s2->mesh = walkMeshdef0List(D_mission_overlay_800A8090);
+                            }
+                            *(u8 **)(getNpcContextByIndex(*(u16 *)(s2->obj + 0x198)) + 0xC) = s2->mesh;
+                            mat34CrossRowsAndCopyPos(s2->mesh + 0x28, s2, s2->scale);
+                        }
+                        if (s2->bC6 != 0) s2->mode = 4; else s2->mode = 3;
+                        s2->fB8 = 0.0f;
+                        s2->fBC = 0.0f;
+                        s2->bC4 = (rand() & 1) ? 2 : 5;
+                    }
+                }
+            }
+            break;
+        case 4:
+            {
+                u8 r = slerpFrameTowardTargetAxis(s2, dt);
+                buildDebrisTransformStack(s2, dt);
+                if (r == 1) {
+                    s32 k;
+                    s32 n = (s16)(rand() % 5) + 5;
+                    for (k = 0; k < n; ) {
+                        f32 a;
+                        f32 b;
+                        f32 c;
+                        composeRandomRotationMatrix(sp, &sp[4], s2->radius * 0.5f, 0x5A, 0, 0);
+                        sp[0] += s2->pos.x;
+                        sp[1] += s2->pos.y;
+                        sp[2] += s2->pos.z;
+                        scaleVec3ByRandomRange(&sp[4], 3.0f, 4.0f);
+                        a = TCABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.03125f * 5.0f) + 20.0f;
+                        b = TCABSF(((f32)(rand() & 0x7F) - 64.0f) / 25.6f) + 2.0f;
+                        c = TCABSF(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f;
+                        spawnDebris1Npc(sp, &sp[4], a, b, c);
+                        k++;
+                    }
+                    spawnDestructionEffectBurst(s2, 0xFFFF, 2.0f, 1.5f, 1.2f, 0.8f);
+                    zmemcpy(&sp[8], s2, 0x30);
+                    transformLimbStrideAnchorsLocal(*(u16 *)(arg0 + 0x16), &sp[17], sp);
+                    sp[8] += sp[0];
+                    sp[9] += sp[1];
+                    sp[10] += sp[2];
+                    gameStateByteGatedNpcHelper(2, &sp[8], 0, s2->radius * 0.7f, s2->radius * 1.1f, 0.5f);
+                    spawnNpcType0xAFromTemplate(s2, s2->radius * 3.5f);
+                    play3DSoundEvent(0, s2, &s2->vel, 24.0f, 0.5f, 0, 0x23, 0x7D, 0x50);
+                destroy:
+                    destroyNpcSlotByIndex(*(u16 *)(arg0 + 0x16));
+                    return 1;
+                }
+            }
+            break;
+        case 3:
+            dispatchEffectByActorType(s2->obj, dt);
+            {
+                TcSub *p = *(TcSub **)(s2->obj + 0x1A8);
+                p->phase += dt * p->rate;
+                if (p->phase > 1.0f) {
+                    p->phase -= 2.0f;
+                }
+                s2->pos.y += sinf(p->phase * 3.1415927f) * *(f32 *)(s2->rec + 0xA0) * 0.25f;
+            }
+            buildDebrisTransformStack(s2, dt);
+            if (s2->bC6 != 0) {
+                s2->mode = 4;
+            }
+            break;
+        }
+        if (*(s32 *)(s2->rec + 0x88) == 0) {
+            s2->outCount = 0;
+        } else if (isNpcWithinActiveReferenceRange(s2) != 0) {
+            s2->outCount = 0;
+        } else {
+            s2->outCount++;
+            if (s2->outCount >= 0x15) {
+                goto destroy;
+            }
+        }
+        destroyObjectOwnedNpcSlot(s2->obj);
+        return 1;
+    case 4:
+        sub = *(TcSub **)(s2->obj + 0x1A8);
+        if (sub->on0 != 0) {
+            updateActive3DAudioSource(sub->audio0, s2, &s2->vel, 0x6E);
+        }
+        if (sub->on1 != 0) {
+            updateActive3DAudioSource(sub->audio1, s2, &s2->vel, sub->vol);
+        }
+        addNpcToVisibilityBucket(*(s32 *)arg2, s2->mesh, s2, s2->radius);
+        if (s2->ctx != NULL) {
+            advanceNpcOnCurvedPath(*(s32 *)(arg2 + 8), *(s32 *)arg2, s2, s2->ctx);
+            return 1;
+        }
+        return 1;
+    case 5:
+        a5 = arg2;
+        if (*(u16 *)a5 != 0xFFFF) {
+            s32 clip = -1;
+            f32 *last = NULL;
+            switch (s2->type) {
+            case 0:
+            case 1:
+            case 2:
+                if (*(u16 *)(a5 + 4) != 0xC && (u16)getPlayerField2(0) == *(u16 *)(a5 + 2)) {
+                    clip = 0x15D;
+                    last = &D_mission_overlay_8010C0B4_f;
+                }
+                break;
+            case 3:
+            case 4:
+                if ((u16)getPlayerField2(0) == *(u16 *)(a5 + 2)) {
+                    clip = 0xC4;
+                    if (rand() & 1) {
+                        clip = 0xAA;
+                    }
+                    last = &D_mission_overlay_8010C0B0_f;
+                }
+                break;
+            default:
+                goto noclip;
+            }
+            if (clip != -1 && D_main_bss_80130BA4 - *last >= 10.0f) {
+                *last = D_main_bss_80130BA4;
+                playSpeechClip(clip, 0x73, 0.0f, 2);
+            }
+        }
+    noclip:
+        switch (*(u16 *)(a5 + 4)) {
+        case 0xC:
+            if (*(s32 *)(a5 + 8) != 0) {
+                vec3ExtrapolateFirstOrder(*(s32 *)(a5 + 8), 0, sp, 0.05f);
+                spawnRandomScaleColoredEffectAltVariant(sp, 0.4f);
+            }
+            play3DSoundEvent(0, s2, &s2->vel, 18.0f, 0.3f, 0, 0x35, 0x78, 0x50);
+            if (getObjectDetailLevel(s2->obj) == 1 && D_main_bss_80130B39 == 0) {
+                func_mission_overlay_800EFD6C(0x1F4);
+            }
+            hp = (s32 *)(s2->rec + 0xC4);
+            if (s2->flagB1 == 0) {
+                if ((hp[D_main_bss_80137CE4] -= *(u16 *)(a5 + 6)) <= 0) {
+                    u8 *r = s2->rec;
+                    s32 k;
+                    s2->flagB1 = 1;
+                    datItemSetObjectiveBooleanCount(*(s32 *)(r + 0xB4), *(s32 *)(r + 0xB8), *(s32 *)(r + 0xAC), *(s32 *)(r + 0xB0), *(s32 *)(r + 0xBC), *(s32 *)(s2->rec + 0xC0));
+                    for (k = 0; k < 6; k++) {
+                        spawnRandomParticleWithParent(0, *(u16 *)(arg0 + 0x16), 0.4f, 1);
+                    }
+                }
+            }
+            break;
+        case 0xB:
+            if (*(u16 *)(a5 + 2) == *(u16 *)(arg0 + 0x16)) {
+                break;
+            }
+        default:
+            if (getNpcCurrentHealth(s2->obj) > 0) {
+                extrapolateNpcPositionForCurrentMode(a5);
+                play3DSoundEvent(0, s2, &s2->vel, 24.0f, 0.4f, 0, 0x2A, 0x6E, 0x50);
+                if (s2->type == 0) {
+                    u8 *r = s2->rec;
+                    if (*(s32 *)(r + 0x11C) != 0 && gObjectiveBooleans[*(s32 *)(r + 0x11C) - 1] == 0) {
+                        break;
+                    }
+                    if (*(s32 *)(r + 0x120) != 0 && gObjectiveCounts[*(s32 *)(r + 0x120) - 1] < *(s32 *)(r + 0x124)) {
+                        break;
+                    }
+                }
+                if (s2->type == 3) {
+                    u8 *r = s2->rec;
+                    if (*(s32 *)(r + 0xC8) != 0 && gObjectiveBooleans[*(s32 *)(r + 0xC8) - 1] == 0) {
+                        break;
+                    }
+                    if (*(s32 *)(r + 0xCC) != 0 && gObjectiveCounts[*(s32 *)(r + 0xCC) - 1] < *(s32 *)(r + 0xD0)) {
+                        break;
+                    }
+                }
+                if (getObjectDetailLevel(s2->obj) == 1 && D_main_bss_80130B39 == 0) {
+                    func_mission_overlay_800EFD6C(0x1F4);
+                }
+                if (dealDamageToNpc(s2->obj, *(u16 *)(a5 + 6)) <= 0) {
+                    s2->mode = 2;
+                    s2->cntB3 = rand() % 8 + 0xA;
+                    s2->bC5 = 0;
+                    s2->timer = 0.0f;
+                    unregisterAndFreeNpcSlot(s2->slotA8, arg0);
+                    if (s2->slotAE != 0xFFFF) {
+                        unregisterAndFreeNpcSlot(s2->slotAE, arg0);
+                    }
+                    {
+                        u8 *r = s2->rec;
+                        datItemSetObjectiveBooleanCount(*(s32 *)(r + 0x78), *(s32 *)(r + 0x7C), *(s32 *)(r + 0x70), *(s32 *)(r + 0x74), *(s32 *)(r + 0x80), *(s32 *)(s2->rec + 0x84));
+                    }
+                    tallyMidDetailObject(arg0);
+                    clearPendingChildNpc(s2->obj);
+                    setObjectFlagBit4(arg0);
+                    {
+                        TcSub *p = *(TcSub **)(s2->obj + 0x1A8);
+                        if (p->on0 == 1) {
+                            p->on0 = 0;
+                            factor5RemoveListNode(p->audio0);
+                        }
+                    }
+                    {
+                        TcSub *p = *(TcSub **)(s2->obj + 0x1A8);
+                        if (p->on1 == 1) {
+                            p->on1 = 0;
+                            factor5RemoveListNode(p->audio1);
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        if (*(u16 *)a5 != 0xFFFF) {
+            destroyNpcSlotByIndex(*(u16 *)a5);
+            return 1;
+        }
+        return 1;
+    case 9:
+        a9 = arg2;
+        switch (a9[0x18]) {
+        case 1:
+            setType1ActorParams(s2->obj, *(s32 *)a9, a9[9], a9[0xA], a9[8], *(s32 *)(a9 + 4));
+            return 1;
+        case 2:
+        case 3:
+            break;
+        case 10:
+            s2->bC6 = 1;
+            break;
+        case 5:
+            if ((s2->type == 0 || s2->type == 3) && s2->bFD != 0) {
+                s32 k;
+                for (k = 0; k < s2->count; k++) {
+                    if (s2->live[k] == 1) {
+                        slotDispatcherIter(s2->ids[k], 9, a9);
+                    }
+                }
+            }
+            updateType1AnimRamp(s2->obj, *(s32 *)(a9 + 4), *(s32 *)(a9 + 8), *(s32 *)(a9 + 0xC), a9[0x10]);
+            return 1;
+        case 8:
+            if (getNpcCurrentHealth(s2->obj) > 0) {
+                u8 *b;
+                s32 o;
+                unregisterAndFreeNpcSlot(s2->slotAA, arg0);
+                b = (u8 *)D_main_bss_80139560;
+                o = 0x2C;
+                if (*(s32 *)a9 == 1) {
+                    o = 0x2E;
+                }
+                s2->slotAA = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+                unregisterAndFreeNpcSlot(s2->slotAC, arg0);
+                o = 0x12;
+                if (*(s32 *)a9 == 1) {
+                    o = 0xE;
+                }
+                s2->slotAC = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+                if (s2->slotAE != 0xFFFF) {
+                    unregisterAndFreeNpcSlot(s2->slotAE, arg0);
+                    if (*(s32 *)(s2->rec + 0xA8) != 0) {
+                        o = 0x18;
+                        if (*(s32 *)a9 == 1) {
+                            o = 0x1A;
+                        }
+                        s2->slotAE = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
+                    }
+                }
+                setObjectDetailLevel(s2->obj, *(s32 *)a9);
+                return 1;
+            }
+            return 1;
+        }
+        break;
+    case 7:
+        dispatchSlotAction5IfActive(arg0, arg2);
+        break;
+    }
+    return 1;
+}
 
 s32 playDualTextureAttachmentCue(s32, s32, s32);
 
