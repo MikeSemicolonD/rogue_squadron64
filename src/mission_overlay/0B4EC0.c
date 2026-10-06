@@ -19,7 +19,183 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0B4EC0", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B4EC0", playerXwingInit);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B4EC0", playWeaponFireSound);
+typedef struct {
+    /* 0x00 */ s32 idx;
+    /* 0x04 */ f32 f4;
+    /* 0x08 */ s32 w8;
+    /* 0x0C */ u8 *pC;
+    /* 0x10 */ u8 *p10;
+    /* 0x14 */ f32 f14;
+} PwState;
+
+typedef struct {
+    /* 0x000 */ u8 pad0[0xB8];
+    /* 0x0B8 */ s32 index;
+    /* 0x0BC */ u8 padBC[0xE8 - 0xBC];
+    /* 0x0E8 */ f32 fE8;
+    /* 0x0EC */ f32 fEC;
+    /* 0x0F0 */ f32 fF0;
+    /* 0x0F4 */ f32 fF4;
+    /* 0x0F8 */ f32 fF8;
+    /* 0x0FC */ u8 padFC[0x120 - 0xFC];
+    /* 0x120 */ f32 f120;
+    /* 0x124 */ u8 pad124[0x180 - 0x124];
+    /* 0x180 */ u16 flags;
+    /* 0x182 */ u8 pad182[0x2A0 - 0x182];
+} PwPlayer;
+
+typedef struct {
+    u8 pad0[0x12];
+    u16 m12;
+    u8 pad14[4];
+    u16 m18;
+    u8 pad1A[8];
+    u16 m22;
+} PwHud;
+
+typedef struct {
+    u8 pad0[4];
+    u8 *p4;
+    u8 pad8[0x144 - 8];
+} PwCam;
+
+extern PwPlayer D_pw_players[] __asm__("D_main_bss_80137DBC");
+extern u16 D_pw_btn[][3] __asm__("D_main_bss_80130B88");
+extern PwHud D_pw_hud[] __asm__("D_mission_overlay_8010BE18");
+extern PwCam D_pw_cam[] __asm__("D_main_bss_80138D18");
+extern f32 D_mission_overlay_8010BEA8[][0x10];
+extern u8 D_main_bss_8013800C[];
+s32 countTrailingZeros16(u16);
+u8 getCraftAnimationSlotFlag(s32);
+f32 getCraftAnimationSlotValue(s32);
+void setCraftAnimationSlotParams(s32, s32, f32);
+void updatePlayerCraftPhysics(void *, f32);
+void computeBootConfigScaledVec4(s32, f32, f32, u8 *, f32, f32);
+void bsearchFactor5TableByU16Key(s32, s32, s32);
+void scheduleSceneFormatMessageTimed(void *, s32);
+void buildRotationMatrixFromEulerAngles(void *, f32, f32, f32);
+void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+
+static __inline__ u8 pwSlotReady(u8 arg0) {
+    s32 ret;
+    ret = 0;
+    if ((D_mission_overlay_8010BC80[arg0] != 1) || !(0.95f < D_mission_overlay_8010BC90[arg0])) {
+        ret = 1;
+    }
+    return ret;
+}
+
+void pwImpl(PwState *e, f32 dt) __asm__("playWeaponFireSound");
+void pwImpl(PwState *e, f32 dt) {
+    PwPlayer *p;
+    f32 v;
+    register f32 k asm("$f22");
+    f32 lim;
+    f32 r;
+    register PwHud *hud asm("$19");
+    register s32 tbl asm("$16");
+    s32 ct;
+
+    p = &D_pw_players[e->idx];
+    if (*(u16 *)((s32)D_pw_players + p->index * 0x2A0 + 0x180) & 1) {
+        v = p->fEC;
+        k = 0.28125f;
+        if ((D_pw_btn[e->idx][0] & D_pw_hud[e->idx].m12) && !(D_pw_btn[e->idx][0] & D_pw_hud[e->idx].m18)) {
+            v -= 0.1875f;
+            k = -0.09375f;
+        }
+        __asm__ volatile("" :: "f"(k));
+        p->f120 = 60.0f;
+        if (v < e->f14 * 2.25f) {
+            v = e->f14 * 2.25f;
+        }
+        { s32 hi; __asm__("lui %0, %%hi(D_mission_overlay_8010BE18)" : "=r"(hi)); __asm__("addiu %0, %1, %%lo(D_mission_overlay_8010BE18)" : "=r"(hud) : "r"(hi)); }
+        ct = countTrailingZeros16(hud[e->idx].m18);
+        tbl = (s32)D_mission_overlay_8010BEA8;
+        v += *(f32 *)((e->idx * 0x40 + ct * 4) + tbl) * 0.1875f;
+        countTrailingZeros16(hud[e->idx].m18);
+        { s32 ix = e->idx; __asm__("" :: "r"(ix));
+        if ((D_pw_btn[ix][0] & hud[ix].m18) && pwSlotReady(e->idx)) {
+            if (getCraftAnimationSlotFlag(0) == 0) {
+                setCraftAnimationSlotParams(0, 1, 0);
+            }
+        } else if (getCraftAnimationSlotFlag(0) == 1) {
+            if (getCraftAnimationSlotValue(0) == 0.0f) {
+                setCraftAnimationSlotParams(0, 1, 0.5f);
+            }
+        }
+        }
+        if (!(D_pw_btn[e->idx][0] & D_pw_hud[e->idx].m12) && !(D_pw_btn[e->idx][0] & D_pw_hud[e->idx].m18) && p->fE8 < 2.625f) {
+            lim = e->f14 * 2.625f;
+            v += 0.1875f;
+            if (lim < v) {
+                v = lim;
+            }
+        }
+        { register f32 z asm("$f4") = 0.0f; register f32 t asm("$f0") = e->f4; if (t != z) {
+            v = e->f14 * 3.75f;
+        } }
+        if (e->f14 * 3.75f < v) {
+            v = e->f14 * 3.75f;
+        }
+        p->fEC = v;
+        if (p->fF0 < v - p->fE8) {
+            p->fE8 = p->fE8 + p->fF0;
+        } else {
+            p->fE8 = v;
+        }
+        if (v - p->fE8 < -p->fF4) {
+            p->fE8 = p->fE8 - p->fF4;
+        } else {
+            p->fE8 = v;
+        }
+        if (e->w8 == 0) {
+            if (e->f4 == 0.0f) {
+                if (D_pw_btn[e->idx][0] & D_pw_hud[e->idx].m22) {
+                    if (*(u16 *)(D_pw_cam[e->idx].p4 + 4) == 3) {
+                        bsearchFactor5TableByU16Key(0x4D, 0x78, 0x40);
+                    } else {
+                        play3DSoundEvent(0, (u8 *)p + 4, (u8 *)p + 0x28, 20.0f, 0.0f, 0, 0x20, 0x5A, 0);
+                    }
+                    e->f4 += dt;
+                    play3DSoundEvent(0, (u8 *)p + 4, (u8 *)p + 0x28, 20.0f, 0.4f, 0, 0x25, 0x7A, 0);
+                    scheduleSceneFormatMessageTimed(p, 8);
+                    setCraftAnimationSlotParams(0, 2, 1.5f);
+                }
+            } else {
+                e->f4 += dt;
+                if (e->f4 > 1.0f) {
+                    e->f4 = 1.0f;
+                    e->w8 = 1;
+                    p->fF8 = 1.2800001f;
+                }
+            }
+        } else if (e->f4 == 1.0f) {
+            if ((D_pw_btn[e->idx][0] & D_pw_hud[e->idx].m22) || (D_pw_btn[e->idx][0] & D_pw_hud[e->idx].m12)) {
+                if (*(u16 *)(D_pw_cam[e->idx].p4 + 4) == 3) {
+                    bsearchFactor5TableByU16Key(0x37, 0x78, 0x40);
+                } else {
+                    play3DSoundEvent(0, (u8 *)p + 4, (u8 *)p + 0x28, 20.0f, 0.0f, 0, 0x1F, 0x5A, 0);
+                }
+                e->f4 -= dt;
+            }
+        } else {
+            e->f4 -= dt;
+            if (e->f4 < 0.0f) {
+                e->f4 = 0.0f;
+                e->w8 = 0;
+                p->fF8 = 1.6f;
+            }
+        }
+        e->f14 = e->f4 * 0.5f + 1.0f;
+        r = (1.0f - e->f4) * 10.0f;
+        buildRotationMatrixFromEulerAngles(e->pC + 0x1C, 0.0f, 0.0f, -r);
+        buildRotationMatrixFromEulerAngles(e->p10 + 0x1C, 0.0f, 0.0f, r);
+    }
+    k = 0.28125f;
+    updatePlayerCraftPhysics(p, dt);
+    { f32 t = e->f14; computeBootConfigScaledVec4(e->idx, k, k, D_main_bss_8013800C + e->idx * 0x2A0, t, dt); }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B4EC0", playerXwingFireBlaster);
 
