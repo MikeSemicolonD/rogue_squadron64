@@ -1980,7 +1980,180 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A7040);
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", postLevelStatScreen);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuShipSelectScreen);
+typedef struct {
+    u8 pad0[0x14];
+    u32 flags;
+    f32 f18;
+    f32 f1C;
+    u8 pad20[4];
+    f32 f24;
+    f32 f28;
+    u8 b2C;
+    u8 b2D;
+    u8 b2E;
+    u8 b2F;
+} SsElem;
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    s32 unk8;
+} SsCtx;
+extern SsCtx ssCtx __asm__("D_menu_overlay_800CF090");
+extern void *ssList78 __asm__("D_menu_overlay_800CF078");
+extern void *ssList7C __asm__("D_menu_overlay_800CF07C");
+extern s32 ssText __asm__("D_menu_overlay_800CF108");
+extern SsElem *ssMedal __asm__("D_menu_overlay_800CFE30");
+extern f32 ssPhase __asm__("D_menu_overlay_800CF074");
+extern u8 ssDone __asm__("D_menu_overlay_800CFE3C");
+extern s32 ssSong __asm__("D_menu_overlay_800CF070");
+extern s32 ssB20 __asm__("D_main_bss_80138920");
+extern char strMenuMedalSh[];
+void initMenuScreenRenderContext(void);
+s32 buildScaledFormatTextElement(char *, s32, s32, s32, s32, s32);
+void cueMenuScreenAudioC(void);
+void *getStructField0xC(s32);
+void insertLookupEntry(void *, void *, u8);
+void setLookupEntryField5ByKey(s32, u8 *, s32);
+void setChildPosFromI16Pair(void *, s16, s16);
+s32 ssLoadTex(char *, s32, s32, s32) __asm__("loadNamedTextureDescriptor");
+void *ssCreateText(void) __asm__("createMenuTextElement");
+f32 advanceWrappingPhaseAccumulator(void);
+void pollControllerInputs(void);
+void setNewAndPreviousButtonsPressed(void);
+s32 rand(void);
+s32 findAudioChannelById(s32);
+s32 playSongById(s32, s32, s32, s32);
+void runMenuContentStateMachine(void *, f32, f32);
+u8 isPlayerShipActive(void);
+void updateTextOverlayLookupEntry(void *, void *, f32);
+void queueAudioVoiceCmd(s32, s32, s32, s32);
+u8 accumulateShipThrottleCharge(void *, void *, f32);
+f32 quadraticEaseInOut(f32);
+void waitForPrevFrameDone(void);
+void frameStartReset(void);
+s32 rebuildActiveDisplayObjectList(void *);
+void setupCameraMatrices(void *);
+void initRenderStateArrays(void);
+void drawFrameProfilerBars(void);
+void submitGfxFrame(void);
+void bufferArbiterProducerScanWait(void);
+void destroyPlayerShipRecord(void *, void *);
+s32 shutdownFormatMessageWorker();
+void tickMusyXIfActive(void);
+u8 anyAudioSlotActive(void);
+void runMusyXTaskLocked(void);
+
+void runMenuShipSelectScreen(void) {
+    void *txt;
+    SsElem *e;
+    f32 dt;
+    f32 t;
+    f32 lo;
+    f32 fade;
+    f32 sc;
+    f32 k;
+    u32 state;
+    u8 played;
+    u8 done;
+
+    initMenuScreenRenderContext();
+    played = 0;
+    ssText = buildScaledFormatTextElement("credits", 2, 0x40, 0x1E, 0, ssB20);
+    done = played;
+    state = 0;
+    cueMenuScreenAudioC();
+    fade = 1.0f;
+    insertLookupEntry(ssList78, getStructField0xC(ssText), 0xA);
+    sc = fade;
+    k = 3.2f;
+    setLookupEntryField5ByKey((s32)ssList78, getStructField0xC(ssText), 1);
+    setChildPosFromI16Pair((void *)ssText, -0x140, -0x96);
+    e = getStructField0xC(ssLoadTex(strMenuMedalSh, 0x40, 0x40, 1));
+    ssMedal = e;
+    e->b2C = 0;
+    e->flags |= 0x2400003;
+    ssMedal->b2D = 0;
+    ssMedal->b2E = 0;
+    ssMedal->b2F = 0xFF;
+    insertLookupEntry(ssList7C, ssMedal, 0xF);
+    txt = ssCreateText();
+    *(s32 *)&ssPhase = 0;
+    t = ssPhase;
+    ssDone = 0;
+    lo = t;
+    while (1) {
+        dt = advanceWrappingPhaseAccumulator();
+        pollControllerInputs();
+        setNewAndPreviousButtonsPressed();
+        ssPhase += dt * 30.0f;
+        t += dt;
+        rand();
+        if (0.5f < t && played == 0) {
+            ssSong = playSongById(0x20, 0x5E, findAudioChannelById(0x5E), 0);
+            played = 1;
+        }
+        ssCtx.unk0 = 0;
+        switch (state) {
+        case 0:
+            sc -= dt * 1.5f;
+            if (sc < lo) {
+                sc = lo;
+            }
+            runMenuContentStateMachine(txt, fade, dt);
+            if (ssDone != 0) {
+                state = 1;
+            }
+            break;
+        case 1:
+            fade -= dt;
+            if (fade < lo) {
+                fade = lo;
+            }
+            runMenuContentStateMachine(txt, 1.0f, dt);
+            if (fade == lo && isPlayerShipActive() == 0) {
+                updateTextOverlayLookupEntry(ssList7C, &ssCtx, 16.0f);
+                state = 2;
+                queueAudioVoiceCmd(0, 0x190, ssSong, 1);
+            }
+            break;
+        case 2:
+            if (accumulateShipThrottleCharge(ssList7C, &ssCtx, dt) != 0) {
+                done = 1;
+            }
+            break;
+        }
+        __asm__("" :: "f"(k));
+        __asm__("" :: "f"(fade));
+        __asm__("" :: "f"(t));
+        __asm__("" :: "f"(t));
+        if (0.05f < sc) {
+            ssMedal->f24 = quadraticEaseInOut(sc) * k;
+            ssMedal->f28 = quadraticEaseInOut(sc) * k;
+            ssMedal->f18 = ssMedal->f24 * -128.0f;
+            ssMedal->f1C = ssMedal->f28 * -128.0f;
+        }
+        setLookupEntryField5ByKey((s32)ssList7C, (u8 *)ssMedal, 0.05f < sc);
+        if (done == 1) {
+            break;
+        }
+        waitForPrevFrameDone();
+        frameStartReset();
+        ssCtx.unk8 = rebuildActiveDisplayObjectList(ssList78);
+        setupCameraMatrices(&ssCtx);
+        initRenderStateArrays();
+        ssCtx.unk8 = rebuildActiveDisplayObjectList(ssList7C);
+        setupCameraMatrices(&ssCtx);
+        drawFrameProfilerBars();
+        submitGfxFrame();
+    }
+    bufferArbiterProducerScanWait();
+    destroyPlayerShipRecord(ssList7C, &ssCtx);
+    shutdownFormatMessageWorker();
+    tickMusyXIfActive();
+    while (anyAudioSlotActive() == 0) {
+    }
+    runMusyXTaskLocked();
+}
 
 typedef struct {
     s32 unk0;
