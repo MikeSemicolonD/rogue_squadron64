@@ -742,7 +742,202 @@ void initEffectObjectDefaults(s32 arg0, u16 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", spawnEffectObjectAtNpc);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", initEffectObjectFromLevelData);
+typedef struct {
+    u16 f0;
+    u16 f2;
+    u16 f4;
+    u8 p6[2];
+    s32 f8;
+    s32 fC;
+    f32 f10;
+    f32 f14;
+    f32 f18;
+    s32 f1C;
+    s32 f20;
+    s32 f24;
+    u8 p28[0x4C - 0x28];
+    f32 f4C;
+    f32 f50;
+    f32 f54;
+    f32 f58;
+    f32 f5C;
+    f32 f60;
+    s32 f64;
+    s32 f68;
+    s32 f6C;
+    void *f70;
+    void *f74;
+    f32 f78;
+    f32 f7C;
+    f32 f80;
+    f32 f84;
+    f32 f88;
+    f32 f8C;
+    s32 f90;
+    s32 f94;
+    s32 f98;
+    s32 f9C;
+    s32 fA0;
+    f32 fA4;
+    s32 fA8;
+    f32 fAC;
+    f32 fB0;
+    s32 fB4;
+    f32 fB8;
+    void *fBC;
+    void *fC0;
+    s32 fC4;
+    f32 fC8;
+    s32 fCC;
+    s32 fD0;
+    f32 fD4;
+    s32 fD8;
+    s32 fDC;
+    s32 fE0;
+    f32 fE4;
+    f32 fE8;
+    f32 fEC;
+    s32 fF0;
+    u16 fF4;
+    u8 pF6[2];
+} EffObj;
+extern u8 D_main_bss_80138458[];
+extern u8 D_main_8009EC14[];
+extern u8 D_main_8009EBBC;
+extern u8 D_main_bss_80138B20[];
+extern s32 D_8010CA20;
+void resetHudInstancesAndUnbindNpcs(void);
+void *getLevelDatItemByName(char *);
+typedef struct { s32 a, b, c; } V3i;
+void buildTransformMatrixFromEulerAngles(void *, f32, f32, f32);
+u8 *getNpcContextByIndex(u16);
+s16 ffnskA(s32, u16) __asm__("findFreeNpcSlotByKey");
+void spawnEffectObjectAtNpc(s32, void *);
+void releaseEffectObjectNpcSlotsVariant(s32, s32, u8);
+extern s16 D_main_8009EBC4;
+void updateAudioListenerPosFromPlayer(void);
+
+void initEffectObjectFromLevelData(s32 arg0, s32 arg1)
+{
+  EffObj *o;
+  u8 *item;
+  u8 *name;
+  u8 *it2;
+  u16 idx;
+  u8 *ctx;
+  s32 v;
+  s32 sp10[3];
+  resetHudInstancesAndUnbindNpcs();
+  if (D_8010CA20 == 0 || D_8010CA20 == 7)
+  {
+    o = (EffObj *)(D_main_bss_80138B20 + arg0 * 0x3E0);
+    if (*(u16 *)D_main_bss_80138D18[arg0].unk4 & 0x20)
+    {
+      D_main_8009EBBC = 0;
+    }
+    o->f2 = 0;
+    o->f4 = 0;
+    o->f0 = 0;
+    clearVec4QuadStruct((void *)((u8 *)o + 0x28));
+    o->f70 = D_main_8009EC14;
+    o->f74 = D_main_8009EC14;
+    o->fBC = D_main_bss_80138268;
+    o->fC0 = D_main_bss_80138268;
+    o->f58 = 0;
+    o->f5C = 0;
+    o->f60 = 0;
+    o->f64 = 0;
+    o->f68 = 0;
+    o->f6C = 0;
+    o->f78 = 0;
+    o->f7C = 0;
+    o->f80 = 0;
+    o->f84 = 0;
+    o->f88 = 0;
+    o->f8C = 0;
+    o->f10 = 0.0f;
+    o->f14 = 0.0f;
+    o->f18 = 0.0f;
+    o->f1C = 0;
+    o->f20 = 0;
+    o->f24 = 0;
+    o->f90 = 0;
+    o->f94 = 0;
+    o->f98 = 0;
+    o->f9C = 0;
+    o->fA0 = 0;
+    o->fC4 = 0;
+    o->fCC = 0;
+    o->fD0 = 0;
+    o->fD8 = 0;
+    o->fE0 = 0;
+    o->fC8 = 1.0f;
+    o->fDC = 0;
+    o->fD4 = 80.0f;
+    o->fE4 = -45.0f;
+    o->fE8 = 45.0f;
+    o->fA4 = 0.033333335f;
+    o->fA8 = 0;
+    o->fAC = 0.075f;
+    o->fB0 = 10.0f;
+    o->fEC = 0;
+    o->fF4 = 0xFFFF;
+    o->fF0 = 0;
+    o->fB4 = 0;
+    o->f0 = 0x33;
+    o->fB8 = 0.3515625f;
+    if (D_main_8009EBBC == 0)
+    {
+      item = getLevelDatItemByName((char *)arg1);
+      *(V3i *)&o->f10 = *(V3i *)(item + 0x10);
+      buildTransformMatrixFromEulerAngles((u8 *)o + 0x28, 0.0f, 0.0f, 0.0f);
+      composeRotationMatrixSlot0((u8 *)o + 0x28, *(f32 *)(item + 0x1C));
+      composeRotationMatrixSlot1((u8 *)o + 0x28, *(f32 *)(item + 0x20));
+      composeRotationMatrixSlot2((u8 *)o + 0x28, *(f32 *)(item + 0x24));
+      o->f4C = o->f10;
+      o->f50 = o->f14;
+      o->f54 = o->f18;
+      computeAngleToTargetFromTransform((u8 *)o + 0x28, sp10, (u8 *)o + 0x1C);
+      applyPlayerVehicleStateUpdate(o);
+      o->fEC = *(f32 *)(item + 0x60);
+      name = (u8 *)(*(s32 *)(item + 0x64) + (s32)item);
+      if (*name != 0x2D)
+      {
+        it2 = getLevelDatItemByName((char *)name);
+        if (it2 != NULL)
+        {
+          idx = *(u16 *)(it2 + 6);
+          if (idx != 0xFFFF)
+          {
+            v = *(s32 *)(getNpcContextByIndex(idx) + 0xC);
+            if (v != 0)
+            {
+              o->f74 = (void *)(v + 0x28);
+              o->f58 = 0.0f;
+              o->f5C = 0.0f;
+              o->f60 = 0.0f;
+              o->f78 = 0.0f;
+              o->f7C = 0.0f;
+              o->f80 = 0.0f;
+              o->f84 = 0.0f;
+              o->f88 = 0.0f;
+              o->f8C = 0.0f;
+              o->f2 = 2;
+              o->f4 = 0;
+              o->fF4 = ffnskA(0xFFFF, idx);
+            }
+          }
+        }
+      }
+    }
+    else
+    {
+      spawnEffectObjectAtNpc(arg0, o);
+    }
+    releaseEffectObjectNpcSlotsVariant(arg0, 2, 0);
+    o->fF0 = arg1;
+  }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", destroyEffectObjectAndAssets);
 
