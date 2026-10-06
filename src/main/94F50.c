@@ -279,7 +279,176 @@ s32 startSongSequence(SsEnt *tblA, SsEnt *tblB, u8 *ci, u32 *sng, SsCfg *cfg) {
     return -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", stepActiveSongTracks);
+typedef struct {
+    u32 unk0;
+    u16 unk4;
+    u8 unk6;
+    u8 unk7;
+} SatEv;
+typedef struct {
+    u32 unk00;
+    u32 unk04;
+    SatEv *ev;
+    u8 pad0C[0x14];
+    u8 ch;
+    s8 vel;
+    s8 note;
+    u8 ch2;
+} SatLane;
+typedef struct {
+    u32 a;
+    u32 b;
+} SatPair;
+typedef struct {
+    u16 a;
+    u8 b;
+    u8 c;
+    u32 pad;
+} SatProg;
+typedef struct { SatProg *tbl; u8 map[0x80]; } SatBank;
+#define SLANE(o) ((SatLane *)((u8 *)D_main_bss_801529C0 + (o) + 0x568))
+
+extern s32 D_main_bss_801499F4;
+extern u8 D_sat801499F8 __asm__("D_main_bss_801499F8");
+extern u8 D_main_bss_801529CB;
+void setChannelNoteCell(u8, u8, u8, u8);
+s32 processSongByHandle(s32, s32, s32);
+extern s32 dispatchSequencerNoteEvent(s32, u8, u8, s32, s32, s32, s32, s32, s32, s32);
+
+static __inline__ struct D_main_bss_801511C0_type *satAllocNode(void) {
+    struct D_main_bss_801511C0_type *n = D_main_bss_801529C4;
+    if (n != NULL) {
+        D_main_bss_801529C4 = n->unk00;
+        if (D_main_bss_801529C4 != NULL) {
+            D_main_bss_801529C4->unk04 = NULL;
+        }
+        n->unk04 = NULL;
+        n->unk00 = D_main_bss_801529C0->unkE78[0];
+        if (n->unk00 != NULL) {
+            D_main_bss_801529C0->unkE78[0]->unk04 = n;
+        }
+        D_main_bss_801529C0->unkE78[0] = n;
+    }
+    return n;
+}
+
+static __inline__ void satSetProg(SsSlot *s, u8 pr, s32 ch) {
+    if (ch != 9) {
+        pr = s->mapA[pr];
+        if (pr != 0xFF) {
+            s->prog[ch] = (((SsEnt *)(pr * 8 + (s32)s->tblA))->h0 << 16) | (((SsEnt *)(pr * 8 + (s32)s->tblA))->b2 << 8) | ((SsEnt *)(pr * 8 + (s32)s->tblA))->b3;
+        }
+    } else {
+        pr = s->mapB[pr];
+        if (pr != 0xFF) {
+            s->prog[9] = (((SsEnt *)(pr * 8 + (s32)s->tblB))->h0 << 16) | (((SsEnt *)(pr * 8 + (s32)s->tblB))->b2 << 8) | ((SsEnt *)(pr * 8 + (s32)s->tblB))->b3;
+        }
+    }
+}
+
+s32 stepActiveSongTracks(void) {
+    s32 ret;
+    s32 i;
+    s32 off;
+    s32 o;
+    struct D_main_bss_80149A00_type *d;
+    SatLane *l;
+    SatEv *ev;
+    SatProg *pg;
+    s32 b6;
+    s32 b7;
+    u8 ch;
+    s32 k;
+    s32 p;
+    s32 idx;
+    s32 ch2;
+    s32 h;
+    s32 note;
+    s32 vel;
+    struct D_main_bss_801511C0_type *n;
+    struct D_main_bss_801511C0_type *nx;
+
+    ret = 0;
+    for (i = 0; i < 0x40; i++) {
+        off = i * 0x24;
+        if (SLANE(off)->ev != NULL) {
+            D_main_bss_801499F4++;
+            ret = 1;
+            while (SLANE(off)->ev != NULL) {
+                o = off;
+                d = D_main_bss_801529C0;
+                l = (SatLane *)((u8 *)d + o + 0x568);
+                ev = l->ev;
+                if (l->unk04 + d->unk110[4] < ev->unk0) {
+                    break;
+                }
+                b6 = ev->unk6;
+                b7 = ev->unk7;
+                ch = l->ch;
+                if ((b6 == 0xFF) & (b7 == 0xFF)) {
+                    l->ev = NULL;
+                    continue;
+                }
+                if (((b6 & 0x80) != 0) & (b7 == 0)) {
+                    k = b6 & 0x7F;
+                    satSetProg((SsSlot *)d, k, ch);
+                } else if (((b6 & 0x80) != 0) & (b7 == 1)) {
+                    k = 0x82;
+                    setChannelNoteCell(k, ch, D_main_bss_801529CB, b6 & 0x7F);
+                } else if ((b6 & 0x80) && (b7 & 0x80)) {
+                    k = b7 & 0x7F;
+                    if (k == 0x68) {
+                        if (*((u8 *)d + 0xEF4) != 0) {
+                            processSongByHandle((s32)d->unkEC8, d->unkEF0[0], 1);
+                            *((u8 *)D_main_bss_801529C0 + 0xEF4) = 0;
+                        }
+                    } else {
+                        setChannelNoteCell(k, ch, D_main_bss_801529CB, b6 & 0x7F);
+                    }
+                } else {
+                    ch2 = SLANE(o)->ch2;
+                    if (D_main_bss_801529C0->unk110[ch2 / 32] & (1 << (ch2 & 0x1F))) {
+                        h = *(s32 *)((u8 *)D_main_bss_801529C0 + ch * 4 + 0xE80);
+                        if (h != -1) {
+                            b6 += SLANE(o)->note;
+                            b6 = (b6 < 0x80) ? ((b6 < 0) ? 0 : b6) : 0x7F;
+                            b7 += SLANE(o)->vel;
+                            b7 = (b7 < 0x80) ? ((b7 < 0) ? 0 : b7) : 0x7F;
+                            n = satAllocNode();
+                            if (n != NULL) {
+                                h = dispatchSequencerNoteEvent(h, b6, b7, 0x40, ch, D_main_bss_801529CB, 0, ch2,
+                                    D_main_bss_801529C0->unk528[ch2], D_sat801499F8 ? -1 : 0);
+                                if (h != -1) {
+                                    n->unk08 = h;
+                                    l = SLANE(o);
+                                    n->unk0C = l->ev->unk0 + l->ev->unk4;
+                                    *(SatPair *)&n->unk10 = *(SatPair *)&l->unk00;
+                                } else {
+                                    if (n->unk00 != NULL) {
+                                        n->unk00->unk04 = n->unk04;
+                                    }
+                                    if (n->unk04 != NULL) {
+                                        n->unk04->unk00 = n->unk00;
+                                    } else {
+                                        D_main_bss_801529C0->unkE78[0] = n->unk00;
+                                    }
+                                    n->unk00 = D_main_bss_801529C4;
+                                    if (D_main_bss_801529C4 != NULL) {
+                                        D_main_bss_801529C4->unk04 = n;
+                                    }
+                                    n->unk04 = NULL;
+                                    D_main_bss_801529C4 = n;
+                                }
+                            }
+                        }
+                    }
+                }
+                SLANE(o)->ev++;
+            }
+        }
+    }
+    return ret;
+}
 
 #if 0
 // https://decomp.me/scratch/9HNev
