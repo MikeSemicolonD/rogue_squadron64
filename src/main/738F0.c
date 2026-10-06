@@ -718,7 +718,469 @@ void forwardToNpcGeneratorSpawn(u16 arg0, s32 arg1, f32 arg2) {
     buildNpcAnchoredCameraEffectTransform(arg0, out, arg1, arg2);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", func_main_80077AF0);
+typedef struct { f32 x, y, z; } PgBlk;
+typedef struct { f32 f[12]; char name[4]; } PgHs;
+typedef struct {
+    f32 pos[3];
+    f32 rot[6];
+    f32 vel[3];
+    u8 *mesh;
+    f32 mat[12];
+    u8 *beam;
+    u8 *rec;
+    s32 obj;
+    u8 *n0;
+    u8 *n1;
+    u8 *n2;
+    u8 *nc[8];
+    u8 *m0;
+    u8 *m1;
+    u8 *m2;
+    u8 *mc[8];
+    f32 sc[3];
+    s32 health[8];
+    u16 slot[8];
+    u16 fx[2];
+    u16 deb[2];
+    PgBlk debData[2];
+    u8 a124;
+    u8 state;
+    s16 count;
+    f32 radius;
+    f32 scale;
+    f32 a130;
+    f32 a134;
+    f32 a138;
+    f32 t;
+    f32 ease;
+    u16 s144;
+    u16 s146;
+    u16 s148;
+    u16 s14A;
+    s32 cnt;
+    u8 audio[0x88];
+    u8 audioOn;
+    u8 pad1D9[3];
+    u8 dat[0x38];
+} PgObj;
+extern u16 D_main_bss_80139560[];
+extern u8 D_main_bss_80130BA0;
+u16 pgPop(u16, void *) __asm__("popNpcSlotFromTail");
+u8 *pgWalk(char *) __asm__("walkMeshdef0List");
+void *rs_malloc(u32, u16);
+void applyFlagsToMeshTreeOrList(void *, s32, s32, s32);
+u8 *lookupHmtMaterialByName(void *, char *, void *);
+u16 spawnInheritedNpcVariantC(u16, char *, s32);
+void pgTex(void *, char *, s32, void *, s32, s32) __asm__("lookupHmtTextureByName");
+void play3DSoundEventVariant(void *, void *, void *, f32, f32, s32, s32, s32, s32, s32);
+void createAndInitObject(void *, s32, void *, void *, s32);
+void initSpawnedNpcHealthAndDetail(void *);
+void spawnNpcWithRandomRotation(void *);
+s32 sprintf(char *, const char *, ...);
+u16 spawnHeavyMechSubEffect(void *, void *, char *);
+void dispatchDatSubtypeByRandomIndex(void *, void *);
+void factor5RemoveListNode(void *);
+void initActorRenderDescriptorIfUninit(s32, s32, void *, s32, void *);
+void clearPendingAndDestroyChildNpc(void *);
+void walkDatTreeAndCollectSubtypes(void *, void *);
+void npcPowerGeneratorHandleDestruction();
+f32 quadraticEaseInOut(f32);
+f32 floatModulo(f32, f32);
+void spawnDebrisBurstFromTemplate(void *, s32);
+s32 isNpcWithinActiveReferenceRange(void *);
+void walkDatTreeAndScaleLeafByFloat(void *, void *, f32);
+void destroyObjectOwnedNpcSlot(s32);
+s32 addNpcToVisibilityBucket(s32, void *, void *, f32);
+void walkDatTreeAndVisitChildren(void *, void *, void *);
+void updateActive3DAudioSource(void *, void *, void *, s32);
+s32 getNpcCurrentHealth(s32);
+extern u8 D_main_bss_80130B39;
+void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+void spawnOrientedNpc(s32, void *, s32, s32, f32, f32, f32, f32);
+void unregisterAndFreeNpcSlot(u16, void *);
+void datItemSetObjectiveBooleanCount(s32, s32, s32, s32, s32, s32);
+void tallyMidDetailObject(void *);
+void setObjectFlagBit4(void *);
+void dispatchSlotAction5IfActive(void *, void *);
+#define PG_JOINT_HEAD(mm, nn) \
+    m = (mm); \
+    n = (nn) + 0x1C; \
+    clearVec4QuadStruct((void *)n); \
+    if (*(s32 *)(m + 0x4C) & 1) { \
+        addVec3At0x24((void *)n, -*(f32 *)(m + 0x50), -*(f32 *)(m + 0x54), -*(f32 *)(m + 0x58)); \
+    } \
+    if (*(s32 *)(m + 0x4C) & 2) { \
+        applyScaleToMat3x4((void *)n, *(f32 *)(m + 0x5C), *(f32 *)(m + 0x60), *(f32 *)(m + 0x64)); \
+    } \
+    if (*(s32 *)(m + 0x4C) & 4) { \
+        composeQuatToMat3x4((void *)n, (void *)(m + 0x68)); \
+    }
+#define PG_JOINT_TAIL() \
+    { s32 fl = *(s32 *)(m + 0x4C); \
+    if ((fl & 9) == 9) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x78) + *(f32 *)(m + 0x50), *(f32 *)(m + 0x7C) + *(f32 *)(m + 0x54), *(f32 *)(m + 0x80) + *(f32 *)(m + 0x58)); \
+    } else if ((fl & 9) == 8) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x78), *(f32 *)(m + 0x7C), *(f32 *)(m + 0x80)); \
+    } else if (fl & 1) { \
+        addVec3At0x24((void *)n, *(f32 *)(m + 0x50), *(f32 *)(m + 0x54), *(f32 *)(m + 0x58)); \
+    } }
+
+static __inline__ u8 pgAlive(PgObj *s2) {
+    if (D_main_bss_80130B39 == 0) {
+        return getNpcCurrentHealth(s2->obj) > 0;
+    }
+    return 1;
+}
+
+s32 func_main_80077AF0(u8 *arg0, u16 action, u8 *arg2) {
+    union {
+        struct { char nm[12]; s32 pad; PgHs hs; s32 pad2; char buf[16]; } c1;
+        struct { char pad[0x10]; f32 v[3]; } c4;
+        struct { char pad[0x20]; PgHs hs; s32 pad2; f32 m[12]; char nm[4]; } c5;
+    } u;
+    PgObj *s2 = *(PgObj **)(arg0 + 4);
+
+    switch (action) {
+    case 1:
+        {
+            u8 *rec = arg2;
+            f32 inv;
+            s32 i;
+            s2 = rs_malloc(0x214, 0);
+            *(PgObj **)(arg0 + 4) = s2;
+            *(u16 *)(arg0 + 0x14) |= 0x100;
+            s2->rec = rec;
+            s2->mesh = pgWalk(*(char **)(rec + 0x5C));
+            s2->beam = pgWalk("engybeam");
+            applyFlagsToMeshTreeOrList(s2->beam, 0, 0x10000, 0);
+            s2->pos[0] = *(f32 *)(rec + 0x10);
+            s2->pos[1] = *(f32 *)(rec + 0x14);
+            s2->pos[2] = *(f32 *)(rec + 0x18);
+            composeEulerRotationXYZ((void *)s2, *(f32 *)(rec + 0x1C), *(f32 *)(rec + 0x20), *(f32 *)(rec + 0x24));
+            s2->vel[0] = s2->vel[1] = s2->vel[2] = 0.0f;
+            inv = 1.0f / *(f32 *)(*(u8 **)s2->mesh + 0x34);
+            s2->scale = inv * *(f32 *)(rec + 0x28);
+            initVec4TripletFromArgs((void *)(s2->mesh + 0x28), inv * *(f32 *)(rec + 0x28), inv * *(f32 *)(rec + 0x2C), inv * *(f32 *)(rec + 0x30));
+            composeRotationMatrixSlot0((void *)(s2->mesh + 0x28), *(f32 *)(rec + 0x1C));
+            composeRotationMatrixSlot1((void *)(s2->mesh + 0x28), *(f32 *)(rec + 0x20));
+            composeRotationMatrixSlot2((void *)(s2->mesh + 0x28), *(f32 *)(rec + 0x24));
+            addVec3At0x24((void *)(s2->mesh + 0x28), s2->pos[0], s2->pos[1], s2->pos[2]);
+            *(PgObj **)(arg0 + 8) = s2;
+            *(u8 **)(arg0 + 0xC) = s2->mesh;
+            s2->n0 = lookupHmtMaterialByName(s2->mesh, "base", &s2->m0);
+            s2->n1 = lookupHmtMaterialByName(s2->mesh, "maintrns", &s2->m1);
+            s2->n2 = lookupHmtMaterialByName(s2->mesh, "top_top", &s2->m2);
+            {
+                __builtin_memcpy(u.c1.nm, "cb_trns1", 9);
+                for (i = 0; i < 8; i++) {
+                    s2->nc[i] = lookupHmtMaterialByName(s2->mesh, u.c1.nm, &s2->mc[i]);
+                    u.c1.nm[7]++;
+                }
+            }
+            {
+                __builtin_memcpy(u.c1.nm, "cb1", 4);
+                for (i = 0; i < 8; i++) {
+                    s2->slot[i] = spawnInheritedNpcVariantC(*(u16 *)(arg0 + 0x16), u.c1.nm, 0);
+                    u.c1.nm[2]++;
+                }
+            }
+            pgTex(s2->mesh, "03", 0, s2->mat, 0, 0);
+            s2->mat[6] = -s2->mat[6];
+            s2->mat[7] = -s2->mat[7];
+            s2->sc[0] = s2->scale * 1.8f;
+            s2->mat[8] = -s2->mat[8];
+            s2->sc[1] = 1.5f;
+            s2->sc[2] = s2->scale * 1.8f;
+            { /*B1*/
+                u8 *b = (u8 *)D_main_bss_80139560;
+                s32 o = 0x12;
+                if (*(s32 *)(rec + 0x8C) == 1) {
+                    o = 0xE;
+                }
+                s2->s148 = pgPop(*(u16 *)(o + b), arg0);
+                if (*(s32 *)(rec + 0x90) != 0) {
+                    s32 o2 = 0x18;
+                    if (*(s32 *)(rec + 0x8C) == 1) {
+                        o2 = 0x1A;
+                    }
+                    s2->s14A = pgPop(*(u16 *)(o2 + b), arg0);
+                } else {
+                    s2->s14A = 0xFFFF;
+                }
+            }
+            {
+                u8 *b;
+                s32 t;
+                s32 o;
+                __asm__("la %0, D_main_bss_80139560" : "=r"(b));
+                s2->s144 = pgPop(*(u16 *)(b + 0x1C), arg0);
+                t = *(s32 *)(rec + 0x8C);
+                o = (t == 1) ? 0x26 : (t == 0) ? 0x28 : 0x2A;
+                s2->s146 = pgPop(*(u16 *)(b + o), arg0);
+            } /*B2*/
+            s2->radius = *(f32 *)(*(u8 **)s2->mesh + 0x44) * s2->scale;
+            s2->a130 = 0.0f;
+            s2->a134 = 0.0f;
+            s2->a138 = 0.0f;
+            s2->t = 0.0f;
+            s2->ease = 0.0f;
+            s2->a124 = 0;
+            s2->count = 0;
+            s2->cnt = 0;
+            s2->deb[0] = s2->deb[1] = s2->fx[0] = s2->fx[1] = 0xFFFF;
+            s2->audioOn = 1;
+            play3DSoundEventVariant(s2->audio, s2, s2->vel, 14.0f, 0.6f, 7, 0x14, 1, 0x7F, 0x3C);
+            if (D_main_bss_80130B39 == 0) {
+                createAndInitObject(&s2->obj, 0, arg0, initSpawnedNpcHealthAndDetail, 0);
+            } else {
+                s2->state = 0;
+                if (D_main_bss_80130BA0 != 0) {
+                    for (i = 0; i < 7; ) {
+                        s32 j;
+                        s2->health[i] = -1;
+                        u.c1.hs.name[0] = 'c';
+                        u.c1.hs.name[1] = 'b';
+                        u.c1.hs.name[2] = i + '1';
+                        u.c1.hs.name[3] = 0;
+                        spawnNpcWithRandomRotation(&u.c1.hs);
+                        j = i + 1;
+                        u.c1.hs.f[6] = 0.0f;
+                        sprintf(u.c1.buf, "cb_trns%d", j);
+                        spawnHeavyMechSubEffect(&u.c1.hs, arg0, u.c1.buf);
+                        destroyNpcSlotByIndex(s2->slot[i]);
+                        s2->slot[i] = 0xFFFF;
+                        i = j;
+                    }
+                    s2->health[7] = 1;
+                    s2->count = 7;
+                }
+            }
+            dispatchDatSubtypeByRandomIndex(s2->dat, s2->mesh);
+            return 1;
+        }
+    case 2:
+        if (s2->audioOn == 1) {
+            s2->audioOn = 0;
+            factor5RemoveListNode(s2->audio);
+        }
+        if (D_main_bss_80130B39 == 0) {
+            initActorRenderDescriptorIfUninit(s2->obj, s2->state == 1, s2->rec, 0, s2->rec + 0x70);
+            clearPendingAndDestroyChildNpc(&s2->obj);
+        }
+        walkDatTreeAndCollectSubtypes(s2->dat, s2->mesh);
+        releaseMeshAsset(s2->mesh);
+        return 1;
+    case 3:
+        {
+            f32 dt = *(f32 *)arg2;
+            f32 d;
+            npcPowerGeneratorHandleDestruction();
+            switch (s2->state) {
+            case 0:
+                d = *(f32 *)(s2->rec + 0x94) * dt * 30.0f;
+                s2->a134 = floatModulo(s2->a134 + d, 360.0f);
+                s2->a130 = floatModulo(s2->a130 - d, 360.0f);
+                s2->a138 = floatModulo(s2->a138 + (d + d), 360.0f);
+                break;
+            case 1:
+                {
+                    f32 e;
+                    s2->t = s2->t + dt / 1.5f;
+                    if (s2->t > 1.0f) {
+                        s2->t = 1.0f;
+                    }
+                    e = quadraticEaseInOut(s2->t);
+                    s2->ease = e;
+                    d = *(f32 *)(s2->rec + 0x94) * dt * 30.0f * (1.0f - e);
+                    s2->a134 = floatModulo(s2->a134 + d, 360.0f);
+                    s2->a130 = floatModulo(s2->a130 - d, 360.0f);
+                    if (s2->deb[0] != 0xFFFF) {
+                        s2->debData[0].y -= 6.0f;
+                        spawnDebrisBurstFromTemplate(s2, 0);
+                    }
+                    if (s2->deb[1] != 0xFFFF) {
+                        spawnDebrisBurstFromTemplate(s2, 1);
+                    }
+                    if (s2->a124 == 2) {
+                    destroy:
+                        destroyNpcSlotByIndex(*(u16 *)(arg0 + 0x16));
+                        return 1;
+                    }
+                }
+                break;
+            }
+            if (*(s32 *)(s2->rec + 0x88) == 0) {
+                s2->cnt = 0;
+            } else if (isNpcWithinActiveReferenceRange(s2) != 0) {
+                s2->cnt = 0;
+            } else if (++s2->cnt >= 0x15) {
+                goto destroy;
+            }
+            if (s2->dat[0] != 0xFF) {
+                walkDatTreeAndScaleLeafByFloat(s2->dat, s2->mesh, *(f32 *)arg2);
+            }
+            if (D_main_bss_80130B39 == 0) {
+                destroyObjectOwnedNpcSlot(s2->obj);
+                return 1;
+            }
+            return 1;
+        }
+    case 4:
+        {
+            u8 *a4 = arg2;
+            s32 i;
+            u8 *m;
+            u8 *n;
+            PG_JOINT_HEAD(s2->m0, s2->n0)
+            composeRotationMatrixSlot1((void *)n, s2->a134);
+            PG_JOINT_TAIL()
+            PG_JOINT_HEAD(s2->m1, s2->n1)
+            composeRotationMatrixSlot1((void *)n, s2->a130);
+            PG_JOINT_TAIL()
+            PG_JOINT_HEAD(s2->m2, s2->n2)
+            addVec3At0x24((void *)n, 0.0f, s2->ease + s2->ease, 0.0f);
+            PG_JOINT_TAIL()
+            for (i = 0; i < 8; i++) {
+                if (s2->health[i] > 0) {
+                    PG_JOINT_HEAD(s2->mc[i], s2->nc[i])
+                    composeRotationMatrixSlot1((void *)n, s2->a138);
+                    PG_JOINT_TAIL()
+                }
+            }
+            mat34CrossRowsAndCopyPos((void *)(s2->mesh + 0x28), (void *)s2, s2->scale);
+            if (addNpcToVisibilityBucket(*(s32 *)a4, s2->mesh, s2, s2->radius) != 0 && s2->dat[0] != 0xFF) {
+                walkDatTreeAndVisitChildren(s2->dat, s2->mesh, a4);
+            }
+            pgTex(s2->mesh, "03", 0, s2->mat, 0, 0);
+            s2->mat[6] = -s2->mat[6];
+            s2->mat[7] = -s2->mat[7];
+            s2->mat[8] = -s2->mat[8];
+            u.c4.v[0] = s2->sc[0] * (1.0f - s2->ease);
+            u.c4.v[1] = s2->sc[1] * (1.0f - s2->ease);
+            u.c4.v[2] = s2->sc[2] * (1.0f - s2->ease);
+            if (u.c4.v[1] > 0.0f) {
+                mat34CrossRowsAndCopyPosPtr((void *)(s2->beam + 0x28), (void *)s2->mat, u.c4.v);
+                addNpcToVisibilityBucket(*(s32 *)a4, s2->beam, s2->mat, s2->radius);
+            }
+            for (i = 0; i < 2; i++) {
+                if (s2->fx[i] != 0xFFFF) {
+                    slotDispatcherIter(s2->fx[i], 0xE, arg2);
+                }
+            }
+            if (s2->audioOn != 0) {
+                updateActive3DAudioSource(s2->audio, s2, s2->vel, 0x7F);
+                return 1;
+            }
+        }
+        break;
+    case 5:
+        {
+            u8 *a5 = arg2;
+            s32 idx;
+            s32 alive = pgAlive(s2);
+            if (alive == 1) {
+                u8 *msg;
+                u8 *nm;
+                u8 c0;
+                u8 c1;
+                extrapolateNpcPositionForCurrentMode(a5);
+                msg = *(u8 **)(a5 + 8);
+                if (msg != NULL && (nm = *(u8 **)(msg + 0x24)) != NULL && (c0 = nm[0]) == 'c' && (c1 = nm[1]) == 'b' && nm[2] == '_') {
+                    u8 c7 = nm[7];
+                    idx = c7 - '1';
+                    if (s2->health[idx] > 0) {
+                        play3DSoundEvent(0, s2, s2->vel, 24.0f, 0.4f, 0, 0x2A, 0x78, 0x3C);
+                        if ((s2->health[idx] -= *(u16 *)(a5 + 6)) <= 0) {
+                            u.c5.nm[0] = c0;
+                            u.c5.nm[1] = c1;
+                            u.c5.nm[2] = c7;
+                            u.c5.nm[3] = 0;
+                            pgTex(s2->mesh, u.c5.nm, 0, u.c5.m, 0, 0);
+                            spawnOrientedNpc(2, u.c5.m, 0, 0, s2->scale * 1.3f, s2->scale * 1.9f, 0.8f, 0.6f);
+                            spawnOrientedNpc(2, u.c5.m, 0, 0, s2->scale * 1.1f, s2->scale + s2->scale, 0.8f, 0.5f);
+                            spawnOrientedNpc(3, u.c5.m, 0, 0, s2->scale * 0.9f, s2->scale * 2.2f, 0.8f, 0.45f);
+                            spawnNpcType0xAFromTemplate(u.c5.m, s2->scale * 4.0f);
+                            play3DSoundEvent(0, s2, s2->vel, 24.0f, 0.6f, 0, 0x23, 0x7D, 0x50);
+                            if (s2->slot[idx] != 0xFFFF) {
+                                destroyNpcSlotByIndex(s2->slot[idx]);
+                            }
+                            s2->slot[idx] = 0xFFFF;
+                            spawnNpcWithRandomRotation(&u.c5.hs);
+                            u.c5.hs.f[6] = 0.0f;
+                            spawnHeavyMechSubEffect(&u.c5.hs, arg0, (char *)nm);
+                            if (++s2->count == 8) {
+                                s2->state = alive;
+                                spawnNpcWithRandomRotation(&u.c5.hs);
+                                u.c5.hs.f[8] = 0.0f;
+                                u.c5.hs.f[9] = 0.0f;
+                                u.c5.hs.f[10] = 0.0f;
+                                u.c5.hs.f[4] = 0.5f;
+                                u.c5.hs.f[2] = -0.5f;
+                                u.c5.hs.f[3] = -2.8f;
+                                u.c5.hs.f[5] = 2.4f;
+                                u.c5.hs.f[11] = 5.0f;
+                                u.c5.hs.f[6] = 2.5f;
+                                s2->fx[0] = spawnHeavyMechSubEffect(&u.c5.hs, arg0, "maintrns");
+                                u.c5.hs.f[4] = 0.9f;
+                                u.c5.hs.f[5] = 1.3f;
+                                u.c5.hs.f[2] = 0.2f;
+                                u.c5.hs.f[3] = 0.2f;
+                                u.c5.hs.f[11] = 45.0f;
+                                u.c5.hs.f[6] = 3.4f;
+                                s2->fx[1] = spawnHeavyMechSubEffect(&u.c5.hs, arg0, "base");
+                                if (D_main_bss_80130B39 == 0) {
+                                    unregisterAndFreeNpcSlot(s2->s146, arg0);
+                                    unregisterAndFreeNpcSlot(s2->s148, arg0);
+                                    if (s2->s14A != 0xFFFF) {
+                                        unregisterAndFreeNpcSlot(s2->s14A, arg0);
+                                    }
+                                    pgPop(D_main_bss_80139574, arg0);
+                                    {
+                                        u8 *r = s2->rec;
+                                        datItemSetObjectiveBooleanCount(*(s32 *)(r + 0x78), *(s32 *)(r + 0x7C), *(s32 *)(r + 0x70), *(s32 *)(r + 0x74), *(s32 *)(r + 0x80), *(s32 *)(s2->rec + 0x84));
+                                    }
+                                    tallyMidDetailObject(arg0);
+                                    setObjectFlagBit4(arg0);
+                                }
+                                if (s2->audioOn == 1) {
+                                    s2->audioOn = 0;
+                                    factor5RemoveListNode(s2->audio);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    play3DSoundEvent(0, s2, s2->vel, 18.0f, 0.4f, 0, 0x2A, 0x78, 0x3C);
+                }
+            }
+            if (*(u16 *)a5 != 0xFFFF) {
+                destroyNpcSlotByIndex(*(u16 *)a5);
+                return 1;
+            }
+            return 1;
+        }
+    case 15:
+        {
+            u16 *msg = (u16 *)arg2;
+            s32 i;
+            for (i = 0; i < 2; i++) {
+                if (s2->fx[i] == msg[0]) {
+                    s2->deb[i] = s2->fx[i];
+                    s2->debData[i] = *(PgBlk *)(msg + 2);
+                    msg[0] = 0xFFFF;
+                    return 1;
+                }
+            }
+            return 1;
+        }
+    case 7:
+        if (D_main_bss_80130B39 == 0) {
+            dispatchSlotAction5IfActive(arg0, arg2);
+        }
+        break;
+    }
+    return 1;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D448);
 
