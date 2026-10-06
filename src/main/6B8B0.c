@@ -351,7 +351,30 @@ INCLUDE_ASM("asm/nonmatchings/main/6B8B0", transformObjectColliderCenter);
 INCLUDE_ASM("asm/nonmatchings/main/6B8B0", intersectSegmentWithObjectSphere);
 
 // Looking at the assembly for this, I'm forced to wonder if it was hand-written...
-INCLUDE_ASM("asm/nonmatchings/main/6B8B0", decrypt_ns_hmt);
+// Hand-written assembly.
+__asm__(
+    ".set push\n.set noat\n.set noreorder\n"
+    "glabel decrypt_ns_hmt\n"
+    "    addu       $t0, $a0, $zero\n"
+    "    addu       $t1, $a1, $zero\n"
+    "    addu       $t2, $a2, $zero\n"
+    "  .Lmain_8006AFCC:\n"
+    "    lbu        $t3, 0x0($t0)\n"
+    "    andi       $t4, $t2, 0xFF\n"
+    "    xor        $t5, $t3, $t4\n"
+    "    sb         $t5, 0x0($t0)\n"
+    "    srl        $t4, $t2, 8\n"
+    "    sll        $t2, $t2, 24\n"
+    "    or         $t2, $t2, $t4\n"
+    "    addu       $t2, $t2, $t3\n"
+    "    addiu      $t1, $t1, -0x1\n"
+    "    bnez       $t1, .Lmain_8006AFCC\n"
+    "    addiu     $t0, $t0, 0x1\n"
+    "    jr         $ra\n"
+    "    nop\n"
+    "endlabel decrypt_ns_hmt\n"
+    ".set pop\n"
+);
 
 INCLUDE_ASM("asm/nonmatchings/main/6B8B0", applyLevelScreenAndCameraSettings);
 
