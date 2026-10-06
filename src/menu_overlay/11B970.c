@@ -1071,7 +1071,183 @@ INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", playerTieInterceptorMainUpda
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initControllerSettingsStructs);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", controllerSettingsScreen);
+void setMenuOverlayHeaderState(s32, s32, s32);
+typedef struct {
+    u16 pad0;
+    u16 f2;
+    s32 f4;
+} CtlMapEnt;
+
+typedef struct {
+    u8 pad0[8];
+    u16 cnt;
+    u8 padA[2];
+    s32 p0C;
+    s32 p10;
+    u8 pad14[4];
+    f32 f18;
+    f32 f1C;
+} CtlSlotInfo;
+
+extern u16 *D_menu_overlay_800CC9D8[];
+extern u16 D_menu_overlay_800CC9E8[];
+extern CtlMapEnt D_menu_overlay_800CCA30[];
+extern u16 controllerActionTextIds[];
+extern s16 D_menu_overlay_800CE930[];
+extern s16 D_menu_overlay_800CEB30[];
+extern s32 strlen();
+
+void controllerSettingsScreen(u8 *arg0, s32 arg1) {
+    s32 sp18[14];
+    u32 i;
+    u32 i2;
+    s32 *p;
+    u8 *q;
+    u8 *base0;
+    u16 *tbl;
+    u16 *lp;
+    u32 n;
+    u16 t0;
+    u16 v1;
+    u16 a3;
+    s32 s3;
+    u32 j;
+    CtlMapEnt *e;
+    CtlMapEnt *e2;
+    s32 *s2;
+    s32 s4;
+    char *s1;
+    s32 s0;
+    u16 id;
+    s32 a0v;
+    s16 acc;
+    CtlSlotInfo *base;
+    CtlSlotInfo *cur;
+    s32 k;
+    f32 d0;
+    f32 e0;
+    f32 e1;
+    f32 d1;
+    s16 *w;
+    u32 a2;
+    s32 idx;
+
+    base0 = arg0;
+    tbl = D_menu_overlay_800CC9D8[arg1 & 0xFF];
+    i = 0;
+    p = sp18;
+    do {
+        *p = 0;
+        *arg0 = 0;
+        arg0 += 0x1B8;
+        i++;
+        p++;
+    } while (i < 14);
+    setMenuOverlayHeaderState(1, 0, 0);
+
+    n = 0;
+    while (1) {
+        t0 = D_menu_overlay_800CC9E8[n];
+        n++;
+        if (t0 == 0xFFFF) {
+            break;
+        }
+        v1 = 0xFFFF;
+        a3 = tbl[t0];
+        for (j = 0; j < 14; j++) {
+            e = &D_menu_overlay_800CCA30[j];
+            if (e->f4 == a3) {
+                v1 = e->f2;
+                break;
+            }
+        }
+        s3 = t0;
+        s4 = 1 << s3;
+        s2 = &sp18[v1];
+        if (s4 & *s2) {
+            continue;
+        }
+        s1 = (char *)(base0 + v1 * 0x1B8);
+        s0 = strlen(s1);
+        if (s0 != 0) {
+            s1[s0] = '/';
+            s0++;
+        }
+        rs_strcpy(s1 + s0, getGameOrFrontText(controllerActionTextIds[s3]));
+        __asm__("" :: "r"(tbl));
+        __asm__("" :: "r"(base0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        __asm__("" :: "i"(0));
+        a0v = *s2 | s4;
+        *s2 = a0v;
+        if ((0xE00 >> s3) & 1) {
+            *s2 = a0v | 0xE00;
+        }
+    }
+    i = 0;
+    do {
+        id = i;
+        q = base0 + i * 0x1B8;
+        e1 = *(f32 *)(q + 0x30);
+        e0 = *(f32 *)(q + 0x34) + 16.0f;
+        setPlayerSlotAnimationFlag(8, q, id, (s16)(s32)e1, (s16)(s32)e0);
+        setPlayerSlotEntryRGB(8, id, mainMenuGreyColor);
+        activateAnimationKeyframe(8, id, 0);
+        samplePlayerAnimChannel(8, id, 1.0f);
+        i++;
+    } while (i < 14);
+    acc = 0;
+    base = getPlayerSlotFieldAt34(8, 0);
+
+    i = 0;
+    do {
+        cur = getPlayerSlotFieldAt34(8, i);
+        idx = (u16)acc;
+        a2 = cur->cnt;
+        zmemcpy((u8 *)D_menu_overlay_800CE930 + idx * 2, (u8 *)cur->p0C, a2 * 2);
+        zmemcpy((u8 *)D_menu_overlay_800CEB30 + idx * 4, (u8 *)cur->p10, cur->cnt * 4);
+        if (i != 0) {
+            d1 = cur->f18 - base->f18;
+            d0 = cur->f1C - base->f1C;
+            a2 = 0;
+            if (cur->cnt != 0) {
+                k = idx;
+                do {
+                    w = D_menu_overlay_800CEB30 + (k + a2) * 2;
+                    w[0] = (s32)((f32)w[0] + d1);
+                    w[1] = (s32)((f32)w[1] + d0);
+                    a2++;
+                } while (a2 < cur->cnt);
+            }
+        }
+        i++;
+        acc = acc + cur->cnt;
+    } while (i < 14);
+    base->p0C = (s32)D_menu_overlay_800CE930;
+    base->p10 = (s32)D_menu_overlay_800CEB30;
+    base->cnt = acc;
+    setMenuOverlayHeaderState(2, 0x200, 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", easeT16AnimationKeyframe);
 
