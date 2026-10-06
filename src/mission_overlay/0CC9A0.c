@@ -356,7 +356,126 @@ void processAtAtSubFeatureSlot(u8 *arg0) {
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CC9A0", D_mission_overlay_800A6DE0);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", npcAtAtHandleDestruction);
+typedef struct { u8 a, b, c, d; } AaRgba;
+typedef struct { s32 a, b, c; } AaV3i;
+typedef struct {
+    u8 pad0[0x24];
+    f32 f24[3];
+    s32 f30;
+    u8 *f34;
+    s32 f38;
+    u8 pad3C[0x14];
+    f32 f50;
+    f32 f54;
+} AaNpc;
+extern AaRgba D_mission_overlay_800A6DE0;
+extern u8 D_mission_overlay_800A6DCC[];
+extern u8 D_mission_overlay_800A6DD0[];
+extern u8 D_main_bss_80130B63;
+extern s32 gCurrentLevel;
+s16 rand(void);
+s32 lookupHmtTextureByName(s32, u8 *, s32, u8 *, s32, s32);
+s32 play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+void spawnEffectNpcWithRampedScale(void *, s32, f32, f32, f32);
+void spawnNpcType0xAFromTemplate(void *, f32);
+void spawnByteAnimDebrisDefault(void *);
+void spawnOrientedNpc(s32, void *, s32, void *, f32, f32, f32, f32);
+void spawnDestructionEffectBurst(void *, s32, f32, f32, f32, f32);
+void composeRandomRotationMatrix(void *, void *, f32, s32, s32, s32);
+void scaleVec3ByRandomRange(void *, f32, f32);
+void spawnDebris1Npc(void *, void *, f32, f32, f32);
+void spawnSplineWalkerCraft(void *, f32, f32, s32);
+#define AABS(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
+
+void npcAtAtHandleDestruction(void *arg0, s32 arg1) {
+    register AaNpc *npc asm("$20");
+    f32 mtx[4];
+    f32 vel[4];
+    f32 pos[4];
+    AaRgba color;
+    u8 buf[0x30];
+    f32 k;
+    f32 fa;
+    f32 fb;
+    s32 i;
+    s32 n;
+
+    npc = arg0;
+    color = D_mission_overlay_800A6DE0;
+    switch (arg1) {
+    case 0:
+        lookupHmtTextureByName(npc->f30, D_mission_overlay_800A6DCC, 0, buf, 0, 0);
+        *(AaV3i *)pos = *(AaV3i *)buf;
+        k = npc->f54 * 23.71073f;
+        spawnEffectNpcWithRampedScale(pos, 0xFFFF, k * 10.0f, k * 30.0f, 0.5f);
+        spawnNpcType0xAFromTemplate(pos, npc->f50 * 4.0f);
+        spawnByteAnimDebrisDefault(npc);
+        play3DSoundEvent(0, npc, npc->f24, 24.0f, 0.6f, 0, 0x21, 0x7D, 0x50);
+        n = 0x50;
+        if (D_main_bss_80130B63 != 0) {
+spawn:
+            spawnOrientedNpc(0x8002, pos, 0, NULL, k * 2.2f, k * 3.5f, 1.0f, 1.0f);
+            spawnOrientedNpc(0x8003, pos, 0, NULL, k + k, k * 3.3f, 1.0f, 0.9f);
+            spawnOrientedNpc(1, pos, 0, &color, k, k * 4.9f, 1.5f, 2.0f);
+        } else {
+            switch (gCurrentLevel) {
+            case 3:
+            case 6:
+            case 9:
+            case 0xD:
+                n = 0xF;
+                break;
+            default:
+                n = 0x28;
+                goto spawn;
+            }
+        }
+        {
+            for (i = 0; i < n; i++) {
+                composeRandomRotationMatrix(mtx, vel, npc->f50 * 0.5f, 0xA0, 0, 0);
+                mtx[0] += pos[0];
+                mtx[1] += pos[1];
+                mtx[2] += pos[2];
+                scaleVec3ByRandomRange(vel, 1.5f, 3.0f);
+                fa = AABS(((f32)(rand() & 0x7F) - 64.0f) * 0.125f);
+                fa = fa + 15.0f;
+                fb = AABS(((f32)(rand() & 0x7F) - 64.0f) / 25.6f);
+                fb = fb + 2.0f;
+                spawnDebris1Npc(mtx, vel, fa, fb, AABS(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
+            }
+        }
+        spawnSplineWalkerCraft(buf, npc->f54 * 38.4f, npc->f54 * 64.0f, 0xC);
+        lookupHmtTextureByName(npc->f30, D_mission_overlay_800A6DD0, 0, buf, 0, 0);
+        spawnSplineWalkerCraft(buf, npc->f54 * 30.0f, npc->f54 * 35.0f, 0xC);
+        break;
+    case 1:
+        lookupHmtTextureByName(npc->f30, D_mission_overlay_800A6DD0, 0, buf, 0, 0);
+        *(AaV3i *)pos = *(AaV3i *)buf;
+        k = npc->f54 * 23.71073f;
+        play3DSoundEvent(0, npc, npc->f24, 24.0f, 0.6f, 0, 0x21, 0x7D, 0x50);
+        pos[1] -= 0.5f;
+        spawnNpcType0xAFromTemplate(pos, k * 3.0f);
+        spawnOrientedNpc(2, pos, 0, NULL, k * 0.4f, k * 0.7f, 1.0f, 1.0f);
+        spawnDestructionEffectBurst(buf, 0xFFFF, 2.0f, k, 0.8f, 0.6f);
+        for (i = 0; i < 0xC; i++) {
+            composeRandomRotationMatrix(mtx, vel, npc->f50 * 0.125f, 0xA0, 0, 0);
+            mtx[0] += pos[0];
+            mtx[1] += pos[1];
+            mtx[2] += pos[2];
+            scaleVec3ByRandomRange(vel, 1.5f, 3.0f);
+            fa = AABS(((f32)(rand() & 0x7F) - 64.0f) / 12.8f);
+            fa = fa + 12.0f;
+            fb = AABS(((f32)(rand() & 0x7F) - 64.0f) / 42.666668f);
+            fb = fb + 1.0f;
+            spawnDebris1Npc(mtx, vel, fa, fb, AABS(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.3f);
+        }
+        spawnByteAnimDebrisDefault(npc);
+        spawnSplineWalkerCraft(buf, npc->f54 * 30.0f, npc->f54 * 35.0f, 0xC);
+        __asm__("" : "+r"(npc));
+        *(s32 *)(npc->f34 + 0x4C) |= 0x40000000;
+        break;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", spawnAtAtFootstepDustBurst);
 
