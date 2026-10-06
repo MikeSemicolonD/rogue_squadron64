@@ -324,7 +324,79 @@ INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D0C8);
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D0CC);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", triggerDistanceScaledExplosion);
+typedef struct ExplColor {
+    u8 r, g, b, a;
+} ExplColor;
+typedef struct ExplosionArgs {
+    void *pos;
+    void *colorA;
+    void *colorB;
+    f32 scale;
+    u16 id;
+} ExplosionArgs;
+extern ExplColor D_main_8003D0C8;
+extern ExplColor D_main_8003D0CC;
+extern u8 *D_main_bss_80138D1C;
+extern u8 D_main_bss_80138058[];
+extern f32 vec3Length(Vec3f);
+extern f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+extern s32 randX(void) __asm__("rand");
+extern void spawnOrientedNpcX(s32, f32 *, s32, void *, f32, f32, f32, f32) __asm__("spawnOrientedNpc");
+extern void distanceAndDopplerNpcHelper(f32 *, f32, f32);
+
+void triggerDistanceScaledExplosion(s32 i, f32 arg1) {
+    ExplosionArgs args;
+    ExplColor colA;
+    ExplColor colB;
+    f32 pos[3];
+    Vec3f d;
+    u8 *cam;
+    f32 dist;
+    s32 count;
+    f32 x;
+    f32 z;
+    f32 ground;
+
+    colA = D_main_8003D0C8;
+    cam = D_main_bss_80138D1C + 0x28;
+    colB = D_main_8003D0CC;
+    d[0] = ((f32 *)i)[0] - *(f32 *)(cam + 0x24);
+    d[1] = ((f32 *)i)[1] - *(f32 *)(cam + 0x28);
+    d[2] = ((f32 *)i)[2] - *(f32 *)(cam + 0x2C);
+    dist = vec3Length(d) / 2.5f;
+    arg1 = arg1 * dist;
+    if (dist > 0.0f) {
+        count = 7.0f / dist;
+    } else {
+        count = 1;
+    }
+    if (count >= 8) {
+        count = 7;
+    }
+    x = ((f32 *)i)[0];
+    pos[0] = x;
+    z = ((f32 *)i)[2];
+    pos[2] = z;
+    i = 0;
+    ground = wrapAngleToCyclicRange(x, z, D_main_bss_80138058, 0);
+    args.pos = pos;
+    args.id = 0xFFFF;
+    args.colorA = &colA;
+    pos[1] = ground;
+    args.colorB = &colB;
+    if (count > 0) {
+        do {
+            args.scale = arg1 + ((f32)(randX() & 0x7F) - 64.0f) / 1280.0f;
+            if (args.scale <= 0.0f) {
+                args.scale = 0.001f;
+            }
+            spawnNpcOfType((void *)explosionEffectNpcHandler, &args, 1, 10);
+            i++;
+        } while (i < count);
+    }
+    spawnOrientedNpcX(0x8002, pos, 0, &colA, 0.05f, 0.18f, 0.4f, 0.5f);
+    distanceAndDopplerNpcHelper(pos, 0.1f, 0.4f);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", triggerObjectDestructionEffects);
 
