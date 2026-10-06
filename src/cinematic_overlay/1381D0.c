@@ -733,7 +733,85 @@ void processCutsceneActions(u8 *arg0, s32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", computeCutsceneScreenScale);
+struct CS { u8 p0[0x14]; u32 f14; f32 f18; f32 f1C; u8 p20[4]; f32 f24; f32 f28; };
+extern s32 getCinematicStateSubObject(void *);
+extern void setGridLayerScrollBounds(f32, f32);
+extern s8 D_cinematic_overlay_800B09B0;
+extern u16 D_cinematic_overlay_800B09B2;
+extern u16 D_cinematic_overlay_800B09B6;
+extern void *D_cinematic_overlay_800B0B00;
+extern void *D_cinematic_overlay_800B0B04;
+extern void *D_cinematic_overlay_800B0B08;
+extern void *D_cinematic_overlay_800B0B0C;
+extern s32 D_main_bss_80130B50;
+extern u8 D_main_bss_80136E18[];
+extern s32 D_main_bss_80138898;
+extern s32 D_main_bss_80138928;
+
+f32 computeCutsceneScreenScale(u32 arg0) {
+    struct CS *o;
+    f32 a, b, c, d, r;
+    s32 lt;
+
+    o = (struct CS *)getCinematicStateSubObject(D_cinematic_overlay_800B0B0C);
+    o->f24 = (f32)D_cinematic_overlay_800B09B2 * 0.34f / 240.0f;
+    o->f28 = (f32)D_cinematic_overlay_800B09B6 * 0.48f / 240.0f;
+    lt = arg0 >= 0x3E4;
+    o->f14 |= 0x02400001;
+    o->f18 = o->f24 * -256.0f;
+    o->f1C = o->f28 * -48.0f + 5.0f;
+    setLookupEntryField5ByKey(D_cinematic_overlay_800B0B00, o, lt);
+
+    { struct CS *o2 = (struct CS *)getCinematicStateSubObject(D_cinematic_overlay_800B0B08);
+    o = o2;
+    o->f24 = (f32)D_cinematic_overlay_800B09B2 * 0.38f / 240.0f; }
+    o->f28 = (f32)D_cinematic_overlay_800B09B6 * 0.47f / 240.0f;
+    o->f14 |= 0x02400001;
+    o->f18 = o->f24 * -96.0f;
+    o->f1C = o->f28 * -128.0f;
+    setLookupEntryField5ByKey(D_cinematic_overlay_800B0B00, o, lt);
+
+    o = (struct CS *)getCinematicStateSubObject(D_cinematic_overlay_800B0B04);
+    o->f24 = (f32)D_cinematic_overlay_800B09B2 * 0.28f / 240.0f;
+    o->f28 = (f32)D_cinematic_overlay_800B09B6 * 0.37f / 240.0f;
+    o->f14 |= 0x02400000;
+    o->f18 = o->f24 * -128.0f;
+    o->f1C = o->f28 * -128.0f;
+    setLookupEntryField5ByKey(D_cinematic_overlay_800B0B00, o, arg0 < 0x5F);
+
+    if (arg0 - 0x2E9 < 0x1F) {
+        register f32 t asm("$f0") = (f32)arg0 - 745.0f;
+        register f32 dd asm("$f2") = t / 30.0f;
+        c = quadraticEaseInOut(1.0f - dd) * 255.0f;
+        D_main_bss_80136E18[0] = (u32)c;
+        D_main_bss_80136E18[1] = (u32)c;
+        D_main_bss_80136E18[2] = (u32)c;
+    }
+    if (arg0 - 0x12D < 0x13) {
+        setGridLayerScrollBounds(19.75f, 19.75f);
+    }
+    D_cinematic_overlay_800B09B0 = 0;
+    r = 1.0f;
+    if (arg0 < 0x50) {
+        r = 2.0f;
+    }
+    if (arg0 - 0x6E < 0xB) {
+        r = ((f32)arg0 - 110.0f) / 10.0f + 1.0f;
+    }
+    if (arg0 - 0x79 < 0x289) {
+        r = 2.0f;
+    }
+    if (!(D_main_bss_80130B50 & 1)) {
+        if (arg0 - 0x30C < 0xD8) {
+            D_main_bss_80138898 |= 0x11;
+            D_main_bss_80138928 &= ~0x11;
+        } else {
+            D_main_bss_80138898 &= ~0x11;
+            D_main_bss_80138928 |= 0x11;
+        }
+    }
+    return r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", tickCutsceneCameraFromTimeline);
 
