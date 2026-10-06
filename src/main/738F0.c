@@ -1374,7 +1374,77 @@ INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D448);
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D454);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnDebrisBurstFromTemplate);
+#include "main/700B0.h"
+typedef struct {
+    f32 x, y, z;
+} DebrisVec3;
+extern char D_main_8003D448[];
+extern char D_main_8003D454[];
+extern void composeRandomRotationMatrix(f32 *, f32 *, f32, s32, s32, s32);
+extern void spawnDebris1Npc(f32 *, f32 *, f32, f32, f32);
+extern void spawnOrientedNpc_sdbt(s32, void *, void *, void *, f32, f32, f32, f32) __asm__("spawnOrientedNpc");
+extern void spawnNpcType0xAFromTemplate(f32 *, f32);
+
+static __inline__ f32 avabs(f32 x) { f32 r; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); return r; }
+void spawnDebrisBurstFromTemplate_(u8 *base, u8 idx) __asm__("spawnDebrisBurstFromTemplate");
+void spawnDebrisBurstFromTemplate_(u8 *base, u8 idx) {
+    f32 pos[3];
+    f32 vel[3];
+    DebrisVec3 v40;
+    char name[4];
+    u8 i;
+    register u8 *e asm("$16");
+    f32 *e2;
+    u8 *e3;
+    f32 *pv;
+    f32 a;
+    f32 b;
+    f32 t;
+
+    i = 0;
+    pv = vel;
+    {
+        register s32 off asm("$2") = idx * 12;
+        e = (u8 *)(off + (s32)base);
+    }
+    e2 = (f32 *)(e + 0x10C);
+    v40 = *(DebrisVec3 *)D_main_8003D448;
+    __builtin_memcpy(name, D_main_8003D454, 4);
+    do {
+        composeRandomRotationMatrix(pos, pv, 1.5f, 0x78, 0, 0);
+        pos[0] = *(f32 *)(e + 0x10C) + pos[0];
+        pos[1] = e2[1] + pos[1];
+        pos[2] = e2[2] + pos[2];
+        scaleVec3ByRandomRange(pv, 2.0f, 4.0f);
+        t = ((f32)(rand() & 0x7F) - 64.0f) / 12.8f;
+        a = avabs(t) + 12.0f;
+        t = ((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f;
+        b = (avabs(t) + 1.0f) * 3.0f + 6.0f;
+        t = ((f32)(rand() & 0x7F) - 64.0f) / 320.0f;
+        spawnDebris1Npc(pos, pv, a, b, (avabs(t) + 0.6f) * 1.5f);
+        if (i & 1) {
+            composeRandomRotationMatrix(pos, pv, 5.0f, 0x78, 0, 0);
+            scaleVec3ByRandomRange(pos, 0.25f, 1.5f);
+            pos[0] = *(f32 *)(e + 0x10C) + pos[0];
+            pos[1] = e2[1] + pos[1];
+            pos[2] = e2[2] + pos[2];
+            spawnNpcType0xAFromTemplate(pos, ((f32)(rand() & 0x7F) - 64.0f) * 0.0625f + 10.0f);
+        }
+        i++;
+    } while (i < 12);
+    e3 = base + (idx * 12 + 0x10C);
+    spawnOrientedNpc_sdbt(0, e3, &v40, name, 0.5f, 15.0f, 1.5f, 0.5f);
+    spawnOrientedNpc_sdbt(0, e3, &v40, name, 0.5f, 14.0f, 1.5f, 1.0f);
+    spawnOrientedNpc_sdbt(0, e3, &v40, name, 0.5f, 13.0f, 1.5f, 1.5f);
+    spawnOrientedNpc_sdbt(2, e3, &v40, name, 0.5f, 12.0f, 0.75f, 0.25f);
+    {
+        u8 *b2 = base + idx * 2;
+        destroyNpcSlotByIndex(*(u16 *)(b2 + 0x108));
+        *(u16 *)(b2 + 0x108) = 0xFFFF;
+        *(u16 *)(b2 + 0x104) = 0xFFFF;
+    }
+    base[0x124]++;
+}
 
 typedef struct {
     u8 pad0[0x6C];
