@@ -520,7 +520,156 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0F3E90", D_mission_overlay_800A
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", executeActorType1Effect);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", executeActorType2Effect);
+void *getNpcContextField8(u16);
+typedef struct {
+    f32 x, y, z;
+} T2V3;
+
+typedef struct {
+    T2V3 dir;
+    f32 rate0;
+    f32 rate;
+    f32 speed;
+    f32 timer;
+    f32 angBase;
+    f32 angRange;
+    f32 timeBase;
+    f32 timeRange;
+    f32 rate1;
+    u8 *box;
+    u8 active;
+    u8 hold;
+} T2State;
+
+void vec3Cross(f32 *, f32 *, f32 *);
+f32 constMinusSinfApprox(f32);
+void normalize_vector(f32 *);
+f32 vec3Dot(f32 *, f32 *);
+f32 vec3Length(f32 *);
+void quatFromAxisAngleSafe(f32 *, f32 *, f32);
+void quatFromAxisAngle(f32 *, f32 *, f32);
+void rotateVec3ByQuat(f32 *, f32 *, f32 *);
+void orthonormalizeFrameF(f32 *) __asm__("orthonormalizeFrame");
+f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+u16 rand(void);
+f32 fabsf(f32);
+extern u8 D_main_bss_80138058[];
+
+void executeActorType2Effect(void *arg0, f32 dt) {
+    f32 d[3];
+    f32 v[3];
+    f32 q[4];
+    f32 c[3];
+    T2State *s = (T2State *)((u8 *)arg0 + 8);
+    f32 *m = getNpcContextField8(*(u16 *)((u8 *)arg0 + 0x198));
+    f32 ang;
+    f32 len;
+    f32 turn;
+    f32 *fw;
+
+    {
+        f32 vx = m[9];
+        d[0] = m[0] + vx - *(f32 *)(s->box + 0x10);
+    }
+    {
+        f32 vx = m[10];
+        d[1] = m[1] + vx - *(f32 *)(s->box + 0x14);
+    }
+    {
+        f32 vx = m[11];
+        d[2] = m[2] + vx - *(f32 *)(s->box + 0x18);
+    }
+    len = vec3Length(d);
+    if (len == 0.0f) {
+        len = 1.0f;
+    }
+    v[0] = d[0] / len;
+    v[1] = d[1] / len;
+    v[2] = d[2] / len;
+    fw = &m[3];
+    ang = constMinusSinfApprox(vec3Dot(v, fw)) * 57.29578f;
+    len = vec3Length(d);
+    if (*(f32 *)(s->box + 0x1C) <= len) {
+        if (s->active == 0) {
+            if (s->hold == 0) {
+                quatFromAxisAngle(q, v, 180.0f);
+                rotateVec3ByQuat(q, fw, v);
+                *(f32 *)((u8 *)arg0 + 8) = -v[0];
+                s->dir.y = -v[1];
+                s->dir.z = -v[2];
+                s->active = 1;
+                s->hold = 0;
+                s->rate = s->rate0;
+            } else if (ang < 112.5f) {
+                vec3Cross(c, v, fw);
+                quatFromAxisAngleSafe(q, c, 180.0f - ang);
+                rotateVec3ByQuat(q, fw, (f32 *)s);
+                s->active = 1;
+                s->hold = 0;
+                s->rate = s->rate0;
+            }
+        } else if (*(f32 *)(s->box + 0x1C) + 0.25f <= len) {
+            s->active = 0;
+            s->hold = 0;
+        }
+    } else {
+        if (s->timeBase != 0.0f) {
+            s->timer -= dt;
+            if (s->active == 0 && s->timer <= 0.0f) {
+                f32 a;
+                f32 ab;
+                register f32 x asm("$f0");
+                __asm__ volatile("abs.s %0, %1" : "=f"(ab) : "f"(((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->timeRange)));
+                s->timer = s->timeBase + ab;
+                __asm__ volatile("abs.s %0, %1" : "=f"(ab) : "f"(((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->angRange)));
+                a = s->angBase + ab;
+                if (rand() & 1) {
+                    x = a;
+                } else {
+                    x = -a;
+                }
+                quatFromAxisAngle(q, &m[6], x);
+                rotateVec3ByQuat(q, fw, (f32 *)s);
+                s->active = 1;
+                s->rate = s->rate1;
+            }
+        }
+        s->hold = 0;
+    }
+    turn = s->rate * 30.0f * dt;
+    if (*(u16 *)((u8 *)arg0 + 0x110) & 4) {
+        s->dir.y = 0.0f;
+        normalize_vector((f32 *)s);
+    }
+    if (s->active != 0) {
+        ang = constMinusSinfApprox(vec3Dot((f32 *)s, &m[3])) * 57.29578f;
+        if (ang > 0.01f) {
+            vec3Cross(c, &m[3], (f32 *)s);
+            if (turn < ang) {
+                ang = turn;
+            }
+            quatFromAxisAngleSafe(q, c, ang);
+            rotateVec3ByQuat(q, &m[3], v);
+            *(T2V3 *)&m[3] = *(T2V3 *)v;
+            rotateVec3ByQuat(q, &m[6], v);
+            *(T2V3 *)&m[6] = *(T2V3 *)v;
+            orthonormalizeFrameF(m);
+        } else {
+            *(T2V3 *)&m[3] = s->dir;
+            s->active = 0;
+            s->hold = 1;
+        }
+    }
+    m[9] = m[3] * s->speed;
+    m[10] = m[4] * s->speed;
+    m[11] = m[5] * s->speed;
+    m[0] += m[9] * dt;
+    m[1] += m[10] * dt;
+    m[2] += m[11] * dt;
+    if (*(u16 *)((u8 *)arg0 + 0x110) & 4) {
+        m[1] = wrapAngleToCyclicRange(m[0], m[2], D_main_bss_80138058, 0);
+    }
+}
 
 void *getNpcContextField8(u16);
 typedef struct {
