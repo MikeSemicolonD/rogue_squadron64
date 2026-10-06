@@ -7,7 +7,100 @@
 typedef struct { s32 unk0; u8 pad[0x20]; } ModelAnimSlot24;
 extern ModelAnimSlot24 D_mission_overlay_8010C4A0[];
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", resolveScriptedNameTokenList);
+extern void copyPipeDelimitedField(u8 *, s32, char *);
+extern void copyRandomPipeDelimitedField(u8 *, char *);
+extern s32 returnZero_800F3258(u8 *, s32);
+extern void *getLevelDatItemByName(char *);
+
+typedef struct { s32 type; f32 a; f32 b; s32 name; } RsTok;
+
+static __inline__ u8 rsObjBool(u8 *a0, s32 v) {
+    if (v == 0) {
+        return 1;
+    }
+    if (v < 0x81) {
+        return gObjectiveBooleans[v - 1] != 0;
+    }
+    return returnZero_800F3258(a0, v);
+}
+
+s32 resolveScriptedNameTokenList(u8 *arg0, u8 *arg1) {
+    char buf[0x40];
+    s32 i;
+    RsTok *t;
+    s32 v;
+    s32 r;
+    u8 *name;
+    u8 *item;
+
+    t = (RsTok *)(*(u8 **)(arg1 + 0x24) + 0x54);
+    for (i = 0; i < 8; i++) {
+        name = *(u8 **)(arg1 + 0x24) + t->name;
+        switch (t->type) {
+        case 1:
+            if ((s32)t->a < *(s32 *)(arg1 + 0x34)) {
+                break;
+            }
+            goto done;
+        case 2:
+            r = rsObjBool(arg0, (s32)t->a);
+            if ((u8)r == (s32)t->b) {
+                copyPipeDelimitedField(name, 0, buf);
+                *(void **)(arg1 + 0x28) = getLevelDatItemByName(buf);
+                *(s32 *)(arg1 + 0x34) = 0;
+                return 1;
+            }
+            break;
+        case 3:
+            {
+            s32 v3 = (s32)t->a;
+            if (v3 > 0) {
+                if (gObjectiveCounts[v3 - 1] >= (s32)t->b) {
+                    copyPipeDelimitedField(name, 0, buf);
+                    *(void **)(arg1 + 0x28) = getLevelDatItemByName(buf);
+                    *(s32 *)(arg1 + 0x34) = 0;
+                    return 1;
+                }
+            }
+            }
+            break;
+        case 4:
+            copyRandomPipeDelimitedField(name, buf);
+            *(void **)(arg1 + 0x28) = getLevelDatItemByName(buf);
+            *(s32 *)(arg1 + 0x34) = 0;
+            return 1;
+        case 5:
+            copyPipeDelimitedField(name, 0, buf);
+            *(void **)(arg1 + 0x28) = getLevelDatItemByName(buf);
+            *(s32 *)(arg1 + 0x34) = 0;
+            return 1;
+        case 6:
+            __asm__("" :: "r"(arg1));
+            __asm__("" :: "r"(arg1));
+            if ((s32)t->a == 1) {
+                arg0[0x1A5] = 1;
+            }
+            return 0;
+        case 7:
+            copyPipeDelimitedField(name, 0, buf);
+            item = getLevelDatItemByName(buf);
+            *(u8 **)(arg1 + 0x28) = item;
+            *(s32 *)(arg1 + 0x34) = 0;
+            *(f32 *)(arg1 + 0x104) = t->a;
+            if (*(s32 *)(item + 0x50) == 1) {
+                *(f32 *)(arg1 + 0x14) = *(f32 *)(arg1 + 0x14) + 180.0f;
+            }
+            return 1;
+        default:
+            *(u8 **)(arg1 + 0x28) = *(u8 **)(arg1 + 0x24);
+            return 1;
+        }
+        t++;
+    }
+done:
+    *(u8 **)(arg1 + 0x28) = *(u8 **)(arg1 + 0x24);
+    return 1;
+}
 
 #include "main/1D000.h"
 #include "main/5A750.h"
