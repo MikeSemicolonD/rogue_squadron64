@@ -352,7 +352,100 @@ INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", acquireNpcTargetsInAimCon
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", tickProgressChannel);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", raycastTerrainAndNpcs);
+typedef struct { f32 x, y, z; } RcV3;
+typedef struct { u8 a, b; } RcPair;
+typedef struct { RcV3 pos; RcV3 n; f32 u; f32 d; f32 e; f32 g; } RcHit;
+extern u8 D_main_bss_80138058[];
+extern u16 D_main_bss_80139560[];
+extern u8 D_mission_overlay_8010B340[];
+extern s32 sampleTerrainAtNpcPosition(f32 *, RcV3 *, void *, RcHit *);
+extern void sampleTerrainSurfaceAtWorldXz(f32, f32, void *, RcHit *);
+extern s32 revalidateNpcSlotIterator(void *);
+extern s32 findSegmentObjectSphereHit(s32, void *, void *, void *);
+extern f32 projectPointOntoObjectSphereHit(s32, void *, void *);
+
+f32 raycastTerrainAndNpcs(f32 *org, f32 *dir, u16 ignore, u16 *outIdx, f32 maxd, f32 stop, f32 *outDist, RcV3 *outN, u32 flags, u8 *outFlag) {
+    RcHit hit;
+    u8 it[8];
+    RcV3 v;
+    s32 k;
+    s32 idx;
+    f32 d;
+    s32 mesh;
+    u8 fl;
+    u16 cur;
+
+    *outIdx = ignore;
+    fl = flags;
+    *outFlag = 0;
+    if (maxd == 0.0f) {
+        return 0.0f;
+    }
+    v.x = dir[0] * maxd;
+    v.y = dir[1] * maxd;
+    v.z = dir[2] * maxd;
+    if (flags & 1) {
+        if (sampleTerrainAtNpcPosition(org, &v, D_main_bss_80138058, &hit)) {
+            v.x = hit.pos.x - org[0];
+            v.y = hit.pos.y - org[1];
+            v.z = hit.pos.z - org[2];
+            *outIdx = 0xFFFF;
+            sampleTerrainSurfaceAtWorldXz(hit.pos.x, hit.pos.z, D_main_bss_80138058, &hit);
+            *outN = hit.n;
+            *outFlag |= 1;
+            if (outDist != NULL) {
+                *outDist = hit.d;
+            }
+            maxd = hit.d;
+            if (maxd <= stop) {
+                return maxd;
+            }
+        }
+    }
+    if ((fl & 2) && D_mission_overlay_8010B340[0] != 0xFF) {
+        k = 0;
+        do {
+            if (((RcPair *)D_mission_overlay_8010B340)[k].b == 0) {
+                for (idx = findActiveNpcInSlotChain(D_main_bss_80139560[((RcPair *)D_mission_overlay_8010B340)[k].a], (s32)it); (idx & 0xFFFF) != 0xFFFF && (cur = idx) != ignore; idx = revalidateNpcSlotIterator(it)) {
+                    {
+                        mesh = *(s32 *)((u8 *)getNpcContextByIndex(cur) + 0xC);
+                        if (mesh != 0) {
+                            if (findSegmentObjectSphereHit(mesh, org, &v, &hit) != 0) {
+                                if (hit.d < maxd) {
+                                    maxd = hit.d;
+                                    *outIdx = idx;
+                                    *outFlag |= 2;
+                                    if (maxd <= stop) {
+                                        return maxd;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } else {
+                for (idx = findActiveNpcInSlotChain(D_main_bss_80139560[((RcPair *)D_mission_overlay_8010B340)[k].a], (s32)it); (idx & 0xFFFF) != 0xFFFF && (cur = idx) != ignore; idx = revalidateNpcSlotIterator(it)) {
+                    {
+                        mesh = *(s32 *)((u8 *)getNpcContextByIndex(cur) + 0xC);
+                        if (mesh != 0) {
+                            d = projectPointOntoObjectSphereHit(mesh, org, &v);
+                            if (0.0f < d && d < maxd) {
+                                maxd = d;
+                                *outIdx = idx;
+                                *outFlag |= 2;
+                                if (maxd <= stop) {
+                                    return maxd;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+k++;
+        } while (((RcPair *)D_mission_overlay_8010B340)[k].a != 0xFF);
+    }
+    return maxd;
+}
 
 typedef struct { f32 x, y, z; } Vec3Cp2;
 
