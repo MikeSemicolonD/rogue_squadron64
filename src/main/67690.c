@@ -108,7 +108,73 @@ char *D_main_800A05C8[] = {
 // DO NOT DELETE ME I AM REQUIRED FOR MATCHING
 u32 data_pad_67690 = 0x10400019;
 
-INCLUDE_ASM("asm/nonmatchings/main/67690", initSpeechSubsystem);
+extern u8 subtitleSlotHead;
+extern u8 subtitleSlotTail;
+extern u8 subtitleSlotsAvailable;
+extern u8 D_main_80139C73;
+extern s32 D_main_bss_80139C78;
+extern f32 D_main_bss_80139C7C;
+extern f32 D_main_bss_80139C80;
+extern f32 D_main_bss_80139C84;
+extern f32 D_main_bss_80139C88;
+extern s32 D_main_bss_80139B70;
+extern s32 D_main_bss_80139B74;
+extern s32 D_main_bss_80138920;
+extern s32 D_main_bss_80137CFC;
+extern s32 D_main_80139B80[];
+extern s16 D_main_bss_80139BA8;
+extern s8 D_main_bss_80139C8C;
+extern s8 D_main_bss_80139C8D;
+extern s8 D_main_bss_80139C8E;
+extern u8 D_main_bss_80139C8F;
+extern void initMusyXVoiceTable(void);
+extern s32 findAssetAcrossSegments(s32, s32, s32, char *, s32);
+extern s32 load_asset(char *);
+extern s32 loadSpeechFile(s32, s32);
+
+s32 initSpeechSubsystem(s32 arg0, s32 arg1) {
+    s32 handle;
+    s32 ret;
+    s32 i;
+    s32 idx;
+    s32 *p;
+    f32 vol;
+
+    initMusyXVoiceTable();
+    subtitleSlotTail = 0;
+    subtitleSlotHead = 0;
+    subtitleSlotsAvailable = 0x10;
+    D_main_80139C73 = 0;
+    D_main_bss_80139C78 = 0;
+    D_main_bss_80139C7C = 0.0f;
+    D_main_bss_80139C80 = D_main_bss_80139C84 = (f32)(arg1 & 0xFF) / 127.0f;
+    D_main_bss_80139C88 = 1.0f;
+    idx = arg0 & 0xFF;
+    if (idx == 0) {
+        handle = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, D_main_800A05C8[0], 1);
+        D_main_bss_80139B70 = handle;
+        D_main_bss_80139B74 = 0;
+        ret = loadSpeechFile(handle, D_main_bss_80138920);
+    } else {
+        handle = load_asset(D_main_800A05C8[idx]);
+        D_main_bss_80139B74 = handle;
+        ret = loadSpeechFile(handle, D_main_bss_80138920);
+    }
+    {
+        s32 m = -1;
+        i = 7;
+        p = D_main_80139B80 + i;
+        do {
+            *p-- = m;
+        } while (--i >= 0);
+    }
+    D_main_bss_80139BA8 = 0;
+    D_main_bss_80139C8F = 0;
+    D_main_bss_80139C8C = 0;
+    D_main_bss_80139C8D = 0;
+    D_main_bss_80139C8E = 0;
+    return ret & 0xFF;
+}
 
 extern s32 D_main_80139B80[];
 extern u8 D_main_80139BA0[];
