@@ -1,7 +1,96 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AB6E0", playerSnowSpeederInit);
+extern u8 ssCraftBytes[][0x2A0] __asm__("D_main_bss_80137DBC");
+extern struct { u8 pad[0xC]; u32 pl[3]; u32 flags; } ssGs __asm__("gGameSettings");
+extern u8 D_main_8009EBBC;
+extern void ssInitMove(void *) __asm__("initPlayerCraftMovementMode");
+s32 ssLookupMat(s32, char *, void *) __asm__("lookupHmtMaterialByName");
+void ssResetFx(void) __asm__("resetEffectSequenceState");
+
+void ssImpl(u8 *arg0, s32 arg1, s32 arg2) __asm__("playerSnowSpeederInit");
+void ssImpl(u8 *arg0, s32 arg1, s32 arg2) {
+    u8 *p = ssCraftBytes[arg1];
+    f32 hp;
+    f32 a, d, e, f, g, h, i, j, k, l, m, n, o, q, r;
+    *(s16 *)(p + 0x180) = arg2;
+    *(s32 *)arg0 = arg1;
+    *(u16 *)(p + 0xB4) = 4;
+    ssInitMove(p);
+    if (ssGs.flags & 0x40) {
+        hp = 40.0f;
+    } else {
+        hp = 150.0f;
+    }
+    *(f32 *)(p + 0xC0) = hp;
+    *(f32 *)(p + 0xC4) = hp;
+    *(f32 *)(p + 0xE8) = (arg0[0x2D] == 0) ? 2.625f : 1.3125f;
+    *(f32 *)(p + 0xEC) = (arg0[0x2D] == 0) ? 2.625f : 1.3125f;
+    *(f32 *)(p + 0xF0) = (arg0[0x2D] == 0) ? 0.11875f : 0.059375f;
+    a = (arg0[0x2D] == 0) ? 0.11875f : 0.059375f;
+    *(f32 *)(p + 0xF8) = 1.4f;
+    d = 1.8f;
+    e = 15.0f;
+    f = 10.0f;
+    g = 1.0f;
+    h = -40.0f;
+    i = 35.0f;
+    j = 0.75f;
+    k = 3.0f;
+    l = 20.0f;
+    m = 60.0f;
+    n = 5.0f;
+    o = 40.0f;
+    q = 0.2f;
+    r = 0.15f;
+    *(f32 *)(p + 0xF4) = a;
+    *(s32 *)(p + 0x13C) = 0;
+    *(s32 *)(p + 0x14C) = 0;
+    *(s32 *)(p + 0x11C) = 0;
+    *(s32 *)(p + 0xD8) = 0;
+    *(s32 *)(p + 0xDC) = 0;
+    *(s32 *)(p + 0xE0) = 0;
+    *(s16 *)(p + 0x158) = 0;
+    *(s32 *)(p + 0x160) = 0;
+    *(s32 *)(p + 0x170) = 0;
+    *(s32 *)(p + 0x168) = 0;
+    *(s32 *)(p + 0x174) = 0;
+    *(f32 *)(p + 0xFC) = d;
+    *(f32 *)(p + 0x104) = e;
+    *(f32 *)(p + 0x108) = f;
+    *(f32 *)(p + 0x10C) = g;
+    *(f32 *)(p + 0x110) = h;
+    *(f32 *)(p + 0x114) = h;
+    *(f32 *)(p + 0x118) = i;
+    *(f32 *)(p + 0x120) = i;
+    *(f32 *)(p + 0x124) = i;
+    *(f32 *)(p + 0x130) = j;
+    *(f32 *)(p + 0x134) = k;
+    *(f32 *)(p + 0x138) = l;
+    *(f32 *)(p + 0x140) = f;
+    *(f32 *)(p + 0x144) = m;
+    *(f32 *)(p + 0x148) = f;
+    *(f32 *)(p + 0x150) = n;
+    *(f32 *)(p + 0x154) = o;
+    *(f32 *)(p + 0x128) = q;
+    *(f32 *)(p + 0x12C) = r;
+    *(f32 *)(p + 0x164) = 0.137f;
+    ssGs.pl[arg1] &= ~0x1000000;
+    ((s32 *)arg0)[1] = 0;
+    ((s32 *)arg0)[2] = 0;
+    ((s32 *)arg0)[3] = ssLookupMat(*(s32 *)p, "botrns_l", arg0 + 0x1C);
+    ((s32 *)arg0)[4] = ssLookupMat(*(s32 *)p, "botrns_r", arg0 + 0x20);
+    ((s32 *)arg0)[5] = ssLookupMat(*(s32 *)p, "uptrns_l", arg0 + 0x24);
+    ((s32 *)arg0)[6] = ssLookupMat(*(s32 *)p, "uptrns_r", arg0 + 0x28);
+    *(s32 *)(p + 0x194) = 4;
+    ssResetFx();
+    arg0[0x2F] = 0xFF;
+    arg0[0x2C] = 0;
+    arg0[0x2D] = 0;
+    arg0[0x11C] = 0;
+    D_main_8009EBBC = 0;
+    *(u16 *)(arg0 + 0x10C) = 0xFFFF;
+}
 
 typedef struct {
     union { u8 pad0[0xB8]; f32 mat0[4][3]; } u0;
