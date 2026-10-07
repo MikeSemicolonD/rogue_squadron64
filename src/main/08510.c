@@ -1882,7 +1882,111 @@ void transformLightByType(u8 *light, f32 *mat) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", appendRdpStateDl);
+typedef struct {
+    u32 w0;
+    u32 w1;
+} RdpWord;
+
+extern f32 D_main_bss_8011D088;
+extern s32 D_main_8003775C[];
+extern s32 D_main_8003776C[];
+extern s32 D_main_bss_8011A858;
+extern s32 D_main_bss_8011A85C;
+extern u8 D_main_bss_8011A860;
+extern u8 D_main_bss_8011A861;
+extern u8 D_main_bss_8011A908;
+extern u8 D_main_bss_8011A898;
+
+RdpWord *appendRdpStateDl(RdpWord *dl, u32 flags, u8 *outA, u8 *outB) {
+    u32 om;
+    u32 geomSet;
+    u32 geomClr;
+    RdpWord *p;
+    RdpWord *q;
+    u8 v;
+
+    p = dl++;
+    p->w0 = 0xE7000000;
+    p->w1 = 0;
+    if (flags & 0x200000) {
+        om = 0;
+        geomSet = 0x1000;
+        geomClr = 0;
+    } else {
+        om = 0x80000;
+        geomSet = 0;
+        geomClr = 0x1000;
+    }
+    if (!(flags & 0x8000)) {
+        om |= 0x2000;
+    }
+    if (flags & 0x80000) {
+        p = dl++;
+        p->w0 = 0xB9000201;
+        p->w1 = 4;
+        q = dl++;
+        q->w0 = 0xEE000000;
+        q->w1 = (u32)D_main_bss_8011D088 << 16;
+        geomClr |= 1;
+    } else {
+        p = dl++;
+        p->w0 = 0xB9000201;
+        p->w1 = 0;
+        geomSet |= 1;
+    }
+    if (flags & 0x1C00000) {
+        om |= D_main_8003775C[(flags & 0x1C00000) >> 22];
+    } else {
+        om |= D_main_bss_8011A858;
+    }
+    if (flags & 0xE000000) {
+        om |= D_main_8003776C[(flags & 0xE000000) >> 25];
+    } else {
+        om |= D_main_bss_8011A85C;
+    }
+    if (!(flags & 0x10000) && D_main_bss_8011A898 != 0) {
+        geomSet |= 0x10000;
+        v = 0x82;
+    } else {
+        geomClr |= 0x10000;
+        v = 1;
+    }
+    D_main_bss_8011A908 = v;
+    if (geomSet != 0) {
+        p = dl++;
+        p->w0 = 0xB7000000;
+        p->w1 = geomSet;
+    }
+    if (geomClr != 0) {
+        p = dl++;
+        p->w0 = 0xB6000000;
+        p->w1 = geomClr;
+    }
+    dl[0].w0 = 0xBE000000;
+    dl[0].w1 = om;
+    dl[1].w0 = 0xFFF7CF0F;
+    dl[1].w1 = 0;
+    dl += 2;
+    flags &= 0x30000000;
+    if (flags != 0) {
+        switch (flags) {
+        case 0x30000000:
+            D_main_bss_8011A861 = 1;
+            break;
+        case 0x10000000:
+            D_main_bss_8011A861 = 0;
+            break;
+        case 0x20000000:
+            D_main_bss_8011A861 = 2;
+            break;
+        }
+    } else {
+        D_main_bss_8011A861 = D_main_bss_8011A860;
+    }
+    *outB = 0x7F;
+    *outA = 0xFF;
+    return dl;
+}
 
 extern s32 D_main_80037760[];
 extern s32 D_main_bss_8011A858;
