@@ -179,7 +179,154 @@ void triggerFalconEngineEffect(s32 *arg0, s32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BAFF0", bindFalconSubmodelMaterials);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BAFF0", playerFalconMainUpdate);
+static __inline__ f32 pfAbs(f32 x) { f32 r; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); return r; }
+typedef struct {
+    u8 pad0[0x4C];
+    u32 flags;
+    f32 f50, f54, f58;
+    s32 w5C, w60, w64;
+    u8 q68[0x10];
+    f32 f78, f7C, f80;
+} PfDef;
+
+typedef struct {
+    u8 pad0[8];
+    PfDef *def[4];
+    u8 *node[4];
+    u16 lock[2];
+    f32 mat[2][12];
+    f32 pos[2][3];
+    f32 tYaw[2];
+    f32 cYaw[2];
+    f32 tPit[2];
+    f32 cPit[2];
+} PfTur;
+
+u16 pfLock(void *src, f32 *out, u16 cur, f32 range, f32 minDot, f32 lead, u8 mode) __asm__("acquireLockOnTarget");
+f32 pfNorm(f32 *) __asm__("normalize_vector");
+f32 pfCms(f32) __asm__("constMinusSinfApprox");
+void pfMul(void *, void *, void *) __asm__("mat3x4Multiply");
+void pfInv(void *, void *) __asm__("mat3x3InverseInto");
+void pfXf(void *, void *, void *) __asm__("transformVec3ByMat34");
+void pfClr(void *) __asm__("clearVec4QuadStruct");
+void pfAdd(void *, f32, f32, f32) __asm__("addVec3At0x24");
+void pfScl(void *, s32, s32, s32) __asm__("applyScaleToMat3x4");
+void pfQuat(void *, void *) __asm__("composeQuatToMat3x4");
+void pfRot0(void *, f32) __asm__("composeRotationMatrixSlot0");
+void pfRot1(void *, f32) __asm__("composeRotationMatrixSlot1");
+
+#define PF_SUB(NODE, DEF, ANG, ROT) \
+    { \
+        u8 *m; \
+        PfDef *d; \
+        f32 ang; \
+        m = (NODE) + 0x1C; \
+        d = (DEF); \
+        ang = (ANG); \
+        pfClr(m); \
+        if (d->flags & 1) { \
+            pfAdd(m, -d->f50, -d->f54, -d->f58); \
+        } \
+        if (d->flags & 2) { \
+            pfScl(m, d->w5C, d->w60, d->w64); \
+        } \
+        if (d->flags & 4) { \
+            pfQuat(m, d->q68); \
+        } \
+        ROT(m, ang); \
+        { \
+            u32 fl = d->flags; \
+            if ((fl & 9) == 9) { \
+                pfAdd(m, d->f78 + d->f50, d->f7C + d->f54, d->f80 + d->f58); \
+            } else if ((fl & 9) == 8) { \
+                pfAdd(m, d->f78, d->f7C, d->f80); \
+            } else if (fl & 1) { \
+                pfAdd(m, d->f50, d->f54, d->f58); \
+            } \
+        } \
+    }
+
+#define PF_STEP(CF, TF) \
+    { \
+        f32 cur, tgt, d, s; \
+        cur = t->CF[i]; \
+        tgt = t->TF[i]; \
+        d = tgt - cur; \
+        if (pfAbs(d) > 0.35f) { \
+            if (cur < tgt) { \
+                if (d > 180.0f) { \
+                    s = dt * -70.0f; \
+                } else { \
+                    s = dt * 70.0f; \
+                } \
+            } else { \
+                if (cur - tgt > 180.0f) { \
+                    s = dt * 70.0f; \
+                } else { \
+                    s = dt * -70.0f; \
+                } \
+            } \
+            cur += s; \
+            if (cur < 0.0f) { \
+                cur += 360.0f; \
+            } else if (cur > 360.0f) { \
+                cur -= 360.0f; \
+            } \
+        } else { \
+            cur = tgt; \
+        } \
+        t->CF[i] = cur; \
+    }
+
+void pfmuImpl(s32 *arg0, PfTur *t, f32 dt) __asm__("playerFalconMainUpdate");
+void pfmuImpl(s32 *arg0, PfTur *t, f32 dt) {
+    f32 sp20[4];
+    f32 sp30[4];
+    f32 v[4];
+    f32 sp50[12];
+    f32 sp80[12];
+    u32 i;
+    u16 r;
+    f32 y;
+    f32 len;
+    f32 a;
+
+    for (i = 0; i < 2; i++) {
+        r = pfLock(arg0 + 1, sp20, t->lock[i], 18.0f, 0.89f, 12.5f, i + 1);
+        if (r != 0xFFFF) {
+            t->lock[i] = r;
+            pfMul((u8 *)*arg0 + 0x28, t->mat[i], sp50);
+            pfInv(sp80, sp50);
+            pfXf(sp80, sp20, sp30);
+            v[0] = sp30[0] - t->pos[i][0];
+            v[1] = sp30[1] - t->pos[i][1];
+            v[2] = sp30[2] - t->pos[i][2];
+            pfNorm(v);
+            y = v[1];
+            v[1] = 0.0f;
+            len = pfNorm(v);
+            a = pfCms(v[2]) * 57.295776f;
+            t->tYaw[i] = a;
+            if (v[0] < 0.0f) {
+                t->tYaw[i] = 360.0f - a;
+            }
+            if ((y < 0.0f && i == 0) || (y > 0.0f && i == 1)) {
+                t->tPit[i] = pfCms(len) * 57.295776f;
+            } else {
+                t->tPit[i] = 0.0f;
+            }
+        } else {
+            t->tYaw[i] = 0.0f;
+            t->tPit[i] = 0.0f;
+        }
+        PF_STEP(cYaw, tYaw)
+        PF_STEP(cPit, tPit)
+    }
+    PF_SUB(t->node[0], t->def[0], t->cYaw[0], pfRot1);
+    PF_SUB(t->node[1], t->def[1], t->cPit[0], pfRot0);
+    PF_SUB(t->node[2], t->def[2], t->cYaw[1], pfRot1);
+    PF_SUB(t->node[3], t->def[3], -t->cPit[1], pfRot0);
+}
 
 typedef struct {
     u8 pad0[0x1A];
