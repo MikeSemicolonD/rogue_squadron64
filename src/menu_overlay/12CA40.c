@@ -280,25 +280,110 @@ s32 drawRadarIcon(u8 *arg0, s32 arg1) {
     return 0;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/12CA40", strMenuALPHA);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/12CA40", strMenuBETA);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/12CA40", strMenuGAMMA);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/12CA40", strMenuDELTA);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/12CA40", D_menu_overlay_800A760C);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/12CA40", strMenuINTRO);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/12CA40", strMenuEXTRO);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/12CA40", strMenuSPECIAL);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/12CA40", D_menu_overlay_800A7644);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/12CA40", runResultsTextScreenLoop);
+extern u8 D_menu_overlay_800CD40C[];
+extern u8 D_menu_overlay_800CD438[];
+s32 getLevelHardwiredDifficulty(u8);
+void rrClear(void *) __asm__("clearVec4QuadStruct");
+s32 rand(void);
+void pollControllerInputs(void);
+void setNewAndPreviousButtonsPressed(void);
+void waitForPrevFrameDone(void);
+void frameStartReset(void);
+void setupCameraMatrices(void *);
+void drawFrameProfilerBars(void);
+void submitGfxFrame(void);
+s32 sprintf(char *, const char *, ...);
+u32 rrImpl(s32 arg0, char *title) __asm__("runResultsTextScreenLoop");
+u32 rrImpl(s32 arg0, char *title) {
+    char *items[0x20];
+    char line[0x80];
+    char *names[8] = { "ALPHA", "BETA", "GAMMA", "DELTA" };
+    char *cuts[3] = { "INTRO", "EXTRO", "SPECIAL" };
+    char note[0x80];
+    u32 n;
+    u32 sel;
+    u32 i;
+    char *s;
+
+    n = 0;
+    sel = 0;
+    rrClear(D_menu_overlay_800CD438);
+    __asm__("" :: "r"(arg0));
+    switch ((u8)arg0) {
+    case 1:
+        n = 0x12;
+        for (i = 0; i <= n; i++) {
+            items[i] = getGameOrFrontText(i);
+        }
+        break;
+    case 2:
+        n = 8;
+        for (i = 0; i <= n; i++) {
+            items[i] = getGameOrFrontText(i + 0x18);
+        }
+        break;
+    case 3:
+        n = 3;
+        for (i = 0; i <= n; i++) {
+            items[i] = getGameOrFrontText(i + 0x14);
+        }
+        sel = getLevelHardwiredDifficulty(gGameSettings.currentLevel);
+        break;
+    case 4:
+        n = 3;
+        for (i = 0; i <= n; i++) {
+            items[i] = names[i];
+        }
+        break;
+    case 5:
+        n = 2;
+        for (i = 0; i <= n; i++) {
+            items[i] = cuts[i];
+        }
+        break;
+    }
+    while (1) {
+        rand();
+        pollControllerInputs();
+        setNewAndPreviousButtonsPressed();
+        waitForPrevFrameDone();
+        frameStartReset();
+        for (i = 0; i <= n; i++) {
+            sprintf(line, " %s", items[i]);
+            if (i == sel) {
+                line[0] = '>';
+            }
+        }
+        if ((u8)arg0 == 3) {
+            s = getGameOrFrontText(gGameSettings.currentLevel);
+            sprintf(note, "\nNOTE: HARDWIRED DIFFICULTY FOR\n      %s\n      IS %s", s, getGameOrFrontText(getLevelHardwiredDifficulty(gGameSettings.currentLevel) + 0x14));
+        }
+        if (getControllerNewButtonsPressed(0) & 0x200800) {
+            sel = (sel != 0) ? sel - 1 : n;
+        }
+        if (getControllerNewButtonsPressed(0) & 0x100400) {
+            sel = (sel != n) ? sel + 1 : 0;
+        }
+        __asm__("" :: "r"(arg0));
+        if (getControllerNewButtonsPressed(0) & 0x5000) {
+            break;
+        }
+        setupCameraMatrices(D_menu_overlay_800CD40C);
+        drawFrameProfilerBars();
+        submitGfxFrame();
+    }
+    bufferArbiterProducerScanWait();
+    return sel;
+}
 
 s32 getAvailablePlayerCraftFlagsConsiderUnlocks(enum Level levelId) {
     s32 availableCraftFlags;
