@@ -69,7 +69,75 @@ void func_mission_overlay_800D7974(u8 *arg0) {
     initObjectAnimSubstruct(*(s32 *)(arg0 + 0x38), *(f32 *)(def + 0xD0), *(f32 *)(def + 0xD4), *(f32 *)(def + 0xD8), *(f32 *)(def + 0xDC), fn, 0, D_mission_overlay_8010A910[arg0[0x5D]], 15.0f, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanStateEffectShared);
+typedef struct {
+    u16 h0;
+    u16 type;
+    s32 w4;
+    f32 f8;
+    f32 fC;
+    f32 f10;
+    u8 b14;
+    u8 pad15[0xB];
+} WseCtx;
+extern u8 D_mission_overlay_8010A8B0[][12];
+extern void resolveNpcAttachmentPos(s32, void *, f32, f32);
+extern s32 tickProgressChannel(s32, void *, s32, f32 *);
+extern s32 triggerCueWithSlotEffect(s32, s32, void *, void *, s32, f32, f32);
+extern u16 getObjectNpcTypeId(s32);
+extern s32 slotDispatcherIter(u16, s32, void *);
+extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+
+u8 wseImpl(u8 *npc, void *tex, f32 unused, u32 mode) __asm__("npcWingmanStateEffectShared");
+u8 wseImpl(u8 *npc, void *tex, f32 unused, u32 mode) {
+    WseCtx ctx;
+    f32 prog;
+    u8 ret;
+    f32 r;
+    u16 h;
+
+    ret = 0;
+    r = ((f32 *)(*(u8 **)(npc + 0x34) + D_main_bss_80137CE4 * 4))[0xE0 / 4];
+    if (r != 0.0f) {
+        resolveNpcAttachmentPos(*(s32 *)(npc + 0x38), tex, D_mission_overlay_8010A910[npc[0x5D]], r);
+    }
+    if ((u8)tickProgressChannel(*(s32 *)(npc + 0x38), tex, 0, &prog) == 1) {
+        ret = 1;
+        switch (mode) {
+        case 0:
+        case 1:
+        default:
+            triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), (mode == 1) ? 0xC : 0, tex, D_mission_overlay_8010A8B0[npc[0x5D]], 1, D_mission_overlay_8010A910[npc[0x5D]], prog);
+            break;
+        case 2:
+            triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 10, tex, NULL, 0, 6.0f, prog);
+            play3DSoundEvent(0, npc, npc + 0x24, 18.0f, 0.2f, 0, 0x46, 0x78, 0);
+            break;
+        case 3:
+            ctx.h0 = 0;
+            ctx.type = getObjectNpcTypeId(*(s32 *)(npc + 0x38));
+            ctx.w4 = 0;
+            ctx.f8 = 10.0f;
+            ctx.fC = 6.0f;
+            ctx.f10 = -1.0f;
+            ctx.b14 = 0;
+            h = triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 10, tex, NULL, 1, 6.0f, 0.0f);
+            if (h != 0xFFFF) {
+                slotDispatcherIter(h, 10, &ctx);
+            }
+            play3DSoundEvent(0, npc, npc + 0x24, 18.0f, 0.2f, 0, 0x46, 0x78, 0);
+            break;
+        case 4:
+            triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 8, tex, NULL, 0, 0.0f, 0.0f);
+            play3DSoundEvent(0, npc, npc + 0x24, 18.0f, 0.2f, 0, 0x47, 0x78, 0);
+            break;
+        case 5:
+            triggerCueWithSlotEffect(*(s32 *)(npc + 0x38), 0xD, tex, NULL, 1, 6.0f, prog);
+            play3DSoundEvent(0, npc, npc + 0x24, 18.0f, 0.2f, 0, 0x46, 0x78, 0);
+            break;
+        }
+    }
+    return ret;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A781C);
 
