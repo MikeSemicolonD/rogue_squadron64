@@ -751,7 +751,142 @@ done:
     return n;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", tickProgressChannel);
+typedef struct { f32 x, y, z; } TpV3;
+typedef struct {
+    s16 cnt;
+    u16 ids[8];
+    u8 pad12[2];
+    f32 range;
+    s16 done;
+    u8 pad1A[2];
+    f32 dist;
+    f32 keys[8];
+    u8 it[8];
+    TpV3 dir;
+    TpV3 org;
+} TpState;
+typedef struct {
+    u8 pad0[0x20];
+    f32 f20;
+    s16 h24;
+    u8 pad26[3];
+    u8 b29;
+} TpCh;
+typedef struct {
+    u8 pad0[0x10];
+    u8 *p10;
+    u8 pad14;
+    u8 b15;
+} TpCtx;
+extern u16 D_main_bss_8013957C;
+s32 tpGather(f32 *, u16, TpState *) __asm__("gatherAndSortNearbyNpcViewPoints");
+TpCtx *tpCtx(u16) __asm__("getNpcContextByIndex");
+
+#define TP_TEAM(id) ({ TpCtx *c_ = tpCtx(id); c_->p10 != NULL ? *(s16 *)(c_->p10 + 0x19A) : 3 - (c_->b15 >> 6); })
+
+s32 tpImpl(u8 *obj, f32 *src, TpCh *ch, f32 *out) __asm__("tickProgressChannel");
+s32 tpImpl(u8 *obj, f32 *src, TpCh *ch, f32 *out) {
+    TpState st;
+    f32 r;
+    u8 hit;
+    s32 n;
+    s32 i;
+    s32 v;
+    u16 id;
+
+    switch ((s32)ch) {
+    case 0:
+        v = *(s16 *)(obj + 0x15C);
+        break;
+    case 1:
+        v = *(s16 *)(obj + 0x188);
+        break;
+    default:
+        v = ch->h24;
+        break;
+    }
+    {
+        register f32 d asm("$f0") = (f32)v;
+        r = d / 100.0f;
+    }
+    __asm__("");
+    hit = 0;
+    st.range = r;
+    n = tpGather(src, D_main_bss_8013957C, &st);
+    if (st.range != r) {
+        hit = 1;
+        if (out != NULL) {
+            *out = st.range;
+        }
+    } else if (out != NULL) {
+        *out = 0.0f;
+    }
+    switch ((s32)ch) {
+    case 0:
+        obj[0x161] = hit;
+        *(f32 *)(obj + 0x158) = st.range;
+        break;
+    case 1:
+        obj[0x18D] = hit;
+        *(f32 *)(obj + 0x184) = st.range;
+        break;
+    default:
+        ch->b29 = hit;
+        ch->f20 = st.range;
+        break;
+    }
+    __asm__("" :: "f"(r));
+    if (n == 0) {
+        return 1;
+    }
+    if (*(s16 *)(obj + 0x19A) == 1) {
+        if (obj[0x136] == 0) {
+            for (i = 0; i < n; i++) {
+                id = st.ids[i];
+                if (id == *(u16 *)(obj + 0x198)) {
+                    if (i + 1 == n) {
+                        return 1;
+                    }
+                } else {
+                    if (TP_TEAM(id) == 1) {
+                        goto ret0;
+                    }
+                    return 1;
+                }
+            }
+        } else {
+            for (i = 0; i < n; i++) {
+                id = st.ids[i];
+                if (id == *(u16 *)(obj + 0x198)) {
+                    if (i + 1 == n) {
+                        return 1;
+                    }
+                } else {
+                    if (TP_TEAM(id) != 0) {
+                        goto ret0;
+                    }
+                    return 1;
+                }
+            }
+        }
+    } else {
+        for (i = 0; i < n; i++) {
+            id = st.ids[i];
+            if (id == *(u16 *)(obj + 0x198)) {
+                if (i + 1 == n) {
+                    return 1;
+                }
+            } else {
+                if (TP_TEAM(id) != 1) {
+                    goto ret0;
+                }
+                return 1;
+            }
+        }
+    }
+ret0:
+    return 0;
+}
 
 typedef struct { f32 x, y, z; } RcV3;
 typedef struct { u8 a, b; } RcPair;
