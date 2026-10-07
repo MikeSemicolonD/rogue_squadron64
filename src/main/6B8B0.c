@@ -592,7 +592,67 @@ __asm__(
     ".set pop\n"
 );
 
-INCLUDE_ASM("asm/nonmatchings/main/6B8B0", applyLevelScreenAndCameraSettings);
+extern u8 D_main_bss_80130B63;
+struct BootCfg {
+    u8 pad0[0x12];
+    u16 f12;
+    u16 f14;
+    u16 f16;
+    u8 pad18[0x10];
+    s32 f28;
+    u8 pad2C[4];
+    s32 f30;
+    s32 f34;
+    s32 f38;
+    u16 f3C;
+    u16 f3E;
+    u8 pad40[4];
+    s32 f44;
+};
+extern struct BootCfg gBootCfgL __asm__("gBootConfig");
+s32 isCraftAvailableByIdx(s32);
+
+void applyLevelScreenAndCameraSettings(void) {
+    struct BootCfg *c = &gBootCfgL;
+    c->f30 = D_main_800A05D0[gGameSettings.currentLevel].unk04 << 10;
+    c->f38 = D_main_800A05D0[gGameSettings.currentLevel].unk06 << 10;
+    c->f34 = D_main_800A05D0[gGameSettings.currentLevel].unk08 << 10;
+    c->f44 = 0;
+    if (gGameSettings.unlockAndSettingsFlags[1] & 1) {
+        c->f12 = 0x200;
+        c->f14 = 0x1C0;
+        c->f44 = 0x40;
+        c->f16 = 0x10;
+    } else {
+        c->f12 = 0x140;
+        c->f14 = 0xE0;
+        c->f44 = 0;
+        if (gGameSettings.unk23 == 0) goto skip;
+        c->f16 = 0x10;
+    }
+    if (D_main_bss_80130B63 != 0) {
+            gBootCfgL.f34 = 0x40000;
+            gBootCfgL.f38 = 0x100000;
+            gBootCfgL.f28 = 0x40000;
+            gBootCfgL.f3C = 0x7D0;
+            gBootCfgL.f3E = 0x7D0;
+            gBootCfgL.f30 += 0x4B000;
+        return;
+    }
+skip:
+    if (isCraftAvailableByIdx(5) == 0) {
+        gBootCfgL.f38 += 0xFFFF4C00;
+    }
+    gBootCfgL.f28 = 0;
+    switch (gGameSettings.currentLevel) {
+    case 6:
+    case 9:
+    case 12:
+    case 3:
+        gBootCfgL.f28 = 0x80000;
+        break;
+    }
+}
 
 s32 isCraftAvailableByIdx(s32 craftId) {
     switch (craftId) {
