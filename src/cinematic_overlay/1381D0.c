@@ -787,7 +787,43 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A54B4);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", applyCutsceneSlotMaterialOverrides);
+extern u8 D_cinematic_overlay_800A54A8[];
+extern u8 D_cinematic_overlay_800A54B4[];
+extern s32 lookupHmtMaterialByName(s32, u8 *, s32 *);
+extern void composeInterpolatedNodeMatricesAltCall(s32, s32, s32, s32, f32) __asm__("composeInterpolatedNodeMatricesAlt");
+
+void applyCutsceneSlotMaterialOverrides(void) {
+    s32 sp18;
+    s32 sp1C;
+    u32 val;
+    s32 off = 0;
+    s32 m1;
+    u8 *slot;
+    u8 st;
+    u16 i;
+    f32 fv;
+
+    for (i = 0; i < D_cinematic_overlay_800B1904->unk0058_active_count; i++) {
+        {
+            if (D_cinematic_overlay_800B1904->unk0058[i].sub_type == 0xB &&
+                D_cinematic_overlay_800B1904->unk0058[i].unk04 == 0 &&
+                D_cinematic_overlay_800B1904->unk0058[i].unk10 == 0) {
+                off = *(u16 *)((u8 *)&D_cinematic_overlay_800B1904->unk0058[i] + 0xA) * 0x13C;
+                slot = (u8 *)(off + (s32)D_cinematic_overlay_800B1900);
+                switch (slot[2]) {
+                case 2:
+                case 0xF:
+                case 0x10:
+                    val = D_cinematic_overlay_800B1904->unk0058[i].unk0C;
+                    fv = (f32)val;
+                    m1 = lookupHmtMaterialByName(*(s32 *)(slot + 0x50), D_cinematic_overlay_800A54A8, &sp18);
+                    composeInterpolatedNodeMatricesAltCall(m1, lookupHmtMaterialByName(*(s32 *)(off + (s32)D_cinematic_overlay_800B1900 + 0x50), D_cinematic_overlay_800A54B4, &sp1C), sp18, sp1C, fv);
+                    break;
+                }
+            }
+        }
+    }
+}
 
 typedef struct {
     s32 unk0;
