@@ -1,7 +1,116 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/48A50", allocAndInitGridCellArray);
+typedef struct {
+    u8 b0;
+    u8 b1;
+    u8 b2;
+    u8 b3;
+} AgEnt;
+
+typedef struct {
+    u16 f0;
+    u16 f2;
+    u16 f4;
+    u16 f6;
+    u16 f8;
+    u16 fA[5];
+    u8 pad14[2];
+    u16 f16;
+    u8 pad18[6];
+    u16 f1E;
+    u8 pad20[0x15];
+    u8 b35;
+    u8 pad36[0xA];
+    u16 h40;
+    u16 h42;
+    u8 pad44[4];
+    AgEnt *p48;
+    u8 pad4C[2];
+    u16 h4E;
+    u8 pad50[4];
+    AgEnt ent[25];
+} AgCell;
+
+typedef struct {
+    u8 pad0[100];
+} AgBlk;
+
+extern AgCell *agCells __asm__("D_main_bss_80137A5C");
+extern s32 agCount __asm__("D_main_bss_80137610");
+extern s32 agNodeCnt __asm__("D_main_bss_80137A70");
+extern void *agNodes __asm__("D_main_bss_80137A54");
+extern u16 *agFree __asm__("D_main_bss_80137A4C");
+extern u16 agFreeCnt __asm__("D_main_bss_80137A58");
+extern s32 agBlkCnt __asm__("D_main_bss_80137A60");
+extern AgBlk *agBlk[2] __asm__("D_main_bss_80137A68");
+void *agMalloc(s32, s32) __asm__("rs_malloc");
+
+void allocAndInitGridCellArray(s32 n) {
+    AgCell *c2;
+    AgCell *c3;
+    AgCell *e;
+    s32 i;
+    s32 k;
+
+    agCells = agMalloc(n * sizeof(AgCell), 0);
+    agCount = n;
+    for (i = 0; i < n; i++) {
+        agCells[i].f16 = i;
+    }
+    for (i = 5; i < n; i++) {
+        e = &agCells[i];
+        e->f0 = i - 1;
+        e->f2 = i + 1;
+        e->f1E = 0xFFFF;
+        e->f4 = 0xFFFF;
+        e->f6 = 0xFFFF;
+        e->f8 = 0xFFFF;
+        e->p48 = e->ent;
+        e->b35 = 0;
+        e->h4E = 0;
+        e->h40 = 5;
+        e->h42 = 0x80;
+        k = 24;
+        do {
+            e->ent[k].b3 = 0xFF;
+        } while (--k >= 0);
+        e->fA[0] = e->fA[1] = e->fA[2] = e->fA[3] = e->fA[4] = 0;
+    }
+    c2 = agCells;
+    c2[5].f0 = 3;
+    c2[n - 1].f2 = 4;
+    for (i = 0; i < 3; i++) {
+        c2[i].f2 = 0xFFFF;
+        c2[i].f0 = 0xFFFF;
+        c2[i].f4 = 0xFFFF;
+        c2[i].f6 = 0xFFFF;
+        c2[i].f8 = 0xFFFF;
+    }
+    c3 = agCells;
+    agNodeCnt = n * 2;
+    e = &c3[3];
+    e->f2 = 5;
+    e->f0 = 0xFFFF;
+    e->f4 = 0xFFFF;
+    e->f6 = 0xFFFF;
+    e->f8 = 0xFFFF;
+    e = &c3[4];
+    e->f0 = n - 1;
+    e->f2 = 0xFFFF;
+    e->f4 = 0xFFFF;
+    e->f6 = 0xFFFF;
+    e->f8 = 0xFFFF;
+    agNodes = agMalloc((agNodeCnt * 5 + 1) * 12, 0);
+    agFree = agMalloc(agNodeCnt * 2, 0);
+    for (i = 0; i < agNodeCnt; i++) {
+        agFree[i] = i * 5 + 1;
+    }
+    agFreeCnt = agNodeCnt;
+    agBlkCnt = n / 10;
+    agBlk[0] = agMalloc(agBlkCnt * 200, 0);
+    agBlk[1] = agBlk[0] + agBlkCnt;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/48A50", loadLevelTextureCache);
 
