@@ -128,7 +128,127 @@ void pfImpl(FalconInitArg *arg0, s32 arg1, s16 arg2) {
     bindFalconSubmodelMaterials(p, arg0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BAFF0", computeFalconFlightTransform);
+typedef struct {
+    u8 pad0[0x12];
+    u16 maskA;
+    u8 pad14[4];
+    u16 maskB;
+    u8 pad1A[0xA];
+} FfCfg;
+
+typedef struct {
+    u8 pad0[0xB8];
+    s32 owner;
+    u8 padBC[0xE8 - 0xBC];
+    f32 fE8;
+    f32 fEC;
+    f32 fF0;
+    f32 fF4;
+    u8 padF8[0x180 - 0xF8];
+    u16 flags;
+    u8 pad182[0x2A0 - 0x182];
+} FfCraft;
+
+typedef struct {
+    s32 index;
+    f32 scale;
+} FfArg;
+
+extern u8 ffCraftB[][0x2A0] __asm__("D_main_bss_80137DBC");
+extern u16 ffB88[][3] __asm__("D_main_bss_80130B88");
+extern FfCfg ffCfg[] __asm__("D_mission_overlay_8010BE18");
+extern u8 ffD800C[][0x2A0] __asm__("D_main_bss_8013800C");
+extern s32 getCraftAnimationSlotFlag(s32);
+extern f32 getCraftAnimationSlotValue(s32);
+extern void setCraftAnimationSlotParams(s32, s32, f32);
+extern void updatePlayerCraftPhysics(void *, f32);
+extern void computeBootConfigScaledVec4(s32, f32, f32, void *, f32, f32);
+
+void ffImpl(FfArg *arg0, f32 dt) __asm__("computeFalconFlightTransform");
+void ffImpl(FfArg *arg0, f32 dt) {
+    FfCraft *c;
+    f32 fs0;
+    f32 sc;
+    f32 t;
+    f32 e8;
+    f32 lim;
+    u16 bits;
+    register f32 *tb asm("$16");
+    register FfCfg *cf asm("$19");
+
+    c = (FfCraft *)ffCraftB[arg0->index];
+    if (*(u16 *)((s32)ffCraftB + c->owner * 0x2A0 + 0x180) & 1) {
+        fs0 = c->fEC;
+        sc = 0.65625f;
+        if ((ffB88[arg0->index][0] & ffCfg[arg0->index].maskA) && !(ffB88[arg0->index][0] & ffCfg[arg0->index].maskB)) {
+            sc = 0.0f;
+            fs0 -= 0.09375f;
+        }
+        {
+            f32 t1 = arg0->scale * 2.25f;
+            if (fs0 < t1) {
+                fs0 = t1;
+            }
+        }
+        { s32 hi; __asm__("lui %0, %%hi(D_mission_overlay_8010BE18)" : "=r"(hi)); __asm__("addiu %0, %1, %%lo(D_mission_overlay_8010BE18)" : "=r"(cf) : "r"(hi)); }
+        {
+            s32 k = countTrailingZeros16(cf[arg0->index].maskB);
+            tb = (f32 *)D_mission_overlay_8010BEA8;
+            fs0 += *(f32 *)((k << 2) + (arg0->index << 6) + (s32)tb) * 0.1875f;
+        }
+        countTrailingZeros16(cf[arg0->index].maskB);
+        {
+        s32 ii = arg0->index;
+        __asm__("" : "+r"(ii));
+        if (ffB88[ii][0] & cf[ii].maskB) {
+            if (!(u8)getCraftAnimationSlotFlag(0)) {
+                setCraftAnimationSlotParams(0, 1, 0.0f);
+            }
+        } else if ((u8)getCraftAnimationSlotFlag(0) == 1) {
+            if (getCraftAnimationSlotValue(0) == 0.0f) {
+                setCraftAnimationSlotParams(0, 1, 0.5f);
+            }
+        }
+        }
+        bits = ffB88[arg0->index][0];
+        if (!(bits & ffCfg[arg0->index].maskA) && !(bits & ffCfg[arg0->index].maskB) && c->fE8 < 3.0f) {
+            f32 t2 = arg0->scale * 3.0f;
+            fs0 += 0.09375f;
+            if (t2 < fs0) {
+                fs0 = t2;
+            }
+        }
+        {
+            register f32 t3 asm("$f2") = arg0->scale * 5.625f;
+            if (t3 < fs0) {
+                fs0 = t3;
+            }
+        }
+        {
+            f32 e8a = c->fE8;
+            f32 la = c->fF0;
+            c->fEC = fs0;
+            if (la < fs0 - e8a) {
+                c->fE8 = e8a + la;
+            } else {
+                c->fE8 = fs0;
+            }
+        }
+        e8 = c->fE8;
+        lim = c->fF4;
+        if (fs0 - e8 < -lim) {
+            c->fE8 = e8 - lim;
+        } else {
+            c->fE8 = fs0;
+        }
+        __asm__("" :: "f"(sc));
+        arg0->scale = 1.0f;
+    }
+    updatePlayerCraftPhysics(c, dt);
+    sc = 0.65625f;
+    t = arg0->scale;
+    computeBootConfigScaledVec4(arg0->index, sc, sc, ffD800C[arg0->index], (c->fE8 - t * 2.25f) / (t * 3.375f) + 1.0f, dt);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BAFF0", D_mission_overlay_800A5E00);
 
