@@ -655,7 +655,101 @@ void quicksortFloatKeysWithValues(f32 *keys, u16 *vals, s32 lo, s32 hi) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", gatherAndSortNearbyNpcViewPoints);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", acquireNpcTargetsInAimCone);
+typedef struct {
+    f32 pos[3];
+    f32 dir[3];
+    f32 ang;
+    f32 maxr;
+    f32 minr;
+    u8 *list;
+    u16 ignore;
+    u8 flag;
+    u8 pad2B;
+    u16 ids[32];
+} AcState;
+typedef struct {
+    u8 pad0[8];
+    f32 *pos;
+    s32 mesh;
+    u8 pad10[4];
+    u16 h14;
+} AcCtx;
+extern f32 cosf(f32);
+AcCtx *acCtx(u16) __asm__("getNpcContextByIndex");
+s32 acFind(u16, void *) __asm__("findActiveNpcInSlotChain");
+void acXform(s32, f32 *) __asm__("transformMeshPartIntoWorld");
+void acSort(f32 *, u16 *, s32, s32) __asm__("quicksortFloatKeysWithValues");
+
+s32 acquireNpcTargetsInAimCone(AcState *p) {
+    u8 it[8];
+    f32 v[3];
+    f32 keys[32];
+    s32 n;
+    s32 k;
+    f32 cs;
+    u16 idx;
+    f32 d2;
+    f32 dot;
+    f32 *q;
+    AcCtx *ctx;
+
+    n = 0;
+    k = n;
+    cs = cosf(p->ang * 0.017453292f);
+    p->ids[0] = 0xFFFF;
+    while (p->list[k] != 0xFF) {
+        for (idx = acFind(D_main_bss_80139560[p->list[k]], it); idx != 0xFFFF; idx = revalidateNpcSlotIterator(it)) {
+            if (idx == p->ignore) {
+                continue;
+            }
+            ctx = acCtx(idx);
+            if (p->flag && (ctx->h14 & 0x100)) {
+                continue;
+            }
+            if (ctx->mesh != 0) {
+                acXform(ctx->mesh, v);
+                q = v;
+            } else {
+                q = ctx->pos;
+                if (q == NULL) {
+                    continue;
+                }
+            }
+            v[0] = q[0] - p->pos[0];
+            v[1] = q[1] - p->pos[1];
+            v[2] = q[2] - p->pos[2];
+            d2 = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
+            if (d2 <= p->maxr * p->maxr && p->minr * p->minr <= d2) {
+                dot = vec3Dot(p->dir, v) / vec3Length(v);
+                if (cs <= dot) {
+                    f32 sq;
+                    p->ids[n] = idx;
+                    __asm__ volatile("sqrt.s %0, %1" : "=f"(sq) : "f"(d2));
+                    keys[n] = (1.0f - dot) * 100.0f + sq;
+                    n++;
+                    if (n == 32) {
+                        goto done;
+                    }
+                }
+            }
+        }
+        k++;
+    }
+done:
+    if (n >= 3) {
+        acSort(keys, p->ids, 0, n - 1);
+    } else if (n == 2) {
+        if (keys[0] > keys[1]) {
+            f32 t = keys[0];
+            u16 u = p->ids[0];
+            keys[0] = keys[1];
+            p->ids[0] = p->ids[1];
+            keys[1] = t;
+            p->ids[1] = u;
+        }
+    }
+    return n;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", tickProgressChannel);
 
