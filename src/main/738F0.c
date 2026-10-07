@@ -1182,7 +1182,34 @@ void buildRandomCameraFacingOrientation(Vec3f out, Vec3f dst, f32 scale, s32 ran
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D170);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnScaledOrientedEffectTriple);
+typedef struct { f32 x, y, z; f32 f34; s16 h38; s32 w3C; u8 b40; u8 b41; f32 f44; } SoArgs;
+extern ExplColor D_main_8003D170;
+extern s32 D_main_bss_80139740;
+extern void byteAnimatedDebrisNpcHandler(void *);
+
+void spawnScaledOrientedEffectTriple(f32 *pos, f32 scale) {
+    ExplColor col;
+    SoArgs a;
+    f32 k;
+    f32 y;
+
+    col = D_main_8003D170;
+    spawnOrientedNpcX(3, pos, 0, &col, scale * 0.1f, k = scale * 0.7f, k, scale * 0.37f);
+    spawnOrientedNpcX(1, pos, 0, &col, scale * 0.15f, scale * 1.5f, scale * 0.5f, k);
+    y = wrapAngleToCyclicRange(pos[0], pos[2], D_main_bss_80138058, 0) - 2.0f;
+    if (y < pos[1]) {
+        a.x = pos[0];
+        a.y = y;
+        a.z = pos[2];
+        a.w3C = D_main_bss_80139740;
+        a.b40 = 0x30;
+        a.b41 = 0x40;
+        a.f34 = 4.0f;
+        a.h38 = 0x300;
+        a.f44 = 30.0f;
+        spawnNpcOfType(byteAnimatedDebrisNpcHandler, &a, 2, 0xF);
+    }
+}
 
 typedef struct { u8 p0[4]; struct HBNode *unk04; u8 p8[0xE]; u16 unk16; } HBSelf;
 typedef struct HBNode {
