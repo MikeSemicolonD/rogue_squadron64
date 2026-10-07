@@ -1,7 +1,111 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0DCF00", npcRadarDishComputeAimMotion);
+typedef struct { f32 x, y, z; } RdV3;
+typedef union { RdV3 v; f32 w[4]; } RdV4;
+extern RdV3 D_mission_overlay_8010A950;
+extern u8 isPendingChildNpcActive(s32);
+extern u8 computeActorAnchorDeltaAfterLOS(s32);
+extern f32 *getObjectMeshTransformOrLocal(s32, void *);
+extern void mat3x3InverseInto(void *, void *);
+extern void transformVec3ByMat34(void *, void *, void *);
+extern void vec3NormalizeInto(void *, void *);
+extern void buildRotationMatrixSlot0(void *, f32);
+extern void buildRotationMatrixSlot1(void *, f32);
+extern f32 vec3Dot(void *, void *);
+extern f32 vec3Length(void *);
+extern f32 constMinusSinfApprox(f32);
+extern void vec3Cross(void *, void *, void *);
+extern void normalize_vector(void *);
+extern void quatFromAxisAngle(void *, void *, f32);
+extern void rotateVec3ByQuat(void *, void *, void *);
+extern void play3DSoundEventVariant(void *, void *, void *, f32, f32, s32, s32, s32, s32, s32);
+void mat34CrossRowsAndCopyPos(void *, void *, f32);
+void composeRotationMatrixSlot1(void *, f32);
+void factor5RemoveListNode(void *);
+f32 floatModulo(f32, f32);
+
+void rdImpl(u8 *npc, f32 dt) __asm__("npcRadarDishComputeAimMotion");
+void rdImpl(u8 *npc, f32 dt) {
+    f32 m1[12];
+    f32 m2[12];
+    RdV4 tgt;
+    RdV4 dir;
+    f32 *pos;
+    f32 ang;
+    f32 ang2;
+    f32 lim;
+    u8 r;
+    s32 los;
+
+    r = isPendingChildNpcActive(*(s32 *)(npc + 0x38));
+    if (r != 1) goto other;
+    los = computeActorAnchorDeltaAfterLOS(*(s32 *)(npc + 0x38));
+    if (los == r) {
+        pos = getObjectMeshTransformOrLocal(*(s32 *)(npc + 0x38), NULL);
+        mat34CrossRowsAndCopyPos(m1, npc, 1.0f);
+        mat3x3InverseInto(m2, m1);
+        transformVec3ByMat34(m2, pos, &dir);
+        dir.v.y -= *(f32 *)(npc + 0x5C);
+        vec3NormalizeInto(&tgt, &dir);
+        buildRotationMatrixSlot0(m1, *(f32 *)(npc + 0x58));
+        composeRotationMatrixSlot1(m1, *(f32 *)(npc + 0x54));
+        transformVec3ByMat34(m1, &D_mission_overlay_8010A950, &dir);
+        ang = constMinusSinfApprox(vec3Dot(&dir, &tgt)) * 57.29578f;
+        if (ang > 0.001f) {
+            RdV4 axis;
+            f32 q[4];
+            RdV4 c;
+            RdV4 a;
+            RdV4 b;
+            if (ang > 10.0f && npc[0xB0] == 0) {
+                npc[0xB0] = los;
+                play3DSoundEventVariant(npc + 0x6C, npc, npc + 0x24, 8.0f, 0.1f, 7, 0x4B, los, 0x64, 0x28);
+            }
+            { register f32 t asm("$f0") = dt * 30.0f; register f32 l asm("$f2") = *(f32 *)(npc + 0x60) * t; lim = l; }
+            if (lim < ang) {
+                ang = lim;
+            }
+            vec3Cross(&axis, &dir, &tgt);
+            normalize_vector(&axis);
+            quatFromAxisAngle(q, &axis, ang);
+            rotateVec3ByQuat(q, &dir, &tgt);
+            axis.v.x = tgt.v.x;
+            axis.v.y = 0.0f;
+            axis.v.z = tgt.v.z;
+            ang = constMinusSinfApprox(vec3Dot(&D_mission_overlay_8010A950, &axis) / (vec3Length(&D_mission_overlay_8010A950) * vec3Length(&axis))) * 57.29578f;
+            a.v = D_mission_overlay_8010A950;
+            a.v.y = 0.0f;
+            b.v = axis.v;
+            b.v.y = 0.0f;
+            vec3Cross(&c, &a, &b);
+            if (!(c.v.y >= 0.0f)) {
+                ang = -ang;
+            }
+            buildRotationMatrixSlot1(m1, -ang);
+            transformVec3ByMat34(m1, &tgt, &axis);
+            axis.v.x = 0.0f;
+            *(f32 *)(npc + 0x54) = ang;
+            ang2 = constMinusSinfApprox(vec3Dot(&D_mission_overlay_8010A950, &axis) / (vec3Length(&D_mission_overlay_8010A950) * vec3Length(&axis))) * 57.29578f;
+            if (!(axis.v.y <= 0.0f)) {
+                ang2 = -ang2;
+            }
+            lim = -ang2;
+            *(f32 *)(npc + 0x58) = lim;
+            if (lim > 24.0f) {
+                *(f32 *)(npc + 0x58) = 24.0f;
+            } else if (lim < -50.0f) {
+                *(f32 *)(npc + 0x58) = -50.0f;
+            }
+        } else if (npc[0xB0] == los) {
+            npc[0xB0] = 0;
+            factor5RemoveListNode(npc + 0x6C);
+        }
+    } else {
+other:
+        *(f32 *)(npc + 0x54) = floatModulo(*(f32 *)(npc + 0x54) + *(f32 *)(npc + 0x60) * (dt * 30.0f), 360.0f);
+    }
+}
 
 f32 fabsf(f32);
 extern u16 D_main_bss_80139560[] __asm__("D_main_bss_80139560");
