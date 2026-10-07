@@ -51,7 +51,40 @@ f32 atan2Approx(f32 arg0, f32 arg1) {
     return 0.0f;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/1D000", atan2Approx);
+f32 atan2Approx(f32 arg0, f32 arg1) {
+    register f32 a asm("$f4");
+
+    a = arg0;
+    arg0 = (a * a) + (arg1 * arg1);
+    if (arg0 > 0.0f) {
+        SQRTF_ASM(arg0, arg0);
+        arg1 = arg1 / arg0;
+        arg0 = a / arg0;
+        if (fabs((f64)arg0) < fabs((f64)arg1)) {
+            if (arg0 >= 0.0f) {
+                if (arg1 >= 0.0f) {
+                    return sinfApprox(arg0);
+                }
+                return 3.1415927f - sinfApprox(arg0);
+            }
+            if (arg1 >= 0.0f) {
+                return 6.2831855f - sinfApprox(-arg0);
+            }
+            return 3.1415927f + sinfApprox(-arg0);
+        }
+        if (arg0 >= 0.0f) {
+            if (arg1 >= 0.0f) {
+                return 1.5707964f - sinfApprox(arg1);
+            }
+            return 1.5707964f + sinfApprox(-arg1);
+        }
+        if (arg1 >= 0.0f) {
+            return 4.712389f + sinfApprox(arg1);
+        }
+        return 4.712389f - sinfApprox(-arg1);
+    }
+    return 0.0f;
+}
 #endif
 
 #if 0
