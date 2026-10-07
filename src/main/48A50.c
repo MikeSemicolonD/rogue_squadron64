@@ -112,7 +112,123 @@ void allocAndInitGridCellArray(s32 n) {
     agBlk[1] = agBlk[0] + agBlkCnt;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/48A50", loadLevelTextureCache);
+typedef struct {
+    u16 f0;
+    u16 f2;
+    u16 f4;
+    u16 f6;
+    u16 f8;
+    u16 fA;
+} LtCell;
+typedef struct {
+    u8 *data;
+    u8 pad4[0x1C];
+    u8 *pal;
+    char *name;
+    u16 w;
+    u16 h;
+    u8 b2C;
+    u8 pad2D;
+    u16 h2E;
+    u8 pad30[4];
+    u16 m34;
+    u16 pad36;
+    f32 f38;
+    f32 f3C;
+    s32 w40;
+    u8 b44;
+    u8 pad45[3];
+    char nm[16];
+    u8 px[0x1000];
+    u8 pl[0x300];
+    u8 pad1358[0x14];
+} LtBuf;
+typedef struct {
+    u8 pad0[0x1C];
+    u8 b1C;
+    u8 pad1D[3];
+} LtSlot;
+extern s32 ltCount __asm__("D_main_bss_80137A44");
+extern u16 ltCount2 __asm__("D_main_bss_80137A46");
+extern LtCell *ltCells __asm__("D_main_bss_80137614");
+extern s32 ltAsset __asm__("D_main_bss_80137A48");
+extern s32 ltWorker __asm__("D_main_bss_80137A40");
+extern u8 ltBusy[] __asm__("D_main_bss_80137A20");
+extern LtSlot ltSlots[] __asm__("D_main_bss_80137620");
+extern s32 D_main_bss_80138920;
+extern s32 D_main_bss_80137CFC;
+u32 getLoadedTextureCount(void);
+void ltFree(void *) __asm__("rs_free");
+s32 sprintf(char *, const char *, ...);
+s32 registerHmtTextureInTable(void *, void *, s32);
+u16 getTextureAttrBySlot(u16);
+s32 findAssetAcrossSegments(s32, s32, s32, char *, s32);
+s32 registerServiceWorker(s32, s32, s32, void *);
+s32 startServiceWorker(s32);
+void hudDisplayUpdateWorker(s32 *);
+
+void loadLevelTextureCache(u32 arg0) {
+    LtBuf *b;
+    s32 i;
+    s32 r;
+    LtCell *c;
+    u8 *p;
+
+    ltCount = (getLoadedTextureCount() - arg0) / 0x840 + 4;
+    ltCells = agMalloc(ltCount * sizeof(LtCell), 0);
+    for (i = 5; i < ltCount; i++) {
+        ltCells[i].f0 = i - 1;
+        ltCells[i].f2 = i + 1;
+    }
+    c = ltCells;
+    c[5].f0 = 3;
+    c[ltCount - 1].f2 = 4;
+    for (i = 0; i < 3; i++) {
+        c[i].f2 = 0xFFFF;
+        c[i].f0 = 0xFFFF;
+    }
+    ltCells[3].f0 = 0xFFFF;
+    ltCells[3].f2 = 5;
+    ltCells[4].f0 = ltCount2 - 1;
+    ltCells[4].f2 = 0xFFFF;
+    b = agMalloc(sizeof(LtBuf), 0);
+    i = 0xFFF;
+    p = (u8 *)b + i;
+    do {
+        p[0x58] = i;
+        p--;
+    } while (--i >= 0);
+    for (i = 0; i < 0x100; i++) {
+        b->pl[i * 3] = b->pl[i * 3 + 1] = b->pl[i * 3 + 2] = i << 4;
+    }
+    b->b2C = b->b44 = b->m34 = 1;
+    b->data = b->px;
+    b->h = 0x40;
+    b->w = 0x40;
+    b->h2E = 0x20;
+    b->pal = b->pl;
+    b->w40 = 0;
+    b->name = b->nm;
+    b->f38 = 0.2f;
+    b->f3C = 1.0f;
+    for (i = 5; i < ltCount; i++) {
+        sprintf(b->nm, "ltex_cache_%d", i);
+        r = registerHmtTextureInTable(&b->m34, b, 0);
+        ltCells[i].f4 = r;
+        __asm__("" :: "r"(r));
+        ltCells[i].f6 = getTextureAttrBySlot(r);
+        ltCells[i].f8 = 0xFFFF;
+    }
+    ltFree(b);
+    ltAsset = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, "level/tex", 0);
+    for (i = 0; i < 0x20; i++) {
+        ltBusy[i] = 0;
+        ltSlots[i].b1C = i;
+    }
+    ltWorker = registerServiceWorker(0x42, 0x800, 0xA, hudDisplayUpdateWorker);
+    startServiceWorker(ltWorker);
+    getLoadedTextureCount();
+}
 
 typedef struct {
     u16 f0;
