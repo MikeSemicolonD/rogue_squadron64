@@ -2182,7 +2182,113 @@ void easeT16AnimationKeyframe(void **arg0, u8 *arg1, f32 arg2) {
     activateAnimationKeyframe(8, 0, (u8)(u32)(arg2 * 254.0f));
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", allocT16EffectContext);
+typedef struct { u8 r, g, b, a; } AtCol;
+typedef struct {
+    s32 w0;
+    s32 w4;
+    s32 w8;
+    s16 hC;
+    s16 hE;
+    s16 h10;
+    s16 h12;
+    u8 pad14[4];
+    s16 h18;
+    s16 h1A;
+    s16 h1C;
+    s16 h1E;
+    s16 h20;
+    s16 h22;
+    AtCol c24;
+    AtCol c28;
+    AtCol c2C;
+    AtCol c30;
+    s16 h34;
+    u8 pad36[2];
+} AtQuad;
+extern AtCol atLightBlue __asm__("mainMenuLightBlueColor");
+extern AtCol atDarkBlue __asm__("mainMenuDarkBlueColor");
+extern AtCol atBlack __asm__("mainMenuBlackColor");
+extern u8 *D_menu_overlay_800CCBF0;
+void clearVec4QuadStruct(void *);
+s32 findCharEntryAltValueByKey(s32, s32);
+void computeNabooBankingOrientation(u8 *, u8, f32);
+void atInitScroll(void *, f32, f32) __asm__("initMenuElementScrollAnimParams");
+void *rs_malloc(s32, s32);
+void rs_memset(void *, u8, u32);
+#define ATW(o) (*(s32 *)(s + (o)))
+
+u8 *allocT16EffectContext(void) {
+    u8 *s;
+    s32 i;
+    AtQuad *q0;
+    AtQuad *q1;
+    s32 v;
+
+    s = rs_malloc(0x1504, 0);
+    rs_memset(s, 0, 0x1504);
+    clearVec4QuadStruct(s + 0x1C);
+    clearVec4QuadStruct(s + 0x68);
+    ATW(0x10) = (s32)(s + 0x98);
+    ATW(0x5C) = (s32)(s + 0xF4);
+    ATW(0xB8) = (s32)(s + 0x150);
+    ATW(0xBC) = (s32)(s + 0xE20);
+    ATW(0xAC) = 0x74;
+    ATW(0xC0) = (s32)(s + 0x1390);
+    ATW(0xB0) = 0x1D;
+    ATW(0x114) = (s32)(s + 0x160);
+    ATW(0xA4) = 0x6C6000B;
+    ATW(0x118) = (s32)(s + 0xE20);
+    ATW(0x108) = 0x74;
+    ATW(0x11C) = (s32)(s + 0x1390);
+    ATW(0x158) = (s32)(s + 0x170);
+    ATW(0x10C) = 0x1D;
+    ATW(0x100) = 0x6D6000B;
+    ATW(0x15C) = 0x1D;
+    ATW(0x168) = (s32)(s + 0x7C8);
+    ATW(0x16C) = 0x1D;
+    for (i = 0; i < 29; i++) {
+        q0 = (AtQuad *)(s + (i * 0x38 + 0x170));
+        q1 = (AtQuad *)(s + (i * 0x38 + 0x7C8));
+        q0->w0 = 0x5E;
+        q0->w4 = 0xE0C9345;
+        q0->w8 = 0;
+        q1->w0 = 0x5E;
+        q1->w4 = 0xE0C9345;
+        q1->w8 = 0;
+        v = findCharEntryAltValueByKey(5, D_menu_overlay_800CCBF0[i]);
+        q0->w8 = v << 16;
+        q1->w8 = v << 16;
+        q0->hC = i * 4;
+        q0->hE = i * 4 + 2;
+        q0->h10 = i * 4 + 3;
+        q0->h12 = i * 4 + 1;
+        q1->hE = i * 4 + 1;
+        q1->h10 = i * 4 + 3;
+        q1->h12 = i * 4 + 2;
+        q1->hC = i * 4;
+        q1->h34 = i;
+        q0->h34 = i;
+        q0->h20 = 0x1000;
+        q0->h1E = 0x1000;
+        q0->h1C = 0x1000;
+        q0->h1A = 0x1000;
+        q1->h18 = 0x1000;
+        q1->h1E = 0x1000;
+        q1->h1C = 0x1000;
+        q1->h22 = 0x1000;
+        q0->c30 = atLightBlue;
+        q0->c24 = q0->c30;
+        q0->c2C = atDarkBlue;
+        q0->c28 = q0->c2C;
+        q1->c30 = atBlack;
+        q1->c2C = q1->c30;
+        q1->c28 = q1->c2C;
+        q1->c24 = q1->c28;
+        computeNabooBankingOrientation(s, i, 1.0f);
+    }
+    atInitScroll(s, 0.65f, -14.0f);
+    return s;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", computeNabooBankingOrientation);
 
