@@ -315,7 +315,159 @@ void composeNpcOrientationMatrix(void) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", updateHangarBayScene);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", hangarTickCameraOrbit);
+typedef struct { f32 x, y, z; } OV3;
+typedef struct {
+    s32 unk0;
+    u8 *mesh;
+    u8 *unk8;
+    OV3 pos;
+    f32 rx, ry, rz;
+    OV3 delta;
+    OV3 prev;
+    f32 scale;
+    u16 flags;
+    u8 pad42[0x1CA];
+    s32 tex;
+    u8 anim[0xC];
+    f32 t;
+    f32 dur;
+    f32 f224;
+    u8 snd[8];
+    s32 sndActive;
+    u8 pad234[0x38];
+    u16 sndId;
+    u16 dir;
+    u8 pad270[3];
+    u8 b273;
+    u8 pad274[4];
+} OEnt;
+extern u16 D_menu_overlay_800CDA48;
+extern u16 D_menu_overlay_800CDA52;
+extern u16 D_menu_overlay_800CDA56;
+extern u8 D_menu_overlay_800CD6E4;
+extern f32 D_menu_overlay_800CC3E8;
+extern u8 D_menu_overlay_800CC3EC[];
+extern f32 D_menu_overlay_800CD70C;
+f32 sinf(f32);
+void setupActorAnchorTransformType1(void *, void *, void *, void *, f32);
+void buildPositionAndCallTransformHelper(void *, void *, void *, void *, f32, f32, f32);
+void updateAnimatedTextureStreaming(s32, void *, f32);
+s32 mostlyMusyxFlagGatedHelper(void *);
+void safeLookup3DSoundEntry(s32, u16);
+void updateActive3DAudioSource(void *, void *, void *, u8);
+
+static __inline__ void orbVec3Sub(f32 *d, f32 *a, f32 *b) {
+    d[0] = a[0] - b[0];
+    d[1] = a[1] - b[1];
+    d[2] = a[2] - b[2];
+}
+
+#define EI(i) (*(OEnt *)((i) * sizeof(OEnt) + (s32)gCutAssetEnts))
+
+void hangarTickCameraOrbit(void) {
+    u32 i;
+    OEnt *e;
+    f32 amp;
+    f32 t;
+    f32 d;
+    f32 dur;
+    f32 x;
+    f32 lim;
+    OEnt *ed;
+    OEnt *e3;
+    u16 fl;
+    OEnt *ea;
+    OEnt *eb;
+    OEnt *ec;
+    OEnt *e2;
+
+    for (i = 0; i < D_menu_overlay_800CDA42; i++) {
+        e = &EI(i);
+        if (e->flags & 2) {
+            continue;
+        }
+        e->prev = e->pos;
+        initVec4TripletFromArgs(EI(i).mesh + 0x28, EI(i).scale, EI(i).scale, EI(i).scale);
+        e = &EI(i);
+        dur = e->dur;
+        if (0.0f < dur) {
+            if (!(e->flags & 1)) {
+                t = e->t;
+                e->t = t + D_menu_overlay_800CD604;
+                amp = t / dur;
+                if (1.0f <= amp) {
+                    e->t = e->t - e->dur;
+                    amp = e->t / e->dur;
+                    setupActorAnchorTransformType1(e->anim, e->unk8 + 0x10, &e->pos, &e->rx, amp);
+                }
+#define EB (*(OEnt *)((s32)gCutAssetEnts + i * sizeof(OEnt)))
+                buildPositionAndCallTransformHelper(EB.anim, EB.unk8 + 0x10, &EB.pos, &EB.rx, EB.f224, EB.scale, amp);
+            } else {
+                if (i == D_menu_overlay_800CD6E4) {
+                    amp = D_menu_overlay_800CC3E8;
+                } else {
+                    amp = 0.5f;
+                }
+                if (EI(i).flags & 0x400) {
+                    composeRotationMatrixSlot2(EI(i).mesh + 0x28, amp * sinf(D_menu_overlay_800CD608 / 9.0f));
+                    amp = amp * sinf(D_menu_overlay_800CD608 / 11.0f);
+                    composeRotationMatrixSlot0(EI(i).mesh + 0x28, amp);
+                }
+            }
+            composeRotationMatrixSlot2(EI(i).mesh + 0x28, EI(i).rz);
+            composeRotationMatrixSlot0(EI(i).mesh + 0x28, EI(i).rx);
+            composeRotationMatrixSlot1(EI(i).mesh + 0x28, EI(i).ry);
+        } else {
+            if (i == D_menu_overlay_800CDA48) {
+                e2 = e;
+                x = e2->pos.x;
+                if (e2->dir != 0) {
+                    d = -D_menu_overlay_800CD604;
+                } else {
+                    d = D_menu_overlay_800CD604;
+                }
+                { s32 t; do { e2->pos.x = x + (d + d); t = (s32)gCutAssetEnts; } while (0); lim = -14.0f; ed = (OEnt *)(i * sizeof(OEnt) + t); }
+                if ((ed->pos.x < lim && ed->dir != 0) || (14.0f < ed->pos.x && ed->dir == 0)) {
+                    EI(i).dir = ~EI(i).dir;
+                }
+            } else if (i == D_menu_overlay_800CDA4A || i == D_menu_overlay_800CDA4C) {
+                e->pos.x = e->pos.x - D_menu_overlay_800CD604 / 1.2717f;
+                lim = -50.0f;
+                if (e->pos.x < lim) {
+                    e->pos.x = 50.0f;
+                }
+            }
+            composeRotationMatrixSlot0(EI(i).mesh + 0x28, EI(i).rx);
+            composeRotationMatrixSlot1(EI(i).mesh + 0x28, EI(i).ry);
+            composeRotationMatrixSlot2(EI(i).mesh + 0x28, EI(i).rz);
+        }
+        addVec3At0x24(EI(i).mesh + 0x28, EI(i).pos.x, EI(i).pos.y, EI(i).pos.z);
+        ea = &EI(i);
+        fl = ea->flags;
+        if (fl & 1) {
+            if (fl & 0x200) {
+                e3 = ea;
+                updateAnimatedTextureStreaming(e3->tex, D_menu_overlay_800CC3EC, i == D_menu_overlay_800CD6E4 ? D_menu_overlay_800CD70C : 3.0f);
+            }
+            eb = &EI(i);
+            if (eb->sndActive) {
+                safeLookup3DSoundEntry(mostlyMusyxFlagGatedHelper(eb->snd), EI(i).sndId);
+                ec = &EI(i);
+                orbVec3Sub(&ec->delta.x, &ec->pos.x, &ec->prev.x);
+                updateActive3DAudioSource(ec->snd, &ec->pos, &ec->delta, ec->b273);
+            }
+        }
+        if (i == D_menu_overlay_800CDA52 && !hangarTieInterceptorAvailable) {
+            continue;
+        }
+        if (i == D_menu_overlay_800CDA56 && !hangarNabooStarfighterAvailable) {
+            continue;
+        }
+        if (!(EI(i).flags & 0x800)) {
+            loadCutsceneAssetsByIndex(i);
+        }
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/110410", D_menu_overlay_800A5804);
 
