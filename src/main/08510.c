@@ -2832,7 +2832,127 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", renderFlatMeshFaceGroup);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", renderUnlitMeshFaces);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", resetVertexCacheSlot);
+struct RvItem {
+    /* 0x00 */ struct RvItem *next;
+    /* 0x04 */ u32 pad4;
+    /* 0x08 */ s16 x, y, z;
+    /* 0x0E */ u16 padE;
+    /* 0x10 */ u16 flags;
+    /* 0x12 */ u16 mat;
+};
+struct RvScene {
+    /* 0x00 */ u8 pad0[0x20];
+    /* 0x20 */ struct RvItem *items;
+};
+
+void resetVertexCacheSlot(struct RvScene *scene, f32 *m, s8 *a2, s8 *a3, s8 *a4, s8 *a5, u16 *lo, u16 *hi) {
+    u32 n;
+    register struct TSLEnt *ent asm("$10");
+    struct TSLEnt *e;
+    struct RvItem *it;
+    s32 idx;
+    s32 t;
+    s32 c;
+    u8 tag;
+    void **pp;
+    u8 *arr;
+    struct { f32 x; f32 y; f32 z; f32 pad[3]; } vec;
+
+    D_main_bss_8011A454++;
+    if (D_main_bss_8011A454 == 0) {
+        D_main_bss_8011A454 = 1;
+    }
+    n = 0;
+    if (D_main_bss_8011A8BC != 0) {
+        do {
+            ((u8 *)D_main_bss_8010E8AC)[D_main_bss_80114380++] = 0;
+            if (D_main_bss_80114380 == D_main_bss_8011A8B8) {
+                D_main_bss_80114380 = 0;
+            }
+            D_main_bss_8010F8B0[D_main_bss_801143A4++] = 0;
+            if (D_main_bss_801143A4 == 0x400) {
+                D_main_bss_801143A4 = 0;
+            }
+            n++;
+        } while (n < D_main_bss_8011A8BC);
+    }
+    *a2 = 0;
+    *a3 = 0;
+    *a4 = 0;
+    *a5 = 0;
+    *lo = 0xFFFF;
+    *hi = 0;
+    it = scene->items;
+    ent = D_main_bss_801143B0;
+    if (it != NULL) {
+        do {
+            if (it->flags & 0x100) {
+                if ((it->flags & 3) != 0) {
+                    *a5 = 1;
+                } else {
+                    *a4 = 1;
+                }
+                vec.x = (f32)it->x * 0.00390625f;
+                vec.y = (f32)it->y * 0.00390625f;
+                vec.z = (f32)it->z * 0.00390625f;
+                t = (s32)(m[6] * vec.x + m[7] * vec.y + m[8] * vec.z + m[11]);
+                idx = (s32)((f32)t * 256.0f / 64.0f);
+                if (idx >= 0) {
+                    c = 0x1FF;
+                    if (idx < 0x200) {
+                        c = idx;
+                    }
+                } else {
+                    c = 0;
+                }
+                idx = c;
+                if (idx < *lo) {
+                    *lo = idx;
+                }
+                if (*hi < idx) {
+                    *hi = idx;
+                }
+                tag = D_main_bss_8011A454;
+                e = ent;
+                ent = e + 1;
+                e->p4 = it;
+                if (D_main_bss_8010F8B0[idx] == tag) {
+                    e->p0 = D_main_bss_8010E8B0[idx];
+                } else {
+                    e->p0 = NULL;
+                    D_main_bss_8010F8B0[idx] = tag;
+                }
+                D_main_bss_8010E8B0[idx] = e;
+            } else {
+                if ((it->flags & 3) != 0) {
+                    *a3 = 1;
+                } else {
+                    *a2 = 1;
+                }
+                idx = it->mat;
+                if (D_main_bss_8011A444[idx].material_type & 1) {
+                    idx = (D_main_bss_8011A444[idx].D_80128F08_index + 1) * 2;
+                } else {
+                    idx = 0;
+                }
+                e = ent;
+                ent = e + 1;
+                pp = (void **)&e->p4;
+                *pp = it;
+                arr = (u8 *)D_main_bss_8010E8AC;
+                tag = D_main_bss_8011A454;
+                if (arr[idx] == tag) {
+                    ((void **)e)[0] = ((void **)D_main_bss_8010E8A8)[idx];
+                } else {
+                    ((void **)e)[0] = NULL;
+                    ((u8 *)D_main_bss_8010E8AC)[idx] = tag;
+                }
+                ((void **)D_main_bss_8010E8A8)[idx] = e;
+            }
+            it = it->next;
+        } while (it != NULL);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", buildOrientedFaceGeometry);
 
