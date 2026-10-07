@@ -209,7 +209,65 @@ void runModelViewerSoundDemo(u8 craft) {
     register3DAudioListenerNode(D_menu_overlay_800D0020, v1, v2, v2, v3, 2.0f, 2.0f, 50.0f, 0, 0x7F);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", updateModelViewerAudioSource);
+typedef struct { f32 x, y, z; } MvV3;
+typedef struct {
+    u8 pad0[8];
+    u8 snd[0x44];
+    u8 b4C;
+    u8 pad4D[3];
+    MvV3 v50;
+    u8 pad5C[0xC];
+    MvV3 v68;
+    u8 pad74[0x1C];
+} MvEnt;
+#define MVE ((MvEnt *)D_menu_overlay_800D0120)
+extern f32 D_menu_overlay_800CD508;
+extern MvV3 D_menu_overlay_800D0010;
+s32 setMusyX3DProperties(void *, void *, void *, void *, void *, s32);
+void updateActive3DAudioSource(void *, void *, void *, s32);
+
+void updateModelViewerAudioSource(f32 dt, f32 spin, u8 craft) {
+    MvV3 pos;
+    f32 up[3];
+    f32 fw[3];
+    MvV3 vel;
+    MvV3 d;
+    f32 *m;
+    u16 i;
+
+    D_menu_overlay_800CD508 = (spin != 0.0f) ? D_menu_overlay_800CD508 + dt / 5.0f : 0.0f;
+    if (1.0f <= D_menu_overlay_800CD508) {
+        D_menu_overlay_800CD508 = 1.0f;
+    }
+    m = mvXform(spin);
+    pos.x = m[9];
+    pos.y = m[10];
+    pos.z = m[11];
+    if (0.0f < dt) {
+        vel.x = (pos.x - D_menu_overlay_800D0010.x) / dt;
+        vel.y = (pos.y - D_menu_overlay_800D0010.y) / dt;
+        vel.z = (pos.z - D_menu_overlay_800D0010.z) / dt;
+    } else {
+        vel.x = vel.y = vel.z = 0.0f;
+    }
+    D_menu_overlay_800D0010 = pos;
+    up[0] = m[2];
+    up[1] = m[5];
+    up[2] = m[8];
+    fw[0] = -m[1];
+    fw[1] = -m[4];
+    fw[2] = -m[7];
+    setMusyX3DProperties(D_menu_overlay_800D0020, &pos, &vel, up, fw, 0x7F);
+    for (i = 0; i < gPostIntroCrawlNumCraft[craft]; i++) {
+        MvV3 *a = &MVE[i].v50;
+        MvV3 *b = &MVE[i].v68;
+        d.x = a->x - b->x;
+        d.y = a->y - b->y;
+        d.z = a->z - b->z;
+        MVE[i].v68 = MVE[i].v50;
+        updateActive3DAudioSource(MVE[i].snd, a, &d, (u8)(u32)(MVE[i].b4C * D_menu_overlay_800CD508));
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", loadModelViewerModels);
 
