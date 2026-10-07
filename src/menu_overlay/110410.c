@@ -412,7 +412,37 @@ void hangarInitializeShipShadowHob(u8 *p, s32 id, u8 *arg2)
 
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/110410", craftSelectionVoiceLineHelper);
+extern u8 D_menu_overlay_800CDA08[];
+extern u8 hangarCameraState;
+extern s32 D_menu_overlay_800CC4F8[];
+s32 mallocVoiceLineStruct(s32, f32, s32);
+
+void craftSelectionVoiceLineHelper(void) {
+    u8 idx;
+
+    if (getControllerNewButtonsPressed(D_menu_overlay_800CD6D0) & 0xF) {
+        { u8 m = hangarBaytoMap1Map[hangarDesiredBay];
+        D_menu_overlay_800CDA08[m - 1] = 0;
+        if (D_menu_overlay_800CDA18 == 0) {
+            D_menu_overlay_800CDA14 = 5.0f;
+        } else if (m != D_menu_overlay_800CDA11) {
+            setVoiceLineLoopFlag(D_menu_overlay_800CDA18);
+            D_menu_overlay_800CDA10 = 1;
+        } }
+    }
+    if (hangarCameraState < 5) {
+        D_menu_overlay_800CDA14 += D_menu_overlay_800CD604;
+        if (5.0f < D_menu_overlay_800CDA14 && D_menu_overlay_800CDA14 < 6.0f) {
+            idx = hangarBaytoMap1Map[hangarDesiredBay];
+            if (D_menu_overlay_800CDA18 == 0 && D_menu_overlay_800CDA08[idx - 1] == 0) {
+                D_menu_overlay_800CDA18 = mallocVoiceLineStruct(D_menu_overlay_800CC4F8[idx - 1], 0.7f, 0x78);
+                D_menu_overlay_800CDA08[idx - 1] = 1;
+                D_menu_overlay_800CDA14 = 6.0f;
+                D_menu_overlay_800CDA11 = idx;
+            }
+        }
+    }
+}
 
 s32 lerpVec3(s32 *, s32 *, s32, f32);
 f32 quadraticEaseInOut(f32);
