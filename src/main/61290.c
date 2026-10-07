@@ -1,7 +1,109 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/61290", randomlyScaledEffectNpcHandler);
+typedef struct { f32 x, y, z; } RseV3;
+typedef struct RseCtx {
+    struct RseCtx *next;
+    struct RseCtx *prev;
+    s16 f8;
+    s16 fA;
+    s16 fC;
+    u8 padE[2];
+    u16 f10;
+    u16 f12;
+    u8 pad14[0xC];
+    f32 f20;
+    f32 f24;
+    u8 pad28[8];
+    f32 f30;
+    f32 f34;
+    f32 f38;
+    f32 f3C;
+} RseCtx;
+typedef struct {
+    u8 pad0[4];
+    RseCtx *ctx;
+    u8 pad8[0xE];
+    u16 f16;
+} RseNpc;
+typedef struct {
+    f32 *pos;
+    u8 pad4[4];
+    f32 f8;
+} RseParams;
+typedef struct {
+    s32 f0;
+    u8 pad4[0x14];
+    f32 f18;
+    f32 f1C;
+    f32 f20;
+    u8 pad24[0x24];
+    struct { u8 pad[0x20]; RseCtx *head; } *f48;
+} RseUpdate;
+extern u16 D_main_bss_80139574;
+extern u16 rseTblA[] __asm__("D_main_bss_80139870");
+extern u16 rseTblB[] __asm__("D_main_bss_80139898");
+extern u8 D_main_bss_80130B63;
+extern s32 rand();
+extern void popNpcSlotFromTail(u16, void *);
+extern void destroyNpcSlotByIndex(u16);
+extern u8 transformVec3ToNpcLocalWithScale(s32, s32, void *, f32, s32);
+
+s32 rseImpl(RseNpc *npc, u16 cmd, void *arg) __asm__("randomlyScaledEffectNpcHandler");
+s32 rseImpl(RseNpc *npc, u16 cmd, void *arg) {
+    RseCtx *c = npc->ctx;
+
+    switch (cmd) {
+    case 1: {
+        RseParams *p = arg;
+        f32 s;
+        c->f10 = 0x100;
+        c->f10 |= rand() & 0x1C00;
+        s = ((f32)(rand() & 0xFF) / 255.0f + 2.5f) * (p->f8 * 0.25f);
+        c->f20 = c->f24 = s;
+        *(RseV3 *)&c->f30 = *(RseV3 *)p->pos;
+        *(f32 *)((u8 *)c + 0x3C) = 0.0f;
+        popNpcSlotFromTail(D_main_bss_80139574, npc);
+        return 1;
+    }
+    case 2:
+        break;
+    case 3: {
+        f32 *dt = arg;
+        c->f3C = c->f3C + *dt * 20.0f;
+        if ((s32)c->f3C >= 20) {
+            destroyNpcSlotByIndex(npc->f16);
+            return 1;
+        }
+        break;
+    }
+    case 4: {
+        RseUpdate *q = arg;
+        if (transformVec3ToNpcLocalWithScale(q->f0, 0, &c->f30, 1.0f, 0)) {
+            *(u16 *)((u8 *)c + 0x12) = rseTblA[(s32)c->f3C];
+            if (D_main_bss_80130B63 != 0) {
+                s32 t = (s32)c->f3C;
+                if (t < 19) {
+                    if (0.5f < c->f3C - (f32)t) {
+                        c->f12 = rseTblB[t];
+                    }
+                }
+            }
+            c->f8 = (s32)((c->f30 - q->f18) * 256.0f);
+            c->fA = (s32)((c->f34 - q->f1C) * 256.0f);
+            c->fC = (s32)((c->f38 - q->f20) * 256.0f);
+            c->next = q->f48->head;
+            if (c->next != 0) {
+                c->next->prev = c;
+            }
+            c->prev = 0;
+            q->f48->head = c;
+        }
+        break;
+    }
+    }
+    return 1;
+}
 
 #define VABS(x) ({ f32 _x = (x); f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); _r; })
 typedef struct { f32 x, y, z; } V3;
