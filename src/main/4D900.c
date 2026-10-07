@@ -165,7 +165,270 @@ void rotateObjectMatrixAboutStoredAxis(u8 *arg0, f32 dt) {
     floatModulo(*(f32 *)(arg0 + 0xD0), 180.0f);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", updatePlayerVehicleByControlMode);
+typedef struct { s32 a, b, c; } PvV3;
+typedef struct { s32 b[12]; } PvM;
+typedef struct {
+    u16 flags;
+    u16 mode;
+    u16 type;
+    u16 f6;
+    s32 f8;
+    s32 idx;
+    f32 pos[3];
+    f32 ang[3];
+    f32 m[12];
+    f32 v58[3];
+    u8 pad64[0xC];
+    f32 *f70;
+    f32 *f74;
+    f32 v78[3];
+    u8 pad84[0xC];
+    f32 *f90;
+    f32 f94;
+    f32 f98;
+    f32 f9C;
+    f32 fA0;
+    f32 fA4;
+    u8 padA8[0x14];
+    u8 *fBC;
+    u8 *fC0;
+    f32 fC4;
+    f32 fC8;
+    f32 fCC;
+} PvObj;
+extern u8 D_main_bss_80138838;
+extern u8 D_main_bss_80137CF4;
+extern void computeAngleToTargetFromTransform(u8 *, u8 *, u8 *);
+void buildOrientationFromPosAndAngles(void *, void *, void *);
+extern void transformVec3ByMat34(void *, f32 *, f32 *);
+extern void updateAudioListenerPosFromPlayer(void);
+void pvImpl(PvObj *o, f32 dt) __asm__("updatePlayerVehicleByControlMode");
+static __inline__ f32 pvAbs(f32 x) {
+    f32 r;
+    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+    return r;
+}
+
+void pvImpl(PvObj *o, f32 dt) {
+    f32 v10[4];
+    f32 v20[4];
+    f32 w30[4];
+    f32 m40[12];
+    f32 v70[4];
+    f32 a80[4];
+    f32 b90[4];
+    PvV3 saved;
+    f32 tgt;
+    f32 len;
+    f32 t;
+    f32 cur;
+    f32 d;
+    f32 b;
+    f32 r;
+
+    tgt = 0.0f;
+    if (D_main_bss_80137CF4 != 0) {
+        return;
+    }
+    if (D_main_bss_80138838 != 0 && o->mode != 4) {
+        return;
+    }
+    saved = *(PvV3 *)o->pos;
+    switch (o->mode) {
+    case 0:
+        buildOrientationFromPosAndAngles(o->m, o->pos, o->ang);
+        break;
+    case 2:
+        {
+            f32 *pm = o->m;
+            f32 *pp = o->pos;
+            __asm__("" :: "r"(pm), "r"(pp));
+            *(PvV3 *)v10 = *(PvV3 *)o->v58;
+            buildOrientationFromPosAndAngles(pm, pp, o->ang);
+        }
+        goto xform;
+    case 1:
+        if (o->flags & 0x200) {
+            computeAngleToTargetFromTransform((u8 *)o->f70, (u8 *)o->pos, (u8 *)o->ang);
+            *(s32 *)&o->ang[1] = 0;
+            *(s32 *)&o->ang[2] = 0;
+            buildOrientationFromPosAndAngles(o->m, o->pos, o->ang);
+        } else {
+            *(PvM *)o->m = *(PvM *)o->f70;
+        }
+        if (o->f90 != NULL) {
+            *(PvV3 *)o->ang = *(PvV3 *)o->f90;
+            o->pos[0] = o->f70[9];
+            o->pos[1] = o->f70[10];
+            o->pos[2] = o->f70[11];
+        } else {
+            computeAngleToTargetFromTransform((u8 *)o->m, (u8 *)o->pos, (u8 *)o->ang);
+        }
+        *(PvV3 *)v10 = *(PvV3 *)o->v58;
+    xform:
+        if (v10[0] != 0.0f || v10[1] != 0.0f || v10[2] != 0.0f) {
+            transformVec3ByMat34(o->m, v10, v20);
+            o->m[9] = v20[0];
+            o->m[10] = v20[1];
+            o->m[11] = v20[2];
+        }
+        break;
+    case 3:
+        *(PvM *)m40 = *(PvM *)o->f70;
+        *(PvV3 *)v10 = *(PvV3 *)o->v58;
+        if (v10[0] != 0.0f || v10[1] != 0.0f || v10[2] != 0.0f) {
+            transformVec3ByMat34(m40, v10, v20);
+            m40[9] = v20[0];
+            m40[10] = v20[1];
+            m40[11] = v20[2];
+        } else {
+            v20[0] = m40[9];
+            v20[1] = m40[10];
+            v20[2] = m40[11];
+        }
+        if (o->fA4 < dt && o->fA4 != 0.0f) {
+            v10[0] = v20[0] - o->pos[0];
+            v10[1] = v20[1] - o->pos[1];
+            v10[2] = v20[2] - o->pos[2];
+            clampVec3ToUnitIfLongerThan(v10);
+            o->pos[0] += o->f98 * (dt - o->fA4) * v10[0];
+            o->pos[1] += o->f98 * (dt - o->fA4) * v10[1];
+            o->pos[2] += o->f98 * (dt - o->fA4) * v10[2];
+            o->m[9] = o->pos[0];
+            o->m[10] = o->pos[1];
+            o->m[11] = o->pos[2];
+            dt = o->fA4;
+        }
+        o->fA4 = dt;
+        v70[0] = v20[0] - o->pos[0];
+        v70[1] = v20[1] - o->pos[1];
+        v70[2] = v20[2] - o->pos[2];
+        len = vec3Length(v70);
+        if (0.01f < len) {
+            {
+            f32 q = pvAbs(len - o->f94);
+            if (1.0f < q) {
+                q = 1.0f;
+            }
+            tgt = q * o->f9C;
+            }
+            cur = o->f98;
+            d = tgt - cur;
+            t = pvAbs(d);
+            b = o->f9C * dt;
+            t = t * dt;
+            if (t < b) {
+                b = t;
+            }
+            if (b < 0.01f) {
+                b = 0.0f;
+            }
+            if (0.0f < d) {
+                o->f98 = cur + b;
+            } else {
+                o->f98 = cur - b;
+            }
+            if (tgt < o->f98) {
+                o->f98 = tgt;
+            }
+            clampVec3ToUnitIfLongerThan(v70);
+            o->pos[0] += o->f98 * dt * v70[0];
+            o->pos[1] += o->f98 * dt * v70[1];
+            o->pos[2] += o->f98 * dt * v70[2];
+            o->m[9] = o->pos[0];
+            o->m[10] = o->pos[1];
+            o->m[11] = o->pos[2];
+        } else {
+            o->m[9] = m40[9];
+            o->m[10] = m40[10];
+            o->m[11] = m40[11];
+            o->pos[0] = o->m[9];
+            o->pos[1] = o->m[10];
+            o->pos[2] = o->m[11];
+        }
+        {
+            u8 *p = D_main_bss_80138D18[o->idx].unk4;
+            if (*(u16 *)(p + 2) == 4 && *(PvObj **)(p + 0xC0) == o) {
+                o->f98 = tgt;
+            }
+        }
+        break;
+    case 4:
+        if (!(0.0f < o->fCC)) {
+            r = o->fC4 / o->fC8;
+            if (r > 1.0) {
+                r = 1.0f;
+            }
+            a80[0] = ((PvObj *)o->fBC)->m[9];
+            a80[1] = ((PvObj *)o->fBC)->m[10];
+            a80[2] = ((PvObj *)o->fBC)->m[11];
+            b90[0] = ((PvObj *)o->fC0)->m[9];
+            b90[1] = ((PvObj *)o->fC0)->m[10];
+            b90[2] = ((PvObj *)o->fC0)->m[11];
+            o->pos[0] = b90[0] - a80[0];
+            o->pos[1] = b90[1] - a80[1];
+            o->pos[2] = b90[2] - a80[2];
+            addScaledVec3ToVec3(o->pos, a80, r, o->pos);
+            o->m[9] = o->pos[0];
+            o->m[10] = o->pos[1];
+            o->m[11] = o->pos[2];
+            if ((u8 *)o == D_main_bss_80138D18[o->idx].unk4) {
+                updateAudioListenerPosFromPlayer();
+            }
+        }
+        break;
+    }
+    if (o->type == 4) {
+        rotateObjectMatrixAboutStoredAxis((u8 *)o, dt);
+    }
+    if (o->flags & 8) {
+        v10[0] = o->f74[2];
+        v10[1] = o->f74[5];
+        v10[2] = o->f74[8];
+        v10[1] = 0.0f;
+        clampVec3ToUnitIfLongerThan(v10);
+        w30[0] = o->m[2];
+        w30[1] = o->m[5];
+        w30[2] = o->m[8];
+        w30[1] = 0.0f;
+        clampVec3ToUnitIfLongerThan(w30);
+        if (vec3Dot(v10, w30) < 0.0f) {
+            *(PvV3 *)o->pos = saved;
+        } else {
+            transformVec3ByMat34(o->f74, o->v78, v20);
+            v70[0] = o->pos[0] - v20[0];
+            v70[1] = o->pos[1] - v20[1];
+            {
+                register f32 pz asm("$f2") = o->pos[2];
+                v70[2] = pz - v20[2];
+            }
+            dt = 2.5f;
+            if (!(dt <= vec3Length(v70))) {
+                goto skip;
+            }
+            clampVec3ToUnitIfLongerThan(v70);
+            addScaledVec3ToVec3(o->pos, v20, dt, v70);
+        }
+        o->m[9] = o->pos[0];
+        o->m[10] = o->pos[1];
+        o->m[11] = o->pos[2];
+    }
+skip:
+    if (o->type == 0 && !(*(s32 *)o & 0x4100000)) {
+        transformVec3ByMat34(o->f74, o->v78, v20);
+        v70[0] = o->pos[0] - v20[0];
+        v70[1] = o->pos[1] - v20[1];
+        v70[2] = o->pos[2] - v20[2];
+        if (8.75f <= vec3Length(v70)) {
+            *(PvM *)o->m = *(PvM *)o->f74;
+            o->pos[0] = o->m[9];
+            o->pos[1] = o->m[10];
+            o->pos[2] = o->m[11];
+            updateAudioListenerPosFromPlayer();
+        }
+    }
+    applyPlayerVehicleStateUpdate((u8 *)o);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", updateEffectObjectMotionOnTerrain);
 
