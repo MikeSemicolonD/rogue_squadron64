@@ -825,7 +825,91 @@ void setupCraftAnimationFlagSet(void *a0) {
     applyCraftSlotAnimations(0.0f);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", initVwingHudAndSlotState);
+typedef struct {
+    s32 unk0;
+    s32 unk4;
+    s32 unk8;
+    s32 unkC;
+    s32 unk10;
+    s32 unk14;
+    s32 unk18;
+    s32 unk1C;
+    f32 unk20;
+    f32 unk24;
+    f32 unk28;
+    f32 unk2C[12];
+} VhCtx;
+extern VhCtx vhCtx __asm__("D_menu_overlay_800CF090");
+extern void *D_menu_overlay_800CF07C;
+extern void *D_menu_overlay_800CF080;
+extern s32 D_main_bss_8013889C;
+extern s32 D_menu_overlay_800CF158;
+extern s32 D_menu_overlay_800CF154;
+extern u16 D_menu_overlay_800CFA6C;
+void setRenderStateFlagByteOne(s32);
+void selectRenderPresetByIndex(s32);
+void selectSecondaryPresetByIndex(s32);
+void clearVec4QuadStruct(void *);
+void *allocateSlotTable(u16);
+void allocAnimationPhasePool(s32);
+u16 vhLoadHdr(char *) __asm__("load_full_header_image");
+void loadFontAsset(s32);
+void loadCharTextureSet(void *, s32, s32, s32);
+void resetPlayerSlotAllChannels(u16, u8);
+s16 getCraftStatIfThresholdMet(s16);
+void setMenuOverlayHeaderCallback(void *);
+s32 initPlayerSlotAnimationChannelFull(s32, s32, s32, s32, s32, s32, f32);
+void setMenuOverlayHeaderState(s32, s32, s32);
+void initNpcBookkeepingTables();
+void initSpeechSubsystem(s32, u8);
+extern u8 D_main_bss_80130B62;
+void buildLevelSelectTextTextures(f32);
+void initFormatMessageWorker(s32);
+
+void initVwingHudAndSlotState(void) {
+    vhCtx.unk10 = 0x200;
+    vhCtx.unk14 = 0x1C0;
+    vhCtx.unk18 = 0x100;
+    vhCtx.unk4 = 0;
+    vhCtx.unk8 = 0;
+    vhCtx.unkC = 0;
+    vhCtx.unk1C = 0xE0;
+    vhCtx.unk20 = 45.0f;
+    vhCtx.unk24 = 0.1171875f;
+    vhCtx.unk28 = 93.75f;
+    setRenderStateFlagByteOne(0);
+    selectRenderPresetByIndex(0);
+    selectSecondaryPresetByIndex(0);
+    clearVec4QuadStruct(vhCtx.unk2C);
+    D_menu_overlay_800CF078 = allocateSlotTable(0x40);
+    D_menu_overlay_800CF07C = allocateSlotTable(8);
+    D_menu_overlay_800CF080 = allocateSlotTable(8);
+    D_main_bss_8013889C = 0;
+    allocAnimationPhasePool(4);
+    D_menu_overlay_800CFA6C = vhLoadHdr("frontend/gold_TM");
+    loadFontAsset(1);
+    loadCharTextureSet(D_menu_overlay_800CF078, 5, 0xD, 0x20);
+    loadCharTextureSet(D_menu_overlay_800CF078, 8, 0x11, 0x400);
+    loadCharTextureSet(D_menu_overlay_800CF080, 0xB, 8, 0x200);
+    resetPlayerSlotAllChannels(0xB, 0x14);
+    setPlayerSlotEntryRGB(5, 8, mainMenuBlackColor);
+    setPlayerSlotEntryRGB(5, 0xA, mainMenuBlackColor);
+    setPlayerSlotEntryRGB(5, 0xC, mainMenuBlackColor);
+    resetPlayerSlotAllChannels(8, 0x14);
+    resetPlayerSlotAllChannels(5, 0x14);
+    relocateLookupEntryToNewKey(D_menu_overlay_800CF078, getPlayerSlotFieldAt34(5, 8), 0x19);
+    relocateLookupEntryToNewKey(D_menu_overlay_800CF078, getPlayerSlotFieldAt34(5, 0xA), 0x19);
+    relocateLookupEntryToNewKey(D_menu_overlay_800CF078, getPlayerSlotFieldAt34(5, 0xC), 0x19);
+    setMenuOverlayHeaderCallback(getCraftStatIfThresholdMet);
+    D_menu_overlay_800CF158 = initPlayerSlotAnimationChannelFull(8, 0x28, 0xE, -0xC8, -0x80, 0xB4, 1.35f);
+    setPlayerSlotEntryRGB(8, 0xE, mainMenuGreyColor);
+    setMenuOverlayHeaderState(2, 0x200, 0);
+    initNpcBookkeepingTables();
+    initSpeechSubsystem(0, D_main_bss_80130B62);
+    D_menu_overlay_800CF154 = 0;
+    buildLevelSelectTextTextures(150.0f);
+    initFormatMessageWorker(5);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A699C);
 
