@@ -221,7 +221,77 @@ s32 npcTexturedEffectUpdateConditionalAlt(void *arg0, s32 arg1) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcTexturedEffectUpdateWithSlotChain);
+typedef struct {
+    u16 h0;
+    u16 type;
+    f32 f4;
+    s32 w8;
+    s32 wC;
+    f32 f10;
+    u8 b14;
+    u8 pad15[3];
+    f32 f18;
+    u8 pad1C[4];
+} NtCtx;
+extern s32 gObjectiveCounts[0x80];
+extern u8 gObjectiveBooleans[0x80];
+extern s32 D_main_bss_80137CE4;
+f32 *ntMesh(s32, void *) __asm__("getObjectMeshTransformOrLocal");
+u16 getObjectNpcTypeId(s32);
+s32 ntCue(s32, s32, void *, void *, s32, f32, f32) __asm__("triggerCueWithSlotEffect");
+s32 ntIter(u16, s32, void *) __asm__("slotDispatcherIter");
+
+s32 npcTexturedEffectUpdateWithSlotChain(void *arg0, s32 arg1) {
+    u8 sp28[0x30];
+    NtCtx ctx;
+    f32 sp78;
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+    u8 *def;
+    u8 ret;
+    u16 h;
+    f32 *m;
+
+    ret = 0;
+    def = *(u8 **)(npc + 0x34);
+    if (*(s32 *)(def + 0xBC) != 0) {
+        if (gObjectiveBooleans[*(s32 *)(def + 0xBC) - 1] == 0) {
+            return 0;
+        }
+    }
+    if (*(s32 *)(def + 0xC0) != 0) {
+        if (gObjectiveCounts[*(s32 *)(def + 0xC0) - 1] < *(s32 *)(def + 0xC4)) {
+            return 0;
+        }
+    }
+    m = ntMesh(*(s32 *)(npc + 0x38), sp28);
+    if (*(f32 *)(*(u8 **)(npc + 0x34) + 0xB4) * 0.25f < m[1]) {
+        return 0;
+    }
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), (*(s16 *)(npc + 0xAE) < 2) ? D_main_8003D69C : "c_d", *(s16 *)(npc + 0xAE) & 1, sp28, 0, 0);
+    *(s16 *)(npc + 0xAE) = (*(s16 *)(npc + 0xAE) + 1) % 4;
+    if ((stepAndTickProgressChannel(*(s32 *)(npc + 0x38), sp28, 0.5f, 0, &sp78) & 0xFF) == 1) {
+        ctx.h0 = 0;
+        ctx.type = getObjectNpcTypeId(*(s32 *)(npc + 0x38));
+        ctx.f4 = 0.0f;
+        ctx.f4 = (f32)((s32 *)(*(u8 **)(npc + 0x34) + 0xB0))[D_main_bss_80137CE4] * 0.033333335f;
+        ctx.w8 = 0;
+        ctx.wC = 0;
+        ctx.f10 = -1.0f;
+        ctx.b14 = 0;
+        h = ntCue(*(s32 *)(npc + 0x38), 0xB, sp28, (u8 *)&D_main_800A0D9C[0].block_o_floats[3] + *(s16 *)(npc + 0xA4) * 0x3C, 0, ((f32 *)((u8 *)&D_main_800A0D9C[0].block_o_floats[3] + *(s16 *)(npc + 0xA4) * 0x3C))[3], sp78);
+        if (*(s32 *)(*(u8 **)(npc + 0x34) + 0xAC) != 0) {
+            ntIter(h, 0xA, &ctx);
+            ctx.h0 = 4;
+            ctx.f18 = *(f32 *)(*(u8 **)(npc + 0x34) + 0xB8);
+            ntIter(h, 0xA, &ctx);
+        }
+        play3DSoundEvent(0, npc, npc + 0x24, 12.0f, 0.3f, 0, 0x16, 0x6E, 0x3C);
+        if (--*(s32 *)(npc + 0xA0) == 0) {
+            ret = 1;
+        }
+    }
+    return ret;
+}
 
 #include "main/1D000.h"
 #include "main/192E0.h"
