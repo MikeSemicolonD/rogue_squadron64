@@ -2375,7 +2375,39 @@ void setMenuObjectColorPreset(s32 arg0, s32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", createMenuTextLabels);
+typedef struct {
+    u8 pad0[0x14];
+    s32 w14;
+    u8 pad18[0x14];
+    u8 b2C;
+    u8 b2D;
+    u8 b2E;
+    s8 b2F;
+} CmElem;
+extern CmElem *cmLabel __asm__("D_menu_overlay_800CFE2C");
+extern CmElem *cmMedal __asm__("D_menu_overlay_800CFE30");
+extern s32 cmTex __asm__("D_menu_overlay_800CFE38");
+extern char strMenuMedalSh[];
+s32 cmLoadTex(char *, s32, s32, s32) __asm__("loadNamedTextureDescriptor");
+CmElem *cmField0xC(s32) __asm__("getStructField0xC");
+
+void createMenuTextLabels(s32 arg0) {
+    cmTex = cmLoadTex((u8)arg0 ? "rebel_sh" : strMenuMedalSh, 0x40, 0x40, 1);
+    cmLabel = cmField0xC(cmTex);
+    cmLabel->w14 |= 0x8C00003;
+    cmLabel->b2C = 10;
+    cmLabel->b2D = 0;
+    cmLabel->b2E = 0;
+    cmLabel->b2F = (u8)arg0 ? -1 : -0x38;
+    insertLookupEntry(rbList7C, cmLabel, 0xF);
+    cmMedal = cmField0xC(cmLoadTex(strMenuMedalSh, 0x40, 0x40, 1));
+    cmMedal->w14 |= 0x2400003;
+    cmMedal->b2C = 0;
+    cmMedal->b2D = 0;
+    cmMedal->b2E = 0;
+    *(u8 *)&cmMedal->b2F = 0xFF;
+    insertLookupEntry(rbList78, cmMedal, 0xF);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", strMenuMedalSh);
 
