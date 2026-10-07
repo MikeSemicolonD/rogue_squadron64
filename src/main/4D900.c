@@ -1200,7 +1200,51 @@ void initEffectObjectFromLevelData(s32 arg0, s32 arg1)
   }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", destroyEffectObjectAndAssets);
+extern u8 D_main_bss_80137DBC[][0x2A0];
+extern void *getLevelDatItemByName(char *);
+extern s32 D_8010C9E0;
+extern s32 D_main_8009EC10;
+void destroyNpcSlotChain(u16);
+extern void despawnCraftAnimationSlotNpcs(s32);
+extern void loadPlayerStartPosition(void *, s32);
+typedef struct { u8 pad[4]; f32 x, y, z; } DePl;
+typedef struct { u16 kind; u8 pad[0xE]; f32 x, y, z; } DeIt;
+void destroyEffectObjectAndAssets(s32 idx, char *name) {
+    u8 *player = D_main_bss_80137DBC[idx];
+    u8 *obj = D_main_bss_80138D18[idx].unk4;
+    u8 *item;
+    u8 *v;
+    u8 *str;
+    u16 kind;
+    if (*(u16 *)(obj + 0xF4) != 0xFFFF) {
+        destroyNpcSlotChain(*(u16 *)(obj + 0xF4));
+        *(u16 *)(obj + 0xF4) = 0xFFFF;
+    }
+    if (name != 0) {
+        item = getLevelDatItemByName(name);
+        str = (u8 *)(*(s32 *)(item + 0x68) + (s32)item);
+        if (*str != 0x2D && *str != 0) {
+            { register DeIt *it asm("$3") = getLevelDatItemByName((char *)str);
+            switch (it->kind) {
+            case 2:
+                ((DePl *)player)->x = it->x;
+                ((DePl *)player)->y = it->y;
+                D_8010C9E0 |= 0x80;
+                ((DePl *)player)->z = it->z;
+                return;
+            case 1:
+                despawnCraftAnimationSlotNpcs(0);
+                loadPlayerStartPosition(player, 0);
+                break;
+            case 0x26:
+                D_main_8009EC10 = (s32)str;
+                D_8010C9E0 |= 0x40;
+                return;
+            } }
+        }
+    }
+    D_8010C9E0 |= 0x80;
+}
 
 void destroyNpcSlotChain(u16);
 void deactivateEffectObject(s32 idx) {
