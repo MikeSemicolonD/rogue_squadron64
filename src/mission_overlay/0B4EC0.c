@@ -17,7 +17,95 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0B4EC0", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0B4EC0", D_mission_overlay_800A5848);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B4EC0", playerXwingInit);
+extern u8 xwCraftBytes[][0x2A0] __asm__("D_main_bss_80137DBC");
+extern s32 D_main_bss_80130B58;
+extern struct { u8 pad[0x18]; u16 unk18; u8 pad1A[0xA]; } xwHud[] __asm__("D_mission_overlay_8010BE18");
+extern f32 D_mission_overlay_8010BEA8[][0x10];
+extern void initPlayerCraftMovementMode(void *);
+s32 xwLookupMat(s32, char *, void *) __asm__("lookupHmtMaterialByName");
+s32 countTrailingZeros16(u16);
+void buildRotationMatrixFromEulerAngles(void *, f32, f32, f32);
+
+void playerXwingInit(s32 *arg0, s32 arg1, s32 arg2) {
+    u8 *p = xwCraftBytes[arg1];
+    f32 hp;
+    register f32 h asm("$f10");
+    f32 b, c, d, f, e, g, i, j, k, l, m, n, o;
+    f32 z;
+    *(s16 *)(p + 0x180) = arg2;
+    arg0[0] = arg1;
+    *(u16 *)(p + 0xB4) = 0;
+    initPlayerCraftMovementMode(p);
+    hp = 150.0f;
+    if (D_main_bss_80130B58 & 0x40) {
+        hp = 40.0f;
+    }
+    *(f32 *)(p + 0xF8) = 1.6f;
+    b = 2.625f;
+    c = 0.0625f;
+    d = 1.75f;
+    f = 15.0f;
+    e = 10.0f;
+    g = -30.0f;
+    h = 40.0f;
+    i = 60.0f;
+    j = 180.0f;
+    k = 0.75f;
+    l = 2.0f;
+    m = 20.0f;
+    n = 5.0f;
+    o = 0.1f;
+    *(f32 *)(p + 0xC0) = hp;
+    *(f32 *)(p + 0xC4) = hp;
+    *(s32 *)(p + 0x13C) = 0;
+    *(s32 *)(p + 0x14C) = 0;
+    *(s32 *)(p + 0x11C) = 0;
+    *(s32 *)(p + 0xD8) = 0;
+    *(s32 *)(p + 0xDC) = 0;
+    *(s32 *)(p + 0xE0) = 0;
+    *(s16 *)(p + 0x158) = 0;
+    *(s32 *)(p + 0x160) = 0;
+    *(f32 *)(p + 0xE8) = b;
+    *(f32 *)(p + 0xEC) = b;
+    *(f32 *)(p + 0xF0) = c;
+    *(f32 *)(p + 0xF4) = c;
+    *(f32 *)(p + 0xFC) = d;
+    *(f32 *)(p + 0x104) = f;
+    *(f32 *)(p + 0x108) = e;
+    *(f32 *)(p + 0x110) = g;
+    *(f32 *)(p + 0x114) = g;
+    *(f32 *)(p + 0x118) = h;
+    *(f32 *)(p + 0x120) = i;
+    *(f32 *)(p + 0x124) = j;
+    *(f32 *)(p + 0x130) = k;
+    *(f32 *)(p + 0x134) = l;
+    *(f32 *)(p + 0x138) = m;
+    *(f32 *)(p + 0x140) = e;
+    *(f32 *)(p + 0x144) = i;
+    *(f32 *)(p + 0x148) = e;
+    *(f32 *)(p + 0x150) = n;
+    *(f32 *)(p + 0x154) = h;
+    *(f32 *)(p + 0x128) = o;
+    *(f32 *)(p + 0x168) = 0.5f;
+    *(f32 *)(p + 0x12C) = o;
+    *(f32 *)(p + 0x164) = o;
+    *(s32 *)(p + 0x170) = 0;
+    *(f32 *)(p + 0x174) = o;
+    D_mission_overlay_8010BEA8[arg0[0]][countTrailingZeros16(xwHud[arg0[0]].unk18)] = 0.0f;
+    arg0[1] = 0;
+    arg0[2] = 0;
+    D_mission_overlay_8010BC80[arg0[0]] = 0;
+    D_mission_overlay_8010BC90[arg0[0]] = *(f32 *)&arg0[1];
+    *(f32 *)&arg0[5] = 1.0f;
+    arg0[3] = xwLookupMat(*(s32 *)p, "wngrot_a", NULL);
+    z = 0.0f;
+    arg0[4] = xwLookupMat(*(s32 *)p, "wngrot_b", NULL);
+    buildRotationMatrixFromEulerAngles((u8 *)arg0[3] + 0x1C, z, z, -10.0f);
+    buildRotationMatrixFromEulerAngles((u8 *)arg0[4] + 0x1C, z, z, e);
+    *((u8 *)arg0 + 0x19) = 0;
+    *(u16 *)((u8 *)arg0 + 0x1A) = 0xFFFF;
+    *((u8 *)arg0 + 0x18) = 0;
+}
 
 typedef struct {
     /* 0x00 */ s32 idx;
