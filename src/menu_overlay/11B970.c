@@ -1067,7 +1067,55 @@ void animateVwingThrusterMaterial(void **arg0, f32 arg1, f32 arg2, f32 arg3)
   }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateVwingTrailGeometry);
+extern u8 vtLight[] __asm__("D_menu_overlay_800CCC58");
+f32 cosf(f32);
+void normalize_vector(f32 *);
+void trackResourceListWithMappingTables(void *, void *, f32 *);
+
+void updateVwingTrailGeometry(void *arg0, f32 arg1, f32 arg2) {
+    f32 v[3];
+    f32 a;
+    u8 *L;
+    f32 f;
+    register f32 b asm("$f20");
+
+    if (arg1 > 0.05f) {
+        a = arg2 / 45.0f;
+        f = sinf(a);
+        L = vtLight;
+        *(f32 *)(L + 0x70) = f;
+        *(f32 *)(L + 0x74) = cosf(a);
+        *(f32 *)(L + 0x78) = 0.0f;
+        normalize_vector((f32 *)(L + 0x70));
+        v[0] = cosf(arg2 * 1.1f * 3.1415927f / 180.0f) * 0.4f;
+        v[1] = sinf(arg2 * 1.3f * 3.1415927f / 180.0f) * 0.4f;
+        v[2] = sinf(arg2 * 3.1415927f / 180.0f) * 0.1f + 8.0f;
+        trackResourceListWithMappingTables(lvSel->mat, (u8 *)lvTbl[0] + 0x28, v);
+        f = arg1 * 1.65f * 1.075f;
+        initVec4TripletFromArgs((u8 *)lvTbl[0] + 0x28, f, f, f);
+        b = sinf(arg2 / 39.0f);
+        f = sinf(arg2 / 67.0f);
+        a = b * 2.5f + 180.0f + f * 1.2f;
+        composeRotationMatrixSlot0((u8 *)lvTbl[0] + 0x28, a);
+        b = sinf(arg2 / 47.0f);
+        f = sinf(arg2 / 53.0f);
+        a = b * 2.5f + f * 1.1f;
+        composeRotationMatrixSlot1((u8 *)lvTbl[0] + 0x28, a);
+        composeRotationMatrixSlot2((u8 *)lvTbl[0] + 0x28, quadraticEaseInOut(arg1) * 360.0f + 180.0f);
+        addVec3At0x24((u8 *)lvTbl[0] + 0x28, 0.0f, -0.099999994f, 15.0f);
+        ((void **)arg0)[1] = L;
+        applyFlagsToMeshTreeOrList(lvTbl[0], 0, 0x20, 0x100000);
+        {
+            void *h;
+        *(void **)((u8 *)lvTbl[0] + 0xC) = h = *(void **)arg0;
+        if (h != NULL) {
+            *(void **)(*(u8 **)((u8 *)lvTbl[0] + 0xC) + 4) = (u8 *)lvTbl[0] + 0xC;
+        }
+        *(void **)((u8 *)lvTbl[0] + 0x10) = NULL;
+        *(void **)arg0 = (u8 *)lvTbl[0] + 0xC;
+        }
+    }
+}
 
 typedef struct VwTrailSlot {
     u8 pad0[4];
