@@ -1926,7 +1926,48 @@ s32 initActorAsType1(u8 *arg0, struct T1Src *arg1, f32 arg2, f32 arg3, f32 arg4,
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType1WithAnchor);
+extern void *getNpcContextField8(u16);
+extern void setupActorAnchorTransformType1(void *, void *, void *, void *, f32);
+
+u8 initActorAsType1WithAnchor(u8 *a0, u8 *arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5, f32 arg6) {
+    u8 *p = a0 + 8;
+
+    *(u8 *)(a0 + 0x112) = 1;
+    *(u8 **)(p + 0x24) = arg1;
+    *(s32 *)(p + 0x28) = 0;
+    *(s32 *)(a0 + 8) = *(s32 *)(arg1 + 0x1C);
+    *(s32 *)(p + 4) = *(s32 *)(arg1 + 0x20);
+    *(s32 *)(p + 8) = *(s32 *)(arg1 + 0x20) + *(s32 *)(arg1 + 0x1C) * 12;
+    *(s32 *)(p + 0x14) = 0;
+    *(s32 *)(p + 0x10) = 0;
+    *(s32 *)(p + 0xC) = 0;
+    *(s32 *)(p + 0x34) = 0;
+    *(s32 *)(p + 0x20) = 0;
+    *(s32 *)(p + 0x18) = 0;
+    *(f32 *)(p + 0x1C) = 1.0f;
+    *(f32 *)(p + 0x48) = arg2;
+    *(f32 *)(p + 0x50) = arg2;
+    *(f32 *)(p + 0x2C) = arg2 / *(f32 *)(arg1 + 0x24);
+    *(s32 *)(p + 0x104) = 0;
+    *(u8 *)(p + 0xFC) = 0;
+    *(u8 *)(p + 0xFE) = 0;
+    *(f32 *)(p + 0x30) = arg3 * *(f32 *)(p + 0x2C);
+    if (*(f32 *)(p + 0x30) > 1.0f) {
+        *(s32 *)(p + 0x30) = 0;
+    }
+    if (*(s32 *)(arg1 + 0x28) != 0) {
+        *(f32 *)(p + 0x40) = **(f32 **)(arg1 + 0x2C);
+    } else {
+        *(f32 *)(p + 0x40) = 10.0f;
+    }
+    *(s32 *)(p + 0x3C) = 0;
+    *(f32 *)(p + 0x44) = arg6;
+    *(s32 *)(p + 0x38) = 0;
+    setupActorAnchorTransformType1(p, arg1 + 0x10, getNpcContextField8(*(u16 *)(a0 + 0x198)), p + 0xC, *(f32 *)(p + 0x30));
+    *(s32 *)(p + 0xF4) = 0;
+    *(s32 *)(p + 0xF8) = 0;
+    return 1;
+}
 
 s32 setType1ActorVelocity(void *arg0, f32 arg1, f32 arg2, f32 arg3) {
     u8 *p;
