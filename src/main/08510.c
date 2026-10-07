@@ -3241,7 +3241,65 @@ void setRenderViewScaleFloat(f32 arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", buildAndRegisterDefaultMaterial);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", advanceVideoFrame);
+extern void clearPendingViChanges(void);
+extern void clearPostSwapPendingFlags(void);
+extern void initVideoSubsystem(s16, s16, u16, u16, s16, s32, s32, s32, s32, s32, s32, s32, s32, s32 *, u8, s32);
+extern u8 buildAndRegisterDefaultMaterial(s16, s16, s16, s16, s16, s32 *, s32, s32, u32, s32 *, s32, u32, s32, u32, u32, u8, u16, u16);
+void swapBufferWithViMode(void);
+u8 buildMaterialFreeList(void);
+extern void loadDebugAssets(s32);
+extern s32 D_main_bss_8010E008;
+
+static __inline__ void avScanWait(void) {
+    u32 i;
+    volatile u8 *pending = &D_main_bss_8011A89E;
+    s32 stateA;
+    s32 stateB;
+
+    if (*pending != 0) {
+        osRecvMesg(D_main_bss_8011A818, NULL, 1);
+        *pending = 0;
+        osYieldThread();
+    }
+    bufferArbiterMarkSlotReady();
+    if (D_main_bss_8011A89D != 0) {
+        osRecvMesg(D_main_8011A7E8, NULL, 1);
+        D_main_bss_8011A89D = 0;
+        osYieldThread();
+    }
+    D_main_bss_8011A89A = 0;
+    bufferArbiterProducerMark();
+    stateA = 3;
+    stateB = 4;
+    do {
+        i = 0;
+        waitOnVideoQueue();
+        awaitFrameSyncMesgBlock();
+        for (i = 0; i < D_main_bss_80128EAD; i++) {
+            if (D_main_bss_80128EAA[i] == stateA || D_main_bss_80128EAA[i] == stateB) {
+                break;
+            }
+        }
+        signalFrameSyncMesgNonblock();
+    } while (i != D_main_bss_80128EAD);
+}
+
+u8 advanceVideoFrame(s16 w, s16 h, u16 a, u16 b, s16 bpp, s32 *fb, s32 z, s32 e8, u32 p8, s32 *p9, s32 p10, u32 p11, s32 p12, u32 p13, u32 flags, u8 p15, u16 p16, u16 p17) {
+    avScanWait();
+    swapBufferWithViMode();
+    waitOnVideoQueue();
+    clearPendingViChanges();
+    clearPostSwapPendingFlags();
+    initVideoSubsystem(w, h, a, b, bpp, (flags >> 2) & 1, (flags >> 3) & 1, (flags >> 4) & 1, (flags >> 5) & 1, (flags >> 6) & 1, (flags >> 7) & 1, (flags >> 8) & 1, bpp >= 0x18, fb, p15, 1);
+    if (buildAndRegisterDefaultMaterial(w, h, a, b, bpp, fb, z, e8, p8, p9, p10, p11, p12, p13, flags, p15, p16, p17) == 0) {
+        return 0;
+    }
+    if (buildMaterialFreeList() == 0) {
+        return 0;
+    }
+    loadDebugAssets(D_main_bss_8010E008);
+    return 1;
+}
 
 extern void clearPendingViChanges(void);
 extern void clearPostSwapPendingFlags(void);
