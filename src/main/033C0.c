@@ -27,7 +27,109 @@ OSMesgQueue  gSIEventMesgQueue;
 OSContStatus gControllerStatuses[4];
 u8           gControllerBits[8];
 
-INCLUDE_ASM("asm/nonmatchings/main/033C0", processPolledControllerData);
+typedef struct {
+    u16 len;
+    u16 n;
+    u16 *on;
+    u16 *off;
+} RumblePattern;
+
+s32 floatToInt(f32);
+f32 getViModePeriod(void);
+
+void processPolledControllerData(void) {
+    struct D_main_80110520 *r;
+    OSContStatus *st;
+    s32 i;
+    RumblePattern *p;
+    f32 t;
+    f32 len;
+    f32 inv;
+    s32 k;
+    s32 last;
+    u8 f;
+
+    i = 0;
+    r = D_main_80110520;
+    st = gControllerStatuses;
+loop:
+        if (r->unk6B != 0) {
+            t = r->unk80;
+            len = ((RumblePattern *)r->unk70)->len;
+            if (t < len && !(r->unk6C & 2)) {
+                t = t / len;
+                t = t * ((RumblePattern *)r->unk70)->n;
+                k = floatToInt(t);
+                p = (RumblePattern *)r->unk70;
+                last = p->n - 1;
+                t = t - k;
+                if (k >= last) {
+                    r->unk78 = p->on[last];
+                    r->unk7C = ((RumblePattern *)r->unk70)->off[last];
+                } else {
+                    inv = 1.0f; inv = inv - t;
+                    r->unk78 = p->on[k] * inv + p->on[k + 1] * t;
+                    r->unk7C = ((RumblePattern *)r->unk70)->off[k] * inv + ((RumblePattern *)r->unk70)->off[k + 1] * t;
+                }
+                r->unk80 += getViModePeriod();
+            } else {
+                r->unk6B = 0;
+                r->unk84 = -1;
+                if (st->errno != 8 && st->errno != 4 && r->unk68 != 0) {
+                    if (osMotorInit(&gSIEventMesgQueue, &r->pfs, i) == 0) {
+                        osMotorStop(&r->pfs);
+                        r->unk6A = 0;
+                    } else {
+                        r->unk68 = 0;
+                        r->unk6A = 0;
+                    }
+                }
+            }
+        }
+        if (st->errno != 8 && st->errno != 4) {
+            if (r->unk68 == 0) {
+                if (r->unk69 == 0) {
+                if ((r->unk68 = (osMotorInit(&gSIEventMesgQueue, &r->pfs, i) == 0))) {
+                    r->unk6A = 0;
+                    r->unk74 = 0.0f;
+                }
+                r->unk69 = 1;
+            }
+            }
+            if (r->unk6B != 0 && r->unk68 != 0) {
+                if (r->unk74 <= 0.0f) {
+                    f = r->unk6C;
+                    if ((f & 1) && (r->unk6C = f & 0xFE, r->unk6A != 0)) {
+                        goto on;
+                    }
+                    if (r->unk6A == 0) {
+                        if (osMotorStart(&r->pfs) == 0) {
+                        on:
+                            r->unk6A = 1;
+                            r->unk74 = r->unk78;
+                        } else {
+                            goto fail;
+                        }
+                    } else if (osMotorStop(&r->pfs) == 0) {
+                        r->unk6A = 0;
+                        r->unk74 = r->unk7C;
+                    } else {
+                    fail:
+                        r->unk6C |= 2;
+                    }
+                }
+                r->unk74 -= getViModePeriod();
+            }
+        } else {
+            r->unk69 = 0;
+        }
+        r++;
+        i++;
+        st++;
+    if (i < 4) {
+        goto loop;
+    }
+}
 
 u32 startRumbleEffect(u8 arg0, UNIDENTIFIED_TYPE *arg1) {
     if (D_main_bss_80110740 == 0) {
@@ -253,5 +355,5 @@ void initSiQueue(void) {
 }
 
 INCLUDE_ASM("asm/nonmatchings/main/033C0", fake_func_8000337C);
-__asm__(".section .rodata\n.globl D_main_80000460\nD_main_80000460:\n.word 0x3F800000\n.word 0x80003318\n.word 0x00000000\n.word 0x00000000\n.section .text");
+__asm__(".section .rodata\n.word 0x80003318\n.word 0x00000000\n.word 0x00000000\n.section .text");
 
