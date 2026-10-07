@@ -1452,7 +1452,41 @@ void applyTieInterceptorSlotAnim(TieSlotAnimObj *arg0) {
     arg0->w9C = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateTieInterceptorAnimFlag);
+extern u8 D_menu_overlay_800CF048;
+
+void updateTieInterceptorAnimFlag(u8 *arg0, u8 arg1) {
+    u32 i;
+    u32 idx;
+    s32 text;
+    u8 b;
+
+    for (i = 0; i < 8; i++) {
+        if ((arg0 + i)[0x28] == 5) {
+            idx = *(u32 *)(arg0 + i * 4 + 0x74);
+            if (D_menu_overlay_800CC974[idx].unk4 == 1) {
+                b = gGameSettings.unlockAndSettingsFlags[1] & (1 << D_menu_overlay_800CC974[idx].unk6);
+                if (D_menu_overlay_800CC974[idx].unk6 == 4) {
+                    if (D_menu_overlay_800CF048 != 0) {
+                        b = 1;
+                    }
+                }
+                if (b) {
+                    text = D_menu_overlay_800CC974[idx].textB;
+                } else {
+                    text = D_menu_overlay_800CC974[idx].textA;
+                }
+            } else {
+                if (gGameSettings.unlockAndSettingsFlags[arg1] & (1 << D_menu_overlay_800CC974[idx].unk6)) {
+                    text = D_menu_overlay_800CC974[idx].textB;
+                } else {
+                    text = D_menu_overlay_800CC974[idx].textA;
+                }
+            }
+            *(char **)(arg0 + i * 4 + 8) = getGameOrFrontText(text);
+            setPlayerSlotAnimationFlag(5, *(void **)(arg0 + i * 4 + 8), (u16)i, -0x100, (s16)(*(u16 *)(arg0 + 0x96) + (i * 0x24 - arg0[0x95] * 0x12)));
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", integrateTieInterceptorPhysics);
 
