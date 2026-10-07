@@ -122,7 +122,71 @@ void playerTieInterceptorInit(TieIntHandle *h, s32 idx, s32 mode) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BC930", computeTieInterceptorTransform);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BC930", triggerTieInterceptorEffect);
+typedef struct {
+    f32 x, y, z;
+} TtV3;
+typedef struct {
+    TtV3 pos;
+    TtV3 a;
+    TtV3 b;
+    TtV3 c;
+} TtFrame;
+typedef struct {
+    u8 pad0[4];
+    u8 *p4;
+    u8 pad8[0x13C];
+} TtE;
+extern TtE ttD18[] __asm__("D_main_bss_80138D18");
+extern TtV3 D_mission_overlay_801099C4[];
+extern u8 D_mission_overlay_801099B0[];
+void lookupHmtTextureByName(s32, char *, s32, void *, void *, s32);
+void accumulateVectorInObjectFrame(void *, void *, void *);
+void normalize_vector(void *);
+f32 vec3Dot(void *, void *);
+f32 constMinusSinfApprox(f32);
+void vec3Cross(void *, void *, void *);
+void quatFromAxisAngleSafe(void *, void *, f32);
+void rotateVec3ByQuat(void *, void *, void *);
+u16 dispatchCueByCategory(s32, u16, void *, void *, s32, f32, f32);
+void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+
+void triggerTieInterceptorEffect(s32 *arg0, s32 arg1) {
+    register s32 *a0p asm("$17") = arg0;
+    register s32 a1v asm("$16") = arg1;
+    TtFrame f;
+    f32 v[4];
+    f32 ax[4];
+    f32 q[4];
+    u8 *pl;
+    f32 ang;
+
+    pl = D_main_bss_80137DBC[a0p[0]];
+    if (a1v & 2) {
+        lookupHmtTextureByName(*(s32 *)pl, "c_d", a1v & 1, &f, NULL, 0);
+    } else {
+        lookupHmtTextureByName(*(s32 *)pl, "a_b", a1v & 1, &f, NULL, 0);
+    }
+    if (*(u16 *)(ttD18[a0p[0]].p4 + 4) == 3) {
+        accumulateVectorInObjectFrame(&f, &D_mission_overlay_801099C4[a1v & 3], pl);
+        __asm__("" :: "r"(a1v));
+        if (*(u16 *)(a0p + 2) != 0xFFFF) {
+            v[0] = *(f32 *)(a0p + 3) - f.pos.x;
+            v[1] = *(f32 *)(a0p + 4) - f.pos.y;
+            v[2] = *(f32 *)(a0p + 5) - f.pos.z;
+            normalize_vector(v);
+            ang = constMinusSinfApprox(vec3Dot(&f.a, v)) * 57.295776f;
+            vec3Cross(ax, &f.a, v);
+            ang *= 0.8f;
+            quatFromAxisAngleSafe(q, ax, ang);
+            *(TtV3 *)v = f.a;
+            rotateVec3ByQuat(q, v, &f.a);
+            *(TtV3 *)v = f.b;
+            rotateVec3ByQuat(q, v, &f.b);
+        }
+    }
+    dispatchCueByCategory(2, *(u16 *)(pl + 0xB6), &f, D_mission_overlay_801099B0, 1, 12.5f, *(f32 *)(pl + 0x16C));
+    play3DSoundEvent(0, &f, pl + 0x28, 15.0f, 0.2f, 0, 0xB, 0x6E, 0x3C);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BC930", computeTieInterceptorOrientation);
 
