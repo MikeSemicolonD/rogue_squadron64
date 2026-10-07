@@ -143,7 +143,66 @@ s32 rasterizeEdgeXSpansDescending(f32 *a, f32 *b, s32 n)
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", scanConvertTriangleToSpanTable);
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", binPolygonIntoTerrainGrid);
+extern f32 D_main_bss_80136DD0;
+extern s32 D_main_bss_80132DB0;
+extern s32 D_main_bss_80132DB4;
+extern s32 D_main_bss_80132DB8;
+extern s32 D_main_bss_80132DBC;
+extern s8 D_main_bss_80130DB0[];
+extern s8 D_main_bss_80131DB0[];
+void bpScan(f32 *, f32 *, f32 *, f32) __asm__("scanConvertTriangleToSpanTable");
+
+void binPolygonIntoTerrainGrid(f32 *pts) {
+    f32 v[5][3];
+    f32 sc;
+    f32 minx, maxx, minz, maxz;
+    s32 i;
+    s32 j;
+    s32 x0;
+    s32 z0;
+    s32 f;
+
+    maxx = pts[0];
+    maxz = pts[2];
+    sc = 512.0f / D_main_bss_80136DD0;
+    minx = maxx;
+    minz = maxz;
+    for (i = 1; i < 5; i++) {
+        if (pts[i * 3] < minx) {
+            minx = pts[i * 3];
+        } else if (maxx < pts[i * 3]) {
+            maxx = pts[i * 3];
+        }
+        if (pts[i * 3 + 2] < minz) {
+            minz = pts[i * 3 + 2];
+        } else if (maxz < pts[i * 3 + 2]) {
+            maxz = pts[i * 3 + 2];
+        }
+    }
+    { s32 f = minx < 0.0f; x0 = (s32)minx - f; D_main_bss_80132DB0 = x0; }
+    { s32 f = 0.0f <= maxx; s32 t = (s32)maxx + f; D_main_bss_80132DB4 = t; }
+    { s32 f = minz < 0.0f; z0 = (s32)minz - f; D_main_bss_80132DB8 = z0; }
+    { s32 f = 0.0f <= maxz; s32 t = (s32)maxz + f; D_main_bss_80132DBC = t; }
+    for (i = 0; i < 5; i++) {
+        v[i][0] = pts[i * 3] - (f32)x0;
+        v[i][1] = pts[i * 3 + 1];
+        v[i][2] = pts[i * 3 + 2] - (f32)z0;
+    }
+    D_main_bss_80132DB4 -= D_main_bss_80132DB0;
+    D_main_bss_80132DBC -= D_main_bss_80132DB8;
+    for (j = 0; j < D_main_bss_80132DBC; j++) {
+        s32 k;
+        for (k = 0; k < D_main_bss_80132DB4; k++) {
+            D_main_bss_80130DB0[k + j * 64] = D_main_bss_80131DB0[k + j * 64] = -0x80;
+        }
+    }
+    bpScan(v[0], v[1], v[2], sc);
+    bpScan(v[0], v[2], v[3], sc);
+    bpScan(v[0], v[3], v[4], sc);
+    bpScan(v[0], v[4], v[1], sc);
+    bpScan(v[1], v[4], v[3], sc);
+    bpScan(v[3], v[2], v[1], sc);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/42AF0", streamTerrainGridCellsByDistance);
 
