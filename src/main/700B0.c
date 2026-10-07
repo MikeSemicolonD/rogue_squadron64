@@ -539,7 +539,161 @@ INCLUDE_RODATA("asm/nonmatchings/main/700B0", strILndHi);
 
 INCLUDE_RODATA("asm/nonmatchings/main/700B0", strILtsrcHi);
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", loadSfxAsset);
+typedef struct {
+    s32 w0;
+    s32 w4;
+    s32 w8;
+    u8 padC[8];
+    s16 h14;
+    s16 h16;
+    s16 h18;
+    s16 h1A;
+    s16 h1C;
+    s16 h1E;
+    s16 h20;
+    s16 h22;
+    u8 b[16];
+} SfxEnt;
+
+typedef struct {
+    s32 w0;
+    s32 w4;
+    s32 w8;
+    s32 wC;
+    void *p10;
+    s32 w14;
+    s32 w18;
+    u8 v1C[0x30];
+    s32 w4C;
+    s32 w50;
+    s32 w54;
+    s32 w58;
+    s32 w5C;
+    s32 w60;
+    s32 w64;
+    s32 w68;
+    void *p6C;
+    s32 w70;
+    s32 w74;
+    u8 pad78[0x30];
+    s32 wA8;
+    s32 wAC;
+    SfxEnt *pB0;
+    s32 wB4;
+    SfxEnt ent[7];
+} SfxState;
+
+typedef struct {
+    char *name;
+    s32 flags;
+} SfxMesh;
+
+extern SfxState D_main_8013A670;
+extern SfxMesh D_main_800A0C1C[];
+extern u8 *D_main_bss_80130C08;
+extern s32 D_main_bss_8013A894;
+extern u8 D_main_bss_8013A898;
+extern u8 *D_main_bss_8013A89C;
+extern u8 D_main_bss_80130B63;
+extern s32 gCurrentLevel;
+extern void load_hmt_and_hob(char *, s32, s32, s32);
+extern void clearVec4QuadStruct(void *);
+extern s32 clearStructPair2C30(void *);
+extern u8 isHobObjectLoaded(char *);
+extern void *lsMalloc(s32, s32) __asm__("rs_malloc");
+extern void *lsAttach __asm__("D_main_bss_8013A8A0");
+
+void loadSfxAsset(void) {
+    SfxEnt *e;
+    s32 i;
+    s32 k;
+    s32 hw;
+
+    load_hmt_and_hob("gnrc_stuff/sfx", 0, 0, 0);
+    D_main_8013A670.wC = 0;
+    D_main_8013A670.w8 = 0;
+    D_main_8013A670.w4 = 0;
+    D_main_8013A670.w0 = 0;
+    D_main_8013A670.p10 = &D_main_8013A670.w4C;
+    D_main_8013A670.w14 = 0;
+    clearVec4QuadStruct(D_main_8013A670.v1C);
+    D_main_8013A670.w58 = 0x100000;
+    D_main_8013A670.w50 = 0;
+    D_main_8013A670.w4C = 0;
+    D_main_8013A670.w54 = 0;
+    D_main_8013A670.w68 = 0;
+    D_main_8013A670.w5C = 0;
+    D_main_8013A670.w60 = 0;
+    D_main_8013A670.w64 = 0;
+    D_main_8013A670.p6C = &D_main_8013A670.wA8;
+    D_main_8013A670.w70 = 0;
+    D_main_8013A670.w74 = 0;
+    clearStructPair2C30(&D_main_8013A670.w4C);
+    D_main_8013A670.wAC = 0;
+    D_main_8013A670.wA8 = 0;
+    D_main_8013A670.pB0 = D_main_8013A670.ent;
+    D_main_8013A670.wB4 = 0;
+    hw = *(u16 *)(D_main_bss_80130C08 + 0x22) << 16;
+    for (e = D_main_8013A670.ent, i = 0; i < 7; e++, i++) {
+        e->w0 = 0x9E;
+        e->w4 = 0xD0C9005;
+        e->w8 = hw;
+        e->h14 = e->h20 = 0;
+        e->h16 = e->h1A = ((7 - i) << 12) / 7;
+        e->h1E = e->h22 = ((6 - i) << 12) / 7;
+        e->h18 = e->h1C = 0x1000;
+        e->b[0] = 0xFF;
+        e->b[1] = 0xFF;
+        e->b[2] = 0xFF;
+        e->b[3] = 0xFF;
+        e->b[4] = 0xFF;
+        e->b[5] = 0xFF;
+        e->b[6] = 0xFF;
+        e->b[7] = 0xFF;
+        e->b[8] = 0xFF;
+        e->b[9] = 0xFF;
+        e->b[10] = 0xFF;
+        e->b[11] = 0xFF;
+        e->b[12] = 0xFF;
+        e->b[13] = 0xFF;
+        e->b[14] = 0xFF;
+        e->b[15] = 0xFF;
+    }
+    D_main_bss_8013A894 = 0;
+    k = 0;
+    if (D_main_800A0C1C[0].name != NULL) {
+        do {
+            if (isHobObjectLoaded(D_main_800A0C1C[k].name)) {
+                u8 **m = dbWalk(D_main_800A0C1C[k].name);
+                *(s32 *)(*(u8 **)(*m + 0x10) + 0x18) |= D_main_800A0C1C[k].flags;
+                dbRelease(m);
+            }
+            k++;
+        } while (D_main_800A0C1C[k].name != NULL);
+    }
+    if (D_main_bss_80130B63 != 0) {
+        D_main_bss_8013A898 = 0xFF;
+    } else {
+        switch (gCurrentLevel) {
+        case 0:
+        case 4:
+        case 9:
+        case 10:
+            D_main_bss_8013A898 = 0xAA;
+            break;
+        default:
+            D_main_bss_8013A898 = 0;
+            break;
+        }
+    }
+    if (D_main_bss_8013A898 != 0) {
+        D_main_bss_8013A89C = lsMalloc(D_main_bss_8013A898, 0);
+        lsAttach = lsMalloc(D_main_bss_8013A898 * 48, 0);
+        for (i = 0; i < D_main_bss_8013A898; i++) {
+            D_main_bss_8013A89C[i] = i;
+        }
+    }
+}
 
 void buildRotationMatrixSlot0(f32 *, f32);
 void composeRotationMatrixSlot0(f32 *, f32);
