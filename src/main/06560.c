@@ -1,7 +1,97 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/06560", initMemoryPack);
+extern s32 D_main_bss_801126E0;
+extern u8 *D_main_bss_801126E4;
+typedef struct { u8 b[0x68]; } ImpPfs;
+typedef struct { u16 type; u8 status; u8 errno; } ImpCont;
+extern ImpPfs impPfs[] __asm__("D_main_bss_80112730");
+extern ImpCont *impCont __asm__("D_main_bss_801126E8");
+extern s32 (*impCb)(s32) __asm__("D_main_bss_801126F0");
+s32 osPfsInitPak(s32, void *, s32);
+s32 osPfsRepairId(void *);
+s32 osContStartQuery(s32);
+s32 osRecvMesg(s32, void *, s32);
+void osContGetQuery(void *);
+
+s32 initMemoryPack(u32 chan) {
+    s32 err;
+    s32 cont;
+
+retry:
+    err = 0;
+    if ((*D_main_bss_801126E4 >> chan) & 1) {
+        if ((impCont[chan].type & 5) == 5) {
+            switch (osPfsInitPak(D_main_bss_801126E0, &impPfs[chan], chan)) {
+            case 1:
+                osContStartQuery(D_main_bss_801126E0);
+                osRecvMesg(D_main_bss_801126E0, NULL, 1);
+                osContGetQuery(impCont);
+                if (impCont[chan].errno == 8) {
+                    goto nopak;
+                }
+                err = 1;
+                break;
+            case 2:
+                err = 7;
+                break;
+            case 4:
+                err = 9;
+                break;
+            case 10:
+                cont = 0;
+                if (impCb != NULL) {
+                    cont = impCb(8);
+                }
+                if (cont == 1) {
+                    goto retry;
+                }
+                if (cont < 2) {
+                    if (cont == 0) {
+                        goto ret0;
+                    }
+                } else if (cont == 2) {
+                    osPfsRepairId(&impPfs[chan]);
+                    goto retry;
+                }
+                break;
+            case 0:
+            ret0:
+                return 0;
+            case 11:
+                if (impCb != NULL) {
+                    impCb(0xD);
+                }
+                return 0xD;
+            }
+            cont = 0;
+            if (impCb != NULL) {
+                cont = impCb(err);
+            }
+            if (cont == 0) {
+                return err;
+            }
+            if (cont < 0) {
+                goto reterr;
+            }
+            if (cont >= 3) {
+                goto reterr;
+            }
+            goto retry;
+        }
+        if (impCb != NULL) {
+            impCb(0xC);
+        }
+        return 0xC;
+    }
+nopak:
+    if (impCb != NULL) {
+        impCb(0xB);
+    }
+    return 0xB;
+reterr:
+    return err;
+}
 
 extern s32 gSaveDataBuffer;
 extern s32 D_main_bss_801126E0;
