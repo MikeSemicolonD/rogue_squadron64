@@ -844,7 +844,125 @@ void buildEffectObjectWorldTransform(BeObj *o, f32 dt) {
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", destroyEffectObjectTypeNpcSlots);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", computeBootConfigScaledVec4);
+typedef struct {
+    u16 h0;
+    u16 h2;
+    u16 h4;
+    u16 h6;
+    s32 w8;
+    s32 player;
+    u8 pad10[0x48];
+    f32 v58[3];
+    f32 v64[3];
+    u8 pad70[4];
+    s32 key;
+    f32 v78[3];
+    f32 v84[3];
+    u8 pad90[4];
+    f32 f94;
+    u8 pad98[4];
+    f32 f9C;
+    f32 fA0;
+    u8 padA4[4];
+    f32 fA8;
+    u8 padAC[0x4C];
+} CbObj;
+typedef struct {
+    u8 pad0[0x14];
+    u16 h14;
+    u16 h16;
+    u8 pad18[8];
+    u16 h20;
+    u8 pad22[2];
+} CbBind;
+typedef struct {
+    u8 pad0[0xB8];
+    u16 hB8;
+    u8 padBA[0xCA];
+    u16 h184;
+    u8 pad186[0x11A];
+} CbPlayer;
+typedef struct { s32 pad[3]; s32 f; } CbGs;
+typedef struct { f32 x, y, z, w; } CbV4;
+extern u8 D_main_bss_80138925;
+extern u8 D_main_bss_80138926;
+extern CbBind cbBind[] __asm__("D_8010BE18");
+extern CbPlayer cbPlayers[] __asm__("gPlayers");
+extern CbObj cbObjs[][6] __asm__("D_main_bss_80138268");
+
+static __inline__ void cbStep(f32 *tgt, f32 *dst, f32 *pos, f32 k) {
+    CbV4 t;
+
+    t.x = tgt[0] - pos[0];
+    t.y = tgt[1] - pos[1];
+    t.z = tgt[2] - pos[2];
+    addScaledVec3ToVec3(dst, pos, k, &t.x);
+}
+
+void computeBootConfigScaledVec4(s32 idx, f32 a, f32 b, s32 key, f32 c, f32 d) {
+    CbV4 v;
+    CbV4 w;
+    CbObj *o;
+    s32 i;
+    s32 p;
+
+    if (D_main_bss_80138925 != 0 || D_main_bss_80138926 != 0 || D_main_bss_80137CF4 != 0) {
+        return;
+    }
+    for (i = 0; i < 6; i++) {
+        o = &cbObjs[idx][i];
+        if (!(o->h0 & 1)) {
+            continue;
+        }
+        if (o->h2 != 3) {
+            continue;
+        }
+        if (o->key != key) {
+            continue;
+        }
+        switch (o->h4) {
+        case 2:
+            o->f94 = b / 5.0f;
+            break;
+        case 3:
+            o->f94 = b;
+            break;
+        default:
+            o->f94 = a;
+            o->f9C = c * o->fA0;
+            break;
+        }
+        if ((((CbGs *)&beGs[idx])->f & 0x1000000) && (D_main_bss_80130B88[idx][0] & cbBind[idx].h20)
+            && !(cbPlayers[idx].h184 & 2) && !(*(u16 *)D_main_bss_80138D18[idx].unk4 & 0x10)) {
+            o->fA8 += d;
+            if (1.0f < o->fA8) {
+                o->fA8 = 1.0f;
+            }
+        } else {
+            o->fA8 -= d;
+            if (o->fA8 < 0.0f) {
+                o->fA8 = 0.0f;
+            }
+        }
+        p = o->player;
+        if (cbPlayers[p].hB8 == 8 && o->w8 < 2 && (D_main_bss_80130B88[p][0] & cbBind[p].h20)) {
+            o->f94 = b * 0.5f;
+            if ((D_main_bss_80130B88[o->player][0] & cbBind[o->player].h14) || (D_main_bss_80130B88[o->player][0] & cbBind[o->player].h16)) {
+                o->f94 = b;
+            }
+        }
+        v.x = 0.0f;
+        v.y = 0.0f;
+        v.z = o->v64[2];
+        __asm__("");
+        w.x = 0.0f;
+        w.y = 0.0f;
+        __asm__("");
+        w.z = o->v84[2];
+        cbStep(&v.x, o->v58, o->v64, o->fA8);
+        cbStep(&w.x, o->v78, o->v84, o->fA8);
+    }
+}
 
 typedef struct {
     s32 a;
