@@ -7,7 +7,86 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0B64C0", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0B64C0", D_mission_overlay_800A59A0);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B64C0", playerAwingInit);
+extern u8 awCraftBytes[][0x2A0] __asm__("D_main_bss_80137DBC");
+extern s32 D_main_bss_80130B58;
+extern void initPlayerCraftMovementMode(void *);
+s32 awLookupMat(s32, char *, void *) __asm__("lookupHmtMaterialByName");
+
+void playerAwingInit(s32 *arg0, s32 arg1, s32 arg2) {
+    u8 *p = awCraftBytes[arg1];
+    f32 hp;
+    f32 a, b, c, d, e, f, g, h, i, j, k, l, m, n, o;
+    *(s16 *)(p + 0x180) = arg2;
+    arg0[0] = arg1;
+    *(u16 *)(p + 0xB4) = 2;
+    initPlayerCraftMovementMode(p);
+    hp = 75.0f;
+    if (D_main_bss_80130B58 & 0x40) {
+        hp = 40.0f;
+    }
+    a = 0.046875f;
+    b = 3.0f;
+    c = 0.03125f;
+    d = 1.6f;
+    e = 1.8f;
+    f = 15.0f;
+    g = 10.0f;
+    h = -40.0f;
+    i = -38.23f;
+    j = 40.0f;
+    k = 65.0f;
+    l = 180.0f;
+    m = 0.75f;
+    n = 2.0f;
+    o = 0.1f;
+    *(f32 *)(p + 0xC0) = hp;
+    *(f32 *)(p + 0xC4) = hp;
+    *(s32 *)(p + 0x13C) = 0;
+    *(s32 *)(p + 0x14C) = 0;
+    *(s32 *)(p + 0x11C) = 0;
+    *(s32 *)(p + 0xD8) = 0;
+    *(s32 *)(p + 0xDC) = 0;
+    *(s32 *)(p + 0xE0) = 0;
+    *(s16 *)(p + 0x158) = 0;
+    *(f32 *)(p + 0xE8) = b;
+    *(f32 *)(p + 0xEC) = b;
+    *(f32 *)(p + 0xF0) = a;
+    *(f32 *)(p + 0xF4) = c;
+    *(f32 *)(p + 0xF8) = d;
+    *(f32 *)(p + 0xFC) = e;
+    *(f32 *)(p + 0x104) = f;
+    *(f32 *)(p + 0x108) = g;
+    *(f32 *)(p + 0x110) = h;
+    *(f32 *)(p + 0x114) = i;
+    *(f32 *)(p + 0x118) = j;
+    *(f32 *)(p + 0x120) = k;
+    *(f32 *)(p + 0x124) = l;
+    *(f32 *)(p + 0x130) = m;
+    *(f32 *)(p + 0x134) = n;
+    *(f32 *)(p + 0x138) = 20.0f;
+    *(f32 *)(p + 0x140) = g;
+    *(f32 *)(p + 0x144) = 60.0f;
+    *(f32 *)(p + 0x148) = g;
+    *(f32 *)(p + 0x150) = 5.0f;
+    *(f32 *)(p + 0x154) = 50.0f;
+    *(f32 *)(p + 0x128) = o;
+    *(f32 *)(p + 0x12C) = o;
+    *(u8 *)((u8 *)arg0 + 0x48) = 0;
+    *(s32 *)(p + 0x160) = 0;
+    *(f32 *)(p + 0x164) = o;
+    *(f32 *)(p + 0x168) = 0.4f;
+    *(s32 *)(p + 0x170) = 0;
+    *(f32 *)(p + 0x174) = o;
+    arg0[3] = awLookupMat(*(s32 *)p, "f_trns_l", arg0 + 1);
+    arg0[4] = awLookupMat(*(s32 *)p, "f_trns_r", arg0 + 2);
+    arg0[7] = awLookupMat(*(s32 *)p, "rot_b", arg0 + 5);
+    arg0[8] = awLookupMat(*(s32 *)p, "rot_a", arg0 + 6);
+    arg0[0xB] = awLookupMat(*(s32 *)p, "l_gn_trn", arg0 + 9);
+    arg0[0xC] = awLookupMat(*(s32 *)p, "r_gn_trn", arg0 + 0xA);
+    *(u16 *)((u8 *)arg0 + 0x34) = 0xFFFF;
+    arg0[0xE] = 0;
+    arg0[0xF] = 0;
+}
 
 typedef struct {
     s32 unk0;
