@@ -1800,7 +1800,61 @@ void controllerSettingsScreen(u8 *arg0, s32 arg1) {
     setMenuOverlayHeaderState(2, 0x200, 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", easeT16AnimationKeyframe);
+extern s32 D_main_bss_8013889C;
+f32 quadraticEaseInOut(f32);
+void activateAnimationKeyframe(s32, s32, u8);
+
+void easeT16AnimationKeyframe(void **arg0, u8 *arg1, f32 arg2) {
+    u8 v;
+    u8 w;
+    u32 i;
+    u8 *p;
+    u8 *q;
+    u8 *n;
+    void *head;
+
+    if (arg2 > 0.05f) {
+        if (arg2 < 1.0f) {
+            v = (u32)(quadraticEaseInOut(arg2) * 0.35f * 255.0f);
+            w = (u32)(quadraticEaseInOut(arg2) * 0.65f * 255.0f);
+            i = 0;
+            do {
+                p = arg1 + i * 0x1B8;
+                q = p + 0x124;
+                q[0x33] = v;
+                q[0x2F] = v;
+                q[0x2B] = v;
+                q[0x27] = v;
+                q = p + 0xF0;
+                q[0x33] = w;
+                q[0x2F] = w;
+                q[0x2B] = w;
+                q[0x27] = w;
+                if ((D_main_bss_8013889C + i) & 1) {
+                    *(u32 *)(p + 0x90) |= 0x20;
+                }
+                i++;
+            } while (i < 0xE);
+        }
+    }
+    i = 0;
+    if (arg2 > 0.05f) {
+        do {
+            p = arg1 + i * 0x1B8;
+            head = *arg0;
+            n = p + 0x38;
+            *(void **)(p + 0x38) = head;
+            if (head != 0) {
+                *(u8 **)((u8 *)head + 4) = n;
+            }
+            *(s32 *)(n + 4) = 0;
+            *arg0 = n;
+            __asm__("" :: "r"(n));
+            i++;
+        } while (i < 0xE);
+    }
+    activateAnimationKeyframe(8, 0, (u8)(u32)(arg2 * 254.0f));
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", allocT16EffectContext);
 
