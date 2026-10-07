@@ -533,7 +533,103 @@ compute:
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", renderRadarSweep);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", renderRadarMinimap);
+typedef struct { u16 idx; u8 a, b, c, d; } RmBlip;
+typedef struct { s32 w[12]; } RmMat;
+typedef struct {
+    u8 grid[0x800];
+    u8 pad800[0x58];
+    u16 h858;
+    u8 pad85A[2];
+    s16 h85C;
+    s16 h85E;
+    RmMat m860;
+    u8 pad890[0x1C];
+    RmMat m8AC;
+    u8 pad8DC[0x24];
+    void *p900;
+    u8 pad904[0x44];
+    u8 b948[0x58];
+    u8 b9A0[0x298];
+    RmBlip blips[0x2A];
+    u8 padD34[0x84];
+    u16 hDB8;
+    u8 padDBA[0x16];
+    u8 bDD0;
+} RmState;
+typedef struct { u8 pad[4]; u16 h4; } RmCam;
+extern RmCam *D_main_bss_80138D1C;
+extern struct { u8 pad[0xC]; u32 wC; } rmGS __asm__("gGameSettings");
+extern u16 D_main_bss_80137F3C;
+extern f32 D_mission_overlay_8010BFDC;
+f32 *rmCraft(s32) __asm__("getPlayerCraftRecordByIdx");
+void plotRadarBlipRow(u8 *, s32);
+void rmCopyMat(void *) __asm__("copyCurrentObjectMatrix");
+f32 getConfigFloatValue(void);
+u8 rmFunc(void) __asm__("func_mission_overlay_800FEECC");
+u8 rmSecCnt(void) __asm__("getHudSecondaryWeponCount");
+void rmUpdAnim(void *, f32 *, f32, f32, f32) __asm__("updateCraftSelectAnimState");
+void rmFind(void *, f32 *, f32 *, f32) __asm__("findClosestRadarContactAndSetSweep");
+void renderRadarSweep(void *, f32 *, f32, f32);
+void placeRadarDots(void *, f32 *);
+s32 findMatchingTextureRecursive(u16, void *, void *, s32);
+
+void renderRadarMinimap(RmState *r) {
+    f32 *c;
+    s32 i;
+    s32 x;
+    s32 z;
+    u16 idx;
+    f32 len;
+    f32 range;
+
+    c = rmCraft(0);
+    for (i = r->hDB8 - 1; i >= 0; i--) {
+        idx = r->blips[i].idx;
+        r->grid[idx] = r->blips[i].a;
+        r->grid[(idx + 1) & 0x7FF] = r->blips[i].b;
+        r->grid[(idx + 0x20) & 0x7FF] = r->blips[i].c;
+        r->grid[(idx + 0x21) & 0x7FF] = r->blips[i].d;
+    }
+    r->hDB8 = 0;
+    x = c[0] * 0.5f;
+    z = c[2] * 0.5f;
+    if (x != r->h85C || z != r->h85E) {
+        if (z < r->h85E) {
+            plotRadarBlipRow((u8 *)r, r->h85E - 16);
+            r->h85E--;
+        } else if (r->h85E < z) {
+            plotRadarBlipRow((u8 *)r, r->h85E + 16);
+            r->h85E++;
+        }
+        if (x < r->h85C) {
+            plotRadarBlipColumn(r, r->h85C - 16);
+            r->h85C--;
+        } else if (r->h85C < x) {
+            plotRadarBlipColumn(r, r->h85C + 16);
+            r->h85C++;
+        }
+    }
+    __asm__ volatile("sqrt.s %0, %1" : "=f"(len) : "f"(c[3] * c[3] + c[5] * c[5]));
+    if (D_main_bss_80138D1C->h4 != 3 || !(rmGS.wC & 0x10) || r->bDD0 == 0) {
+        r->p900 = r->b948;
+        r->m8AC = r->m860;
+        range = D_mission_overlay_8010BFDC;
+    } else {
+        rmCopyMat(&r->m8AC);
+        r->p900 = r->b9A0;
+        if ((rmGS.wC & 0x10) && !(D_main_bss_80137F3C & 0x100) && getConfigFloatValue() == 0.0f
+            && (!rmFunc() || !rmSecCnt())) {
+            range = 1.0f;
+        } else {
+            range = 0.0f;
+        }
+    }
+    rmUpdAnim(r, c, c[3] / len, c[5] / len, range);
+    rmFind(r, c, c + 3, range);
+    renderRadarSweep(r, c, c[3] / len, c[5] / len);
+    placeRadarDots(r, c);
+    findMatchingTextureRecursive(r->h858, r->grid + 0x800, r->grid + 0x824, 0);
+}
 
 extern u8 D_mission_overlay_80109FE4[];
 extern u16 D_mission_overlay_8010BFF0[];
