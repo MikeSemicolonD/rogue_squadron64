@@ -1926,7 +1926,102 @@ s32 wkImpl(u8 *npc, u16 action, void *arg2) {
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D2D4);
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnGatedDistanceEffectPair);
+typedef struct {
+    u8 *parent;
+    s32 unk4;
+    void *unk8;
+    void *unkC;
+    f32 unk10;
+    f32 unk14;
+    f32 unk18;
+    f32 unk1C;
+    f32 unk20;
+    f32 unk24;
+    f32 unk28;
+    s16 unk2C;
+} SgWake;
+
+extern f32 sgNext __asm__("D_main_bss_8013A8B8");
+extern ExplColor D_main_8003D2D4;
+extern u8 D_main_800A0D70[];
+extern void npcWakeUpdate(void);
+
+void spawnGatedDistanceEffectPair(s16 arg0, u8 *arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5, f32 arg6, s32 arg7, f32 arg8) {
+    SgWake args;
+    ExplosionArgs ea;
+    ExplColor colA;
+    ExplColor colB;
+    f32 pos[3];
+    Vec3f d;
+    u8 *cam;
+    f32 dist;
+    f32 sc;
+    s32 count;
+    s32 i;
+    f32 x;
+    f32 z;
+    f32 ground;
+
+    if (D_main_bss_8013A944 != 0 && !(D_main_bss_80130BA4 < sgNext)) {
+        sgNext = D_main_bss_80130BA4 + 0.13333334f;
+        if (arg5 > 0.0f && vec3Length((f32 *)(arg1 + 0x24)) > 0.0f) {
+            if (!wsBlocked(((f32 *)arg1)[0], ((f32 *)arg1)[2], D_main_bss_80138058)) {
+                args.unk8 = args.unkC = D_main_bss_80139920;
+            } else {
+                args.unk8 = D_main_800A0D70;
+                args.unkC = 0;
+            }
+            args.parent = arg1;
+            args.unk14 = arg5;
+            args.unk18 = arg3;
+            args.unk2C = arg0;
+            args.unk1C = arg4;
+            args.unk4 = arg7;
+            args.unk24 = arg8;
+            args.unk20 = 1.0f / arg6;
+            args.unk28 = 0.3f;
+            args.unk10 = arg2 * 0.5f;
+            spawnNpcOfType(npcWakeUpdate, &args, 2, 15);
+        }
+        if (gCurrentLevel == 0xD) {
+            colA = D_main_8003D2D4;
+            cam = D_main_bss_80138D1C + 0x28;
+            colB = D_main_8003D224;
+            d[0] = ((f32 *)arg1)[0] - *(f32 *)(cam + 0x24);
+            d[1] = ((f32 *)arg1)[1] - *(f32 *)(cam + 0x28);
+            d[2] = ((f32 *)arg1)[2] - *(f32 *)(cam + 0x2C);
+            dist = vec3Length(d) / 2.5f;
+            sc = dist * 0.05f;
+            if (dist > 0.0f) {
+                count = 7.0f / dist;
+            } else {
+                count = 1;
+            }
+            if (count >= 8) {
+                count = 7;
+            }
+            x = ((f32 *)arg1)[0];
+            pos[0] = x;
+            z = ((f32 *)arg1)[2];
+            pos[2] = z;
+            ground = wrapAngleToCyclicRange(x, z, D_main_bss_80138058, 0);
+            i = 0;
+            ea.pos = pos;
+            ea.id = 0xFFFF;
+            ea.colorA = &colA;
+            pos[1] = ground;
+            ea.colorB = &colB;
+            for (; i < count; i++) {
+                ea.scale = sc + ((f32)(randX() & 0x7F) - 64.0f) / 1280.0f;
+                if (ea.scale <= 0.0f) {
+                    ea.scale = 0.001f;
+                }
+                spawnNpcOfType((void *)explosionEffectNpcHandler, &ea, 1, 10);
+            }
+            distanceAndDopplerNpcHelper(pos, 0.1f, 0.5f);
+        }
+    }
+}
 
 typedef struct {
     f32 unk0;
