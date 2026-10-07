@@ -3,7 +3,130 @@
 #include "common_types.h"
 #include "mission_overlay/0BAFF0.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BAFF0", playerFalconInit);
+typedef struct {
+    s32 f00;
+    f32 f04;
+} FalconInitArg;
+
+typedef struct {
+    s32 f00;
+    u8 p04[0xB4 - 4];
+    s16 fB4;
+    u8 pB6[0xC0 - 0xB6];
+    f32 fC0;
+    f32 fC4;
+    u8 pC8[0xD8 - 0xC8];
+    s32 fD8;
+    s32 fDC;
+    s32 fE0;
+    u8 pE4[4];
+    f32 fE8;
+    f32 fEC;
+    f32 fF0;
+    f32 fF4;
+    f32 fF8;
+    f32 fFC;
+    u8 p100[4];
+    f32 f104;
+    f32 f108;
+    u8 p10C[4];
+    f32 f110;
+    f32 f114;
+    f32 f118;
+    s32 f11C;
+    f32 f120;
+    f32 f124;
+    f32 f128;
+    f32 f12C;
+    f32 f130;
+    f32 f134;
+    f32 f138;
+    s32 f13C;
+    f32 f140;
+    f32 f144;
+    f32 f148;
+    s32 f14C;
+    f32 f150;
+    f32 f154;
+    s16 f158;
+    u8 p15A[6];
+    s32 f160;
+    f32 f164;
+    f32 f168;
+    u8 p16C[4];
+    s32 f170;
+    f32 f174;
+    u8 p178[8];
+    s16 f180;
+    u8 p182[0x2A0 - 0x182];
+} FalconInitPlayer;
+
+extern FalconInitPlayer gFalconInitPlayers[] __asm__("D_main_bss_80137DBC");
+extern u32 D_main_bss_80130B58;
+void initPlayerCraftMovementMode(FalconInitPlayer *);
+typedef struct {
+    u8 p00[0x18];
+    u16 f18;
+    u8 p1A[0x24 - 0x1A];
+} FalconCueRec;
+extern FalconCueRec Dfcr8010BE18[] __asm__("D_mission_overlay_8010BE18");
+extern s32 D_mission_overlay_8010BEA8[][16];
+s32 countTrailingZeros16(u16);
+void bindFalconSubmodelMaterials(FalconInitPlayer *, FalconInitArg *);
+
+
+void pfImpl(FalconInitArg *, s32, s16) __asm__("playerFalconInit");
+void pfImpl(FalconInitArg *arg0, s32 arg1, s16 arg2) {
+    FalconInitPlayer *p;
+    f32 fs5;
+
+    p = &gFalconInitPlayers[arg1];
+    p->f180 = arg2;
+    arg0->f00 = arg1;
+    p->fB4 = 5;
+    initPlayerCraftMovementMode(p);
+    fs5 = 400.0f;
+    if (D_main_bss_80130B58 & 0x40) {
+        fs5 = 40.0f;
+    }
+    p->fC0 = fs5;
+    p->fC4 = fs5;
+    p->fE8 = 3.0f;
+    p->fEC = 3.0f;
+    arg0->f04 = 1.0f;
+    p->fF0 = 0.0625f;
+    p->fF4 = 0.03125f;
+    p->fF8 = 1.3f;
+    p->fFC = 2.0f;
+    p->f104 = 15.0f;
+    p->f108 = 10.0f;
+    p->f14C = p->f13C = 0;
+    p->f110 = -30.0f;
+    p->f114 = -45.0f;
+    p->f118 = 40.0f;
+    p->f120 = 60.0f;
+    p->f124 = 180.0f;
+    p->f130 = 0.75f;
+    p->f134 = 2.0f;
+    p->f138 = 20.0f;
+    p->f140 = 10.0f;
+    p->f144 = 60.0f;
+    p->f148 = 10.0f;
+    p->f154 = 40.0f;
+    p->f11C = 0;
+    p->f128 = 0.1f;
+    p->f12C = 0.1f;
+    p->fE0 = p->fDC = p->fD8 = 0;
+    p->f158 = 0;
+    p->f150 = 5.0f;
+    p->f160 = 0;
+    p->f164 = 0.1f;
+    p->f170 = 0;
+    p->f174 = 0.1f;
+    p->f168 = 0.5f;
+    D_mission_overlay_8010BEA8[arg0->f00][countTrailingZeros16(Dfcr8010BE18[arg0->f00].f18)] = 0;
+    bindFalconSubmodelMaterials(p, arg0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BAFF0", computeFalconFlightTransform);
 
