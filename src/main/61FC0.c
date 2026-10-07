@@ -266,7 +266,37 @@ INCLUDE_ASM("asm/nonmatchings/main/61FC0", startPlayerSlotAnimationChannelExt);
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", startPlayerSlotAnimationChannel);
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", advancePlayerAnimationPhase);
+typedef struct {
+    u8 b0;
+    s8 speed;
+    u8 pad2[2];
+    f32 pos;
+    u8 b8;
+    u8 b9;
+    u8 padA[4];
+    u8 bE;
+} ApAnim;
+
+void activateAnimationKeyframe(s32, s32, u8);
+
+void advancePlayerAnimationPhase(ApAnim *a, f32 scale, f32 dt) {
+    f32 z;
+    if (a->speed != 0) {
+        a->pos += (f32)(a->speed * a->bE) * dt * 30.0f;
+        z = 0.0f;
+        if (a->pos < z || 255.0f < a->pos) {
+            a->speed = 0;
+            if (a->pos < z) {
+                a->pos = z;
+            }
+            if (255.0f < a->pos) {
+                a->pos = 255.0f;
+            }
+        }
+    }
+    activateAnimationKeyframe(a->b8, a->b9, (u32)(scale * (255.0f - a->pos)));
+    activateAnimationKeyframe(a->b8, a->b9 + 1, (u32)(scale * a->pos));
+}
 
 __asm__(".section .rodata\n.globl D_main_8003B764\nD_main_8003B764:\n.word 0x00000000\n.section .text");
 
