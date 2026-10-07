@@ -207,7 +207,94 @@ s32 setVoiceMixByKey(s32 arg0, s8 arg1, s8 arg2, s8 arg3, u8 arg4) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", serviceVoicePoolFrame);
+extern u64 osGetTime(void);
+extern void svpStream(void *) __asm__("serviceStreamingVoice");
+extern void advanceVoiceStateToPlaying(void *);
+extern s32 startStreamedSampleVoice(s32, s32, s32, s32, s32, s32, s32, s32, void *, s32);
+extern void stopStreamedVoice(s32);
+extern s32 accumulateVoiceSampleOffset(s32, s32, s32, s32, s32);
+extern f32 D_main_8003DF00;
+extern f64 D_main_8003DF08;
+extern u32 D_main_bss_8015466C;
+extern u32 D_main_bss_80154678;
+extern u32 D_main_bss_80154680;
+extern u8 D_main_bss_80154621[];
+extern u8 D_main_bss_80154622[];
+extern u8 D_main_bss_80154623[];
+extern u8 D_main_bss_80154624[];
+extern u8 D_main_bss_80154639[];
+extern s32 D_main_bss_80154630[];
+extern s32 D_main_bss_80154634[];
+extern s32 D_main_bss_8015463C[];
+extern f32 D_main_bss_80154640[];
+extern u16 D_main_bss_801545C0[];
+
+#define SVA(T, K) (*(T *)((u8 *)D_main_80153420 + (K) + off))
+void serviceVoicePoolFrame(void) {
+    s32 i;
+    s32 off;
+    u8 *v;
+
+    if (speechFileLoaded) {
+        lockSpeechVoices();
+        i = 0;
+        D_main_bss_8015466C = osGetTime();
+        for (; i < 1; i++) {
+            off = i * 0x1228;
+            if (*(volatile u8 *)((u8 *)D_main_bss_80154620 + off) == 0) {
+                continue;
+            }
+            v = (u8 *)D_main_80153420 + off;
+            svpStream(v);
+            switch (*(volatile u8 *)((u8 *)D_main_bss_80154620 + off)) {
+            case 1:
+                if (SVA(u8, 0x11DD) == 2) {
+                    s32 r = SVA(s32, 0x1208);
+                    f64 d = r;
+                    f32 x;
+                    x = (f32)*(u16 *)((u8 *)D_main_bss_801545C0 + off) * D_main_8003DF00;
+                    if (r < 0) {
+                        d += D_main_8003DF08;
+                    }
+                    *(s32 *)((u8 *)D_main_bss_8015463C + off) = 0;
+                    *(volatile u8 *)((u8 *)D_main_bss_80154620 + off) = 2;
+                    *(f32 *)((u8 *)D_main_bss_80154640 + off) = x / (f32)d;
+                    advanceVoiceStateToPlaying(v);
+                    *(s32 *)&v[0x120C] = startStreamedSampleVoice(
+                        D_main_bss_80154624[off], *(s32 *)((u8 *)D_main_bss_80154630 + off),
+                        *(s32 *)((u8 *)D_main_bss_80154634 + off), SVA(s32, 0x1208),
+                        D_main_bss_80154621[off], D_main_bss_80154622[off], D_main_bss_80154623[off],
+                        D_main_bss_80154639[off], accumulateVoiceSampleOffset, i);
+                    if (*(s32 *)&v[0x120C] == -1) {
+                        stopVoice(v);
+                        *(volatile u8 *)((u8 *)D_main_bss_80154620 + off) = 0;
+                    }
+                }
+                break;
+            case 2:
+                if (SVA(u8, 0x11DD) == 4) {
+                    *(volatile u8 *)((u8 *)D_main_bss_80154620 + off) = 3;
+                    SVA(u8, 0x1218) = 4;
+                }
+                break;
+            case 3:
+                if (SVA(u8, 0x1218) == 0) {
+                    *(volatile u8 *)((u8 *)D_main_bss_80154620 + off) = 0;
+                } else {
+                    if (SVA(u8, 0x1218) == 2) {
+                        stopStreamedVoice(SVA(s32, 0x120C));
+                        SVA(s32, 0x120C) = -1;
+                    }
+                    v[0x1218] = SVA(u8, 0x1218) - 1;
+                }
+                break;
+            }
+        }
+        D_main_bss_80154680 = osGetTime();
+        D_main_bss_80154678 = D_main_bss_80154680 - D_main_bss_8015466C;
+        unlockSpeechVoices();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/9BB60", getVoicePlaybackProgressByKey);
 
