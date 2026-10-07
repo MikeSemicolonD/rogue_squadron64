@@ -338,7 +338,56 @@ SxAnim *startPlayerSlotAnimationChannelExt(u16 slot, s32 text, u16 b, u16 ch, s1
     return a;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", startPlayerSlotAnimationChannel);
+typedef struct {
+    u8 b0;
+    s8 speed;
+    u8 pad2[2];
+    f32 pos;
+    u8 b8;
+    u8 b9;
+    u16 hA;
+    u16 hC;
+    u8 bE;
+    u8 padF;
+    s32 w10;
+    void *w14;
+} SpAnim;
+
+static __inline__ struct ui_element *spFlag(u16 slot, s32 arg1, u16 idx, s16 arg3, s16 arg4) {
+    struct someFontThing *t;
+    struct ui_element *e;
+    u8 *s2;
+
+    t = D_main_8009FC10[slot];
+    t->unk030 |= 1 << idx;
+    t->unk084[idx] = t->unk01F;
+    s2 = (u8 *)t + (idx * 4);
+    e = t->unk034[idx];
+    e->xy_offset_pointer = (void *)((u8 *)t->unk0EC + (*(u16 *)&t->unk0E8 * idx * 4));
+    e->texture_id_pointer = (void *)((u8 *)t->unk0F0 + (*(u16 *)&t->unk0E8 * idx * 2));
+    measurePlayerSlotTextLayout(slot, e, *(u16 *)&t->unk0E8, arg1, arg3, arg4);
+    if (t->unk0F4 != NULL) {
+        setLookupEntryField5ByKey(t->unk0F4, t->unk034[idx], e->texture_count != 0);
+    }
+    if (t->unk01F == 0) {
+        e->flags |= 1;
+    }
+    *(s16 *)(s2 + 0x98) = arg3;
+    *(s16 *)(s2 + 0x9A) = arg4;
+    return t->unk034[idx];
+}
+
+u8 startPlayerSlotAnimationChannel(SpAnim *a, s32 text) {
+    a->b0 = 1 - a->b0;
+    spFlag(a->b8, text, a->b0 + a->b9, a->hA, a->hC);
+    spFlag(a->b8, a->w10, a->b9 - (a->b0 - 1), a->hA, a->hC);
+    if (a->speed != 0) {
+        a->pos = (a->speed != -1) ? 255.0f : 0.0f;
+    }
+    a->speed = (a->pos == 255.0f) ? -1 : 1;
+    a->w10 = text;
+    return a->b0 + a->b9;
+}
 
 typedef struct {
     u8 b0;
