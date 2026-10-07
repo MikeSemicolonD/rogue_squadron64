@@ -285,7 +285,70 @@ void pwImpl(PwState *e, f32 dt) {
     { f32 t = e->f14; computeBootConfigScaledVec4(e->idx, k, k, D_main_bss_8013800C + e->idx * 0x2A0, t, dt); }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B4EC0", playerXwingFireBlaster);
+typedef struct {
+    f32 x, y, z;
+} XfV3;
+typedef struct {
+    XfV3 pos;
+    XfV3 a;
+    XfV3 b;
+    XfV3 c;
+} XfFrame;
+typedef struct {
+    u8 pad0[4];
+    u8 *p4;
+    u8 pad8[0x13C];
+} XfE;
+extern u8 xfCraftBytes[][0x2A0] __asm__("D_main_bss_80137DBC");
+extern XfE xfD18[] __asm__("D_main_bss_80138D18");
+extern XfV3 xfVecs[] __asm__("D_mission_overlay_801097C4");
+extern u8 xfCues[] __asm__("D_mission_overlay_80109730");
+void xfLookupHmt(s32, char *, s32, void *, void *, s32) __asm__("lookupHmtTextureByName");
+void xfAccum(void *, void *, void *) __asm__("accumulateVectorInObjectFrame");
+void xfNormalize(void *) __asm__("normalize_vector");
+f32 xfDot(void *, void *) __asm__("vec3Dot");
+f32 xfSinApprox(f32) __asm__("constMinusSinfApprox");
+void xfCross(void *, void *, void *) __asm__("vec3Cross");
+void xfQuat(void *, void *, f32) __asm__("quatFromAxisAngleSafe");
+void xfRotate(void *, void *, void *) __asm__("rotateVec3ByQuat");
+u16 xfCue(s32, u16, void *, void *, s32, f32, f32) __asm__("dispatchCueByCategory");
+
+void xfImpl(s32 *arg0, u32 arg1, XfV3 *out) __asm__("playerXwingFireBlaster");
+void xfImpl(s32 *arg0, u32 arg1, XfV3 *out) {
+    XfFrame f;
+    f32 v[4];
+    f32 ax[4];
+    f32 q[4];
+    u8 *pl;
+    f32 ang;
+
+    pl = xfCraftBytes[arg0[0]];
+    xfLookupHmt(*(s32 *)pl, (arg1 & 2) ? "b" : "a", arg1 & 1, &f, NULL, 0);
+    if (*(u16 *)(xfD18[arg0[0]].p4 + 4) == 3) {
+        xfAccum(&f, &xfVecs[arg1], pl);
+    }
+    if (*(u16 *)((u8 *)arg0 + 0x1A) != 0xFFFF) {
+        v[0] = *(f32 *)(arg0 + 7) - f.pos.x;
+        v[1] = *(f32 *)(arg0 + 8) - f.pos.y;
+        v[2] = *(f32 *)(arg0 + 9) - f.pos.z;
+        xfNormalize(v);
+        ang = xfSinApprox(xfDot(&f.a, v)) * 57.295776f;
+        xfCross(ax, &f.a, v);
+        if (*(u16 *)(xfD18[arg0[0]].p4 + 4) != 3) {
+            xfQuat(q, ax, ang * 0.4f);
+        } else {
+            xfQuat(q, ax, ang * 0.8f);
+        }
+        *(XfV3 *)v = f.a;
+        xfRotate(q, v, &f.a);
+        *(XfV3 *)v = f.b;
+        xfRotate(q, v, &f.b);
+    }
+    xfCue(0, *(u16 *)(pl + 0xB6), &f, xfCues, 1, 12.5f, *(f32 *)(pl + 0x16C));
+    if (out != NULL) {
+        *out = f.pos;
+    }
+}
 
 typedef struct {
     /* 0x00 */ s32 idx;
