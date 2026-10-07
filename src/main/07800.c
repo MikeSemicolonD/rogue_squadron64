@@ -18,7 +18,46 @@ s32 returnTrueServiceStub(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/07800", registerServiceWorker);
+void *rs_malloc(s32, s32);
+u32 registerServiceWorker(u16 arg0, s32 arg1, u8 arg2, void (*arg3)(void *)) {
+    s32 size;
+    struct D_801128D0_type *w;
+    struct D_801128D0_type *p;
+    u32 stackSize;
+    u32 sp;
+    u32 *e;
+
+    { s32 t = ((u32)(arg1 + 0x20) >> 3) * 8; size = arg0 * 4; t += 0x1F0; size += t; }
+    w = rs_malloc(size, 0x81);
+    w->unk005 = 1;
+    w->threadStackSize = ((u32)(arg1 + 7) >> 3) * 8;
+    w->threadStackPointer = (u32 *)(((u32)((u8 *)w + size - 8) >> 3) * 8);
+    w->mesg = (OSMesg *)((u8 *)w + 0x1F0);
+    w->next = NULL;
+    w->entry = arg3;
+    w->mesgCount = arg0;
+    w->theadId = ++gServiceWorkerNextId;
+    w->threadStackEnd = e = (u32 *)((u8 *)w->threadStackPointer - w->threadStackSize);
+    w->threadPrio = arg2;
+    *e = 0xCDCDCDCD;
+    w->threadStackEnd[1] = 0xCDCDCDCD;
+    if (w->mesgCount != 0) {
+        osCreateMesgQueue(&w->mq, w->mesg, w->mesgCount);
+    }
+    osCreateThread(&w->thread, w->theadId, w->entry, w, w->threadStackPointer, w->threadPrio);
+    if (D_main_801128D0 == NULL) {
+        D_main_801128D0 = w;
+    } else {
+        p = D_main_801128D0;
+        if (p->next != NULL) {
+            do {
+                p = p->next;
+            } while (p->next != NULL);
+        }
+        p->next = w;
+    }
+    return w->theadId;
+}
 
 s32 startServiceWorker(OSId arg0) {
     struct D_801128D0_type *var_a0;
