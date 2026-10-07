@@ -338,7 +338,81 @@ s32 subscribeEventHandler(s32 *arg0) {
 
 INCLUDE_ASM("asm/nonmatchings/main/04080", processAssetLoadStep);
 
-INCLUDE_ASM("asm/nonmatchings/main/04080", mainEventQueueWorker);
+s32 processAssetLoadStep(u8 *);
+extern s32 sendServiceMessage(s32, s32, void *, s32);
+
+void mqImpl(OSId *arg0) __asm__("mainEventQueueWorker");
+void mqImpl(OSId *arg0) {
+    s32 a;
+    u8 b;
+    u8 busy;
+    s32 r;
+    struct D_80110D60_type *e;
+    s32 i;
+
+    {
+        struct D_80110D60_type *p;
+        i = 7;
+        p = &D_main_bss_80110D60[i];
+        do {
+            p->unk01 = 0;
+            p--;
+        } while (--i >= 0);
+    }
+    busy = 0;
+    D_main_bss_80111244 = 0;
+    D_main_bss_80111248 = 0;
+    D_main_bss_80111250 = 8;
+    D_main_bss_8011124C = 8;
+    D_main_bss_80111240 = 0;
+    while (1) {
+        if (busy == 0) {
+            busy = 1;
+            pushEventToRingBuffer(recvServiceMessage(*arg0));
+            continue;
+        }
+        {
+            union D_80111100_type *m = tryRecvServiceMessage(*arg0);
+            if (m != NULL) {
+                pushEventToRingBuffer(m);
+                busy = 1;
+            }
+        }
+        e = &D_main_bss_80110D60[D_main_bss_80111240];
+        if (e->unk01 == 1) {
+            switch (e->unk00) {
+            case 0:
+                r = subscribeEventHandler(&a);
+                if ((u8)r == 1) {
+                    e->unk04->flag_8000.next->flag_8000.unk0C = a;
+                }
+                break;
+            case 1:
+                r = 1;
+                D_main_80110BC0[(u32)e->unk04->flag_8000.source].unk00 = 0;
+                break;
+            case 2:
+                r = processAssetLoadStep(&b);
+                if ((u8)r == 1) {
+                    rs_free((void *)e->unk48[0]);
+                    e->unk04->flag_8000.next->flag_8000.unk0C = b;
+                }
+                break;
+            }
+            if ((u8)r == 1) {
+                sendServiceMessage(D_main_bss_80110D54, e->unk04->flag_8001.unk14, e->unk04->flag_8000.next, 1);
+                D_main_bss_80110D60[D_main_bss_80111240].unk01 = 0;
+                D_main_bss_80111240 = (s32)(D_main_bss_80111240 + 1) % 8;
+                D_main_bss_80111250++;
+                D_main_bss_8011124C++;
+            }
+            if (D_main_bss_80110D60[D_main_bss_80111240].unk01 == 0) {
+                busy = 0;
+            }
+        }
+        yieldThreadRet1(D_main_bss_80110D54);
+    }
+}
 
 extern u8 D_40[];
 __asm__(".set D_40, 0x40");
