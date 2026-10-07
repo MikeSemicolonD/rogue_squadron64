@@ -69,7 +69,110 @@ void allocateNpcMeshVertexBuffer(u8 *arg0, u8 *arg1)
   *((u32 *) (mesh + 0xC)) |= 0x09010008;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/7B470", transformMeshVerticesForNpc);
+typedef struct {
+    u8 col[4];
+    f32 k[4];
+    f32 f14;
+    s16 h18, h1A, h1C;
+    u16 h1E;
+    u16 fl;
+    u8 pad22[0x1A];
+} TmLight;
+typedef struct {
+    u8 pad0[0xC];
+    u32 flags;
+    u8 pad10[4];
+    s32 count;
+    u8 pad18[0xC];
+    s16 *verts;
+} TmMesh;
+typedef struct {
+    u32 **dst;
+    TmMesh *mesh;
+    TmLight lights[4];
+} TmObj;
+
+static __inline__ f32 tmSqrt(f32 x) { f32 r; __asm__ volatile("sqrt.s %0, %1" : "=f"(r) : "f"(x)); return r; }
+
+void tmImpl(TmObj *o) __asm__("transformMeshVerticesForNpc");
+void tmImpl(TmObj *o) {
+    u32 **dst;
+    s32 n;
+    s16 *v;
+    s32 i;
+    f32 r, g, b;
+    register f32 a asm("$f12");
+    f32 d;
+    f32 c;
+    u32 col;
+    TmLight *L;
+
+    dst = o->dst;
+    n = o->mesh->count;
+    v = o->mesh->verts;
+    for (; n > 0; ) {
+        a = 0.0f;
+        b = a;
+        g = a;
+        r = a;
+        for (i = 0, L = o->lights; i < 4; L++, i++) {
+            if (L->fl == 0) {
+                continue;
+            }
+            if (L->fl & 2) {
+                s32 x = v[0];
+                s32 z = v[2];
+                d = tmSqrt((f32)(x * x + z * z));
+                if (0.0f < d) {
+                    d = (f32)(L->h18 * x + L->h1C * z) * 256.0f / d;
+                }
+            } else if (L->fl & 4) {
+                s32 y = v[1];
+                s32 k = L->h1A;
+                s32 t;
+                if (y < k) {
+                    t = k - y;
+                } else {
+                    t = y - k;
+                }
+                d = (256.0f - (f32)t) * 256.0f;
+            } else {
+                d = (f32)(L->h18 * v[0] + L->h1A * v[1] + L->h1C * v[2]);
+            }
+            d -= L->f14;
+            if (d <= 0.0f) {
+                continue;
+            }
+            d = d / (65536.0f - L->f14);
+            r += L->col[0] + L->k[0] * d;
+            g += L->col[1] + L->k[1] * d;
+            b += L->col[2] + L->k[2] * d;
+            a += L->col[3] + L->k[3] * d;
+            __asm__("" :: "i"(0));
+            __asm__("" :: "i"(0));
+            __asm__("" :: "i"(0));
+            __asm__("" :: "i"(0));
+            __asm__("" :: "i"(0));
+        }
+        c = (r < 0.0f) ? 0.0f : ((255.0f < r) ? 255.0f : r);
+        r = c;
+        c = (g < 0.0f) ? 0.0f : ((255.0f < g) ? 255.0f : g);
+        g = c;
+        c = (b < 0.0f) ? 0.0f : ((255.0f < b) ? 255.0f : b);
+        b = c;
+        c = (a < 0.0f) ? 0.0f : ((255.0f < a) ? 255.0f : a);
+        col = ((s32)r << 24) | ((s32)g << 16) | ((s32)b << 8) | (s32)c;
+        while (*dst != NULL) {
+            **dst = col;
+            dst++;
+        }
+        n--;
+        v += 4;
+        dst++;
+    }
+    o->mesh->flags |= 0x20;
+    o->mesh->flags &= ~0x180;
+}
 
 extern void buildRotationMatrixSlot0(f32 *, f32);
 extern void composeRotationMatrixSlot1(f32 *, f32);
