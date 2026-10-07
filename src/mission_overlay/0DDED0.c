@@ -161,7 +161,44 @@ s32 playAttachmentMaterialFadeSound(void *arg0)
   return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0DDED0", transformCraftDualAnchorsAndApplyMotion);
+typedef struct { f32 m[12]; } CraftMtx;
+u8 tcPending(s32) __asm__("isPendingChildNpcActive");
+u8 tcLos(s32) __asm__("validateActorTargetLOS");
+void tcBuild0(f32 *, s32) __asm__("buildRotationMatrixSlot0");
+void tcComp1(f32 *, s32) __asm__("composeRotationMatrixSlot1");
+void tcXform(f32 *, f32 *, f32 *) __asm__("transformVec3ByMat34");
+void tcApply(s32, f32, f32, s32) __asm__("applyToObjectSubstructByFlag");
+
+void tcImpl(u8 *arg0, f32 arg1) __asm__("transformCraftDualAnchorsAndApplyMotion");
+void tcImpl(u8 *arg0, f32 arg1) {
+    CraftMtx saved;
+    CraftMtx rot;
+    s32 i = 0;
+    s32 r;
+
+    do {
+        if (tcPending(*(s32 *)(arg0 + 0x38)) == 1) {
+            saved = *(CraftMtx *)arg0;
+            tcBuild0(rot.m, *(s32 *)(arg0 + i * 4 + 0x6C));
+            tcComp1(rot.m, *(s32 *)(arg0 + i * 4 + 0x64));
+            tcXform(rot.m, &saved.m[3], (f32 *)(arg0 + 0xC));
+            tcXform(rot.m, &saved.m[6], (f32 *)(arg0 + 0x18));
+            r = tcLos(*(s32 *)(arg0 + 0x38));
+            if (r == 1) {
+                switch (i) {
+                case 0:
+                    tcApply(*(s32 *)(arg0 + 0x38), arg1, 0.0f, 0);
+                    break;
+                case 1:
+                    tcApply(*(s32 *)(arg0 + 0x38), arg1, 0.0f, 1);
+                    break;
+                }
+            }
+            *(CraftMtx *)arg0 = saved;
+        }
+        i++;
+    } while (i < 2);
+}
 
 typedef struct { s32 a, b, c; } EcV3i;
 typedef struct { u8 pad0[0x44]; u16 h44; u8 b46; } EcAudio;
