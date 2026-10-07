@@ -1011,7 +1011,121 @@ void startLevelBackgroundMusic(f32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", tickObjectSoundCueState);
+typedef struct {
+    f32 unk0;
+    f32 unk4;
+    u32 unk8;
+    u32 unkC;
+    u8 pad10[0x10];
+    u16 unk20;
+    u16 unk22;
+    u16 unk24;
+    u16 unk26;
+    u16 unk28;
+    u16 unk2A;
+    u8 unk2C;
+    u8 unk2D;
+    u8 unk2E;
+    u8 unk2F;
+    u8 unk30;
+    u8 unk31;
+    u8 unk32;
+    u8 unk33;
+    u8 unk34;
+    u8 unk35;
+    u8 pad36[2];
+    s32 unk38;
+} ObjCueReq;
+typedef struct {
+    f32 unk0;
+    f32 unk4;
+    u8 pad8[0x10];
+    s32 unk18;
+    s32 unk1C;
+    u16 unk20;
+    u16 unk22;
+    u16 unk24;
+    u8 unk26;
+    u8 unk27;
+    u8 unk28;
+    u8 unk29;
+    u8 unk2A;
+    u8 unk2B;
+    s32 unk2C;
+} ObjCueState;
+extern s32 D_mission_overlay_8010CA20;
+extern u8 gFlag267 __asm__("D_mission_overlay_8010C267");
+extern ObjCueState gCueState230 __asm__("D_mission_overlay_8010C230");
+extern u16 D_mission_overlay_8010C17A;
+void pushActiveSoundDescriptor(void);
+void popActiveSoundDescriptor(void);
+
+s32 tickObjectSoundCueState(ObjCueReq *arg0) {
+    s32 v0;
+    s32 v1;
+
+    if (D_mission_overlay_8010CA20 != 0) {
+        return 0;
+    }
+    if (arg0->unk2E == 1) {
+        pushActiveSoundDescriptor();
+        v0 = arg0->unk20;
+        if (v0 == 0) {
+            D_mission_overlay_8010C170.unkA = 0;
+            D_mission_overlay_8010C170.unk6 = 0xFFFF;
+            D_mission_overlay_8010C170.unk4 = 0xFFFF;
+        } else if (v0 == 1) {
+            D_mission_overlay_8010C170.unkA = 1;
+            D_mission_overlay_8010C170.unk4 = D_mission_overlay_8010C400.unk4;
+            D_mission_overlay_8010C170.unk6 = D_mission_overlay_8010C400.unk6;
+            D_mission_overlay_8010C170.unk8 = D_mission_overlay_8010C400.unk8;
+        } else {
+            D_mission_overlay_8010C170.unk4 = D_mission_overlay_8010B1C0[*(volatile u16 *)&arg0->unk20 - 2].a;
+            D_mission_overlay_8010C170.unk6 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].b;
+            D_mission_overlay_8010C170.unk8 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].c;
+            D_mission_overlay_8010C170.unkA = arg0->unk20;
+        }
+    } else {
+        popActiveSoundDescriptor();
+        v1 = arg0->unk20;
+        if (v1 == 0) {
+            D_mission_overlay_8010C170.unkA = 0;
+            D_mission_overlay_8010C170.unk6 = 0xFFFF;
+            D_mission_overlay_8010C170.unk4 = 0xFFFF;
+        } else if (v1 == 1) {
+            D_mission_overlay_8010C17A = v1;
+        } else {
+            D_mission_overlay_8010C170.unk4 = D_mission_overlay_8010B1C0[*(volatile u16 *)&arg0->unk20 - 2].a;
+            D_mission_overlay_8010C170.unk6 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].b;
+            D_mission_overlay_8010C170.unk8 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].c;
+            D_mission_overlay_8010C170.unkA = arg0->unk20;
+        }
+    }
+    D_mission_overlay_8010C170.padC[0] = arg0->unk2F;
+    D_mission_overlay_8010C170.padC[1] = 0;
+    D_mission_overlay_8010C170.padC[2] = (s16)D_mission_overlay_8010C170.unkA == 1;
+    D_mission_overlay_8010C170.padC[3] = arg0->unk32;
+    ((SoundCueRequest *)&D_mission_overlay_8010C170)->unk10 = arg0->unk2A;
+    gFlag267 = 1;
+    ((SoundCueRequest *)&D_mission_overlay_8010C170)->unk12 = arg0->unk28;
+    D_mission_overlay_8010C400 = D_mission_overlay_8010C170;
+    gCueState230.unk28 = arg0->unk2E;
+    gCueState230.unk0 = arg0->unk0;
+    gCueState230.unk4 = arg0->unk4;
+    gCueState230.unk18 = arg0->unk8;
+    gCueState230.unk1C = arg0->unkC;
+    gCueState230.unk20 = arg0->unk22;
+    gCueState230.unk22 = arg0->unk24;
+    gCueState230.unk24 = arg0->unk26;
+    gCueState230.unk26 = arg0->unk30;
+    gCueState230.unk29 = arg0->unk33;
+    gCueState230.unk2A = arg0->unk34;
+    gCueState230.unk2B = arg0->unk35;
+    gCueState230.unk2C = arg0->unk38;
+    gCueState230.unk27 = arg0->unk31;
+    D_mission_overlay_8010C262 = 1;
+    return 0;
+}
 
 extern s32 D_mission_overlay_8010CA20;
 typedef struct {
