@@ -177,7 +177,86 @@ void triggerFalconEngineEffect(s32 *arg0, s32 arg1) {
     playSpeechClipOncePerLevel(a0, 9);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BAFF0", bindFalconSubmodelMaterials);
+typedef struct BfsNode {
+    u8 pad0[8];
+    struct BfsNode *parent;
+    u8 padC[0x10];
+    f32 m[12];
+} BfsNode;
+typedef struct { u32 flags; s32 x, y, z; } BfsDefPos;
+typedef struct {
+    u8 pad0[0x4C];
+    u32 flags;
+    struct { s32 x, y, z; } pos;
+} BfsDef;
+typedef struct { f32 m[12]; } BfsMat;
+typedef struct { s32 x, y, z; } BfsV3i;
+typedef struct {
+    u8 pad0[8];
+    BfsDef *def[4];
+    BfsNode *node[4];
+    u16 lock[2];
+    BfsMat mat[2];
+    f32 pos[2][3];
+    f32 tYaw[2];
+    f32 cYaw[2];
+    f32 tPit[2];
+    f32 cPit[2];
+} BfsTur;
+BfsNode *lookupHmtMaterialByName(s32, char *, BfsDef **);
+void mat3x4Multiply(void *, void *, void *);
+void clearVec4QuadStruct(void *);
+
+void bfsImpl(FalconInitPlayer *p, BfsTur *t) __asm__("bindFalconSubmodelMaterials");
+void bfsImpl(FalconInitPlayer *p, BfsTur *t) {
+    BfsMat tmp;
+    BfsNode *n;
+    BfsMat *m;
+
+    t->node[0] = lookupHmtMaterialByName(p->f00, "top_trns", &t->def[0]);
+    t->node[1] = lookupHmtMaterialByName(p->f00, "rohr_t_1", &t->def[1]);
+    t->node[2] = lookupHmtMaterialByName(p->f00, "top_tr_2", &t->def[2]);
+    t->node[3] = lookupHmtMaterialByName(p->f00, "rohr_t_2", &t->def[3]);
+    m = &t->mat[0];
+    n = t->node[0];
+    {
+    u8 *root = (u8 *)p->f00 + 0xC;
+    clearVec4QuadStruct(m);
+    for (n = n->parent; n != NULL; n = n->parent) {
+        if ((u8 *)n == root) {
+            break;
+        }
+        tmp = *m;
+        mat3x4Multiply(n->m, &tmp, m);
+    }
+    }
+    m = &t->mat[1];
+    n = t->node[2];
+    {
+    u8 *root = (u8 *)p->f00 + 0xC;
+    clearVec4QuadStruct(m);
+    for (n = n->parent; n != NULL; n = n->parent) {
+        if ((u8 *)n == root) {
+            break;
+        }
+        tmp = *m;
+        mat3x4Multiply(n->m, &tmp, m);
+    }
+    }
+    if (t->def[0]->flags & 1) {
+        *(BfsV3i *)t->pos[0] = *(BfsV3i *)&t->def[0]->pos;
+    } else {
+        t->pos[0][0] = t->pos[0][1] = t->pos[0][2] = 0.0f;
+    }
+    if (t->def[2]->flags & 1) {
+        *(BfsV3i *)t->pos[1] = *(BfsV3i *)&t->def[2]->pos;
+    } else {
+        t->pos[1][0] = t->pos[1][1] = t->pos[1][2] = 0.0f;
+    }
+    t->lock[0] = t->lock[1] = 0xFFFF;
+    t->tYaw[0] = t->tYaw[1] = t->cYaw[0] = t->cYaw[1] = 0.0f;
+    t->tPit[0] = t->tPit[1] = t->cPit[0] = t->cPit[1] = 0.0f;
+}
 
 static __inline__ f32 pfAbs(f32 x) { f32 r; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); return r; }
 typedef struct {
