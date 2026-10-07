@@ -721,7 +721,83 @@ struct MaterialPoolEntry *popMaterialNodeIntoBucket(u16 arg0) {
     return temp_a1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", allocOrEvictMaterialNode);
+extern void *D_main_bss_8011A7DC;
+extern u32 D_main_bss_8011A7E0[];
+
+static __inline__ struct MaterialPoolEntry *aoPop(u16 arg0) {
+    struct MaterialPoolEntry *temp_a1;
+
+    temp_a1 = D_main_bss_80128EF8;
+    if (D_main_bss_80128EF8 != NULL) {
+        D_main_bss_80128EF8 = D_main_bss_80128EF8->next;
+        if (D_main_bss_80128EF8 != NULL) {
+            D_main_bss_80128EF8->prev = NULL;
+        }
+        temp_a1->next = D_main_bss_80128F00[arg0];
+        if (temp_a1->next != NULL) {
+            temp_a1->next->prev = temp_a1;
+        }
+        D_main_bss_80128F00[arg0] = temp_a1;
+    }
+    return temp_a1;
+}
+
+s32 aoImpl(u32 arg0, u16 arg1, s32 arg2) __asm__("allocOrEvictMaterialNode");
+s32 aoImpl(u32 arg0, u16 arg1, s32 arg2) {
+    u32 sp10;
+    u8 sp14;
+    struct MaterialPoolEntry *n;
+    struct DisplayListBuffer *f;
+    u32 end;
+    Gfx *buf;
+    Gfx *d;
+    u32 *dl;
+
+    if (D_main_bss_801163FC == &D_main_bss_801163C8[D_main_bss_8011A899]) {
+        n = aoPop(arg1);
+        if (n == NULL) {
+            f = findAndUnlinkSmallestEntry();
+            if (f != NULL) {
+                heapFreeListInsert(f);
+                n = aoPop(arg1);
+            }
+        }
+        if (n != NULL) {
+            end = D_main_bss_801163D4;
+            D_main_bss_801163FC = (void **)&n->unk14;
+            n->unk14 = NULL;
+            D_main_bss_8011A7DC = &sp10;
+            buf = allocateDisplayListBuffer();
+            d = emitMaterialRenderStateDL(buf, arg1, arg2, &n->unk0E);
+            if ((u32)d >= D_main_bss_801163D4) {
+                d->words.w0 = 0xB5000000;
+                d->words.w1 = 0;
+                d = allocateDisplayListBuffer();
+            }
+            ((u32 *)d)[0] = 0xB8000000;
+            *(int *)((u32 *)d + 1) = 0;
+            D_main_bss_801163D4 = end;
+            D_main_bss_801163FC = &D_main_bss_801163C8[D_main_bss_8011A899];
+            D_main_bss_8011A7DC = &D_main_bss_8011A7E0[D_main_bss_8011A899];
+            n->unk0C = D_main_bss_8011A908;
+            n->unk0D = D_main_bss_801143A8;
+            n->unk08 = 0;
+            n->unk0A = arg1;
+            n->unk10 = arg2 & 7;
+            if (arg0 >= D_main_bss_801163D4) {
+                ((u32 *)arg0)[0] = 0xB5000000;
+                ((u32 *)arg0)[1] = 0;
+                arg0 = (u32)allocateDisplayListBuffer();
+            }
+            dl = (u32 *)arg0;
+            arg0 += 8;
+            dl[0] = 0x06000000;
+            dl[1] = (u32)buf - 8;
+            return arg0;
+        }
+    }
+    return (s32)emitMaterialRenderStateDL((Gfx *)arg0, arg1, arg2, &sp14);
+}
 
 extern u8 D_main_bss_801143A8;
 extern u32 D_main_bss_801163D4;
