@@ -30,7 +30,86 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FCA20", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FCA20", D_mission_overlay_800A9124);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", configurePlayerSecondaryWeaponHud);
+extern u32 D_main_bss_80130B4C;
+extern u32 D_mission_overlay_8010CA1C;
+extern s32 D_mission_overlay_8010B424[];
+u16 loadAndRelocateAsset(s32, s32, s32);
+u8 isWeaponSlotReady(u8);
+
+typedef struct { u8 pad[0x28]; struct ui_element el[10]; } CsHud;
+
+u8 configurePlayerSecondaryWeaponHud(u8 player, u8 weapon, u8 count, s32 adv) {
+    struct hud_struct *h;
+    u32 i;
+    struct ui_element *e;
+
+    h = &D_mission_overlay_8010CA30[player];
+    h->secondaryWeapon = weapon;
+    h->secondaryWeaponCount = count;
+    h->secondaryWeaponReset = count;
+    h->secondaryWeaponIsAdvanced = adv;
+    h->crosshairOnOff = (D_main_bss_80130B4C >> 7) & 1;
+    h->unknown006 = (D_mission_overlay_8010CA1C >> 10) & 1;
+    for (i = 0; i < 10; i++) {
+        h->texture_ids[i] = loadAndRelocateAsset(D_mission_overlay_8010B424[i], 0, 0x2000);
+    }
+    h->outerCrosshairRingElement.texture_count = 1;
+    h->outerCrosshairRingElement.unknown0A = 1;
+    h->outerCrosshairRingElement.flags = 3;
+    h->outerCrosshairRingElement.zero = 0;
+    h->outerCrosshairRingElement.texture_id_pointer = &h->texture_ids[0];
+    h->innerCrosshairRingElement = h->outerCrosshairRingElement;
+    h->innerCrosshairRingElement.texture_id_pointer = &h->texture_ids[1];
+    h->seekerCrosshairRing1Element = h->outerCrosshairRingElement;
+    h->seekerCrosshairRing1Element.texture_id_pointer = &h->texture_ids[8];
+    h->seekerCrosshairRing1Element.rgba.r = 0xFF;
+    h->seekerCrosshairRing1Element.rgba.g = 0xD2;
+    h->seekerCrosshairRing1Element.rgba.b = 0;
+    h->seekerCrosshairRing2Element = h->seekerCrosshairRing1Element;
+    h->seekerCrosshairRing2Element.texture_id_pointer = &h->texture_ids[9];
+    h->bombCrosshairRingElement.texture_count = 1;
+    h->bombCrosshairRingElement.unknown0A = 1;
+    h->bombCrosshairRingElement.flags = 3;
+    h->bombCrosshairRingElement.rgba.r = 0xFF;
+    h->bombCrosshairRingElement.rgba.g = 0xD2;
+    h->bombCrosshairRingElement.zero = 0;
+    h->bombCrosshairRingElement.rgba.b = 0;
+    h->bombCrosshairRingElement.texture_id_pointer = &h->texture_ids[2];
+    for (i = 0; i < 5; i++) {
+        ((CsHud *)h)->el[i + 3].texture_count = 1;
+        ((CsHud *)h)->el[i + 3].unknown0A = 1;
+        ((CsHud *)h)->el[i + 3].zero = 0;
+        ((CsHud *)h)->el[i + 3].flags = 3;
+        ((CsHud *)h)->el[i + 3].rgba.r = 0xFF;
+        ((CsHud *)h)->el[i + 3].rgba.g = 0;
+        ((CsHud *)h)->el[i + 3].rgba.b = 0;
+        ((CsHud *)h)->el[i + 3].rgba.a = 0xBE;
+        ((CsHud *)h)->el[i + 3].texture_id_pointer = &h->texture_ids[i + 3];
+    }
+    switch (h->secondaryWeapon) {
+    case 3:
+    case 8:
+        h->secondaryWeaponState = 0;
+        h->unk210 = 0;
+        h->unk211 = 0;
+        break;
+    case 1:
+    case 2:
+    case 4:
+    case 5:
+        h->secondaryWeaponState = 0;
+        break;
+    }
+    if (getPlayerVehicleId(0) == 0 && !isWeaponSlotReady(0)) {
+        h->alpha_scaling = 0.0f;
+    } else {
+        h->alpha_scaling = 1.0f;
+    }
+    for (i = 0; i < 2; i++) {
+        D_mission_overlay_8010CA30[i].unk274 = 0;
+    }
+    return h->secondaryWeapon;
+}
 
 void destroyNpcSlotChain(u16);
 void factor5RemoveListNode(void *);
