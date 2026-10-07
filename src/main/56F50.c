@@ -563,7 +563,64 @@ s32 computeNamedAttachPointTransform(u8 **arg0, u8 *name, s32 idx, s32 *slot, f3
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", meshdef1_offset_convert);
+typedef struct MdE { u32 w0; u32 w4; u32 w8; } MdE;
+typedef struct MdQ { struct MdQ *next; u32 w4; MdE *e; u32 n; } MdQ;
+typedef struct MdM { struct MdM *next; u32 w4; u8 pad8[4]; u32 flags; u8 pad10[0x10]; MdQ *q; u32 w24; u32 w28; } MdM;
+
+void mdImpl(MdM *m, u32 base, u32 alt, u16 *tbl, u32 *list) __asm__("meshdef1_offset_convert");
+void mdImpl(MdM *m, u32 base, u32 alt, u16 *tbl, u32 *list) {
+    u32 off;
+    u32 *p;
+    MdQ *q;
+    MdE *e;
+    u32 i;
+
+    if (m != NULL) {
+        do {
+            off = alt;
+            for (i = 0; list[i] != 0; i += 3) {
+                if ((u32)m == list[i]) {
+                    off = base;
+                    break;
+                }
+            }
+            ((u32 *)m)[-1] -= (u32)m - base;
+            m->flags |= 0x100008;
+            if (m->next != NULL) {
+                m->next = (MdM *)((u32)m->next + base);
+            }
+            if (m->w4 != 0) {
+                m->w4 += base;
+            }
+            if (m->q != NULL) {
+                m->q = (MdQ *)((u32)m->q + off);
+                for (q = m->q; q != NULL; q = q->next) {
+                    if (q->next != NULL) {
+                        q->next = (MdQ *)((u32)q->next + off);
+                    }
+                    if (q->w4 != 0) {
+                        q->w4 += off;
+                    }
+                    if (q->e != NULL && tbl != NULL) {
+                        q->e = (MdE *)((u32)q->e + off);
+                        e = q->e;
+                        for (i = 0; i < q->n; i++) {
+                            e->w8 = tbl[*(u16 *)&e->w8] << 16;
+                            e = (MdE *)((u8 *)e + ((e->w4 & 0x3F000000) >> 22));
+                        }
+                    }
+                }
+            }
+            if (m->w24 != 0) {
+                m->w24 += off;
+            }
+            if (m->w28 != 0) {
+                m->w28 += off;
+            }
+            m = m->next;
+        } while (m != NULL);
+    }
+}
 
 void meshdef0_offset_convert(struct meshdef0 *arg0, u32 arg1, u32 arg2, u32 arg3, u32 arg4) {
     if (arg0 != NULL) {
