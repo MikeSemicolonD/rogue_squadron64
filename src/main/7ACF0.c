@@ -1,7 +1,33 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/7ACF0", sampleRgbBoxFilter2x2AtSubpixel);
+void sampleRgbBoxFilter2x2AtSubpixel(u16 *arg0, void *arg1v, s32 arg2, f32 arg3, f32 arg4) {
+    s32 y0 = (s32)(arg4 + 0.0f) * arg2;
+    s32 x0 = (s32)(arg3 + 0.0f);
+    s32 x1 = (s32)(arg3 + 0.5f);
+    s32 y1 = (s32)(arg4 + 0.5f) * arg2;
+    u8 *arg1 = arg1v;
+    s32 o;
+    o = (x0 + y0) * 3;
+    arg0[0] = arg1[o];
+    arg0[1] = arg1[o + 1];
+    arg0[2] = arg1[o + 2];
+    o = (x1 + y0) * 3;
+    arg0[0] += arg1[o];
+    arg0[1] += arg1[o + 1];
+    arg0[2] += arg1[o + 2];
+    o = (x0 + y1) * 3;
+    arg0[0] += arg1[o];
+    arg0[1] += arg1[o + 1];
+    arg0[2] += arg1[o + 2];
+    o = (x1 + y1) * 3;
+    arg0[0] += arg1[o];
+    arg0[1] += arg1[o + 1];
+    arg0[2] += arg1[o + 2];
+    arg0[0] = (arg0[0] + 2) >> 2;
+    arg0[1] = (arg0[1] + 2) >> 2;
+    arg0[2] = (arg0[2] + 2) >> 2;
+}
 
 extern void *rs_malloc(s32, s32);
 extern void rs_free(void *);
