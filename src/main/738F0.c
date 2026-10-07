@@ -587,7 +587,116 @@ u16 spawnDirectionalDebrisBurst(f32 *pos, u16 id, f32 size, f32 scale, f32 dir, 
     return npc;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", distanceAndDopplerNpcHelper);
+typedef struct { s32 x, y, z; } DdV3;
+typedef struct {
+    f32 f0;
+    DdV3 v4;
+    f32 f10, f14, f18, f1C;
+    s32 w20, w24;
+    f32 f28, f2C;
+    s32 w30, w34;
+    f32 f38;
+    s16 h3C, h3E;
+    f32 f40, f44, f48, f4C, f50, f54, f58, f5C;
+    s32 w60;
+    u8 *w64;
+    s32 w68;
+    u8 b6C, b6D;
+    u8 pad6E[2];
+    s16 h70, h72, h74, h76;
+    s32 w78;
+    u16 h7C;
+} DdCtx;
+extern u8 *ddCam __asm__("D_main_bss_80138D1C");
+extern u8 *ddC08 __asm__("D_main_bss_80130C08");
+extern s32 ddC04 __asm__("D_main_bss_80130C04");
+extern u8 ddRec[] __asm__("D_main_bss_8013A920");
+f32 vec3Length(f32 *);
+f32 vec3Dot(f32 *, f32 *);
+extern s32 spawnRandomBurstNpcVariantWrapper(void *);
+extern void attachChildNpcByIndex(s32, void *);
+
+static __inline__ f32 ddLen(f32 *v) {
+    return vec3Length(v);
+}
+
+static __inline__ u8 ddOk(f32 *len, f32 *fw, f32 *d) {
+    if ((0.0f < len[0]) && (0.173648f < vec3Dot(fw, d) / len[0])) {
+        return 1;
+    }
+    return 0;
+}
+
+u16 ddImpl(f32 *pos, f32 scale, f32 dir) __asm__("distanceAndDopplerNpcHelper");
+u16 ddImpl(f32 *pos, f32 scale, f32 dir) {
+    DdCtx c;
+    f32 d[3];
+    f32 fw[3];
+    f32 len[1];
+    u8 ok;
+    s32 cnt;
+    u16 id;
+    f32 *cam;
+    f32 lo;
+    f32 hi;
+
+    cam = (f32 *)(ddCam + 0x28);
+    d[0] = pos[0] - cam[9];
+    d[1] = pos[1] - cam[10];
+    d[2] = pos[2] - cam[11];
+    fw[0] = cam[2];
+    fw[1] = cam[5];
+    fw[2] = cam[8];
+    len[0] = ddLen(d);
+    if (!ddOk(len, fw, d)) {
+        return 0xFFFF;
+    }
+    cnt = 0x14;
+    if (6.0f < len[0]) {
+        cnt = (s32)(120.0f / len[0]);
+        if (cnt <= 0) {
+            cnt = 1;
+        }
+    }
+    scale = scale * (len[0] / 4.5f);
+    hi = scale * 3.0f * 0.5f;
+    lo = scale * 0.0005f;
+    c.f0 = 5.0f;
+    c.v4 = *(DdV3 *)pos;
+    c.f10 = 0.0f;
+    c.f14 = -dir;
+    c.f18 = 0.0f;
+    c.f1C = 0.0f;
+    c.w20 = 0;
+    c.w24 = 0;
+    c.f28 = 1.0f;
+    c.f2C = 1.0f;
+    c.w30 = 0;
+    c.w34 = 0;
+    c.f38 = 0.025f;
+    c.h3C = 0x168;
+    c.h3E = 0x168;
+    c.f40 = 120.0f;
+    c.f44 = 0.0f;
+    c.f48 = 0.0f;
+    c.f4C = 1.0f;
+    c.f50 = 0.0f;
+    c.f54 = 0.0f;
+    c.f58 = 1.0f;
+    c.f5C = 0.0f;
+    c.w64 = ddC08 + 0x1E;
+    c.b6C = 1;
+    c.w68 = ddC04 + 0x100;
+    c.b6D = 0x10;
+    c.h70 = (u32)(hi * 256.0f + 1.0f);
+    c.h72 = (u32)(lo * 256.0f + 1.0f);
+    c.h74 = cnt;
+    c.w78 = 0x09000000;
+    c.h7C = 0xB;
+    id = spawnRandomBurstNpcVariantWrapper(&c);
+    attachChildNpcByIndex(id, ddRec);
+    return id;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/738F0", D_main_8003D088);
 
