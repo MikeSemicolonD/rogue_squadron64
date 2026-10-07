@@ -804,7 +804,64 @@ INCLUDE_ASM("asm/nonmatchings/main/4D900", updateMultiNodeAudioListeners);
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", resetEffectObjectVecQuads);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", activateSceneNodeAndAudioListener);
+extern u8 D_main_bss_80138930[][4][0xF8];
+typedef struct {
+    u8 pad0[0x1CC];
+    s32 view;
+    u8 pad1D0[0x84];
+    f32 ref[0x13];
+} AsnPlayer;
+extern AsnPlayer asnPlayers[] __asm__("gPlayers");
+
+void activateSceneNodeAndAudioListener(s32 idx) {
+    SceneNode *n;
+    u8 *top;
+    u8 *cur;
+    register u8 *craft asm("$5");
+    u8 *nw;
+    f32 *ref;
+    f32 zero;
+    f32 one;
+
+    zero = 0.0f;
+    top = D_main_bss_80138268[idx][5];
+    *(u16 *)top |= 0x400;
+    { SceneNode *b = D_main_bss_80138D18; n = &b[idx]; }
+    n->unk4 = top;
+    updateEffectObjectOrientationQuat(n, top, zero);
+    { register s32 o asm("$2") = (s32)D_main_bss_80138268[0][asnPlayers[idx].view]; craft = (u8 *)(idx * 0x5D0 + o); }
+    cur = n->unk4;
+    one = 1.0f;
+    ref = asnPlayers[idx].ref;
+    if (cur != craft) {
+        nw = D_main_bss_80138930[idx][0];
+        *(u16 *)(nw + 2) = 4;
+        *(u8 **)(nw + 0xBC) = cur;
+        *(u8 **)(nw + 0xC0) = craft;
+        *(f32 *)(nw + 0xC4) = zero;
+        *(f32 *)(nw + 0xC8) = one;
+        *(f32 *)(nw + 0xCC) = one;
+        *(f32 **)(nw + 0x74) = ref;
+        *(u16 *)nw |= 1;
+        if (D_main_bss_80138260 == 1) {
+            D_main_bss_80138894->unk4 = nw;
+        }
+        n->unk4 = nw;
+        *(Blob30 *)(nw + 0x28) = *(Blob30 *)(cur + 0x28);
+        *(RoV3 *)(nw + 0x10) = *(RoV3 *)(cur + 0x10);
+        *(RoV3 *)(nw + 0x1C) = *(RoV3 *)(cur + 0x1C);
+        *(u16 *)cur |= 1;
+        *(u16 *)craft |= 1;
+        *(Blob30 *)(craft + 0x28) = *(Blob30 *)(cur + 0x28);
+        *(f32 *)(craft + 0x10) = *(f32 *)(craft + 0x4C);
+        *(f32 *)(craft + 0x14) = *(f32 *)(craft + 0x50);
+        *(f32 *)(craft + 0x18) = *(f32 *)(craft + 0x54);
+        *(f32 *)(craft + 0x98) = *(f32 *)(craft + 0xA0);
+        *(f32 *)(craft + 0x9C) = *(f32 *)(craft + 0xA0);
+        D_main_bss_80138D18[idx].unk4 = nw;
+        updateAudioListenerPosFromPlayer();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", updateEffectObjectTransformPieces);
 
