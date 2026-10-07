@@ -430,7 +430,116 @@ skip:
     applyPlayerVehicleStateUpdate((u8 *)o);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", updateEffectObjectMotionOnTerrain);
+typedef struct {
+    f32 x, y, z;
+} EoV3;
+typedef struct {
+    u8 pad0[2];
+    u16 h2;
+    u8 pad4[0x2A0 - 4];
+} EoPlayer;
+typedef struct {
+    u8 pad0[0xC];
+    s32 player;
+    EoV3 pos;
+    u8 pad1C[0x4C - 0x1C];
+    f32 m4C;
+    f32 m50;
+    f32 m54;
+    u8 pad58[0x74 - 0x58];
+    f32 *m74;
+    EoV3 v78;
+    u8 pad84[0xB4 - 0x84];
+    f32 tB4;
+} EoObj;
+extern EoPlayer eoPlayers[] __asm__("gPlayers");
+extern s32 D_8010CA20;
+extern u16 D_main_bss_8013957C;
+void eoXform(f32 *, EoV3 *, EoV3 *) __asm__("transformVec3ByMat34");
+s32 eoSample(EoV3 *, EoV3 *, void *, void *) __asm__("sampleTerrainAtNpcPosition");
+void eoApply(EoObj *) __asm__("applyPlayerVehicleStateUpdate");
+void updateAudioListenerPosFromPlayer(void);
+s32 findActiveNpcInSlotChain(u16, void *);
+u8 *getNpcContextByIndex(u16);
+s32 findSegmentObjectSphereHit(s32, void *, void *, void *);
+s32 revalidateNpcSlotIterator(void *);
+f32 *getNpcContextField8(u16);
+
+static __inline__ u16 eoFindHit(s32 player, EoV3 *a, EoV3 *b, void *hit, u16 chain) {
+    u8 it[8];
+    u16 self;
+    u16 cur;
+    s32 idx;
+    s32 mesh;
+
+    if (D_8010CA20 == 5) {
+        return 0xFFFF;
+    }
+    self = eoPlayers[player].h2;
+    idx = findActiveNpcInSlotChain(chain, it);
+    if ((idx & 0xFFFF) != 0xFFFF) {
+        do {
+            cur = idx;
+            mesh = *(s32 *)(getNpcContextByIndex(cur) + 0xC);
+            if (mesh != 0 && cur != self) {
+                if (findSegmentObjectSphereHit(mesh, a, b, hit) != 0) {
+                    return cur;
+                }
+            }
+            idx = revalidateNpcSlotIterator(it);
+        } while ((idx & 0xFFFF) != 0xFFFF);
+    }
+    return 0xFFFF;
+}
+
+void updateEffectObjectMotionOnTerrain(EoObj *o, f32 dt) {
+    EoV3 p10;
+    EoV3 d20;
+    EoV3 d30;
+    u8 hit[0x28];
+    u16 idx;
+    f32 *c;
+
+    if (D_8010CA20 == 5) {
+        return;
+    }
+    if (o->m74 == NULL) {
+        return;
+    }
+    d20 = o->v78;
+    eoXform(o->m74, &d20, &p10);
+    d20.x = o->pos.x - p10.x;
+    d20.y = o->pos.y - p10.y;
+    d20.z = o->pos.z - p10.z;
+    if (eoSample(&p10, &d20, D_main_bss_80138058, hit) != 0) {
+        o->tB4 += dt;
+        if (o->tB4 > 0.5f) {
+            o->pos = *(EoV3 *)hit;
+            o->m4C = o->pos.x;
+            o->m50 = o->pos.y;
+            o->m54 = o->pos.z;
+            eoApply(o);
+            updateAudioListenerPosFromPlayer();
+            o->tB4 = 0.0f;
+        }
+        return;
+    }
+    idx = eoFindHit(o->player, &p10, &d20, hit, D_main_bss_8013957C);
+    if (idx != 0xFFFF) {
+        o->tB4 += dt;
+        if (o->tB4 > 0.5f) {
+            c = getNpcContextField8(idx);
+            d30.x = p10.x - c[0];
+            d30.y = p10.y - c[1];
+            d30.z = p10.z - c[2];
+            o->m50 = o->pos.y = o->pos.y - dt;
+            eoApply(o);
+            updateAudioListenerPosFromPlayer();
+        }
+    } else {
+        o->tB4 = 0.0f;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", applyObjectLocalToWorldTransform);
 
