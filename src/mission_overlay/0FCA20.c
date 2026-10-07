@@ -72,7 +72,88 @@ void resetHudInstancesAndUnbindNpcs(void) {
     } while ((u32)(i & 0xFF) < 2);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", findNearestTargetableNpcInRange);
+typedef struct { f32 x, y, z; } FnV3;
+extern u16 D_mission_overlay_8010B4B4[];
+extern u16 D_main_bss_80139560[];
+extern u16 fnFindActive(u16, void *) __asm__("findActiveNpcInSlotChain");
+extern u16 fnRevalidate(void *) __asm__("revalidateNpcSlotIterator");
+extern u8 *fnGetCtx(u16) __asm__("getNpcContextByIndex");
+extern void transformMeshPartIntoWorld(void *, FnV3 *);
+extern f32 fnLen(FnV3 *) __asm__("vec3Length");
+extern f32 fnDot(FnV3 *, f32 *) __asm__("vec3Dot");
+
+u16 findNearestTargetableNpcInRange(f32 *pos, u16 cur, FnV3 *out, u8 *st, u8 *outIdx, f32 dt) {
+    FnV3 d;
+    FnV3 p;
+    FnV3 curPos;
+    FnV3 bestPos;
+    u8 iter[8];
+    u8 bestIdx;
+    u16 best;
+    u8 found;
+    s32 k;
+    u16 n;
+    u8 curIdx;
+    f32 len;
+    f32 bestDist;
+    u8 *ctx;
+
+    best = 0xFFFF;
+    found = 0;
+    k = 0;
+    if (D_mission_overlay_8010B4B4[0] != 0xFFFF) {
+        do {
+            for (n = fnFindActive(D_main_bss_80139560[D_mission_overlay_8010B4B4[k]], iter); n != 0xFFFF; n = fnRevalidate(iter)) {
+                ctx = fnGetCtx(n);
+                if (*(u16 *)(ctx + 0x14) & 0x100) {
+                    continue;
+                }
+                if (*(void **)(ctx + 0xC) != NULL) {
+                    transformMeshPartIntoWorld(*(void **)(ctx + 0xC), &p);
+                } else {
+                    p = **(FnV3 **)(ctx + 0x8);
+                }
+                d.x = p.x - pos[0];
+                d.y = p.y - pos[1];
+                d.z = p.z - pos[2];
+                len = fnLen(&d);
+                if (0.0f < len && len < 20.0f) {
+                    d.x /= len;
+                    d.y /= len;
+                    d.z /= len;
+                    if (fnDot(&d, pos + 3) > 0.985f) {
+                        if (n == cur) {
+                            found = 1;
+                            curPos = p;
+                            curIdx = k;
+                        }
+                        if (best == 0xFFFF || !(bestDist < len)) {
+                            best = n;
+                            bestDist = len;
+                            bestPos = p;
+                            bestIdx = k;
+                        }
+                    }
+                }
+            }
+            k++;
+        } while (D_mission_overlay_8010B4B4[k] != 0xFFFF);
+    }
+    if (found && best != cur) {
+        *(f32 *)(st + 0x214) += dt;
+        if (*(f32 *)(st + 0x214) < 2.0f) {
+            *out = curPos;
+            *outIdx = curIdx;
+            return cur;
+        }
+    }
+    *(f32 *)(st + 0x214) = 0.0f;
+    if (best != 0xFFFF) {
+        *out = bestPos;
+        *outIdx = bestIdx;
+    }
+    return best;
+}
 
 typedef struct TerrainV3 {
     f32 x;
