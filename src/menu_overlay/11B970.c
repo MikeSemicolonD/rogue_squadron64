@@ -1403,7 +1403,45 @@ void updateMenuPerFrameU8(void *argp, f32 arg1, f32 arg2, s32 arg3, u8 arg4)
   activateAnimationKeyframe(5, 9, fp);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", driveFalconAnimationKeyframes);
+typedef struct {
+    u8 pad0[0xA4];
+    f32 fA4;
+    u8 padA8[4];
+    void *pAC;
+} DfObj;
+extern u8 dfYellow[] __asm__("mainMenuBrightYellowColor");
+
+void driveFalconAnimationKeyframes(DfObj *o, f32 dt) {
+
+    if (o->pAC != NULL && o->fA4 == 0.0f) {
+        u8 *e = getPlayerSlotFieldAt34(5, 9);
+        setPlayerSlotAnimationFlag(5, o->pAC, 0xB, -0x100, (s16)*(f32 *)(e + 0x1C));
+        setPlayerSlotAnimationFlag(5, o->pAC, 0xC, -0xFB, (s16)(*(f32 *)(e + 0x1C) + 5.0f));
+        samplePlayerAnimChannel(5, 0xB, 1.0f);
+        setPlayerSlotEntryRGB(5, 0xB, dfYellow);
+        o->fA4 = 1.0f;
+    }
+    if (o->fA4 > 0.0f) {
+        o->fA4 -= dt;
+        if (o->fA4 < 0.0f) {
+            o->fA4 = 0.0f;
+        }
+        activateAnimationKeyframe(5, 9, (u32)(o->fA4 * 254.0f));
+        activateAnimationKeyframe(5, 0xA, (u32)(o->fA4 * 85.0f));
+        activateAnimationKeyframe(5, 0xB, (u32)((1.0f - o->fA4) * 254.0f));
+        activateAnimationKeyframe(5, 0xC, (u32)((1.0f - o->fA4) * 85.0f));
+        if (o->fA4 == 0.0f) {
+            u8 *e = getPlayerSlotFieldAt34(5, 9);
+            setPlayerSlotAnimationFlag(5, o->pAC, 9, -0x100, (s16)*(f32 *)(e + 0x1C));
+            setPlayerSlotAnimationFlag(5, o->pAC, 0xA, -0xFB, (s16)(*(f32 *)(e + 0x1C) + 5.0f));
+            activateAnimationKeyframe(5, 9, 0xFE);
+            activateAnimationKeyframe(5, 0xA, 0x55);
+            activateAnimationKeyframe(5, 0xB, 0);
+            activateAnimationKeyframe(5, 0xC, 0);
+            o->pAC = NULL;
+        }
+    }
+}
 
 void applyTieInterceptorAnimState(u8 *arg0, s32 arg1, s32 arg2) {
     register s32 g asm("$17") = arg1;
