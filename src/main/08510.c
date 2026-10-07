@@ -88,7 +88,60 @@ void heapFreeListInsert(struct DisplayListBuffer *arg0) {
 }
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", heapWalker);
+extern u8 D_main_bss_8011A899;
+extern struct DisplayListBuffer *hwListA[] __asm__("D_main_bss_801163C8");
+extern struct DisplayListBuffer *D_main_bss_8011A4B0[];
+extern struct DisplayListBuffer *D_main_bss_8011A458[];
+extern struct DisplayListBuffer *hwListD[] __asm__("D_main_bss_8011A4A0");
+extern struct DisplayListBuffer *hwListE[] __asm__("D_main_bss_8011A468");
+extern struct DisplayListBuffer *hwTail[] __asm__("D_main_bss_8011A7E0");
+extern struct DisplayListBuffer **D_main_bss_801163FC;
+extern struct DisplayListBuffer **D_main_bss_8011A7DC;
+extern struct DisplayListBuffer **D_main_bss_8011A4C4;
+extern struct DisplayListBuffer **D_main_bss_8011A4AC;
+extern struct DisplayListBuffer **D_main_bss_8011A4BC;
+extern struct DisplayListBuffer **D_main_bss_8011A4B8;
+
+static __inline__ void hwInsert(struct DisplayListBuffer *arg0) {
+    struct DisplayListBuffer *var_v1;
+
+    if (arg0 != NULL) {
+        var_v1 = arg0;
+        if (arg0->next != NULL) {
+            do {
+                var_v1 = var_v1->next;
+            } while (var_v1->next != NULL);
+        }
+        var_v1->next = D_main_bss_801163B0;
+        if (D_main_bss_801163B0 != NULL) {
+            D_main_bss_801163B0->prev = var_v1;
+        }
+        D_main_bss_801163B0 = arg0;
+        arg0->prev = NULL;
+    }
+}
+
+void heapWalker(void) {
+    u8 *ip;
+
+    hwInsert(hwListA[D_main_bss_8011A899]);
+    hwInsert(D_main_bss_8011A4B0[D_main_bss_8011A899]);
+    hwInsert(D_main_bss_8011A458[D_main_bss_8011A899]);
+    hwInsert(hwListD[D_main_bss_8011A899]);
+    hwInsert(hwListE[D_main_bss_8011A899]);
+    ip = &D_main_bss_8011A899;
+    *(int *)((s32)hwListA + *ip * 4) = 0;
+    *(int *)((s32)D_main_bss_8011A4B0 + *ip * 4) = 0;
+    *(int *)((s32)D_main_bss_8011A458 + *ip * 4) = 0;
+    *(int *)((s32)hwListD + *ip * 4) = 0;
+    *(int *)((s32)hwListE + *ip * 4) = 0;
+    D_main_bss_801163FC = &hwListA[D_main_bss_8011A899];
+    D_main_bss_8011A7DC = &hwTail[D_main_bss_8011A899];
+    D_main_bss_8011A4C4 = &D_main_bss_8011A4B0[D_main_bss_8011A899];
+    D_main_bss_8011A4AC = &D_main_bss_8011A458[D_main_bss_8011A899];
+    D_main_bss_8011A4BC = &hwListD[D_main_bss_8011A899];
+    D_main_bss_8011A4B8 = &hwListE[D_main_bss_8011A899];
+}
 
 #if 0
 s32 countDisplayListChunks(void) {
