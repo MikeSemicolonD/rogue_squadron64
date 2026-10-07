@@ -1382,7 +1382,75 @@ TieAnimBuf *copyTieInterceptorAnimBuffer(TieAnimBuf *arg0) {
     return &D_menu_overlay_800CE830;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", applyTieInterceptorSlotAnim);
+typedef struct {
+    u8 pad0[0x18];
+    char *text;
+    u8 pad1C[0x28 - 0x1C];
+    u8 b28;
+    u8 pad29;
+    u8 b2A;
+    u8 b2B;
+    u8 b2C;
+    u8 pad2D[0x38 - 0x2D];
+    s16 h38;
+    s16 h3A;
+    s16 h3C;
+    s16 h3E;
+    s16 h40;
+    s16 h42;
+    u8 pad44[0x5C - 0x44];
+    f32 f5C;
+    f32 f60;
+    f32 f64;
+    u8 pad68[0x94 - 0x68];
+    u8 b94;
+    u8 count;
+    u16 base;
+    u8 pad98[4];
+    s32 w9C;
+} TieSlotAnimObj;
+
+s32 cycleAccountLabelText(void *);
+
+void applyTieInterceptorSlotAnim(TieSlotAnimObj *arg0) {
+    u32 s3;
+    u16 s0;
+    u8 *f;
+    u32 bit;
+
+    arg0->text = getGameOrFrontText(0xA9);
+    cycleAccountLabelText(arg0);
+    s3 = 0;
+    arg0->b28 = 3;
+    arg0->b2C = 9;
+    arg0->h38 = -0x46;
+    arg0->h3C = 0x46;
+    arg0->h3A = 0xBB;
+    arg0->h3E = 0x97;
+    arg0->b2A = 0;
+    arg0->b2B = 0;
+    arg0->h40 = 0;
+    arg0->h42 = 0x9F;
+    arg0->b94 = 0;
+    arg0->f5C = 0.6f;
+    arg0->f60 = 0.6f;
+    arg0->f64 = 1.0f;
+    {
+        for (; s3 < arg0->count; ) {
+            bit = 1 << s3;
+            if (bit & 0x1F) {
+                s0 = s3;
+                setPlayerSlotAnimationFlag(5, *(void **)((u8 *)arg0 + 8 + s3 * 4), s0, (s16)(*(u16 *)((u8 *)arg0 + 0x30 + s3 * 4) - 0x100), (s16)(*(u16 *)((u8 *)arg0 + 0x32 + s3 * 4) + (arg0->base + (s3 * 0x24 - arg0->count * 0x12))));
+                samplePlayerAnimChannel(5, s0, *(f32 *)((u8 *)arg0 + 0x54 + s3 * 4));
+                f = getPlayerSlotFieldAt34(5, s0);
+                *(f32 *)((u8 *)arg0 + 0xB0 + s3 * 4) = *(f32 *)(f + 0x18);
+                *(f32 *)((u8 *)arg0 + 0xD0 + s3 * 4) = *(f32 *)(f + 0x1C);
+            }
+            s3 += 1;
+        }
+    }
+    arg0->w9C = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", updateTieInterceptorAnimFlag);
 
