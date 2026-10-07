@@ -1014,7 +1014,54 @@ void playerVwingMainUpdate(void *arg0, f32 arg1) {
 
 INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setupMenuData);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", handleGameSettingsMenu);
+typedef struct {
+    u16 textA;
+    u16 textB;
+    u8 unk4;
+    u8 pad5;
+    u16 unk6;
+    u16 unk8;
+    u8 padA;
+    u8 unkB;
+} SettingsMenuEntry;
+extern SettingsMenuEntry D_menu_overlay_800CC974[];
+char *getGameOrFrontText(s32);
+
+u8 handleGameSettingsMenu(u8 arg0, s32 arg1, u8 arg2, u8 arg3, u8 arg4) {
+    u32 i;
+    SettingsMenuEntry *e;
+    u16 text;
+    char *t;
+    s32 slot;
+
+    i = 0;
+    do {
+        e = &D_menu_overlay_800CC974[i];
+        if ((e->unk6 != 0 || e->unk4 == 0 || gGameSettings.unk23 != 0) && e->unk8 == arg2 && arg4 == e->unkB) {
+            if (e->unk4 == 0) {
+                if (gGameSettings.unlockAndSettingsFlags[arg0] & (1 << e->unk6)) {
+                    text = e->textB;
+                } else {
+                    text = e->textA;
+                }
+            } else {
+                if (gGameSettings.unlockAndSettingsFlags[1] & (1 << e->unk6)) {
+                    text = e->textB;
+                } else {
+                    text = e->textA;
+                }
+            }
+            t = getGameOrFrontText(text);
+            slot = arg3 & 0xFF;
+            arg3++;
+            *(char **)(arg1 + (slot << 2) + 8) = t;
+            *(u8 *)(arg1 + slot + 0x28) = 5;
+            *(u32 *)(arg1 + (slot << 2) + 0x74) = i;
+        }
+        i++;
+    } while (i < 7);
+    return arg3;
+}
 
 typedef struct {
     u8 pad0[4];
