@@ -1,7 +1,82 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", findNearestNpcWithinRange);
+typedef struct {
+    f32 x, y, z;
+    u8 pad[0x24];
+} NfFrame;
+extern char *nfNames[] __asm__("D_mission_overlay_8010A65C");
+extern u16 nfChain __asm__("D_main_bss_80139580");
+s32 nfPlayer2(s32) __asm__("getPlayerField2");
+f32 *nfCtx8(u16) __asm__("getNpcContextField8");
+s32 nfFindActive(u16, void *) __asm__("findActiveNpcInSlotChain");
+s32 nfRevalidate(void *) __asm__("revalidateNpcSlotIterator");
+u8 *nfCtx(u16) __asm__("getNpcContextByIndex");
+f32 nfLen(f32 *) __asm__("vec3Length");
+s32 nfLookup(s32, char *, s32, void *, s32, s32) __asm__("lookupHmtTextureByName");
+
+u16 findNearestNpcWithinRange(f32 range, f32 *outDist, NfFrame *out, s32 *outIdx) {
+    u8 it[8];
+    NfFrame f;
+    f32 d[4];
+    u16 best;
+    u8 *bctx;
+    f32 *pos;
+    s32 idx;
+    u16 cur;
+    f32 *c;
+    u8 *ctx;
+    s32 i;
+    s32 j;
+    s32 k;
+    s32 base;
+    f32 l;
+
+    bctx = NULL;
+    pos = nfCtx8(nfPlayer2(0));
+    best = 0xFFFF;
+    *outDist = 1000000.0f;
+    idx = nfFindActive(nfChain, it);
+    if ((idx & 0xFFFF) != 0xFFFF) {
+        do {
+            cur = idx;
+            c = nfCtx8(cur);
+            d[0] = pos[0] - c[0];
+            d[1] = pos[1] - c[1];
+            d[2] = pos[2] - c[2];
+            if (!(range < nfLen(d))) {
+                ctx = nfCtx(cur);
+                for (i = 0; nfNames[i] != NULL; i++) {
+                    nfLookup(*(s32 *)(ctx + 0xC), nfNames[i], 0, &f, 0, 0);
+                    d[0] = pos[0] - f.x;
+                    d[1] = pos[1] - f.y;
+                    d[2] = pos[2] - f.z;
+                    l = nfLen(d);
+                    if (!(*outDist < l)) {
+                        best = idx;
+                        *outDist = l;
+                        *out = f;
+                        *outIdx = i;
+                        bctx = ctx;
+                    }
+                }
+            }
+            idx = nfRevalidate(it);
+        } while ((idx & 0xFFFF) != 0xFFFF);
+    }
+    if (best != 0xFFFF) {
+        j = *outIdx;
+        base = (j >= 4) * 4;
+        for (k = 1; k < 4; k++) {
+            j++;
+            if ((j & 3) == 0) {
+                j = base;
+            }
+            nfLookup(*(s32 *)(bctx + 0xC), nfNames[j], 0, &out[k], 0, 0);
+        }
+    }
+    return best;
+}
 
 struct IaObj { u8 pad0[0x34]; u8 *f34; s32 f38; u8 pad3C[0xAA]; u8 fE6; u8 padE7[0x10]; f32 fF8; };
 typedef struct { u8 pad0[4]; struct IaObj *obj; } IaActor;
