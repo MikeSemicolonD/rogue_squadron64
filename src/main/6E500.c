@@ -438,7 +438,32 @@ s32 getAccountUnk51(void) {
     return gSaveDataBody.unk51;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", createAccountProfile);
+void createAccountProfile(u8 *name, s32 id) {
+    s32 i;
+    struct MissionState *ms;
+
+    initializeNumLives();
+    i = 0;
+    ms = &gMissionState;
+    for (; (u32)i < 1; i++) {
+        (&ms->playerRank)[i] = 0;
+        rs_strcpy((u8 *)gGameSettings.name + i * 4, name);
+        gGameSettings.unlockAndSettingsFlags[i] &= 0xFF8001FF;
+    }
+    {
+    struct MissionState *m2 = &gMissionState;
+    m2->maxUnlockedLevel = 0;
+    rs_memset(m2->medalPerLevel, 0, 0x13);
+    gGameSettings.currentLevel = 0;
+    gGameSettings.unk04 = id;
+    m2->unk21 = 1;
+    if (gGameSettings.cheatCodeFlags[0] & 0x1000000) {
+        gGameSettings.unlockAndSettingsFlags[0] |= 0x1FE00;
+    }
+    m2->accountNumber = findUnusedAccountId();
+    }
+    loadAccountDataIntoStruct((u8)id);
+}
 
 extern u8 missionStats;
 
