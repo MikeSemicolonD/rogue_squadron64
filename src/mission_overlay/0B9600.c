@@ -348,7 +348,113 @@ void updateVwingEngineEffect(s32 *arg0, f32 dt) {
     vwComposeEngineMat(e->matR + 0x1C, e->cfgR, D_mission_overlay_8010BDD8[p->idx][0] * -45.0f);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B9600", orientVwingSubmodelByQuat);
+typedef struct { f32 x, y, z; } OvV3;
+typedef struct {
+    s32 idx;
+    u8 pad4[0x1C];
+    u16 target;
+    u8 pad22[2];
+    OvV3 tpos;
+} OvEng;
+
+typedef struct {
+    s32 unk0;
+    u8 pad4[0xB2];
+    u16 unkB6;
+    u8 padB8[0x16C - 0xB8];
+    f32 unk16C;
+    u8 pad170[0x2A0 - 0x170];
+} OvSrc;
+
+typedef struct {
+    u8 pad0[4];
+    u16 *info;
+    u8 pad8[0x144 - 8];
+} OvMeta;
+
+typedef struct {
+    OvV3 pos;
+    OvV3 ax;
+    OvV3 ay;
+    OvV3 az;
+} OvMat;
+
+extern OvSrc ovSrc[] __asm__("D_main_bss_80137DBC");
+extern OvMeta ovMeta[] __asm__("D_main_bss_80138D18");
+extern OvV3 D_mission_overlay_80109974[];
+extern u8 D_mission_overlay_80109920[];
+void ovLookup(s32, char *, s32, void *, s32, s32) __asm__("lookupHmtTextureByName");
+void accumulateVectorInObjectFrame(void *, void *, void *);
+u16 ovDispatch(s32, u16, void *, void *, s32, f32, f32) __asm__("dispatchCueByCategory");
+void ovQuat(void *, void *, f32) __asm__("quatFromAxisAngle");
+void ovQuatSafe(void *, void *, f32) __asm__("quatFromAxisAngleSafe");
+void ovRot(void *, void *, void *) __asm__("rotateVec3ByQuat");
+void ovNorm(void *) __asm__("normalize_vector");
+f32 ovDot(void *, void *) __asm__("vec3Dot");
+void ovCross(void *, void *, void *) __asm__("vec3Cross");
+f32 ovAcos(f32) __asm__("constMinusSinfApprox");
+
+static __inline__ void ovQS(f32 *qq, OvV3 *a, f32 g) { ovQuatSafe(qq, a, g); }
+
+void ovImpl(OvEng *e, u16 side, f32 ang, s32 flag, OvV3 *out) __asm__("orientVwingSubmodelByQuat");
+void ovImpl(OvEng *e, u16 side, f32 ang, s32 flag, OvV3 *out) {
+    char *name = "a_b";
+    OvMat m;
+    OvV3 r;
+    f32 q[4];
+    OvV3 t;
+    OvV3 ax;
+    u8 fl;
+    s32 s;
+    OvSrc *p;
+    u8 *b;
+    f32 k;
+    register OvV3 *pax asm("$18");
+
+    s = side & 1;
+    p = &ovSrc[e->idx];
+    fl = flag;
+    ovLookup(p->unk0, name, s, &m, 0, 0);
+    if (ovMeta[e->idx].info[2] == 3) {
+        accumulateVectorInObjectFrame(&m, &D_mission_overlay_80109974[s], p);
+    }
+    b = (u8 *)ovSrc - 4;
+    if (*(s32 *)(b + e->idx * 0x2A0 + 0x160) == 1) {
+        ovQuat(q, &m.ax, ang);
+        ovRot(q, &m.ay, &r);
+        m.pos.x += r.x * 0.015f;
+        m.pos.y += r.y * 0.015f;
+        m.pos.z += r.z * 0.015f;
+        if (ovMeta[e->idx].info[2] != 3) {
+            goto dispatch;
+        }
+    }
+    if (e->target != 0xFFFF) {
+        t.x = e->tpos.x - m.pos.x;
+        t.y = e->tpos.y - m.pos.y;
+        t.z = e->tpos.z - m.pos.z;
+        ovNorm(&t);
+        ang = ovAcos(ovDot(&m.ax, &t)) * 57.295776f;
+        pax = &ax;
+        ovCross(pax, &m.ax, &t);
+        if (ovMeta[e->idx].info[2] != 3) {
+            k = 0.4f;
+        } else if (*(s32 *)(b + e->idx * 0x2A0 + 0x160) != 1) {
+            k = 0.8f;
+        } else {
+            k = 0.6f;
+        }
+        ang *= k;
+        ovQS(q, pax, ang);
+        t = m.ax;
+        ovRot(q, &t, &m.ax);
+        t = m.ay;
+        ovRot(q, &t, &m.ay);
+    }
+dispatch:
+    ovDispatch(0, p->unkB6, &m, D_mission_overlay_80109920, fl, 12.5f, p->unk16C);
+    *out = m.pos;
+}
 
 #include "common_types.h"
 typedef struct {
