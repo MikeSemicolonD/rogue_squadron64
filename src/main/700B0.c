@@ -268,7 +268,92 @@ INCLUDE_ASM("asm/nonmatchings/main/700B0", orientedNpcHandler);
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", multiEventTemplateNpcHandler);
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", walkDatTreeAndAllocSubtypeBuffers);
+typedef struct { u8 c[4]; } WdCol;
+typedef struct WdNode {
+    u8 type;
+    u8 b1;
+    s16 h2;
+    u8 b4;
+    u8 b5;
+    u8 b6;
+    u8 pad7;
+    struct WdNode *children;
+    u8 padC[0xC];
+    s16 h18;
+    u16 h1A;
+    u8 pad1C[8];
+    f32 f24;
+    f32 f28;
+    f32 f2C;
+    s16 h30;
+    s16 h32;
+    WdCol c34;
+} WdNode;
+extern WdCol wdCols[] __asm__("D_main_800A0B38");
+extern f32 wdScales[] __asm__("D_main_800A0B84");
+extern s32 D_main_bss_80130B50;
+extern u8 *wdGs __asm__("D_main_bss_80130C08");
+s32 findNameTreeEntryIndexByName(void *, char *, s32 *);
+void *wdMalloc(s32, s32) __asm__("rs_malloc");
+
+s32 wdImpl(WdNode *n, void *tree, char *name, s32 flags, s32 sub, s32 k) __asm__("walkDatTreeAndAllocSubtypeBuffers");
+s32 wdImpl(WdNode *n, void *tree, char *name, s32 flags, s32 sub, s32 k) {
+    s32 idx;
+    s32 cnt;
+    f32 f;
+
+    cnt = findNameTreeEntryIndexByName(tree, name, &idx);
+    if (cnt > 0) {
+        if ((cnt >= 2 || (flags & 0x80)) && sub < 0) {
+            if (n->type == 0xFF) {
+                n->type = 0x80;
+                n->b4 = 0;
+                n->children = wdMalloc(0x2A0, 0);
+            }
+            for (idx = 0; n->b4 < 12; n->b4++) {
+                if (idx >= cnt) {
+                    break;
+                }
+                n->children[n->b4].type = 0xFF;
+                wdImpl(&n->children[n->b4], tree, name, flags & ~0x80, idx, k);
+                idx++;
+            }
+            return 1;
+        }
+        if (n->type != 0xFF && (n->type & 0x80)) {
+            if (n->b4 >= 12) {
+                return 0;
+            }
+            n->b4++;
+            n = &n->children[n->b4 - 1];
+        }
+        n->type = flags;
+        n->b1 = 0;
+        n->b4 = idx;
+        n->h2 = k;
+        if (sub >= 0) {
+            n->b5 = sub;
+        } else {
+            n->b5 = 0;
+        }
+        n->h18 = 0x301;
+        n->b6 = 0;
+        n->h32 = 0;
+        n->h30 = 0;
+        n->f24 = 45.0f;
+        f = wdScales[flags & 0x1F];
+        if (f <= 0.5f) {
+            n->f28 = n->f2C = f * ((D_main_bss_80130B50 & 1) ? 1.1f : 1.3f);
+        } else {
+            n->f28 = n->f2C = f;
+        }
+        n->c34 = wdCols[flags & 0x1F];
+        n->h1A = *(u16 *)(wdGs + 0x24);
+    } else {
+        n->type = 0xFF;
+    }
+    return 0;
+}
 
 extern u16 rand(void);
 typedef struct { u8 pad0[0x18]; u32 flags; } DatSubInfo;
