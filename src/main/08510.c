@@ -1655,7 +1655,137 @@ void recordDeferredDrawRefD(s32 flags) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", reserveAndEmitDLEntry);
+extern s32 *D_main_bss_8011A438;
+extern s32 D_main_bss_8011A43C;
+extern u8 D_main_bss_8011A440;
+
+static __inline__ Gfx *raeAllocBuf(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    struct DisplayListBuffer *buf;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    buf = chunk;
+    if (*D_main_bss_801163FC == NULL) {
+        *D_main_bss_801163FC = buf;
+    } else {
+        (*D_main_bss_8011A7DC)->next = buf;
+        buf->prev = *D_main_bss_8011A7DC;
+    }
+    buf->next = NULL;
+    *D_main_bss_8011A7DC = buf;
+    D_main_bss_801163D4 = &buf->displayList[0x1F];
+    return buf->displayList;
+}
+
+static __inline__ void raeRecord(s32 ref, s32 flags, s32 kind) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    u8 *cnt;
+
+    if (flags & 0x40000000) {
+        if (D_main_bss_8011D094 >= 0x40) {
+            chunk = D_main_bss_801163B0;
+            if (chunk == NULL) {
+                chunk = findAndUnlinkSmallestEntry();
+                if (chunk != NULL) {
+                    tail = chunk;
+                    while (tail->next != NULL) {
+                        tail = tail->next;
+                    }
+                    tail->next = D_main_bss_801163B0;
+                    if (D_main_bss_801163B0 != NULL) {
+                        D_main_bss_801163B0->prev = tail;
+                    }
+                    D_main_bss_801163B0 = chunk;
+                    chunk->prev = NULL;
+                }
+                chunk = D_main_bss_801163B0;
+            }
+            D_main_bss_801163B0 = D_main_bss_801163B0->next;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = NULL;
+            }
+            if (*D_main_bss_8011A4BC != NULL) {
+                (*D_main_bss_8011A4BC)->prev = chunk;
+            }
+            chunk->next = *D_main_bss_8011A4BC;
+            *D_main_bss_8011A4BC = chunk;
+            D_main_bss_8011D090 = chunk->displayList;
+            D_main_bss_8011D094 = 0;
+        }
+        cnt = &D_main_bss_8011D094;
+        ((s32 *)D_main_bss_8011D090)[(*cnt)++] = (ref & 0xFFFFFF) | (kind << 24);
+    }
+}
+
+static __inline__ Gfx *raeAllocB(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    if (*D_main_bss_8011A4AC != NULL) {
+        (*D_main_bss_8011A4AC)->prev = chunk;
+    }
+    chunk->next = *D_main_bss_8011A4AC;
+    *D_main_bss_8011A4AC = chunk;
+    return chunk->displayList;
+}
+
+Gfx *raeImpl(Gfx *dl, s32 flags) __asm__("reserveAndEmitDLEntry");
+Gfx *raeImpl(Gfx *dl, s32 flags) {
+    if (dl >= D_main_bss_801163D4) {
+        dl->words.w0 = 0xB5000000;
+        dl->words.w1 = 0;
+        dl = raeAllocBuf();
+    }
+    raeRecord((s32)dl, flags, 1);
+    D_main_bss_8011A438 = (s32 *)dl;
+    D_main_bss_8011A440 = 0;
+    dl++;
+    D_main_bss_8011A43C = (s32)raeAllocB();
+    return dl;
+}
 
 s32 reserveAndEmitDLEntry(s32, s32);
 extern s32 *D_main_bss_8011A438;
