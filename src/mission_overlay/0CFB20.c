@@ -376,7 +376,62 @@ spawn:
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", advanceAtStDeathAnimPhase);
+typedef struct {
+    u8 pad0[0x30];
+    u8 *mesh30;
+    u8 pad34[0x54 - 0x34];
+    f32 f54;
+    u8 pad58[0x7E - 0x58];
+    s16 h7E;
+    s32 anim[3];
+    s32 u8C, u90, u94;
+    f32 f98, f9C;
+    u8 padA0[0xAB - 0xA0];
+    u8 bAB;
+} AdObj;
+
+void setModelAnimSlotCycleDuration(s32, f32);
+s32 flattenAnimTreeAndAllocateSlot(s32, s32);
+s32 markModelAnimChannelEntryActive(s32, s32);
+void adImpl(AdObj *arg0) __asm__("advanceAtStDeathAnimPhase");
+void adImpl(AdObj *arg0) {
+
+    s32 slot;
+
+    clearModelAnimChannelEntry(arg0->u90);
+    releaseModelAnimSlot(arg0->u8C);
+    switch (arg0->bAB) {
+    case 1: {
+        f32 p = arg0->f98 * arg0->f9C;
+        arg0->h7E = 2;
+        arg0->f9C = 0.35576922f / arg0->f54;
+        arg0->f98 = 1.0f / p;
+        goto common; }
+    case 2: {
+        f32 p = arg0->f98 * arg0->f9C;
+        arg0->u94 = 0;
+        arg0->h7E = 1;
+        arg0->f9C = 1.6818181f / arg0->f54;
+        arg0->f98 = 1.0f / p;
+        goto common; }
+    case 3: {
+        f32 p = arg0->f98 * arg0->f9C;
+        arg0->h7E = 0;
+        arg0->f9C = 0.5f / arg0->f54;
+        arg0->f98 = 1.0f / p;
+        goto common; }
+    default:
+        return;
+    }
+common:
+    arg0->f98 = 1.0f / (arg0->f98 * arg0->f9C);
+    slot = flattenAnimTreeAndAllocateSlot(*(s32 *)(arg0->mesh30 + 0x18), arg0->anim[arg0->h7E]);
+    arg0->u8C = slot;
+    arg0->u90 = markModelAnimChannelEntryActive(slot, 0);
+    setModelAnimSlotCycleDuration(arg0->u8C, arg0->f98);
+    advanceAtStEffectPhaseSound((u8 *)arg0, 10.0f, 1);
+    arg0->bAB = 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A70DC);
 
