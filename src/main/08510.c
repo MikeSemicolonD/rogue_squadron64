@@ -542,7 +542,136 @@ void commitMeshDrawBatchRefs(struct meshdef1 *mesh) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", emitAllocatedDLCommand);
+extern Gfx *D_main_bss_8011A448;
+extern Gfx *D_main_bss_8011A44C;
+extern u8 D_main_bss_8011A450;
+
+static __inline__ Gfx *eadAllocBuf(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    struct DisplayListBuffer *buf;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    buf = chunk;
+    if (*D_main_bss_801163FC == NULL) {
+        *D_main_bss_801163FC = buf;
+    } else {
+        (*D_main_bss_8011A7DC)->next = buf;
+        buf->prev = *D_main_bss_8011A7DC;
+    }
+    buf->next = NULL;
+    *D_main_bss_8011A7DC = buf;
+    D_main_bss_801163D4 = &buf->displayList[0x1F];
+    return buf->displayList;
+}
+
+static __inline__ void eadRecord(s32 ref, s32 flags, s32 kind) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+    u8 *cnt;
+
+    if (flags & 0x40000000) {
+        if (D_main_bss_8011D094 >= 0x40) {
+            chunk = D_main_bss_801163B0;
+            if (chunk == NULL) {
+                chunk = findAndUnlinkSmallestEntry();
+                if (chunk != NULL) {
+                    tail = chunk;
+                    while (tail->next != NULL) {
+                        tail = tail->next;
+                    }
+                    tail->next = D_main_bss_801163B0;
+                    if (D_main_bss_801163B0 != NULL) {
+                        D_main_bss_801163B0->prev = tail;
+                    }
+                    D_main_bss_801163B0 = chunk;
+                    chunk->prev = NULL;
+                }
+                chunk = D_main_bss_801163B0;
+            }
+            D_main_bss_801163B0 = D_main_bss_801163B0->next;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = NULL;
+            }
+            if (*D_main_bss_8011A4BC != NULL) {
+                (*D_main_bss_8011A4BC)->prev = chunk;
+            }
+            chunk->next = *D_main_bss_8011A4BC;
+            *D_main_bss_8011A4BC = chunk;
+            D_main_bss_8011D090 = chunk->displayList;
+            D_main_bss_8011D094 = 0;
+        }
+        cnt = &D_main_bss_8011D094;
+        ((s32 *)D_main_bss_8011D090)[(*cnt)++] = (ref & 0xFFFFFF) | (kind << 24);
+    }
+}
+
+static __inline__ Gfx *eadAllocFill(void) {
+    struct DisplayListBuffer *chunk;
+    struct DisplayListBuffer *tail;
+
+    chunk = D_main_bss_801163B0;
+    if (chunk == NULL) {
+        chunk = findAndUnlinkSmallestEntry();
+        if (chunk != NULL) {
+            tail = chunk;
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = D_main_bss_801163B0;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = tail;
+            }
+            D_main_bss_801163B0 = chunk;
+            chunk->prev = NULL;
+        }
+        chunk = D_main_bss_801163B0;
+    }
+    D_main_bss_801163B0 = D_main_bss_801163B0->next;
+    if (D_main_bss_801163B0 != NULL) {
+        D_main_bss_801163B0->prev = NULL;
+    }
+    if (*D_main_bss_8011A4C4 != NULL) {
+        (*D_main_bss_8011A4C4)->prev = chunk;
+    }
+    chunk->next = *D_main_bss_8011A4C4;
+    *D_main_bss_8011A4C4 = chunk;
+    return chunk->displayList;
+}
+
+Gfx *emitAllocatedDLCommand(Gfx *dl, s32 flags) {
+    if (dl >= D_main_bss_801163D4) {
+        dl->words.w0 = 0xB5000000;
+        dl->words.w1 = 0;
+        dl = eadAllocBuf();
+    }
+    eadRecord((s32)dl, flags, 0);
+    D_main_bss_8011A448 = dl;
+    D_main_bss_8011A450 = 0;
+    dl++;
+    D_main_bss_8011A44C = eadAllocFill();
+    return dl;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitFaceDLCommands);
 
