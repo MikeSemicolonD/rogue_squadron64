@@ -236,7 +236,70 @@ void nbImpl(NbArg *arg0, f32 dt) {
     NB_SUB(arg0->def2, arg0->obj2, -45.0f)
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BE650", triggerNabooEngineEffect);
+typedef struct {
+    f32 x, y, z;
+} NeV3;
+typedef struct {
+    NeV3 pos;
+    NeV3 a;
+    NeV3 b;
+    NeV3 c;
+} NeFrame;
+typedef struct {
+    u8 pad0[4];
+    u8 *p4;
+    u8 pad8[0x13C];
+} NeE;
+extern NeE neD18[] __asm__("D_main_bss_80138D18");
+extern NeV3 D_mission_overlay_80109AB4[];
+extern u8 D_mission_overlay_80109A60[];
+void neLookupHmt(s32, char *, s32, void *, void *, s32) __asm__("lookupHmtTextureByName");
+void accumulateVectorInObjectFrame(void *, void *, void *);
+void normalize_vector(void *);
+f32 vec3Dot(void *, void *);
+f32 constMinusSinfApprox(f32);
+void vec3Cross(void *, void *, void *);
+void quatFromAxisAngleSafe(void *, void *, f32);
+void rotateVec3ByQuat(void *, void *, void *);
+u16 dispatchCueByCategory(s32, u16, void *, void *, s32, f32, f32);
+
+void neImpl(s32 *arg0, s32 arg1, NeV3 *out) __asm__("triggerNabooEngineEffect");
+void neImpl(s32 *arg0, s32 arg1, NeV3 *out) {
+    NeFrame f;
+    f32 v[4];
+    f32 ax[4];
+    f32 q[4];
+    u8 *pl;
+    f32 ang;
+    s32 b;
+
+    pl = sCraftBytes[arg0[0]];
+    neLookupHmt(*(s32 *)pl, "a_b", b = arg1 & 1, &f, NULL, 0);
+    if (*(u16 *)(neD18[arg0[0]].p4 + 4) == 3) {
+        accumulateVectorInObjectFrame(&f, &D_mission_overlay_80109AB4[b], pl);
+    }
+    if (*(u16 *)((u8 *)arg0 + 6) != 0xFFFF) {
+        v[0] = *(f32 *)(arg0 + 2) - f.pos.x;
+        v[1] = *(f32 *)(arg0 + 3) - f.pos.y;
+        v[2] = *(f32 *)(arg0 + 4) - f.pos.z;
+        normalize_vector(v);
+        ang = constMinusSinfApprox(vec3Dot(&f.a, v)) * 57.295776f;
+        vec3Cross(ax, &f.a, v);
+        if (*(u16 *)(neD18[arg0[0]].p4 + 4) != 3) {
+            quatFromAxisAngleSafe(q, ax, ang * 0.4f);
+        } else {
+            quatFromAxisAngleSafe(q, ax, ang * 0.8f);
+        }
+        *(NeV3 *)v = f.a;
+        rotateVec3ByQuat(q, v, &f.a);
+        *(NeV3 *)v = f.b;
+        rotateVec3ByQuat(q, v, &f.b);
+    }
+    dispatchCueByCategory(2, *(u16 *)(pl + 0xB6), &f, D_mission_overlay_80109A60, 1, 15.0f, *(f32 *)(pl + 0x16C));
+    if (out != NULL) {
+        *out = f.pos;
+    }
+}
 
 #include "controller_settings.h"
 #include "main/bss_80130B10.h"
