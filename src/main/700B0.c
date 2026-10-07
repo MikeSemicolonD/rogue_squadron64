@@ -817,7 +817,53 @@ u16 spawnMultiEventNpcWrapper(u16 idx, f32 arg1, s32 cnt, s32 arg3, s32 arg4, u8
     return 0xFFFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnNpcChildForActivePlayerCell);
+typedef struct {
+    u16 a;
+    s16 b;
+    u8 c;
+    u8 pad5[3];
+    s32 buf;
+    f32 d;
+    s32 e;
+    s32 f;
+    u8 g;
+    u8 h;
+    u8 pad3A[2];
+} ScArgs;
+
+s32 scCnapt(void *, s32, s32, s32 *, void *, s32, s32) __asm__("computeNamedAttachPointTransform");
+
+u16 spawnNpcChildForActivePlayerCell(u16 idx, f32 arg1, s32 arg2, s32 arg3, u8 arg4, s32 arg5, u8 arg6) {
+    ScArgs args;
+    u8 sp40[0x30];
+    u8 *ctx;
+
+    ctx = (u8 *)getNpcContextByIndex(idx);
+    if (ctx != NULL) {
+        if (D_main_bss_80130B63 == 0) {
+            if (idx != (u16)getPlayerField2(0) && D_main_bss_8013A894 >= 0xB) {
+                return 0xFFFF;
+            }
+        }
+        if (*(void **)(ctx + 0xC) != NULL) {
+            if (scCnapt(*(void **)(ctx + 0xC), arg3, arg4, &args.buf, sp40, 0, 0) != 0) {
+                args.c = arg4;
+                args.a = idx;
+                args.g = arg6;
+                args.h = 0;
+                args.e = 0;
+                args.b = arg2;
+                if (args.b <= 0) {
+                    args.b = 1;
+                }
+                args.d = arg1;
+                args.f = arg5;
+                return spawnNpcOfType((npc_update)multiEventTemplateNpcHandler, &args, 4, ctx[0x19] + 1);
+            }
+        }
+    }
+    return 0xFFFF;
+}
 
 void sendSlotActionTwelve(u16 arg0) {
     if (arg0 != 0xFFFF) {
