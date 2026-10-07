@@ -401,13 +401,64 @@ BgObj *loadNamedTextureDescriptor(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", strMenuAlpha);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5C58);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", strMenuP);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5C7C);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", allocTextRenderTarget);
+typedef struct { u8 b[4]; f32 f4; f32 f8; s32 wC; s32 w10; char name[16]; } AtMat;
+typedef struct { u8 *pix[8]; u8 *plte; char *name; u16 w; u16 h; u8 one; u8 depth; u16 flags; u32 trans; } AtTex;
+typedef struct { u8 pad0[8]; s16 tilesX; s16 tilesY; u16 *ids; u8 pad10[0x14]; f32 f24; f32 f28; u8 b2C; u8 b2D; u8 b2E; u8 b2F; } AtSet;
+typedef struct { u16 w; u16 h; u16 bpp; u16 pad6; s32 count; AtSet *ts; void *asset; u16 *ids; u8 idx; u8 pad19[3]; s32 x1C; u8 pad20[0x18]; } AtObj;
+s32 atRegister(AtMat *, AtTex *, u8) __asm__("registerHmtTextureInTable");
+void *atMalloc(s32, s32) __asm__("rs_malloc");
+void atFree(void *) __asm__("rs_free");
+
+AtObj *atImpl(s16 w, s16 h) __asm__("allocTextRenderTarget");
+AtObj *atImpl(s16 w, s16 h) {
+    AtMat mat = { { 0, 1, 0, 0 }, 1.0f, 1.0f, 0, 0, "P____" };
+    AtTex tex = { { 0, 0, 0, 0, 0, 0, 0, 0 }, 0, D_menu_overlay_800A5C2C, 0, 0, 1, 0, 4, 0 };
+    AtObj *b;
+    AtSet *ts;
+    s32 n;
+    s32 q;
+    u32 i;
+    s16 id;
+
+    b = atMalloc(0x38, 0);
+    rs_memset(b, 0, 0x38);
+    b->w = 0x40;
+    b->h = 0x10;
+    q = w / b->w;
+    b->bpp = 1;
+    b->count = q;
+    b->count = q * (h / b->h);
+    b->ids = atMalloc(b->count * 2, 0);
+    ts = atMalloc(0x30, 0);
+    b->ts = ts;
+    rs_memset(ts, 0, 0x30);
+    ts->ids = atMalloc(b->count * 2, 0);
+    n = b->w * b->h * b->bpp / 2;
+    tex.w = b->w;
+    tex.h = b->h;
+    tex.one = 1;
+    tex.depth = 0;
+    tex.pix[0] = atMalloc(n, 0);
+    rs_memset(tex.pix[0], 0xFF, n);
+    tex.name[1] = D_menu_overlay_800CC850 + 'A';
+    mat.name[1] = D_menu_overlay_800CC850 + 'A';
+    id = atRegister(&mat, &tex, 1);
+    ts->ids[0] = b->ids[0] = id;
+    atFree(tex.pix[0]);
+    ts->tilesX = w / b->w;
+    { s16 ty = h / b->h;
+    ts->f24 = ts->f28 = 1.0f;
+    ts->tilesY = ty; }
+    for (i = 1; i < b->count; i++) {
+        ts->ids[i] = ts->ids[0];
+        b->ids[i] = 0xFFFF;
+    }
+    b->idx = D_menu_overlay_800CC850++;
+    return b;
+}
 
 typedef struct {
     u8 pad0[0x10];
