@@ -307,7 +307,33 @@ void initWaterSprayEffectAndSfx(void) {
     initWaterSprayParticles();
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/79E80", spawnNpcWithRandomRotation);
+s16 rand();
+void buildRotationMatrixSlot0(f32 *, f32);
+void composeRotationMatrixSlot1(f32 *, f32);
+
+static __inline__ void randFacingInl(f32 *p, s16 n) {
+    f32 m[12];
+
+    buildRotationMatrixSlot0(m, (f32)(rand() % n));
+    composeRotationMatrixSlot1(m, (f32)rand());
+    p[0] = -m[1];
+    p[1] = -m[4];
+    p[2] = -m[7];
+}
+
+void spawnNpcWithRandomRotation(f32 *arg0) {
+    randFacingInl(arg0 + 2, 45);
+    arg0[2] *= 4.0f;
+    arg0[5] = 8.0f;
+    arg0[11] = 360.0f;
+    arg0[8] = 0;
+    arg0[7] = 0.5f;
+    arg0[6] = -2.0f;
+    arg0[3] *= 4.0f;
+    arg0[9] = -0.05f;
+    arg0[4] *= 4.0f;
+    arg0[10] = 0;
+}
 
 s32 heavyMechSubEffectNpcHandler(u8 *, u16, u8 *);
 u16 spawnNpcOfType(void *, void *, u32, u8);
