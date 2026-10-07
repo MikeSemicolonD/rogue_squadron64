@@ -1142,9 +1142,85 @@ void playerAtStInit(s32 arg0, s16 arg1)
   p->f178 = refreshPlayerSecondaryWeaponHud(0, &gGameSettings, 0xFEFFFFFF) & 0xFF;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0CFB20", D_mission_overlay_800A721C);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", spawnPlayerAtStCannonFire);
+typedef struct { f32 x, y, z; } PcV3;
+typedef struct { PcV3 pos; PcV3 dir; PcV3 v18; PcV3 v24; } PcBuf;
+typedef struct { PcV3 pos; PcV3 dir; f32 f18; f32 f1C; s32 w20; u8 *p24; u16 h28; u8 b2A; u8 pad2B; u16 h2C; u8 pad2E[0x42]; } PcAim;
+typedef struct { f32 m[12]; } PcMat;
+typedef struct { u8 pad0[8]; PcMat *mtx; s32 part; } PcCtx;
+typedef struct { u8 pad0[0x24]; PcV3 pos; u8 pad30[0]; } PcObjH;
+typedef struct { u8 pad0[0x24]; f32 pos[3]; s32 f30; u8 pad34[0x1C]; s32 w50; u8 pad54[0x1E]; u16 h72; } PcObj;
+s32 acquireNpcTargetsInAimCone(PcAim *);
+PcCtx *pcGetCtx(u16) __asm__("getNpcContextByIndex");
+void transformMeshPartIntoWorld(s32, f32 *);
+void computeAnchorRelativePositionByDistanceRatio(PcBuf *, PcMat *, f32, PcV3 *);
+f32 computeTurnVectorTowardTarget(PcBuf *, PcMat *, PcV3 *);
+void quatFromAxisAngleSafe(f32 *, PcV3 *, f32);
+
+u16 dispatchCueByCategory(s32, u16, void *, void *, s32, f32, f32);
+
+s32 spawnPlayerAtStCannonFire(PcObj *arg0, s32 arg1) {
+    PcBuf buf;
+    f32 sc[3] = { 1.0f, 1.0f, 1.5f };
+    PcAim aim;
+    u8 tag[8];
+    PcMat m;
+    PcV3 t;
+    f32 q[4];
+    PcCtx *ctx;
+    f32 a;
+    f32 r;
+    f32 lim;
+
+    tag[0] = 0xE;
+    tag[1] = 0xFF;
+    if (arg1 == 0) {
+        lookupHmtTextureByName(arg0->f30, D_mission_overlay_800A700C, 0, (u8 *)&buf, 0, 0);
+    } else {
+        lookupHmtTextureByName(arg0->f30, D_mission_overlay_800A7010, 0, (u8 *)&buf, 0, 0);
+    }
+    arg0->w50 = 0;
+    buf.pos.x -= buf.dir.x * 0.2f;
+    buf.pos.y -= buf.dir.y * 0.2f;
+    buf.pos.z -= buf.dir.z * 0.2f;
+    aim.pos = buf.pos;
+    aim.dir = buf.dir;
+    aim.f18 = 6.0f;
+    aim.f1C = 15.0f;
+    aim.w20 = 0;
+    aim.p24 = tag;
+    aim.h28 = arg0->h72;
+    aim.b2A = 0;
+    if (acquireNpcTargetsInAimCone(&aim) == 0) {
+        dispatchCueByCategory(3, arg0->h72, &buf, sc, 1, 10.0f, 1.0f);
+    } else {
+        ctx = pcGetCtx(aim.h2C);
+        lim = 3.5f;
+        if (ctx->part == 0) {
+            m = *ctx->mtx;
+        } else {
+            m = *ctx->mtx;
+            transformMeshPartIntoWorld(ctx->part, m.m);
+        }
+        computeAnchorRelativePositionByDistanceRatio(&buf, &m, 10.0f, &t);
+        *(PcV3 *)&m = t;
+        a = computeTurnVectorTowardTarget(&buf, &m, &t);
+        __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(a));
+        if (r > 0.01f) {
+            if (lim < a) {
+                a = lim;
+            } else if (a < -lim) {
+                a = -lim;
+            }
+            quatFromAxisAngleSafe(q, &t, a);
+            rotateVec3ByQuat(q, &buf.dir, &buf.dir);
+            rotateVec3ByQuat(q, &buf.v18, &buf.v18);
+        }
+        dispatchCueByCategory(3, arg0->h72, &buf, sc, 1, 10.0f, 1.0f);
+    }
+    play3DSoundEvent(0, arg0, arg0->pos, 20.0f, 0.4f, 0, 0xD, 0x78, 0x28);
+    return 0;
+}
 
 extern u16 D_main_bss_8013957C;
 extern u8 D_main_bss_80138058[];
