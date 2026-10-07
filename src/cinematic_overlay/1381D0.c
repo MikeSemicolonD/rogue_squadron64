@@ -42,7 +42,363 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", strCutsceneTypeExtro
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", strCutsceneTypeIntro);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicLoopBody);
+typedef struct {
+    s8 unk0;
+    u8 pad1[0xF];
+    union {
+        s32 w;
+        u8 b[4];
+    } u;
+    u8 pad14[0xC];
+    u8 unk20;
+    u8 unk21;
+    u8 unk22;
+    u8 unk23;
+} ClbGS;
+extern ClbGS gGameSettings_l __asm__("gGameSettings");
+extern s32 D_main_bss_80137CE4;
+extern s16 D_cinematic_overlay_800B0B22_l __asm__("D_cinematic_overlay_800B0B22");
+extern f32 D_cinematic_overlay_800B0B2C;
+extern s8 D_cinematic_overlay_800B0B1F_l __asm__("D_cinematic_overlay_800B0B1F");
+extern s32 D_main_bss_8013889C;
+extern s8 D_cinematic_overlay_800B09B0;
+extern s8 D_main_bss_80130B39;
+extern s8 D_main_bss_80130BA0;
+extern u8 D_main_bss_80130B38;
+extern u8 D_cinematic_overlay_800B0B1C;
+extern s16 D_cinematic_overlay_800B0B24_l __asm__("D_cinematic_overlay_800B0B24");
+extern s8 D_cinematic_overlay_800B0B14_l __asm__("D_cinematic_overlay_800B0B14");
+extern s8 D_cinematic_overlay_800B0B1D_l __asm__("D_cinematic_overlay_800B0B1D");
+extern f32 D_main_bss_80130BA4;
+extern s32 D_cinematic_overlay_800B0B28;
+extern u8 D_cinematic_overlay_800B09C0[];
+extern f32 D_cinematic_overlay_800B1938[];
+extern s32 D_cinematic_overlay_800B0AFC;
+extern u8 D_cinematic_overlay_800B0B1E;
+extern s32 D_main_bss_80130B50;
+extern u16 D_main_bss_80139560[];
+u8 shouldShowCutsceneForLevelStage(u8, u8);
+void applyVolumeSettingsToMixer();
+void initSceneForMission_l(s32 *, s32, u8, s32) __asm__("initSceneForMission");
+void setupCutsceneLevel_l(s32, u8) __asm__("setupCutsceneLevel");
+void maybeLoadYwingCutscene(s32, s32);
+struct cuts_file_constant *load_cutscene_l(s32, u8) __asm__("load_cutscene");
+void resetCutsceneActionSlots(void);
+void initCutsceneSlotTable(void);
+Vec3f *cutscenePopulateSlotsFromLevelLists_l(s32 *, struct cuts_file_constant *, u8, f32 *, f32) __asm__("cutscenePopulateSlotsFromLevelLists");
+f32 cinematicComputeDt(void);
+void pollControllerInputs(void);
+void setNewAndPreviousButtonsPressed(void);
+f32 cinematicInterpRatio(void);
+void applySpeechVolumeScalar(f32);
+s32 isUnlockBitSet(u8);
+u32 getControllerNewButtonsPressed(u8);
+void playSimpleAudioCmd(s32, s32, s32);
+void waitForPrevFrameDone(void);
+s8 spawnCutsceneEffectsAndCues_l(struct cuts_file_constant *, s32, u8, f32, s32) __asm__("spawnCutsceneEffectsAndCues");
+void cutsceneDispatchSlotsByFlag_l(s32 *, struct cuts_file_constant *, f32, f32) __asm__("cutsceneDispatchSlotsByFlag");
+void npcIncomingMissileUpdate_l(s32 *, f32) __asm__("npcIncomingMissileUpdate");
+s32 slotDispatcherIter(u16, s32, void *);
+void updateGridLayerScroll(f32);
+void tickWrappingTimerAccumulatorList(f32);
+void loadGridCellTilesByDistance(f32);
+f32 computeCutsceneScreenScale_l(s32) __asm__("computeCutsceneScreenScale");
+void tickCutsceneCameraFromTimeline_l(s32, f32) __asm__("tickCutsceneCameraFromTimeline");
+void updateActiveGridCellState(Vec3f *);
+void cinematicSlotBatchDispatch_l(s32 *, s32) __asm__("cinematicSlotBatchDispatch");
+void tickSpeechSubsystem(f32);
+void tickVoiceSubtitleDisplay(f32);
+void updatePositionalAudioSource_l(struct cuts_file_constant *, f32 *, f32) __asm__("updatePositionalAudioSource");
+void frameStartReset(void);
+void slotEffectHandlerDispatch_l(s32 *, s32) __asm__("slotEffectHandlerDispatch");
+void drawFrameProfilerBars(void);
+void submitGfxFrame(void);
+void bufferArbiterProducerScanWait(void);
+void waitForAnyAudioSlot(void);
+void tickCutsceneActionSlots(f32);
+void emit3DSoundsForActiveNpcs(u8 *, f32 *);
+void initCinematicDispatchSlots(s32 *, void *);
+s32 cinematicStageAdvancer(s32, s32, f32);
+s32 isCinematicActive(void);
+struct CineSize;
+void cinematicInitializer(s32, struct CineSize *, f32);
+void tickCutsceneNpcSlots(void *);
+void cinematicDeactivator(void *);
+void freeCutsceneResources(void);
+void setUnlockBitAndPersist(u8);
+void clearDeferredClearRequest(void);
+
+void cinematicSlotBatchDispatch_u(s32 *, u8) __asm__("cinematicSlotBatchDispatch");
+void slotEffectHandlerDispatch_u(s32 *, u8) __asm__("slotEffectHandlerDispatch");
+u8 isUnlockBitSet_l(u8) __asm__("isUnlockBitSet");
+void setUnlockBitAndPersist_l(u8) __asm__("setUnlockBitAndPersist");
+void initSceneForMission_m(s32 *, u8, u8) __asm__("initSceneForMission");
+void maybeLoadYwingCutscene_l(u8, u8) __asm__("maybeLoadYwingCutscene");
+u32 getControllerNewButtonsPressed_l(u8) __asm__("getControllerNewButtonsPressed");
+void applyVolumeSettingsToMixer_l(void) __asm__("applyVolumeSettingsToMixer");
+void tickCutsceneNpcSlots_l(void *, f32) __asm__("tickCutsceneNpcSlots");
+void cinematicDeactivator_l(s32, s32 *) __asm__("cinematicDeactivator");
+void noopHandler_l(void *) __asm__("noopHandler_800AEB30");
+void cinematicInitializer_l(s32, s32 *, f32) __asm__("cinematicInitializer");
+u8 cinematicStageAdvancer_l(s32, s32 *, f32) __asm__("cinematicStageAdvancer");
+u8 isCinematicActive_l(void) __asm__("isCinematicActive");
+u8 shouldShow_l(u8, u8) __asm__("shouldShowCutsceneForLevelStage");
+
+void clbImpl(u16 level, u8 type, u8 port) __asm__("cinematicLoopBody");
+void clbImpl(u16 level, u8 type, u8 port)
+{
+  s32 a18[24];
+  f32 f78;
+  u8 hadBit0;
+  u8 vol0;
+  u8 vol1;
+  u8 vol2;
+  f32 dt;
+  f32 prog;
+  f32 scale;
+  f32 nf;
+  u8 skip;
+  u8 doSkip;
+  u8 pressed;
+  s8 i;
+  s32 j;
+  s32 tmp;
+  u8 flag;
+  u32 gw;
+  if (shouldShow_l(level & 0xFF, type) & 0xFF)
+  {
+    hadBit0 = gGameSettings_l.u.b[3] & 1;
+    vol0 = gGameSettings_l.unk20;
+    vol1 = gGameSettings_l.unk21;
+    vol2 = gGameSettings_l.unk22;
+    if ((type == 2) || (gGameSettings_l.u.w & 0x20))
+    {
+      gGameSettings_l.unk20 = 0x7F;
+      gGameSettings_l.unk21 = 0x7F;
+      gGameSettings_l.unk22 = 0x7F;
+      if (gGameSettings_l.unk23 != 0)
+      {
+        gGameSettings_l.u.w |= 1;
+      }
+      applyVolumeSettingsToMixer_l();
+    }
+    gGameSettings_l.unk0 = (gCurrentLevel = level & 0xFFFF);
+    D_main_bss_80137CE4 = 0;
+    D_cinematic_overlay_800B0B22_l = 0;
+    D_cinematic_overlay_800B0B2C = 0.0f;
+    D_cinematic_overlay_800B0B1F_l = 0;
+    D_main_bss_8013889C = 0;
+    D_cinematic_overlay_800B09B0 = 3;
+    D_main_bss_80130B39 = 1;
+    D_main_bss_80130BA0 = type == 1;
+    flag = 0;
+    if (type == 2)
+    {
+      flag = (level & 0xFFFF) == 3;
+    }
+    D_main_bss_80130B38 = flag;
+    D_cinematic_overlay_800B0B1C = 0;
+    D_cinematic_overlay_800B0B24_l = 0;
+    D_cinematic_overlay_800B0B14_l = 0;
+    D_cinematic_overlay_800B0B1D_l = 0;
+    D_main_bss_80130BA4 = 0.0f;
+    initSceneForMission_m(a18, level & 0xFF, type);
+    setupCutsceneLevel_l(level & 0xFFFF, type);
+    maybeLoadYwingCutscene_l(level & 0xFF, type);
+    D_cinematic_overlay_800B1904 = load_cutscene_l(level & 0xFF, type);
+    resetCutsceneActionSlots();
+    i = 0;
+    initCutsceneSlotTable();
+    scale = 1.0f;
+    prog = 0.0f;
+    D_cinematic_overlay_800B0B28 = 0;
+    for (i = 0; i < 6; i++)
+    {
+      if (D_cinematic_overlay_800B1904->unk1318[i].unk00[0] != 0)
+      {
+        break;
+      }
+    }
+
+    a18[0] = 0;
+    for (j = 3; j >= 0; j--)
+    {
+      ((s32 *) D_cinematic_overlay_800B09C0)[j] = 0;
+    }
+
+    D_cinematic_overlay_800B1A08 = cutscenePopulateSlotsFromLevelLists_l(a18, D_cinematic_overlay_800B1904, i, D_cinematic_overlay_800B1938, 0.0f);
+    emit3DSoundsForActiveNpcs((u8 *) D_cinematic_overlay_800B1904, D_cinematic_overlay_800B1938);
+    while (1)
+    {
+      dt = cinematicComputeDt();
+      pollControllerInputs();
+      setNewAndPreviousButtonsPressed();
+      D_cinematic_overlay_800B0B2C += dt;
+      D_main_bss_80130BA4 += dt;
+      if (cinematicStageAdvancer_l(D_cinematic_overlay_800B0AFC, a18, dt) & 0xFF)
+      {
+        break;
+      }
+      nf = cinematicInterpRatio();
+      if (nf != 1.0f)
+      {
+        applySpeechVolumeScalar(nf);
+      }
+      prog += (dt * scale) / D_cinematic_overlay_800B1904->unk0050;
+      prog = (prog < 0.99995f) ? (prog) : (0.99995f);
+      D_cinematic_overlay_800B0B28 = (prog * D_cinematic_overlay_800B1904->unk0054) * D_cinematic_overlay_800B1904->unk0050;
+      if (type != 2)
+      {
+        if (gGameSettings_l.u.w & 0x20)
+        {
+          skip = 1;
+        }
+        else
+        {
+          skip = isUnlockBitSet_l((level & 0xFFFF) + ((type == 0) ? (6) : (0x16)));
+        }
+      }
+      else
+      {
+        skip = 0;
+        if (((level & 0xFFFF) == 0x13) && (D_cinematic_overlay_800B0B28 >= 0x5F))
+        {
+          skip = isUnlockBitSet_l(0);
+        }
+      }
+      if (D_main_bss_80130B38 != 0)
+      {
+        switch (D_cinematic_overlay_800B0B1E)
+        {
+          case 0:
+            if (D_cinematic_overlay_800B0B28 >= 0x222)
+          {
+            D_cinematic_overlay_800B0B1C = 1;
+          }
+            break;
+
+          case 1:
+            if (D_cinematic_overlay_800B0B28 >= 0x222)
+          {
+            D_cinematic_overlay_800B0B1C = 1;
+          }
+            break;
+
+          case 2:
+            if (D_cinematic_overlay_800B0B28 >= 0x47F)
+          {
+            D_cinematic_overlay_800B0B1C = 1;
+          }
+            break;
+
+        }
+
+      }
+      if (gGameSettings_l.u.w & 0x400)
+      {
+        skip = 1;
+      }
+      if (gGameSettings_l.u.w & 0x20)
+      {
+        skip = 1;
+      }
+      pressed = 0;
+      if (skip)
+      {
+        pressed = (getControllerNewButtonsPressed_l(port) & 0x9000) != 0;
+      }
+      doSkip = pressed;
+      gw = gGameSettings_l.u.w;
+      if ((gw & 0x420) && doSkip)
+      {
+        gGameSettings_l.u.w = gw | 0x800;
+      }
+      doSkip = (doSkip || D_cinematic_overlay_800B0B1C) ? (1) : (0);
+      if ((((u32) D_cinematic_overlay_800B0B28) >= (D_cinematic_overlay_800B1904->unk0044 - 10)) || doSkip)
+      {
+        if (!(isCinematicActive_l() & 0xFF))
+        {
+          cinematicInitializer_l(D_cinematic_overlay_800B0AFC, a18, (D_main_bss_80130B38 != 0) ? 6.0f : 16.0f);
+          playSimpleAudioCmd(0, (D_main_bss_80130B38 != 0) ? (0x546) : (0x12C), 0xFD);
+          playSimpleAudioCmd(0, 0x12C, 0xFE);
+        }
+      }
+      waitForPrevFrameDone();
+      i = spawnCutsceneEffectsAndCues_l(D_cinematic_overlay_800B1904, D_cinematic_overlay_800B0B28, i, prog, 0);
+      D_cinematic_overlay_800B1A08 = cutscenePopulateSlotsFromLevelLists_l(a18, D_cinematic_overlay_800B1904, i, D_cinematic_overlay_800B1938, prog);
+      initCinematicDispatchSlots(a18, D_cinematic_overlay_800B1938);
+      cutsceneDispatchSlotsByFlag_l(a18, D_cinematic_overlay_800B1904, prog, dt);
+      tickCutsceneActionSlots(prog);
+      npcIncomingMissileUpdate_l(a18, dt);
+      tickCutsceneNpcSlots_l(D_cinematic_overlay_800B1904, dt);
+      f78 = dt;
+      slotDispatcherIter(D_main_bss_80139560[6], 3, &f78);
+      slotDispatcherIter(D_main_bss_80139560[8], 3, &f78);
+      slotDispatcherIter(D_main_bss_80139560[10], 3, &f78);
+      slotDispatcherIter(D_main_bss_80139560[3], 3, &f78);
+      slotDispatcherIter(D_main_bss_80139560[4], 3, &f78);
+      slotDispatcherIter(D_main_bss_80139560[7], 3, &f78);
+      slotDispatcherIter(D_main_bss_80139560[0x1B], 3, &f78);
+      updateGridLayerScroll(dt);
+      tickWrappingTimerAccumulatorList(dt);
+      loadGridCellTilesByDistance(dt);
+      if (type == 2)
+      {
+        if ((level & 0xFFFF) != 3)
+        {
+          if ((level & 0xFFFF) == 0x13)
+          {
+            scale = computeCutsceneScreenScale_l(D_cinematic_overlay_800B0B28);
+          }
+        }
+        else
+        {
+          tickCutsceneCameraFromTimeline_l(D_cinematic_overlay_800B0B28, dt);
+        }
+      }
+      updateActiveGridCellState(D_cinematic_overlay_800B1A08);
+      cinematicSlotBatchDispatch_u(a18, level);
+      tickSpeechSubsystem(dt);
+      tickVoiceSubtitleDisplay(dt);
+      updatePositionalAudioSource_l(D_cinematic_overlay_800B1904, D_cinematic_overlay_800B1938, dt);
+      frameStartReset();
+      slotEffectHandlerDispatch_u(a18, level);
+      drawFrameProfilerBars();
+      submitGfxFrame();
+    }
+
+    bufferArbiterProducerScanWait();
+    cinematicDeactivator_l(D_cinematic_overlay_800B0AFC, a18);
+    waitForAnyAudioSlot();
+    noopHandler_l(D_cinematic_overlay_800B1904);
+    cinematicShutdownAudioAndAssets();
+    freeCutsceneResources();
+    if ((type == 2) || (D_main_bss_80130B50 & 0x20))
+    {
+      gGameSettings_l.unk20 = vol0;
+      gGameSettings_l.unk21 = vol1;
+      gGameSettings_l.unk22 = vol2;
+      applyVolumeSettingsToMixer_l();
+      gGameSettings_l.u.w &= ~1;
+      if (hadBit0)
+      {
+        gGameSettings_l.u.w |= 1;
+      }
+    }
+    D_main_bss_80130B39 = 0;
+    D_main_bss_80130BA0 = 0;
+    D_main_bss_80130B38 = 0;
+    if ((type == 2) && ((level & 0xFFFF) == 0x13))
+    {
+      setUnlockBitAndPersist_l(0);
+    }
+    if ((!(D_main_bss_80130B50 & 0x20)) && (type != 2))
+    {
+      setUnlockBitAndPersist_l((level & 0xFFFF) + ((type == 0) ? (6) : (0x16)));
+    }
+    clearDeferredClearRequest();
+  }
+}
 
 static const char D_cinematic_overlay_800A516C[16] = "cuts/id%d_%s";
 
