@@ -46,7 +46,80 @@ void initPlayerCraftTrailBuffers(u8 *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", computeCraftSelectTurnFromInput);
+extern f32 D_mission_overlay_8010B790;
+extern f32 D_mission_overlay_8010B794;
+extern f32 D_mission_overlay_8010B798;
+extern f32 D_mission_overlay_8010B79C;
+extern u8 csPl[][0x2A0] __asm__("D_main_bss_8013800C");
+extern f32 csTgt[3] __asm__("D_main_bss_80137CE8");
+extern f32 vec3Dot(void *, void *);
+f32 sinfApprox(f32);
+extern void clampVec3ToUnitIfLongerThan(void *);
+typedef struct {
+    f32 v[3];
+} CsV3;
+
+void computeCraftSelectTurnFromInput(u8 *o, f32 dt) {
+    f32 *pos;
+    f32 out;
+    f32 ang;
+    f32 k;
+    f32 zero;
+    f32 d;
+    f32 t;
+    u8 *m;
+    f32 a[4];
+    f32 b[4];
+
+    pos = (f32 *)(o + 4);
+    out = 0.0f;
+    if (pos[0] < D_mission_overlay_8010B790) {
+        out = D_mission_overlay_8010B790 - pos[0];
+    }
+    if (D_mission_overlay_8010B794 < pos[0]) {
+        out = pos[0] - D_mission_overlay_8010B794;
+    }
+    if (pos[2] < D_mission_overlay_8010B798) {
+        out = D_mission_overlay_8010B798 - pos[2];
+    }
+    if (D_mission_overlay_8010B79C < pos[2]) {
+        out = pos[2] - D_mission_overlay_8010B79C;
+    }
+    m = csPl[*(s32 *)(o + 0xB8)];
+    a[0] = *(f32 *)(m + 0);
+    a[1] = *(f32 *)(m + 0xC);
+    a[2] = *(f32 *)(m + 0x18);
+    b[0] = 0.0f;
+    b[1] = -1.0f;
+    b[2] = 0.0f;
+    k = 57.29578f;
+    t = sinfApprox(vec3Dot(a, b)) * k;
+    __asm__ volatile("abs.s %0, %1" : "=f"(ang) : "f"(t));
+    zero = 0.0f;
+    if (zero < out) {
+        *(u16 *)(o + 0x180) |= 2;
+        a[0] = csTgt[0] - pos[0];
+        a[1] = csTgt[1] - pos[1];
+        a[2] = csTgt[2] - pos[2];
+        a[1] = zero;
+        clampVec3ToUnitIfLongerThan(a);
+        *(CsV3 *)b = *(CsV3 *)(o + 0x10);
+        b[1] = zero;
+        clampVec3ToUnitIfLongerThan(b);
+        d = vec3Dot(b, a);
+        out = a[0] * b[2] - a[2] * b[0];
+        if (d < 0.9961946f && ang < 10.0f) {
+            t = 90.0f - sinfApprox(d) * k;
+            if (out < zero) {
+                *(f32 *)(o + 0xD8) = t * dt;
+            } else {
+                *(f32 *)(o + 0xD8) = -(t * dt);
+            }
+        }
+    } else {
+        *(u16 *)(o + 0x180) &= ~2;
+    }
+}
 
 extern s32 D_mission_overlay_8010B740[];
 extern u8 D_mission_overlay_8010B780[];
