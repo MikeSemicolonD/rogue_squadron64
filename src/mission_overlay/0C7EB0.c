@@ -134,7 +134,72 @@ void checkComplexObjectives(void) {
     D_mission_overlay_8010A450[gCurrentLevel].checkComplexObjectives();
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C7EB0", dealDamagetoDatItem);
+extern s32 D_main_bss_80137CE4;
+s32 getNpcCurrentHealth(void *);
+s32 slotDispatcherIter(u16, s32, void *);
+void *getLevelDatItemByName(char *);
+u8 *getNpcContextByIndex(u16);
+void datItemSetObjectiveBooleanCount(s32, s32, s32, s32, s32, s32);
+
+typedef struct {
+    u16 a;
+    u16 b;
+    u16 c;
+    s16 d;
+    s32 e;
+} DatItemDamageArgs;
+
+typedef struct {
+    u16 a;
+    s16 b;
+    s32 value;
+} DatItemHealthArgs2;
+
+s32 dealDamagetoDatItem(u8 *name, u32 dmg) {
+    s32 result;
+    u8 *item;
+    DatItemDamageArgs args;
+    DatItemHealthArgs2 hargs;
+    u8 *npc;
+
+    result = 0;
+    item = getLevelDatItemByName((char *)name);
+    if (item != NULL) {
+        if (*(u16 *)(item + 6) != 0xFFFF) {
+            args.c = 7;
+            args.a = 0xFFFF;
+            args.b = 0xFFFF;
+            if ((s32)dmg <= 0xFFFF) {
+                args.d = dmg;
+            } else {
+                args.d = -1;
+            }
+            args.e = 0;
+            slotDispatcherIter(*(u16 *)(item + 6), 5, &args);
+            npc = getNpcContextByIndex(*(u16 *)(item + 6));
+            if (*(u8 **)(npc + 0x10) != NULL) {
+                result = getNpcCurrentHealth(*(u8 **)(getNpcContextByIndex(*(u16 *)(item + 6)) + 0x10));
+            } else {
+                hargs.a = 0xFFFF;
+                hargs.b = -1;
+                slotDispatcherIter(*(u16 *)(npc + 0x16), 0xB, &hargs);
+                if (hargs.b != -1) {
+                    result = hargs.value;
+                } else {
+                    result = *(s32 *)(item + D_main_bss_80137CE4 * 4 + 0x6C);
+                }
+            }
+        } else {
+            u8 *it = item; __asm__("" : "+r"(item));
+            *(s32 *)(it + D_main_bss_80137CE4 * 4 + 0x6C) -= dmg;
+            result = *(s32 *)(it + D_main_bss_80137CE4 * 4 + 0x6C);
+            if (*(u16 *)it == 0x14) {
+                datItemSetObjectiveBooleanCount(*(s32 *)(it + 0x78), *(s32 *)(it + 0x7C), *(s32 *)(it + 0x70), *(s32 *)(it + 0x74), *(s32 *)(it + 0x80), *(s32 *)(it + 0x84));
+            }
+        }
+    }
+    return result;
+}
 
 enum Level getCurrentLevel(void) {
     return gCurrentLevel;
