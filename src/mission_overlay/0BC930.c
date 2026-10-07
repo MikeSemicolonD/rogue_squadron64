@@ -188,7 +188,97 @@ void triggerTieInterceptorEffect(s32 *arg0, s32 arg1) {
     play3DSoundEvent(0, &f, pl + 0x28, 15.0f, 0.2f, 0, 0xB, 0x6E, 0x3C);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BC930", computeTieInterceptorOrientation);
+typedef struct {
+    s32 idx;
+    u8 pad4[4];
+    u16 lock;
+    u8 padA[2];
+    u8 pos[0];
+} TioCtl;
+
+typedef struct {
+    s32 w0;
+    f32 pos[10];
+    u8 pad2C[0xB6 - 0x2C];
+    u16 hB6;
+    s32 wB8;
+    u8 padBC[0x158 - 0xBC];
+    u16 h158;
+    u8 pad15A[2];
+    s32 w15C;
+    f32 timer;
+    f32 f164;
+    f32 f168;
+    u8 pad16C[0x178 - 0x16C];
+    s32 w178;
+    u8 pad17C[0x2A0 - 0x17C];
+} TioPlayer;
+
+typedef struct { u16 button; s8 x; s8 y; u8 err; u8 pad; } TioPad;
+typedef struct { u8 pad[0x1A]; u16 fire_blasters; u16 fire_secondary; u16 fire_mode; u8 pad20[4]; } TioCfg;
+
+extern TioPlayer sTioPlayers[] __asm__("D_main_bss_80137DBC");
+extern TioPad sTioPads[] __asm__("D_main_bss_80130B88");
+extern TioCfg sTioCfg[] __asm__("D_mission_overlay_8010BE18");
+extern void triggerTieInterceptorEffect_l(void *, s32) __asm__("triggerTieInterceptorEffect");
+extern u8 tioTickHud(s32, f32, void *, s32, s32, u16 *, s32) __asm__("tickHudInstanceTargetingAndSpawns");
+extern void tioDispatch(s32, u16, void *, s32, s32, s32, s32) __asm__("dispatchHudInstanceWeaponEffect");
+extern s32 tioLock(void *, void *, u16, f32, f32, f32) __asm__("findLockOnTarget");
+extern void tioAnim(s32, f32) __asm__("tickCraftAnimationSlot");
+
+void tioImpl(TioCtl *ctl, f32 dt) __asm__("computeTieInterceptorOrientation");
+void tioImpl(TioCtl *ctl, f32 dt) {
+    u16 sp20;
+    TioPlayer *c;
+    void *pos;
+    s32 r;
+    u16 t;
+    u8 *base;
+
+    c = &sTioPlayers[ctl->idx];
+    base = (u8 *)sTioPlayers - 4;
+    if (*(u16 *)(base + c->wB8 * 0x2A0 + 0x184) & 1) {
+        if (c->timer > 0.0f) {
+            c->timer = c->timer - dt;
+        } else if (sTioPads[ctl->idx].button & sTioCfg[ctl->idx].fire_blasters) {
+            if (*(s32 *)(base + ctl->idx * 0x2A0 + 0x160) == 1) {
+                c->timer = c->timer + c->f168;
+                triggerTieInterceptorEffect_l(ctl, c->h158);
+                triggerTieInterceptorEffect_l(ctl, c->h158 + 1);
+                c->h158 ^= 2;
+            } else if (*(s32 *)(base + ctl->idx * 0x2A0 + 0x160) == 2) {
+                c->timer = c->timer + c->f168 * 1.5;
+                triggerTieInterceptorEffect_l(ctl, 0);
+                triggerTieInterceptorEffect_l(ctl, 1);
+                triggerTieInterceptorEffect_l(ctl, 2);
+                triggerTieInterceptorEffect_l(ctl, 3);
+            } else {
+                c->timer = c->timer + c->f164;
+                triggerTieInterceptorEffect_l(ctl, c->h158);
+                c->h158 = (c->h158 + 1) & 3;
+            }
+        }
+        pos = &c->pos[0];
+        if (tioTickHud(0, dt, pos, c->w0, (u8)(sTioPads[ctl->idx].button & sTioCfg[ctl->idx].fire_secondary), &sp20, c->hB6)) {
+            tioDispatch(0, c->hB6, pos, c->w0, c->w178, c->h158, sp20);
+        }
+        if (sTioPads[ctl->idx].button & sTioCfg[ctl->idx].fire_mode) {
+            if (++c->w15C >= 3) {
+                c->w15C = 0;
+            }
+            c->h158 = 0;
+        }
+    }
+    r = tioLock(&c->pos[0], ctl->pos, ctl->lock, 8.0f, 0.992f, 12.5f);
+    t = r;
+    sp20 = r;
+    if (t != 0xFFFF) {
+        ctl->lock = r;
+    } else {
+        ctl->lock = 0xFFFF;
+    }
+    tioAnim(0, dt);
+}
 
 #include "common_types.h"
 extern struct E144 D_main_bss_80138D18[];
