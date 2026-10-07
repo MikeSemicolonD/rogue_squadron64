@@ -44,13 +44,83 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", strCutsceneTypeIntro
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cinematicLoopBody);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", load_cutscene);
+static const char D_cinematic_overlay_800A516C[16] = "cuts/id%d_%s";
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", strCinPlCraftsVwing);
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A518C);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A519C);
+typedef struct { s32 a, b, c, d; } LcStr16;
+typedef struct { char name[0x4C]; } LcEnt;
+typedef struct { u8 pad[0x4A]; u16 count; u8 pad2[0x13D8 - 0x4C]; LcEnt ents[60]; } LcFile;
+typedef struct { u8 b0; u8 b1; u8 pad[0x66]; f32 f68; u8 pad2[0x4C]; u16 hB8; u8 pad3[0x13C - 0xBA]; } LcSlot;
+extern struct { u8 b0; u8 b1; u8 pad[0x16]; u32 w18; } lcGs __asm__("gGameSettings");
+extern char *cutsceneTypeStrings[];
+extern u16 D_cinematic_overlay_800B0B20;
+extern char strCinPlCraftsVwing[];
+extern char D_cinematic_overlay_800A518C[];
+extern s32 D_cinematic_overlay_800B1A10[4];
+extern s32 D_cinematic_overlay_800B1A20[4];
+extern LcSlot *lcSlots __asm__("D_cinematic_overlay_800B1900");
+s32 sprintf(char *, const char *, ...);
+LcFile *load_asset_with_malloc_flags(char *, s32);
+void processCutsceneActions(u8 *arg0, s32 arg1);
+extern void *rs_malloc(u32, u16);
+extern void *rs_memset(void *, s32, s32);
+s32 strlen(const char *);
+s32 rs_strcmp(char *, char *);
+void clearVec4QuadStruct(void *);
+void spawnCutsceneObjectsFromList(LcFile *, u8, s32);
+void initWaterSprayEffectAndSfx(void);
+void loadLevelTextureCache(s32);
+void initCutsceneAudioChannels(LcFile *);
+
+LcFile *load_cutscene(u8 id, u8 type) {
+    char buf[0x20];
+    LcFile *c;
+    u32 i;
+    s32 n;
+    char *name;
+
+    sprintf(buf, D_cinematic_overlay_800A516C, id, cutsceneTypeStrings[type]);
+    c = load_asset_with_malloc_flags(buf, 0x10);
+    processCutsceneActions((u8 *)c, lcGs.b1);
+    D_cinematic_overlay_800B0B20 = 0;
+    if (id == 0x13 && (lcGs.w18 & 2)) {
+        *(LcStr16 *)c->ents[32].name = *(LcStr16 *)strCinPlCraftsVwing;
+        *(LcStr16 *)c->ents[35].name = *(LcStr16 *)strCinPlCraftsVwing;
+    }
+    lcSlots = rs_malloc(c->count * sizeof(LcSlot), 0x10);
+    rs_memset(lcSlots, 0, c->count * sizeof(LcSlot));
+    for (i = 0; i < c->count; i++) {
+        lcSlots[i].b0 = 0;
+        lcSlots[i].f68 = 5.0f;
+        lcSlots[i].hB8 = 0xFFFF;
+        clearVec4QuadStruct((u8 *)&lcSlots[i] + 0x88);
+        name = c->ents[i].name;
+        n = strlen(name) - 1;
+        lcSlots[i].b1 = n;
+        if (rs_strcmp(name, D_cinematic_overlay_800A518C) != 0 && (u32)(c->ents[i].name[n] - '0') < 10) {
+            do {
+                n--;
+            } while ((u32)(c->ents[i].name[n] - '0') < 10 || c->ents[i].name[n] == '_');
+            lcSlots[i].b1 = n;
+        }
+    }
+    cuts_0058_bubble_sort((struct cuts_file_constant *)c);
+    spawnCutsceneObjectsFromList(c, id, 0);
+    initWaterSprayEffectAndSfx();
+    spawnCutsceneObjectsFromList(c, id, 1);
+    if (id != 10) {
+        loadLevelTextureCache(0x5DC0);
+    }
+    initCutsceneAudioChannels(c);
+    for (i = 0; i < 4; i++) {
+        D_cinematic_overlay_800B1A10[i] = -1;
+        D_cinematic_overlay_800B1A20[i] = -1;
+    }
+    return c;
+}
 
 typedef struct { f32 v; f32 s; f32 t; } CsuKey;
 extern u16 D_cinematic_overlay_800B0B22;
