@@ -372,7 +372,86 @@ s32 buildGridCellMeshForFace(BgNode *head, BgFace **out) {
     return count;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", buildVisibleTerrainGridAroundCamera);
+typedef struct { f32 x, y, z; } BvV3;
+typedef struct { BvV3 cam; BvV3 p[4]; } BvPoly;
+typedef struct { f32 m[12]; } BvMat;
+extern BvPoly bvPoly __asm__("D_main_bss_80130C10");
+extern struct { u8 pad[0x14]; f32 x, y, z; } bvGrid __asm__("D_main_bss_80136DC0");
+extern s32 D_main_bss_80137A68[];
+extern s32 D_main_bss_8013889C;
+extern s32 D_main_bss_80137A60;
+extern s32 D_main_bss_80137A74;
+extern s32 D_main_bss_80137A50;
+extern f32 D_main_bss_80130C50;
+extern f32 D_main_8009DEAC;
+extern f32 D_main_8009DEB0;
+extern void *D_main_bss_80138D1C;
+void recycleGridCellToFreeList(void);
+f32 sinf(f32);
+f32 cosf(f32);
+void bvNorm(void *) __asm__("normalize_vector");
+void bvXform(void *, void *, void *) __asm__("transformVec3ByMat34");
+void bvBin(void *) __asm__("binPolygonIntoTerrainGrid");
+BgNode *bvStream(void *, void *) __asm__("streamTerrainGridCellsByDistance");
+
+s32 bvImpl(BvV3 *out, BgFace **faces, f32 fov) __asm__("buildVisibleTerrainGridAroundCamera");
+s32 bvImpl(BvV3 *out, BgFace **faces, f32 fov) {
+    BvMat m;
+    BvV3 d;
+    u8 *cam;
+    BvMat *cm;
+    f32 half;
+    f32 a;
+    f32 s;
+    f32 t;
+    s32 sel;
+    BgNode *n;
+
+    cam = D_main_bss_80138D1C;
+    recycleGridCellToFreeList();
+    cm = (BvMat *)(cam + 0x28);
+    sel = D_main_bss_80137A68[D_main_bss_8013889C & 1];
+    bvPoly.cam.x = (cm->m[9] - bvGrid.x) * 0.5f;
+    bvPoly.cam.y = (cm->m[10] - bvGrid.y) * 0.5f;
+    D_main_bss_80137A74 = D_main_bss_80137A60;
+    bvPoly.cam.z = (cm->m[11] - bvGrid.z) * 0.5f;
+    d.x = D_main_bss_80130C50 * -4.0f;
+    half = (fov + 4.0f) * 0.5f;
+    D_main_bss_80137A50 = sel;
+    a = half * 3.1415927f / 180.0f;
+    d.y = -3.0f;
+    a = sinf(a) / cosf(a);
+    d.z = 3.0f / a;
+    s = sinf((90.0f - half) * 3.1415927f / 180.0f);
+    D_main_8009DEB0 = D_main_8009DEAC * D_main_bss_80130C50 / s;
+    bvNorm(&d);
+    d.x *= D_main_8009DEB0;
+    d.y *= D_main_8009DEB0;
+    d.z *= D_main_8009DEB0;
+    m = *cm;
+    m.m[9] = bvPoly.cam.x;
+    m.m[10] = bvPoly.cam.y;
+    m.m[11] = bvPoly.cam.z;
+    bvXform(&m, &d, &bvPoly.p[0]);
+    d.x = -d.x;
+    bvXform(&m, &d, &bvPoly.p[1]);
+    d.y = -d.y;
+    bvXform(&m, &d, &bvPoly.p[2]);
+    d.x = -d.x;
+    bvXform(&m, &d, &bvPoly.p[3]);
+    t = (f32)(s32)(bvPoly.cam.x + bvGrid.x * 0.5f);
+    out->x = t + t;
+    t = (f32)(s32)(bvPoly.cam.z + bvGrid.z * 0.5f);
+    out->z = t + t;
+    out->y = bvGrid.y;
+    bvBin(&bvPoly);
+    n = bvStream(&bvPoly, out);
+    if (n == NULL) {
+        return 0;
+    }
+    buildGridCellMeshForFace(n, faces);
+    return (s32)&n->cell->face;
+}
 
 extern f32 D_main_8003A53C;
 __asm__(".section .rodata\n.globl D_main_8003A53C\nD_main_8003A53C:\n.word 0x3F000000\n.section .text");
