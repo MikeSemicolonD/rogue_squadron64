@@ -296,7 +296,45 @@ void serviceVoicePoolFrame(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/9BB60", getVoicePlaybackProgressByKey);
+static inline s32 voiceSlotActive2(s32 i) {
+    return D_main_bss_80154620[i].active;
+}
+
+extern f64 D_main_8003DF10;
+extern f64 D_main_8003DF18;
+
+f32 getVoicePlaybackProgressByKey(s32 handle, f32 *out) {
+    f32 progress;
+    register f64 a asm("$f4");
+    f64 b;
+    s32 v;
+
+    if (handle != -1 && speechFileLoaded) {
+        handle = findVoiceSlotByHandle(handle);
+        if (handle != -1) {
+            lockSpeechVoices();
+            if (gVSlots[handle].active == 2) {
+                v = D_main_bss_80154620[handle].sampleOffset;
+                a = (f64)v;
+                if (v < 0) {
+                    a += D_main_8003DF10;
+                }
+                v = *(s32 *)((u8 *)&D_main_bss_80154620[handle] + 8);
+                b = (f64)v;
+                if (v < 0) {
+                    b += D_main_8003DF18;
+                }
+                progress = (f32)a / (f32)b;
+            } else {
+                progress = 0.0f;
+            }
+            *out = *(f32 *)((u8 *)&D_main_bss_80154620[handle] + 0x20);
+            unlockSpeechVoices();
+            return progress;
+        }
+    }
+    return 0.0f;
+}
 
 extern void *speechSampleOffsets;
 extern u8 speechSampleOffsetsLoaded;
