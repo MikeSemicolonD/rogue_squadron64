@@ -123,7 +123,80 @@ void playerYwingInit(CraftAnim *anim, s32 idx, s16 arg2) {
     anim->mat = lookupHmtMaterialByName(p->object, "tpgn_trn", anim->name);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0B81D0", tickCraftAbilityCooldown);
+typedef struct {
+    s32 unk0;
+    u8 pad4[0xB4];
+    s32 unkB8;
+    u8 padBC[0xE8 - 0xBC];
+    f32 unkE8;
+    f32 unkEC;
+    f32 unkF0;
+    f32 unkF4;
+    u8 padF8[0x180 - 0xF8];
+    u16 unk180;
+    u8 pad182[0x2A0 - 0x182];
+} TccObj;
+typedef struct {
+    u16 pad0[9];
+    u16 unk12;
+    u16 pad14[2];
+    u16 unk18;
+    u16 pad1A[5];
+} TccBtn;
+extern TccObj tccObjs[] __asm__("D_main_bss_80137DBC");
+extern u16 tccB88[][3] __asm__("D_main_bss_80130B88");
+extern TccBtn tccBtn[] __asm__("D_mission_overlay_8010BE18");
+extern u8 tccPos[] __asm__("D_main_bss_8013800C");
+u8 tccGetFlag(s32) __asm__("getCraftAnimationSlotFlag");
+f32 tccGetValue(s32) __asm__("getCraftAnimationSlotValue");
+void tccSetParams(s32, s32, f32) __asm__("setCraftAnimationSlotParams");
+void tccPhys(TccObj *, f32) __asm__("updatePlayerCraftPhysics");
+void tccScaled(s32, f32, f32, u8 *, f32, f32) __asm__("computeBootConfigScaledVec4");
+
+void tccImpl(s32 *arg0, f32 dt) __asm__("tickCraftAbilityCooldown");
+void tccImpl(s32 *arg0, f32 dt) {
+    TccObj *o = &tccObjs[*arg0];
+    f32 v;
+
+    if (*(u16 *)((s32)tccObjs + o->unkB8 * sizeof(TccObj) + 0x180) & 1) {
+        v = o->unkEC;
+        if ((tccB88[*arg0][0] & tccBtn[*arg0].unk12) && !(tccB88[*arg0][0] & tccBtn[*arg0].unk18)) {
+            v -= 0.112500004f;
+        }
+        if (v < 1.6875f) {
+            v = 1.6875f;
+        }
+        if (tccB88[*arg0][0] & tccBtn[*arg0].unk18) {
+            v += 0.075f;
+            if (tccGetFlag(0) == 0) {
+                tccSetParams(0, 1, 0);
+            }
+        } else if (tccGetFlag(0) == 1) {
+            if (tccGetValue(0) == 0.0f) {
+                tccSetParams(0, 1, 0.5f);
+            }
+        }
+        if (v > 3.375f) {
+            v = 3.375f;
+        }
+        o->unkEC = v;
+        if (o->unkF0 < v - o->unkE8) {
+            o->unkE8 = o->unkE8 + o->unkF0;
+        } else {
+            o->unkE8 = v;
+        }
+        if (v - o->unkE8 < -o->unkF4) {
+            o->unkE8 = o->unkE8 - o->unkF4;
+        } else {
+            o->unkE8 = v;
+        }
+    }
+    tccPhys(o, dt);
+    {
+        f32 one = 1.0f;
+        tccScaled(*arg0, 0.28125f, 0.28125f, tccPos + *arg0 * 0x2A0, one, dt);
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0B81D0", D_mission_overlay_800A5B9C);
 
