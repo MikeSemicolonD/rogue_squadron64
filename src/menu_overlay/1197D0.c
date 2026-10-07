@@ -250,7 +250,66 @@ s32 buildFormatMessageGlyphBuffer(void *arg0, void *arg1, s32 arg2, s32 arg3) {
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5C40);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", allocFormatTextElement);
+static __inline__ BgObj *afSpawn(s32 arg0, s16 arg1, s16 arg2, s32 arg3) {
+    BgObj *obj;
+    BgInfo *info;
+
+    obj = (BgObj *)rs_malloc(0x38, 0);
+    rs_memset((u8 *)obj, 0, 0x38);
+    info = (BgInfo *)rs_malloc(0x10, 0);
+    obj->info = info;
+    rs_memset((u8 *)info, 0, 0x10);
+    *(u16 *)obj->info = arg0;
+    obj->flags = arg3;
+    obj->w = arg1;
+    obj->h = arg2;
+    obj->b18 = D_menu_overlay_800CC850++;
+    return obj;
+}
+
+BgObj *allocFormatTextElement(BgObj *src, u16 w, u16 h, s32 flags, u16 h34, u16 h36) {
+    BgObj *obj;
+    BgElem *e;
+    s16 d2;
+
+    obj = afSpawn(src->info->type, src->w, src->h, flags);
+    D_menu_overlay_800CC850--;
+    obj->b18 = src->b18;
+    obj->info->w = w;
+    obj->info->h = h;
+    obj->h34 = h34;
+    obj->h36 = h36;
+    switch (obj->info->type) {
+    case 2:
+        obj->depth = 4;
+        break;
+    case 3:
+        obj->depth = 8;
+        break;
+    case 4:
+        obj->depth = 1;
+        break;
+    case 5:
+        obj->depth = 2;
+        break;
+    }
+    obj->count = ((obj->info->w + obj->w - 1) / obj->w) * ((obj->info->h + obj->h - 1) / obj->h);
+    obj->ids = rs_malloc(obj->count * 2, 0);
+    obj->elem = rs_malloc(0x30, 0);
+    rs_memset(obj->elem, 0, 0x30);
+    e = obj->elem;
+    e->wC = rs_malloc(obj->count * 2, 0);
+    e->h8 = w / obj->w;
+    d2 = h / obj->h;
+    e->f24 = 1.0f;
+    e->f28 = 1.0f;
+    e->b2C = 0xFF;
+    e->b2D = 0xFF;
+    e->b2E = 0xFF;
+    e->b2F = 0xFF;
+    e->hA = d2;
+    return obj;
+}
 
 typedef struct {
     u8 *p0;
