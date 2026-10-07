@@ -1750,13 +1750,57 @@ Backdrop *loadBackdropAsset(char *name, u16 w, u16 h, u8 arg3) {
     return b;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5B88);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_800A5B9C);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5BAC);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", initCinematicSceneAssets);
+typedef struct { u8 b[4]; f32 f4; f32 f8; s32 wC; s32 w10; char name[16]; } IcMat;
+s32 icRegister(IcMat *, BdTex *, u8) __asm__("registerHmtTextureInTable");
+
+Backdrop *icImpl(s16 w, s16 h) __asm__("initCinematicSceneAssets");
+Backdrop *icImpl(s16 w, s16 h) {
+    IcMat mat = { { 0, 1, 0, 0 }, 1.0f, 1.0f, 0, 0, "P____" };
+    BdTex tex = { { 0, 0, 0, 0, 0, 0, 0, 0 }, 0, (char *)D_cinematic_overlay_800A5B6C, 0, 0, 1, 0, 2, 0 };
+    Backdrop *b;
+    BdTexSet *ts;
+    s32 n;
+    s32 q;
+    u32 i;
+    s16 id;
+
+    b = rs_malloc(0x38, 0x10);
+    rs_memset(b, 0, 0x38);
+    b->w = 0x40;
+    b->h = 0x10;
+    q = (w + b->w - 1) / b->w;
+    b->bpp = 4;
+    b->count = q;
+    b->count = q * ((h + b->h - 1) / b->h);
+    b->ids = rs_malloc(b->count * 2, 0x10);
+    ts = rs_malloc(0x30, 0x10);
+    b->ts = ts;
+    rs_memset(ts, 0, 0x30);
+    ts->ids = rs_malloc(b->count * 2, 0x10);
+    n = b->w * b->h * b->bpp / 2;
+    tex.w = b->w;
+    tex.h = b->h;
+    tex.pix[0] = rs_malloc(n, 0x10);
+    rs_memset(tex.pix[0], 0xFF, n);
+    tex.name[1] = D_cinematic_overlay_800AF6E4 + 'A';
+    mat.name[1] = D_cinematic_overlay_800AF6E4 + 'A';
+    id = icRegister(&mat, &tex, 1);
+    ts->ids[0] = b->ids[0] = id;
+    rs_free(tex.pix[0]);
+    ts->tilesX = w / b->w;
+    { s16 ty = h / b->h;
+    ts->f24 = ts->f28 = 1.0f;
+    ts->tilesY = ty; }
+    for (i = 1; i < b->count; i++) {
+        ts->ids[i] = ts->ids[0];
+        b->ids[i] = 0xFFFF;
+    }
+    b->idx = D_cinematic_overlay_800AF6E4++;
+    return b;
+}
 
 extern u8 D_cinematic_overlay_800B0B1E;
 
