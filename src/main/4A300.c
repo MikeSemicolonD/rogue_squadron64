@@ -1,6 +1,50 @@
 #include "common.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/4A300", flushPendingGridCellTiles);
+#include "common_types.h"
+
+typedef struct {
+    u16 h0;
+    u16 next;
+    u8 pad4[2];
+    u16 h6;
+    u16 h8;
+    u16 tiles[5];
+    u16 flags;
+    u16 state;
+    u8 pad18[0xA0];
+} FpCell;
+extern FpCell *fpCells __asm__("D_main_bss_80137A5C");
+extern u16 fpCnt __asm__("D_main_bss_80137A58");
+extern u16 *fpList __asm__("D_main_bss_80137A4C");
+
+s32 flushPendingGridCellTiles(void) {
+    FpCell *c = &fpCells[fpCells[3].next];
+    s32 i;
+
+    while (fpCnt < 10) {
+        {
+            if (c->state == 4) {
+                return 0;
+            }
+            if ((c->h6 == 0xFFFF || c->h8 != 0xFFFF) && !(c->flags & 0x40) && c->tiles[0] != 0) {
+                i = 0;
+                do {
+                    u16 t;
+                    if (i >= 5) {
+                        break;
+                    }
+                    t = c->tiles[i];
+                    fpList[fpCnt++] = t;
+                    c->tiles[i] = 0;
+                    i++;
+                } while (c->tiles[i] != 0);
+                c->flags |= 3;
+            }
+            c = &fpCells[c->next];
+        }
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4A300", emitGridCellTileStrip);
 
