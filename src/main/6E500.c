@@ -111,7 +111,41 @@ done:
     applyAccountUnlocksToSettings();
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6E500", applySaveSlotToMissionState);
+void parseAccountDataBytes(u8 *, u8 *);
+void zmemcpy(u8 *, u8 *, u32);
+void applySaveSlotToMissionState(u8 arg0) {
+    u8 sp10[0x14];
+    u8 i;
+    s32 j;
+    struct account_data *acct;
+    struct MissionState *ms;
+
+    for (i = 0; i < 1; i++) {
+        gMissionState.numLives[i] = 3;
+    }
+    acct = &gSaveDataBody.accounts[arg0];
+    j = 0;
+    ms = &gMissionState;
+    for (; (u32)j < 1; j++) {
+        (&ms->playerRank)[j] = acct->unk04;
+        rs_strcpy((u8 *)gGameSettings.name + j * 4, (u8 *)acct);
+        gGameSettings.unlockAndSettingsFlags[j] = (gGameSettings.unlockAndSettingsFlags[j] & 0xFF8001FF) | (acct->unk0C & 0x7FFE00);
+    }
+    gMissionState.maxUnlockedLevel = acct->unk05;
+    gGameSettings.currentLevel = acct->unk05;
+    gMissionState.accountNumber = acct->accountNumber;
+    gGameSettings.unk04 = arg0;
+    parseAccountDataBytes((u8 *)acct, sp10);
+    zmemcpy(gMissionState.medalPerLevel, sp10, 0x13);
+    gMissionState.unk21 = 1;
+    if (gGameSettings.cheatCodeFlags[0] & 0x1000000) {
+        gGameSettings.unlockAndSettingsFlags[0] |= 0x1FE00;
+    }
+    if (gSaveDataBody.unk51 != arg0) {
+        gSaveDataBody.unk51 = arg0;
+        persistSaveDataBody();
+    }
+}
 
 void loadDefaultHighScores(void) {
     s8 var_a3;
