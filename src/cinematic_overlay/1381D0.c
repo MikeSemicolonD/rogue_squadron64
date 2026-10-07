@@ -886,7 +886,153 @@ void initCutsceneScene(u8 *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", initSceneForMission);
+typedef struct {
+    u8 p0[0x12];
+    u16 f12;
+    u16 f14;
+    u16 f16;
+    u8 f18;
+    u8 p19[3];
+    s32 f1C;
+    u8 f20;
+    u8 f21;
+    u8 f22;
+    u8 p23;
+    u8 p24[4];
+    s32 f28;
+    u8 p2C[4];
+    s32 f30;
+    s32 f34;
+    s32 f38;
+    u16 f3C;
+    u16 f3E;
+    u16 f40;
+    u16 f42;
+    s32 f44;
+    u8 p48[8];
+} IsBoot;
+typedef struct {
+    u16 a;
+    u16 b;
+    u16 c;
+    u16 d;
+} IsCam;
+typedef struct {
+    u8 p0[4];
+    s32 f4;
+    s32 f8;
+    s32 fC;
+    u32 f10;
+    u32 f14;
+    u32 f18;
+    u32 f1C;
+    f32 f20;
+    f32 f24;
+    f32 f28;
+} IsOut;
+extern IsBoot isBc __asm__("gBootConfig");
+extern struct { u8 p[0x10]; u32 f10; u8 p14[0xF]; u8 b23; } isGs __asm__("gGameSettings");
+extern u8 isSave[] __asm__("D_cinematic_overlay_800B0960");
+extern u16 isW __asm__("D_cinematic_overlay_800B09B2");
+extern u16 isH __asm__("D_cinematic_overlay_800B09B4");
+extern u16 isTot __asm__("D_cinematic_overlay_800B09B6");
+extern u16 isTop __asm__("D_cinematic_overlay_800B09B8");
+extern IsCam isCams[][20] __asm__("D_800B072C");
+extern s32 isManifest __asm__("D_main_bss_80137CFC");
+extern s32 isSlotA __asm__("D_cinematic_overlay_800B0AFC");
+extern s32 isSlotB __asm__("D_cinematic_overlay_800B0B00");
+void isZmemcpy(void *, void *, u32) __asm__("zmemcpy");
+void isVidTick(void *, void *, void *) __asm__("runVideoFrameTick");
+s32 isFindMan(char *) __asm__("findManifestEntryByName");
+void isClearBss(s32) __asm__("clearSceneBssRegion");
+void isInitSlots(void) __asm__("initNpcSlotList");
+void isAllocCtx(void) __asm__("allocNpcContextArrays");
+void isAllocNpcs(void) __asm__("allocAllInitialNpcSlots");
+void isLoadSnd(void) __asm__("loadSndFiles");
+void isLoadTxt(char *) __asm__("loadGameOrFrontTxtFile");
+void isInitVoice(void) __asm__("initVoiceSubtitleSystem");
+void isSubPos(s32, s32) __asm__("setSubtitleOverlayScreenPos");
+void isPreset(s32) __asm__("selectRenderPresetByIndex");
+s32 isAllocSlots(s32) __asm__("allocateSlotTable");
+
+void initSceneForMission(IsOut *out, u8 level, u8 craft) {
+    IsCam *e;
+    s32 h;
+    s32 top;
+    u16 tot;
+    s32 av;
+
+    isZmemcpy(isSave, &isBc, 0x50);
+    isW = 0x280;
+    isH = 0xAA;
+    isTop = 0x23;
+    if (level == 0x13) {
+        isH = 0xE0;
+        isTop = 8;
+    }
+    if (isGs.f10 & 1) {
+        isH = 0x154;
+        isTop = isTop * 2;
+    }
+    isBc.f16 = 0x10;
+    isBc.f20 = 0x10;
+    isBc.f21 = 0xE;
+    isBc.f22 = 7;
+    isBc.f1C = 0x5622;
+    isBc.f12 = 0x280;
+    isBc.f18 = 2;
+    top = isTop;
+    h = isH;
+    isBc.f40 = top;
+    isBc.f42 = top;
+    isBc.f14 = h;
+    tot = h + top * 2;
+    {
+        s32 big = tot >= 0xF1;
+        isBc.f44 = big << 6;
+    }
+    {
+        s32 cb = (s32)isCams;
+        e = (IsCam *)((level * 8 + craft * 0xA0) + cb);
+    }
+    isBc.f34 = e->d << 10;
+    isBc.f38 = e->b << 10;
+    isBc.f30 = e->c << 10;
+    av = e->a;
+    isBc.f3E = av;
+    isTot = tot;
+    if (isGs.b23 != 0) {
+        isBc.f34 += 0x20000;
+        isBc.f38 += 0x80000;
+        isBc.f30 += 0x20000;
+        isBc.f3E = 0x800;
+        isBc.f3C = 0x800;
+        isBc.f28 |= 0x40000;
+    }
+    isVidTick((u8 *)&isBc + 0x10, (u8 *)&isBc + 0x2C, (u8 *)&isBc + 0x1C);
+    isManifest = isFindMan("data");
+    isClearBss(2);
+    isInitSlots();
+    isAllocCtx();
+    isAllocNpcs();
+    isLoadSnd();
+    isLoadTxt("game_TXT");
+    isInitVoice();
+    isSubPos(0, -4);
+    out->f4 = 0;
+    out->f8 = 0;
+    out->fC = 0;
+    out->f10 = isW;
+    out->f14 = isH;
+    out->f18 = isW >> 1;
+    out->f1C = isH >> 1;
+    out->f20 = 65.0f;
+    out->f24 = 0.1171875f;
+    out->f28 = 93.75f;
+    isPreset(1);
+    isSlotA = isAllocSlots(4);
+    isSlotB = isAllocSlots(4);
+}
 
 struct V3 { s32 a, b, c; };
 extern void *rs_memset(void *, s32, s32);
