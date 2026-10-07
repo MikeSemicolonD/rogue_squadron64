@@ -477,7 +477,72 @@ spawn:
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CC9A0", spawnAtAtFootstepDustBurst);
+typedef struct { s32 x, y, z; } AfdV3;
+typedef struct {
+    f32 f0;
+    AfdV3 v4;
+    f32 f10, f14, f18, f1C;
+    s32 w20, w24;
+    f32 f28, f2C;
+    s32 w30, w34;
+    f32 f38;
+    s16 h3C, h3E;
+    f32 f40, f44, f48, f4C, f50, f54, f58, f5C;
+    s32 w60;
+    u8 *w64;
+    u8 *w68;
+    u8 b6C, b6D;
+    u8 pad6E[2];
+    s16 h70, h72, h74, h76;
+    s32 w78;
+    u16 h7C;
+} AfdCtx;
+extern u8 *D_main_bss_80130C08;
+extern u8 afdTerrain[] __asm__("D_main_bss_80138058");
+extern u8 D_main_bss_801398C0[];
+extern u8 D_main_bss_80139920[];
+extern s32 isTerrainCellBlockedAtWorldXz(f32, f32, void *);
+extern s32 spawnRandomBurstNpcVariantWrapper(void *);
+
+void spawnAtAtFootstepDustBurst(f32 *pos) {
+    AfdCtx c;
+    f32 s = 1.5f;
+    f32 t = 2.25f;
+
+    c.f0 = 5.0f;
+    c.v4 = *(AfdV3 *)pos;
+    c.f10 = 0.0f;
+    c.f14 = -2.0f;
+    c.f18 = 0.0f;
+    c.f1C = 0.0f;
+    c.w20 = 0;
+    c.w24 = 0;
+    c.f28 = 1.0f;
+    c.f2C = 1.0f;
+    c.w30 = 0;
+    c.w34 = 0;
+    c.f38 = 0.1f;
+    c.h3C = 0;
+    c.h3E = 0;
+    c.f40 = 16.0f;
+    c.f44 = 0.0f;
+    c.f48 = 0.0f;
+    c.f4C = s;
+    c.f50 = 0.0f;
+    c.f54 = 0.8f;
+    c.f58 = 1.0f;
+    c.f5C = 0.0f;
+    c.w64 = D_main_bss_80130C08 + 0x1C;
+    c.b6C = 1;
+    c.w68 = !isTerrainCellBlockedAtWorldXz(pos[0], pos[2], afdTerrain) ? D_main_bss_80139920 : D_main_bss_801398C0;
+    c.b6D = 0x10;
+    c.h70 = (u32)(s * 256.0f);
+    c.h72 = (u32)(t * 256.0f);
+    c.h74 = 8;
+    c.w78 = 0x09000000;
+    c.h7C = 1;
+    spawnRandomBurstNpcVariantWrapper(&c);
+}
 
 extern u8 D_mission_overlay_800A6DCC[];
 extern u8 D_main_bss_80138058[];
