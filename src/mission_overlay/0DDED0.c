@@ -517,7 +517,94 @@ void teImpl(EcObj *npc, f32 dt)
 
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0DDED0", func_mission_overlay_800DE4EC);
+typedef struct {
+    u8 pad0[0x4C];
+    u32 flags;
+    f32 f50, f54, f58;
+    f32 f5C, f60, f64;
+    f32 q68[4];
+    f32 f78, f7C, f80;
+} DeDef;
+
+typedef struct {
+    u8 pad0[0x30];
+    u8 *mesh;
+    u8 pad34[8];
+    u8 *objA[2];
+    u8 *objB[2];
+    DeDef *defA[2];
+    DeDef *defB[2];
+    f32 f5C;
+    f32 scale;
+    f32 angA[2];
+    f32 angB[2];
+    u8 pad74[0x5B];
+    u8 type;
+    u8 padD0[0x14];
+    f32 aE4[2];
+} DeObj;
+
+extern void deClear(void *) __asm__("clearVec4QuadStruct");
+extern void deAdd(void *, f32, f32, f32) __asm__("addVec3At0x24");
+extern void deScale(void *, f32, f32, f32) __asm__("applyScaleToMat3x4");
+extern void deQuat(void *, void *) __asm__("composeQuatToMat3x4");
+extern void deRot0(void *, f32) __asm__("composeRotationMatrixSlot0");
+extern void deRot1(void *, f32) __asm__("composeRotationMatrixSlot1");
+extern void deMat(void *, void *, f32) __asm__("mat34CrossRowsAndCopyPos");
+
+#define DE_TAIL(d, m)                                                  \
+    {                                                                  \
+        u32 fl = d->flags;                                             \
+        if ((fl & 9) == 9) {                                           \
+            deAdd(m, d->f78 + d->f50, d->f7C + d->f54, d->f80 + d->f58); \
+        } else if ((fl & 9) == 8) {                                    \
+            deAdd(m, d->f78, d->f7C, d->f80);                          \
+        } else if (fl & 1) {                                           \
+            deAdd(m, d->f50, d->f54, d->f58);                          \
+        }                                                              \
+    }
+
+void deImpl(DeObj *o, f32 dt) __asm__("func_mission_overlay_800DE4EC");
+void deImpl(DeObj *o, f32 dt) {
+    s32 i;
+
+    for (i = 0; i < 2; i++) {
+        if (o->objA[i] != NULL) {
+            u8 *m = o->objA[i] + 0x1C;
+            DeDef *d = o->defA[i];
+            deClear(m);
+            if (d->flags & 1) {
+                deAdd(m, -d->f50, -d->f54, -d->f58);
+            }
+            if (d->flags & 2) {
+                deScale(m, d->f5C, d->f60, d->f64);
+            }
+            if (d->flags & 4) {
+                deQuat(m, d->q68);
+            }
+            deRot1(m, o->angA[i]);
+            DE_TAIL(d, m)
+        }
+        if (o->objB[i] != NULL) {
+            u8 *m = o->objB[i] + 0x1C;
+            DeDef *d = o->defB[i];
+            deClear(m);
+            if (d->flags & 1) {
+                deAdd(m, -d->f50, -d->f54, -d->f58);
+            }
+            if (d->flags & 2) {
+                deScale(m, d->f5C, d->f60, d->f64);
+            }
+            if (d->flags & 4) {
+                deQuat(m, d->q68);
+            }
+            deAdd(m, 0.0f, 0.0f, -o->aE4[i] * ((struct { u8 p[0x48]; f32 v; } *)((o->type * 0x50 + i * 4) + (s32)D_ec_8010AA04))->v);
+            deRot0(m, o->angB[i]);
+            DE_TAIL(d, m)
+        }
+    }
+    deMat(o->mesh + 0x28, o, o->scale);
+}
 
 typedef struct { f32 x, y, z; } GVec3;
 typedef struct {
