@@ -512,7 +512,80 @@ s32 spawnDistanceScaledDebrisBurstImpl(f32 *arg0, f32 scale, f32 speed0)
   return id;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/738F0", spawnDirectionalDebrisBurst);
+typedef struct { f32 x, y, z; } SddV3;
+typedef struct {
+    f32 f10;
+    SddV3 p;
+    f32 f20, f24, f28, f2C, f30, f34, f38, f3C, f40, f44, f48;
+    s16 h4C, h4E;
+    f32 f50, f54, f58, f5C, f60, f64, f68, f6C;
+    s32 w70;
+    u8 *w74;
+    s32 w78;
+    s8 b7C, b7D;
+    s16 h7E;
+    s16 h80, h82, h84;
+    s32 w88;
+    s16 h8C;
+    s16 pad8E;
+} SddParams;
+extern u8 D_main_bss_80139870[];
+extern s32 spawnRandomBurstNpcVariantWrapper(void *);
+extern void assignNpcTargetAndPosition(u16, u16, void *, f32);
+
+u16 spawnDirectionalDebrisBurst(f32 *pos, u16 id, f32 size, f32 scale, f32 dir, f32 mul) {
+    SddParams d;
+    s32 npc;
+    f32 a;
+    f32 b;
+
+    if (id == 0xFFFF) {
+        return 0xFFFF;
+    }
+    a = scale * 0.5f;
+    b = scale * 3.0f * 0.5f;
+    if (dir == 0.0f) {
+        dir = 1.0f;
+    }
+    d.f10 = 5.0f;
+    d.p = *(SddV3 *)pos;
+    d.f20 = 0.0f;
+    d.f24 = -0.0001f;
+    d.f28 = 0.0f;
+    d.f2C = 0.0f;
+    d.f30 = 0.0f;
+    d.f34 = 0.0f;
+    d.f38 = 1.0f;
+    d.f3C = 1.0f;
+    d.f40 = 0.0f;
+    d.f44 = 0.0f;
+    d.f48 = size * 0.1f * 0.25f;
+    d.h4C = 0;
+    d.h4E = 0;
+    d.f50 = size * 4.0f;
+    d.f54 = 0.0f;
+    d.f58 = 0.0f;
+    d.f5C = size / dir;
+    d.f60 = 0.0f;
+    d.f64 = 0.8f;
+    d.f68 = 1.0f;
+    d.f6C = 0.0f;
+    d.w74 = D_main_bss_80139870;
+    d.b7C = 0x14;
+    d.h7E = 0x1400;
+    d.w78 = 0;
+    d.b7D = 0;
+    d.h80 = (u32)(a * 256.0f + 1.0f);
+    d.h82 = (u32)(b * 256.0f + 1.0f);
+    d.h84 = (u32)(d.f50 * mul);
+    d.w88 = 0x09000000;
+    d.h8C = 0x1B;
+    npc = spawnRandomBurstNpcVariantWrapper(&d);
+    if (id != 0xFFFF) {
+        assignNpcTargetAndPosition(npc, id, 0, 0.0f);
+    }
+    return npc;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/738F0", distanceAndDopplerNpcHelper);
 
