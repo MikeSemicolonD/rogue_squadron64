@@ -161,7 +161,71 @@ void dispatchOverlaySetupV(s32 a0, s32 a1, s32 arg2) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/544B0", updateAnimatedTextureStreaming);
+extern void uatTrack(OvlMdlNode *, s32, f32 *) __asm__("trackResourceListWithMappingTables");
+extern u8 D_main_bss_80130B3A;
+extern s32 D_main_bss_8013889C;
+extern s16 uatRand(void) __asm__("rand");
+typedef struct { f32 x, y, z; } UatV3;
+typedef struct { s16 a, b, c, d; } UatVtx;
+
+void uatImpl(OvlSetupDst *d, f32 *pos, f32 len) __asm__("updateAnimatedTextureStreaming");
+void uatImpl(OvlSetupDst *d, f32 *pos, f32 len) {
+    f32 t;
+    u16 u;
+    f32 v[3];
+
+    t = (len + 0.5 - d->f2C) / (d->f30 - d->f2C);
+    if (t < 0.0f) {
+        t = 0.0f;
+    }
+    u = (u32)(t * 1024.0f + 1.0f);
+    if (d->wnd != NULL) {
+        uatTrack(*d->wnd, d->root + 0x28, pos);
+    }
+    if (d->crmA != NULL) {
+        if (D_main_bss_80130B3A != 0) {
+            v[0] = pos[0] - *(f32 *)(d->root + 0x4C);
+            v[1] = pos[1] - *(f32 *)(d->root + 0x50);
+            v[2] = pos[2] - *(f32 *)(d->root + 0x54);
+            v[0] = *(f32 *)(d->root + 0x4C) + v[0] * 0.7f;
+            v[1] = *(f32 *)(d->root + 0x50) + v[1] * 0.7f;
+            v[2] = *(f32 *)(d->root + 0x54) + v[2] * 0.7f;
+        } else {
+            *(UatV3 *)v = *(UatV3 *)pos;
+        }
+        uatTrack(*d->crmA, d->root + 0x28, v);
+        if (d->crmB != NULL) {
+            uatTrack(*d->crmB, d->root + 0x28, v);
+        }
+    }
+    if (D_main_bss_8013889C & 1) {
+        if (d->eng[0] != NULL) {
+            UatVtx *src = (UatVtx *)d->engBuf[0];
+            UatVtx *p = src;
+            u16 cur = src->c;
+            UatVtx *dst = (UatVtx *)(*d->eng[0])->src;
+            do {
+                p++;
+                dst->c = cur - uatRand() % u;
+                cur = p->c;
+                dst++;
+            } while (p->c - src->c < 0x10);
+        }
+    } else {
+        if (d->eng[1] != NULL) {
+            UatVtx *src = (UatVtx *)d->engBuf[1];
+            UatVtx *p = src;
+            u16 cur = src->c;
+            UatVtx *dst = (UatVtx *)(*d->eng[1])->src;
+            do {
+                p++;
+                dst->c = cur - uatRand() % u;
+                cur = p->c;
+                dst++;
+            } while (p->c - src->c < 0x10);
+        }
+    }
+}
 
 s32 rs_free(s32);
 void *getNpcContextField8(u16);
