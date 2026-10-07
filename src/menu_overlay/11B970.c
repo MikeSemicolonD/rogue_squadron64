@@ -2791,7 +2791,68 @@ void loadMenuSceneModelAndMaterials(void) {
     loadVwingMeshAssets(0, 1);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", animateMenuSceneTransform);
+typedef struct { f32 m[12]; } AmMat;
+extern u8 amLight[] __asm__("D_menu_overlay_800CCD10");
+extern s32 amMesh __asm__("D_menu_overlay_800CF0FC");
+extern s32 *amMats[] __asm__("D_menu_overlay_800CFE20");
+void amXform(s32 *, s32, f32 *, f32) __asm__("transformSceneMeshVertices");
+
+void amImpl(void **arg0, f32 arg1, f32 arg2, f32 arg3) __asm__("animateMenuSceneTransform");
+void amImpl(void **arg0, f32 arg1, f32 arg2, f32 arg3)
+{
+  char buf[16];
+  f32 v[4];
+  AmMat mat;
+  f32 fv;
+  f32 ft;
+  f32 a;
+  s32 i;
+  u8 *m;
+  u8 *prev;
+  u8 *L;
+  if (arg1 > 0.05f)
+  {
+    L = amLight;
+    a = arg2 / 45.0f;
+    *(f32 *)(L + 0x20) = 0.5f;
+    *(f32 *)(L + 0x70) = sinf(a);
+    *(f32 *)(L + 0x74) = cosf(a);
+    *(f32 *)(L + 0x78) = 0.5f;
+    normalize_vector((f32 *)(L + 0x18));
+    normalize_vector((f32 *)(L + 0x70));
+    arg0[1] = L;
+    applyFlagsToMeshTreeOrList(amMesh, 0, 0x20, 0x100000);
+    v[0] = cosf(arg2 * 1.1f * 3.1415927f / 180.0f) * 0.9f;
+    v[1] = sinf(arg2 * 1.3f * 3.1415927f / 180.0f) * 0.8f;
+    v[2] = sinf(arg2 * 3.1415927f / 180.0f) * 0.5f + 6.0f;
+    amXform(amMats[0], amMesh + 0x28, v, 0.5f);
+    amXform(amMats[1], amMesh + 0x28, v, 2.5f);
+    amXform(amMats[2], amMesh + 0x28, v, 1.0f);
+    fv = arg1 * 1.54f;
+    initVec4TripletFromArgs(&mat, fv, fv, fv);
+    ft = quadraticEaseInOut(arg3);
+    if (ft > 0.5f)
+    {
+      ft = 1.0f - ft;
+    }
+    ft = 1.0f - (ft / 1.4f);
+    applyScaleToMat3x4(&mat, ft, ft, ft);
+    composeRotationMatrixSlot0(&mat, (sinf(arg2 / 29.0f) * 2.5f) + 180.0f);
+    composeRotationMatrixSlot1(&mat, sinf(arg2 / 37.0f) * 2.5f);
+    composeRotationMatrixSlot2(&mat, quadraticEaseInOut(arg1) * 360.0f + 180.0f);
+    i = 0;
+    composeRotationMatrixSlot2(&mat, quadraticEaseInOut(arg3) * 360.0f);
+    addVec3At0x24(&mat, 0, 0, 15.0f);
+    do
+    {
+      sprintf(buf, D_menu_overlay_800A6A1C, 2 - (i & 0xFF));
+      m = lookupHmtMaterialByName(amMesh, (s32 *) buf, 0);
+ do { *((AmMat *) (m + 0x1C)) = mat; prev = *arg0; *((u8 **) m) = prev; if (prev != 0) { *((u8 **) (prev + 4)) = m; } *((s32 *) (m + 4)) = 0; *arg0 = m; } while (0);
+      i += 1;
+    }
+    while (((u32) (i & 0xFF)) < 3U);
+  }
+}
 
 typedef struct {
     u8 pad0[0x24];
