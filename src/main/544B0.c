@@ -2,7 +2,89 @@
 #include "common_types.h"
 #include "main/3F160.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/544B0", trackResourceListWithMappingTables);
+typedef struct { f32 x, y, z; } TrV3;
+typedef struct {
+    u8 pad0[8];
+    u32 *faces;
+    s32 count;
+} TrHdr;
+typedef struct {
+    u8 pad0[0x20];
+    TrHdr *hdr;
+    s16 (*pos)[4];
+    s16 (*nrm)[4];
+} TrMdl;
+
+extern u16 D_main_bss_80137AB0[16];
+extern u16 D_main_bss_80137AD0[16];
+extern TrV3 D_main_bss_80137AF0[16];
+extern TrV3 D_main_bss_80137BB0[16];
+void rotateVec3ByMat3x3(void *, void *, void *);
+void normalize_vector(void *);
+void transformVec3ByMat34(void *, void *, void *);
+
+void trackResourceListWithMappingTables(TrMdl *mdl, f32 *mtx, f32 *cam) {
+    TrV3 v;
+    s32 i;
+    s32 n;
+    u32 *f;
+    u16 *a;
+    u16 *b;
+    u16 *uv;
+    s32 k;
+    u32 w;
+    u32 idx;
+    s16 *sv;
+    TrV3 *p;
+
+    for (i = 0; i < 16; i++) {
+        D_main_bss_80137AD0[i] = 0xFFFF;
+        D_main_bss_80137AB0[i] = 0xFFFF;
+    }
+    n = mdl->hdr->count;
+    f = mdl->hdr->faces;
+    for (; n > 0; n--) {
+        w = f[1];
+        k = 2;
+        a = (u16 *)((u8 *)f + ((w & 0xFC0) >> 4));
+        b = (u16 *)((u8 *)f + ((w >> 16) & 0xFC));
+        uv = (u16 *)((u8 *)f + ((w & 0x3F) << 2));
+        if (f[0] & 8) {
+            k = 3;
+        }
+        for (; k >= 0; k--) {
+            idx = *a++;
+            p = &D_main_bss_80137AF0[idx & 0xF];
+            if (D_main_bss_80137AB0[idx & 0xF] != idx) {
+                D_main_bss_80137AB0[idx & 0xF] = idx;
+                sv = mdl->nrm[idx];
+                v.x = sv[0];
+                v.y = sv[1];
+                v.z = sv[2];
+                rotateVec3ByMat3x3(mtx, &v, p);
+                normalize_vector(p);
+            }
+            idx = *b++;
+            p = &D_main_bss_80137BB0[idx & 0xF];
+            if (D_main_bss_80137AD0[idx & 0xF] != idx) {
+                D_main_bss_80137AD0[idx & 0xF] = idx;
+                sv = mdl->pos[idx];
+                v.x = sv[0] * 0.00390625f;
+                v.y = sv[1] * 0.00390625f;
+                v.z = sv[2] * 0.00390625f;
+                transformVec3ByMat34(mtx, &v, p);
+                p->x -= cam[0];
+                p->y -= cam[1];
+                p->z -= cam[2];
+                normalize_vector(p);
+            }
+            uv[0] = (u32)((1.0f - p->x) * 4.0f * 4096.0f);
+            uv[1] = (u32)((1.0f - p->z) * 4.0f * 4096.0f);
+            uv += 2;
+        }
+        f = (u32 *)((u8 *)f + ((f[1] >> 22) & 0xFC));
+    }
+}
 
 typedef struct {
     u8 pad0[0xC];
