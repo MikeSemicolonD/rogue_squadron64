@@ -781,7 +781,93 @@ void emit3DSoundsForActiveNpcs(u8 *arg0, f32 *arg1) {
     *(struct V3 *)D_cinematic_overlay_800B1A40 = *(struct V3 *)sp28;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", updatePositionalAudioSource);
+typedef struct { f32 x, y, z; } PaV3;
+typedef struct {
+    u8 b0;
+    u8 pad1[2];
+    u8 b3;
+    u8 pad4[0x6C];
+    PaV3 v70;
+    PaV3 v7C;
+    u8 pad88[0x34];
+    u8 aBC[0x44];
+    u8 b100;
+    u8 pad101[0x3B];
+} PaSlot;
+
+extern PaV3 paPrev __asm__("D_cinematic_overlay_800B1A40");
+extern f32 vec3Length(void *);
+s32 setMusyX3DProperties(void *, void *, void *, void *, void *, s32);
+void updateActive3DAudioSource(void *, void *, void *, s32);
+
+#define PA_SLOT(i) (((PaSlot *)D_cinematic_overlay_800B1900)[i])
+
+void updatePositionalAudioSource(u8 *sc, f32 *m, f32 dt) {
+    PaV3 pos;
+    f32 up[3];
+    f32 fw[3];
+    PaV3 vel;
+    PaV3 d;
+    f32 len;
+    u16 i;
+
+    pos.x = m[9];
+    pos.y = m[10];
+    pos.z = m[11];
+    if (dt > 0.0f) {
+        vel.x = (pos.x - paPrev.x) / dt;
+        vel.y = (pos.y - paPrev.y) / dt;
+        vel.z = (pos.z - paPrev.z) / dt;
+    } else {
+        vel.x = 0.0f;
+        vel.y = 0.0f;
+        vel.z = 0.0f;
+    }
+    paPrev = pos;
+    len = vec3Length(&vel);
+    if (len > 50.0f) {
+        f32 s = 50.0f / (len * 1.5f);
+        f32 x = vel.x * s;
+        f32 z = vel.z * s;
+        f32 y = vel.y * s;
+        vel.x = x;
+        vel.y = y;
+        vel.z = z;
+    }
+    up[0] = m[2];
+    up[1] = m[5];
+    up[2] = m[8];
+    fw[0] = -m[1];
+    fw[1] = -m[4];
+    fw[2] = -m[7];
+    setMusyX3DProperties(D_cinematic_overlay_800B1A50, &pos, &vel, up, fw, 0x7F);
+    for (i = 0; i < *(u16 *)(sc + 0x4A); i++) {
+        if (PA_SLOT(i).b3 & 2) {
+            f32 f;
+            if (PA_SLOT(i).b0 != 1) {
+                f = PA_SLOT(i).b100;
+            } else {
+                f = 0.0f;
+            }
+            {
+                PaSlot *sl = (PaSlot *)(i * sizeof(PaSlot) + (s32)D_cinematic_overlay_800B1900);
+                PaV3 *a = &sl->v70;
+                PaV3 *b = &sl->v7C;
+                d.x = a->x - b->x;
+                d.y = a->y - b->y;
+                d.z = a->z - b->z;
+                if (dt > 0.0f) {
+                    f32 k = 1.0f / dt;
+                    d.x = d.x * k;
+                    d.y = d.y * k;
+                    d.z = d.z * k;
+                }
+                updateActive3DAudioSource(sl->aBC, a, &d, (u8)(u32)f);
+            }
+            PA_SLOT(i).v7C = PA_SLOT(i).v70;
+        }
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A54A8);
 
