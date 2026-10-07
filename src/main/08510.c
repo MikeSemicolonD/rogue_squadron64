@@ -3120,7 +3120,27 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", buildAndRegisterDefaultMaterial);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", advanceVideoFrame);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", initVideoBootWrapper);
+extern void clearPendingViChanges(void);
+extern void clearPostSwapPendingFlags(void);
+extern void initVideoSubsystem(s16, s16, u16, u16, s16, s32, s32, s32, s32, s32, s32, s32, s32, s32 *, u8, s32);
+extern u8 buildAndRegisterDefaultMaterial(s16, s16, s16, s16, s16, s32 *, s32, s32, u32, s32 *, s32, u32, s32, u32, u32, u8, u16, u16);
+extern s32 createMaterialPool(void);
+extern void *rs_malloc(u32, u16);
+extern SgTask gspTaskI __asm__("gspTask");
+
+s32 initVideoBootWrapper(s16 w, s16 h, u16 a, u16 b, s16 bpp, s32 *fb, s32 z, s32 e8, u32 p8, s32 *p9, s32 p10, u32 p11, s32 p12, u32 p13, u32 flags, u8 p15, u16 p16, u16 p17) {
+    s32 r;
+    clearPendingViChanges();
+    clearPostSwapPendingFlags();
+    initVideoSubsystem(w, h, a, b, bpp, (flags >> 2) & 1, (flags >> 3) & 1, (flags >> 4) & 1, (flags >> 5) & 1, (flags >> 6) & 1, (flags >> 7) & 1, (flags >> 8) & 1, bpp >= 0x18, fb, p15, 0);
+    if (buildAndRegisterDefaultMaterial(w, h, a, b, bpp, fb, z, e8, p8, p9, p10, p11, p12, p13, flags, p15, p16, p17) != 0) {
+        createMaterialPool();
+        gspTaskI.yield_data_ptr = (u32)rs_malloc(0x1000, 0x80);
+        gspTaskI.yield_data_size = 0xC00;
+        return 1;
+    }
+    return 0;
+}
 
 s32 destroyTextureLUTs();
 s32 rs_free(struct D_main_bss_8011A444 *);
