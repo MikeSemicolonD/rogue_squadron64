@@ -930,9 +930,6 @@ s32 computeTurnAxisTowardTarget(Mat4x3 arg0, f32 arg1, f32 arg2, Vec3f arg3, UNI
     return 1;
 }
 
-#if 0
-// The register allocation surrounding the struct copy is a little incorrect, which is annoying because
-// that works just fine in `computeTurnAxisTowardTarget`
 f32 computeTurnVectorTowardTarget(Mat4x3 arg0, Vec3f arg1, struct Struct3f *arg2, f32 *arg3) {
     Vec3f sp10;
     struct Struct3f sp20;
@@ -949,9 +946,6 @@ f32 computeTurnVectorTowardTarget(Mat4x3 arg0, Vec3f arg1, struct Struct3f *arg2
     *arg2 = sp20;
     return temp_fs0;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", computeTurnVectorTowardTarget);
-#endif
 
 #if 0
 // The register allocation surrounding the struct copy is a little incorrect, which is annoying because
