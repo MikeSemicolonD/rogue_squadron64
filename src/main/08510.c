@@ -673,7 +673,77 @@ Gfx *emitAllocatedDLCommand(Gfx *dl, s32 flags) {
     return dl;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", emitFaceDLCommands);
+typedef struct {
+    u16 idx;
+    u16 stamp;
+} EfSlot;
+
+extern u8 efSlotOf[] __asm__("D_main_801132C0");
+extern EfSlot efCache[] __asm__("D_main_bss_80113240");
+extern u16 efStamp __asm__("D_main_bss_801142C0");
+extern struct { Gfx *dl; Gfx *vtx; u8 cnt; } efG __asm__("D_main_bss_8011A448");
+
+Gfx *emitFaceDLCommands(Gfx *dl, Gfx **out, u8 *outIdx, u8 n, u16 *vt, s32 flags) {
+    u8 buf[8];
+    u8 i;
+    u8 cnt;
+    u16 vi;
+    u8 slot;
+    u8 *bp;
+
+    bp = buf;
+    cnt = 0;
+    for (i = 0; i < n; i++) {
+        vi = vt[i];
+        __asm__("" :: "r"(dl));
+        slot = efSlotOf[vi];
+        if (efCache[slot].stamp == efStamp && efCache[slot].idx == vi) {
+            bp[i] = slot;
+        } else {
+            bp[i] = 0xFF;
+            cnt++;
+        }
+    }
+    if (cnt != 0) {
+        if (0x20 - efG.cnt < cnt) {
+            D_main_bss_8011A448->words.w0 = 0x04000000 | (((D_main_bss_8011A450 << 10) | (((D_main_bss_8011A450 * 8 + 0xF) & 0xFFF0) - 1)) & 0xFFFF);
+            D_main_bss_8011A448->words.w1 = (u32)efG.vtx;
+            efStamp++;
+            if (efStamp == 0) {
+                efStamp = 1;
+            }
+            dl = emitAllocatedDLCommand(dl, flags);
+            for (i = 0; i < n; i++) {
+                efSlotOf[vt[i]] = efG.cnt;
+                efCache[efG.cnt].idx = vt[i];
+                efCache[efG.cnt].stamp = efStamp;
+                out[i] = efG.vtx + efG.cnt;
+                outIdx[i] = efG.cnt;
+                efG.cnt++;
+            }
+        } else {
+            for (i = 0; i < n; i++) {
+                if (buf[i] == 0xFF) {
+                    efSlotOf[vt[i]] = efG.cnt;
+                    efCache[efG.cnt].idx = vt[i];
+                    efCache[efG.cnt].stamp = efStamp;
+                    out[i] = efG.vtx + efG.cnt;
+                    outIdx[i] = efG.cnt;
+                    efG.cnt++;
+                } else {
+                    outIdx[i] = buf[i];
+                    out[i] = efG.vtx + buf[i];
+                }
+            }
+        }
+    } else {
+        for (i = 0; i < n; i++) {
+            outIdx[i] = buf[i];
+            out[i] = efG.vtx + buf[i];
+        }
+    }
+    return dl;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", emitFrameRdpInitDl);
 
