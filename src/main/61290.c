@@ -175,7 +175,73 @@ s32 randomlyScaledColoredEffectNpcHandler(ColorFxNpc *npc, u16 cmd, void *arg) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61290", minimalRandomNpcHandler);
+typedef struct {
+    f32 *pos;
+    f32 scale;
+    u8 *color;
+} MinFxParams;
+
+extern u8 D_main_bss_8013990C[];
+
+s32 mrnImpl(ColorFxNpc *npc, u16 cmd, void *arg) __asm__("minimalRandomNpcHandler");
+s32 mrnImpl(ColorFxNpc *npc, u16 cmd, void *arg) {
+    ColorFxCtx *c = npc->ctx;
+
+    switch (cmd) {
+    case 1: {
+        MinFxParams *p = arg;
+        f32 s;
+        c->f10 = 0x300;
+        c->f10 |= rand() & 0x1C00;
+        *(s32 *)((u8 *)c + 0x1C) = 0;
+        c->c2C = p->color[0];
+        c->c2D = p->color[1];
+        c->c2E = p->color[2];
+        c->f44 = p->color[3];
+        c->c2F = (u32)c->f44;
+        c->f12 = *(u16 *)D_main_bss_8013990C;
+        c->f20 = c->f24 = ((f32)(rand() & 0xFF) / 255.0f + 2.5f) * (p->scale * 0.25f);
+        *(V3 *)&c->f30 = *(V3 *)p->pos;
+        *(s32 *)&c->f3C = 0;
+        *(s32 *)&c->f40 = 0;
+        popNpcSlotFromTail(D_main_bss_80139574, npc);
+        return 1;
+    }
+    case 2:
+        break;
+    case 3: {
+        f32 *dt = arg;
+        c->f40 = c->f40 + *dt;
+        c->f44 = c->f44 - *dt * 512.0f;
+        c->f20 = c->f20 * 1.1f;
+        c->f24 = c->f24 * 1.1f;
+        c->f34 = c->f34 - *dt;
+        if (c->f44 > 0.0f) {
+            c->c2F = (u32)c->f44;
+        } else {
+            destroyNpcSlotByIndex(npc->f16);
+            return 1;
+        }
+        break;
+    }
+    case 4: {
+        ColorFxUpdate *q = arg;
+        if (transformVec3ToNpcLocalWithScale(q->f0, 0, &c->f30, 1.0f, 0)) {
+            c->f8 = (s32)((c->f30 - q->f18) * 256.0f);
+            c->fA = (s32)((c->f34 - q->f1C) * 256.0f);
+            c->fC = (s32)((c->f38 - q->f20) * 256.0f);
+            c->next = q->f48->head;
+            if (c->next != 0) {
+                c->next->prev = c;
+            }
+            c->prev = 0;
+            q->f48->head = c;
+        }
+        break;
+    }
+    }
+    return 1;
+}
 
 extern u8 D_main_bss_80130B63;
 extern u8 D_main_bss_80139870[];
