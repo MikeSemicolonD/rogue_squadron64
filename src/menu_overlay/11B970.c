@@ -2681,11 +2681,54 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", strMenuTyFailed);
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", strMenuTyOver);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6FF8);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A7008);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", postLevelSaveInit);
+// LANDING: pre-edit src/menu_overlay/11B970.c: delete the INCLUDE_RODATA lines for D_menu_overlay_800A6FF8 and D_menu_overlay_800A7008 (the aggregate initialisers below emit them); see postLevelSaveInit_pre.py
+typedef struct {
+    u8 c[4];
+} PlsCol;
+typedef struct {
+    u8 pad0[0x14];
+    s32 w14;
+    f32 f18;
+    f32 f1C;
+    u8 pad20[4];
+    f32 f24;
+    f32 f28;
+    PlsCol col;
+} PlsElem;
+extern PlsElem *plsFade __asm__("D_menu_overlay_800CFE34");
+extern PlsCol D_menu_overlay_800CC894;
+extern char strMenuTyComplete[];
+extern char strMenuTyFailed[];
+extern char strMenuTyOver[];
+PlsElem *plsField0xC(s32) __asm__("getStructField0xC");
+
+void postLevelSaveInit(u8 arg0) {
+    char buf[0x20];
+    char *names[4] = { strMenuTyComplete, strMenuTyFailed, strMenuTyFailed, strMenuTyOver };
+    f32 scl[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+    rs_strcpy(buf, names[arg0]);
+    if (arg0 != 3) {
+        if (gGameSettings.languageSelect == 1) {
+            sprintf(buf, "%s_d", names[arg0]);
+        }
+        if (gGameSettings.languageSelect == 2) {
+            sprintf(buf, "%s_f", names[arg0]);
+        }
+    }
+    plsFade = plsField0xC(cmLoadTex(buf, 0x40, 0x40, 1));
+    plsFade->w14 |= 0x6C00003;
+    plsFade->col = D_menu_overlay_800CC894;
+    plsFade->col.c[3] = 0;
+    plsFade->f24 = scl[arg0] * 512.0f / 640.0f;
+    plsFade->f28 = scl[arg0];
+    plsFade->f18 = plsFade->f24 * -224.0f;
+    plsFade->f1C = plsFade->f28 * -96.0f;
+    insertLookupEntry(rbList78, plsFade, 0xF);
+    setLookupEntryField5ByKey((s32)rbList78, (u8 *)plsFade, 1);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A7038);
 
