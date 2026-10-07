@@ -737,7 +737,68 @@ INCLUDE_ASM("asm/nonmatchings/main/4D900", destroyEffectObjectTypeNpcSlots);
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", computeBootConfigScaledVec4);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", initPlayerVehicleStateTables);
+typedef struct {
+    s32 a;
+    s32 b;
+    s32 c;
+    s32 d;
+    s32 w[4];
+    f32 f[3];
+} PvSub;
+typedef struct {
+    u8 b0;
+    u8 pad1[3];
+    void *p4;
+    PvSub sub;
+    u8 q34[0x110];
+} PvNode;
+typedef struct { s32 w[4]; } PvTbl;
+extern PvNode pvNodes[] __asm__("D_main_bss_80138D18");
+extern PvNode *pvCur __asm__("D_main_bss_80138894");
+extern PvTbl D_main_8009DEE0[];
+void resetEffectObjectVecQuads(s32);
+s32 getBootConfigField12(void);
+s32 getBootConfigField14(void);
+
+void initPlayerVehicleStateTables(void) {
+    s32 i;
+    PvNode *n;
+    PvSub *s;
+
+    D_main_bss_80138260 = 1;
+    for (i = 0; i < 1; i++) {
+        resetEffectObjectVecQuads(i);
+        n = &pvNodes[i];
+        s = &n->sub;
+        n->b0 = 0;
+        n->p4 = D_main_bss_80138268[i];
+        n->sub.a = 0;
+        s->b = 0;
+        s->d = 0;
+        s->c = 0;
+        s->w[0] = D_main_8009DEE0[i].w[0];
+        s->w[1] = D_main_8009DEE0[i].w[1];
+        s->w[2] = D_main_8009DEE0[i].w[2];
+        s->w[3] = D_main_8009DEE0[i].w[3];
+        s->f[0] = 65.0f;
+        s->f[1] = 0.1171875f;
+        s->f[2] = 93.75f;
+        clearVec4QuadStruct((void *)n->q34);
+    }
+    pvCur = pvNodes;
+    if (D_main_bss_80138260 == 1) {
+        s = &pvNodes[0].sub;
+        pvNodes[0].b0 = 1;
+        s->w[0] = (u16)getBootConfigField12();
+        s->w[1] = (u16)getBootConfigField14();
+        s->w[3] = (u32)s->w[1] >> 1;
+        s->w[2] = s->w[0] / 2;
+    } else {
+        for (i = 0; i < 1; i++) {
+            pvNodes[i].b0 = 1;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", updateMultiNodeAudioListeners);
 
