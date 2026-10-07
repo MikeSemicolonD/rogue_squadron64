@@ -2073,7 +2073,31 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6E98);
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6E9C);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", tickMenuOptionEntry);
+extern u8 D_main_bss_80130B56;
+void setMenuOverlayHeaderState(s32, s32, s32);
+
+static __inline__ void tmoShow(u8 slot, u8 idx, f32 sc, f32 x, u8 big) {
+    u8 *p;
+
+    if (D_main_bss_80130B56 != 0) {
+        p = getPlayerSlotFieldAt34(slot, idx);
+        setMenuOverlayHeaderState(2, 0x200, 0);
+        setPlayerSlotAnimationFlag(slot, getGameOrFrontText(0xBE), idx, (s16)(x + -256.0f), 0xBE);
+        setPlayerSlotEntryRGB(slot, idx, &mainMenuBrightYellowColor);
+        samplePlayerAnimChannel(slot, idx, sc);
+        if (big) {
+            *(f32 *)(p + 0x28) *= 1.2f;
+        }
+        activateAnimationKeyframe(slot, idx, 0xFE);
+    } else {
+        activateAnimationKeyframe(slot, idx, 0);
+    }
+}
+
+void tickMenuOptionEntry(s32 arg0) {
+    u8 sel = arg0;
+    tmoShow(sel ? 9 : 8, sel ? 0xA : 0x10, sel ? 0.48f : 1.0f, sel ? 212.0f : 160.0f, sel);
+}
 
 
 typedef struct {
