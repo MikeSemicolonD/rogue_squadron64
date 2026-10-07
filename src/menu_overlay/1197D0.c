@@ -611,23 +611,40 @@ void tickFormatMessageWorker(s32 *arg0) {
     }
 }
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5CB4);
+extern u16 blTex1 __asm__("D_menu_overlay_800CE6F0");
+extern u16 blTex2 __asm__("D_menu_overlay_800CE6F2");
+f32 quadraticEaseInOut(f32);
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", strMenuGRAD1);
+void buildLevelSelectTextTextures(f32 lim) {
+    u8 b0[0x200];
+    u8 b1[0x200];
+    u8 b2[0x200];
+    AtMat mat1 = { { 0, 1, 0, 0 }, 1.0f, 1.0f, 0, 0, "GRAD1" };
+    AtMat mat2 = { { 0, 1, 0, 0 }, 1.0f, 1.0f, 0, 0, "GRAD2" };
+    AtTex tex1 = { { 0, 0, 0, 0, 0, 0, 0, 0 }, 0, "GRAD1A", 0x40, 8, 1, 0, 0x405, 0 };
+    AtTex tex2 = { { 0, 0, 0, 0, 0, 0, 0, 0 }, 0, "GRAD2A", 8, 0x40, 1, 0, 0x405, 0 };
+    u32 i;
+    u32 j;
+    f32 v;
 
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5CD8);
-
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", strMenuGRAD2);
-
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", strMenuGRAD1A);
-
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5D04);
-
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", strMenuGRAD2A);
-
-INCLUDE_RODATA("asm/nonmatchings/menu_overlay/1197D0", D_menu_overlay_800A5D40);
-
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", buildLevelSelectTextTextures);
+    for (i = 0; i < 0x40; i++) {
+        for (j = 0; j < 8; j++) {
+            b0[i * 8 + j] = 0xFF;
+            v = quadraticEaseInOut((f32)i * 0.015625f) * 1746.0f;
+            if (lim < v) {
+                v = lim;
+            }
+            b1[i * 8 + j] = (u32)v;
+            b2[j * 0x40 + i] = (u32)v;
+        }
+    }
+    tex2.pix[0] = b0;
+    tex2.pix[1] = b1;
+    tex1.pix[0] = b0;
+    tex1.pix[1] = b2;
+    blTex1 = atRegister(&mat1, &tex1, 1);
+    blTex2 = atRegister(&mat2, &tex2, 1);
+}
 
 typedef struct { u8 pad[0x6C]; u8 *p6C; u8 pad2[8]; } FmtBuf;
 typedef struct {
