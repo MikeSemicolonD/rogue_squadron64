@@ -8,7 +8,79 @@
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0AA780", D_mission_overlay_800A5130);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AA780", computeAngleToTargetFromTransform);
+void computeAngleToTargetFromTransform(Mat4x3 m, Vec3f pos, Vec3f ang) {
+    Vec3f c2;
+    Vec3f c1;
+    Vec3f c0;
+    Vec3f h;
+    Vec3f v;
+    f32 len;
+    f32 d;
+    f32 z;
+    f32 l2;
+
+    pos[0] = m[3][0];
+    pos[1] = m[3][1];
+    pos[2] = m[3][2];
+    c2[0] = m[0][2];
+    c2[1] = m[1][2];
+    c2[2] = m[2][2];
+    c1[0] = m[0][1];
+    c1[1] = m[1][1];
+    c1[2] = m[2][1];
+    c0[0] = m[0][0];
+    c0[1] = m[1][0];
+    c0[2] = m[2][0];
+    h[0] = c2[0];
+    h[1] = 0.0f;
+    h[2] = c2[2];
+    len = vec3Length(h);
+    if (len < 0.001f) {
+        d = 90.0f - sinfApprox(-c0[0]) * 57.29578f;
+        if ((0.0f < c0[2]) == (0.0f < c2[1])) {
+            d = -d;
+        }
+        ang[2] = d;
+        ang[0] = 0.0f;
+    } else {
+        d = 90.0f - sinfApprox(h[2] / len) * 57.29578f;
+        if (0.0f < c2[0]) {
+            d = -d;
+        }
+        ang[0] = d;
+    }
+    if (len < 0.001f) {
+        ang[1] = 90.0f;
+    } else {
+        d = vec3Dot(h, c2) / len;
+        if (d >= 1.0f) {
+            ang[1] = 0.0f;
+        } else {
+            d = 90.0f - sinfApprox(d) * 57.29578f;
+            ang[1] = d;
+        }
+    }
+    if (c2[1] < 0.0f) {
+        ang[1] = -ang[1];
+    }
+    v[0] = h[2];
+    v[1] = z = 0.0f;
+    v[2] = -h[0];
+    l2 = vec3Length(v);
+    if (len >= 0.001) {
+        d = vec3Dot(v, c0) / l2;
+        if (d >= 1.0f) {
+            ang[2] = z;
+        } else if (d <= -1.0f) {
+            ang[2] = 180.0f;
+        } else {
+            ang[2] = 90.0f - sinfApprox(d) * 57.29578f;
+        }
+        if (0.0f < c0[1]) {
+            ang[2] = -ang[2];
+        }
+    }
+}
 
 void buildOrientationFromPosAndAngles(Mat4x3 m, Vec3f pos, Vec3f ang) {
     f32 t[6];
