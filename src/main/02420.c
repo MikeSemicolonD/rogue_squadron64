@@ -155,7 +155,53 @@ why:
     return var_s2;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/02420", rs_free);
+static __inline__ u8 rfFree(struct heapBlockHeader *p, struct heapBlockHeader *blk) {
+    struct heapBlockHeader *prev;
+    struct heapBlockHeader *next;
+
+    prev = NULL;
+    while (!(p->unk00 & 8)) {
+        next = (struct heapBlockHeader *)((u32)p + p->size + sizeof(struct heapBlockHeader));
+        if (p->unk00 & 2) {
+            if (blk == p) {
+                u8 ok = !(p->unk00 & 4);
+                if (!ok) {
+                    return 0;
+                }
+                blk->unk00 = 1;
+                if ((next->unk00 & 1) && !(next->unk00 & 4)) {
+                    blk->size += sizeof(struct heapBlockHeader) + next->size;
+                }
+                if (prev != NULL) {
+                    if ((prev->unk00 & 1) && !(prev->unk00 & 4)) {
+                        prev->size += sizeof(struct heapBlockHeader) + p->size;
+                    }
+                }
+                return 1;
+            }
+        }
+        prev = p;
+        p = next;
+    }
+    return 0;
+}
+
+void rs_free(void *ptr) {
+    struct heapBlockHeader *blk;
+
+    if (ptr != NULL) {
+        osRecvMesg(&D_main_8010FEE0, NULL, 1);
+        blk = (struct heapBlockHeader *)ptr - 1;
+        if (!rfFree(D_main_bss_8010FF18, blk)) {
+            if (D_main_bss_8010FF00 == NULL || !rfFree(D_main_bss_8010FF00, blk)) {
+                if (D_main_bss_8010FEFC != NULL) {
+                    rfFree(D_main_bss_8010FEFC, blk);
+                }
+            }
+        }
+        osSendMesg(&D_main_8010FEE0, NULL, 0);
+    }
+}
 
 static __inline__ void hfInit(void) {
     OSMesg pad[2];
