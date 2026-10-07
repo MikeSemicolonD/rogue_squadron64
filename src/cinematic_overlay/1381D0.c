@@ -829,7 +829,290 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5320);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", spawnCutsceneEffectsAndCues);
+typedef struct {
+    s32 type;
+    u32 time;
+    s32 a;
+    s32 b;
+    s32 c;
+    s32 d;
+} ScEv;
+
+typedef struct {
+    u8 pad0[0x4A];
+    u16 nSlots;
+    u16 pad4C;
+    u16 nEv;
+    f32 f50;
+    f32 f54;
+    ScEv ev[1];
+} ScFile;
+
+typedef struct { u8 r, g, b, a; } ScCol;
+typedef struct { f32 v[3]; } ScV3;
+typedef struct { s32 k[4]; } ScKw;
+
+extern u8 *scSlots __asm__("D_cinematic_overlay_800B1900");
+extern ScV3 scTplV __asm__("D_cinematic_overlay_800A52F0");
+extern ScCol scTplCol __asm__("D_cinematic_overlay_800A52FC");
+extern ScKw scTplKw __asm__("D_cinematic_overlay_800A5310");
+extern ScV3 scTplV2 __asm__("D_cinematic_overlay_800A5320");
+extern u16 scSpeechKeys[] __asm__("D_cinematic_overlay_800AF6E8");
+extern u16 scVoiceBank __asm__("D_cinematic_overlay_800AF6BE");
+extern s32 scAF6BC __asm__("D_cinematic_overlay_800AF6BC");
+extern u8 scSongVol __asm__("D_cinematic_overlay_800B1A30");
+extern u8 scB09B0 __asm__("D_cinematic_overlay_800B09B0");
+extern u8 scB0B1C __asm__("D_cinematic_overlay_800B0B1C");
+extern u8 scB0B14 __asm__("D_cinematic_overlay_800B0B14");
+extern u16 scB0B24 __asm__("D_cinematic_overlay_800B0B24");
+
+void scPlaySpeech(s32, s32, s32, s32) __asm__("playSpeechClip");
+s32 scBsearch(u16, s32, s32) __asm__("bsearchFactor5TableByU16Key");
+void scType0xA(u8 *, f32) __asm__("spawnNpcType0xAFromTemplate");
+void scByteAnim(u8 *) __asm__("spawnByteAnimDebrisDefault");
+void scParticle(u8 *, u16, f32, s32) __asm__("spawnRandomParticleWithParent");
+void scOriented(s32, u8 *, f32 *, ScCol *, f32, f32, f32, f32) __asm__("spawnOrientedNpc");
+void scRandRot(f32 *, f32 *, f32, s32, s32, s32) __asm__("composeRandomRotationMatrix");
+void scScaleRand(f32 *, f32, f32) __asm__("scaleVec3ByRandomRange");
+s16 scRand(void) __asm__("rand");
+void scDebris1(u8 *, f32 *, f32, f32, f32) __asm__("spawnDebris1Npc");
+void scSpray(u8 *, f32, f32, f32, f32, f32) __asm__("spawnWaterSprayDebrisAndBurst");
+void scDespawn(u8) __asm__("despawnCutsceneNpcSlot");
+u16 scLookupId(s32) __asm__("lookupCutsceneIdMapping");
+s32 scFindChan(s32) __asm__("findAudioChannelById");
+s32 scPlaySong(u16, s32, s32, s32) __asm__("playSongById");
+void scQueueVoice(s32, u16, s32, s32) __asm__("queueAudioVoiceCmd");
+void scFrame(f32 *, u8 *) __asm__("extractOrthonormalFrameFromStruct");
+void scCue(s32, u16, f32 *, f32 *, s32, f32, f32) __asm__("dispatchCueByCategory");
+u8 scMatchKw(s32, s32, s32) __asm__("matchKeywordWithPriority");
+s32 scHmtByName(s32, s32, s32, f32 *, s32, s32) __asm__("lookupHmtTextureByName");
+void scNormalize(f32 *) __asm__("normalize_vector");
+void scSchedule(u16, f32, f32, f32) __asm__("scheduleCutsceneActionSlot");
+void scStopVoice(s32) __asm__("stopVoiceByHandleLocked");
+void scSimpleAudio(u8, u16, s32) __asm__("playSimpleAudioCmd");
+void scDebrisField(ScEv *) __asm__("spawnCutsceneDebrisField");
+void scBurst(u8, u8, f32 *, f32 *) __asm__("spawnNpcBurstAlongSegment");
+void scBounds2(f32, f32) __asm__("setGridLayerScrollBounds");
+void scDestroyChain(s32) __asm__("destroyAllNpcsInSlotChain");
+
+#define SC_SLOT(i) (scSlots + (i) * 0x13C)
+#define SC_B(e, o) (*(u8 *)((u8 *)(e) + (o)))
+#define SC_H(e, o) (*(u16 *)((u8 *)(e) + (o)))
+
+u8 spawnCutsceneEffectsAndCues(ScFile *cf, u32 time, u8 arg2, f32 arg3, u8 arg4) {
+    f32 v20[4];
+    ScCol col;
+    f32 q38[4];
+    f32 dir[4];
+    s32 kw[4];
+    f32 v68[4];
+    f32 m[12];
+    u8 ret;
+    ScEv *e;
+    f32 f;
+    f32 a;
+    f32 b;
+    u32 i;
+    s32 k;
+    s32 h;
+    u16 id;
+    u16 mapped;
+
+    *(ScV3 *)v20 = scTplV;
+    col = scTplCol;
+    ret = arg2;
+    while (D_cinematic_overlay_800B0B20 < 200) {
+        if (time < cf->ev[D_cinematic_overlay_800B0B20].time) {
+            break;
+        }
+        e = &cf->ev[D_cinematic_overlay_800B0B20];
+        switch (e->type) {
+            case 0:
+                if (arg4 == 0) {
+                    scPlaySpeech(e->a, e->b ? SC_B(e, 0xF) : 0x7F, 0, 3);
+                }
+                break;
+            case 4:
+                ret = SC_B(e, 0xB);
+                scB09B0 = 3;
+                break;
+            case 3:
+                if (arg4 == 0) {
+                    e->d &= 3;
+                    D_cinematic_overlay_800B1A20[e->d] = scBsearch(scSpeechKeys[e->a], e->b ? SC_B(e, 0xF) : 0x7F, e->c ? SC_B(e, 0x13) : 0x40);
+                }
+                break;
+            case 5:
+                if (e->b != 0) {
+                    f = (f32)(u32)e->b / 500.0f;
+                } else {
+                    f = 1.0f;
+                }
+                switch (e->c) {
+                    case 0:
+                        scType0xA(SC_SLOT(e->a) + 0x70, f);
+                        scByteAnim(SC_SLOT(e->a) + 0x70);
+                        break;
+                    case 1:
+                        scParticle(SC_SLOT(e->a) + 0x70, 0xFFFF, f, 0);
+                        break;
+                    case 2:
+                        scOriented(0, SC_SLOT(e->a) + 0x70, v20, &col, 0.5f, f, 1.5f, 0.7f);
+                        f *= 0.9f;
+                        scOriented(0, SC_SLOT(e->a) + 0x70, v20, &col, 0.5f, f, 1.5f, 1.4f);
+                        f *= 0.9f;
+                        scOriented(0, SC_SLOT(e->a) + 0x70, v20, &col, 0.5f, f, 1.5f, 2.1f);
+                        break;
+                    case 3:
+                        for (i = 0, k = 0; i < 8; i++) {
+                            scRandRot(q38, dir, 1.0f, 15, 75, k);
+                            k += 45;
+                            scScaleRand(dir, 0.3f, 0.8f);
+                            a = ((scRand() & 0x7F) - 64.0f) / 12.8f + 14.0f;
+                            b = ((scRand() & 0x7F) - 64.0f) * 0.00390625f + 0.7f;
+                            scDebris1(SC_SLOT(e->a) + 0x70, dir, a, b, 0.8f);
+                        }
+                        break;
+                    case 4:
+                        scSpray(SC_SLOT(e->a) + 0x70, f / 10.0f, f, f / 10.0f, f, 1.0f);
+                        break;
+                }
+                break;
+            case 7:
+                *SC_SLOT(e->a) = 1;
+                if ((u32)e->a < cf->nSlots) {
+                    scDespawn(SC_B(e, 0xB));
+                }
+                break;
+            case 6:
+                *SC_SLOT(e->a) = 0;
+                break;
+            case 1:
+                e->c &= 3;
+                h = D_cinematic_overlay_800B1A10[e->c];
+                if (h == -1) {
+                    id = gCutsceneIdMappingTable[e->a].unk0;
+                    mapped = scLookupId(id);
+                    {
+                    s32 r = scPlaySong(mapped, id, scFindChan(id), 0);
+                    if (r != h) {
+                        D_cinematic_overlay_800B1A10[e->c] = r;
+                        scQueueVoice(e->b ? SC_B(e, 0xF) : 0x7F, scVoiceBank, D_cinematic_overlay_800B1A10[e->c], 0);
+                        scSongVol = e->b ? SC_B(e, 0xF) : 0x7F;
+                    }
+                    }
+                }
+                break;
+            case 2:
+                e->a &= 3;
+                {
+                s32 hv = D_cinematic_overlay_800B1A10[e->a];
+                if (hv != -1) {
+                    scQueueVoice(0, scVoiceBank, hv, 1);
+                    D_cinematic_overlay_800B1A10[e->a] = -1;
+                }
+                }
+                break;
+            case 8:
+                if ((u32)e->b < 15) {
+                    *(ScKw *)kw = scTplKw;
+                    *(ScV3 *)v68 = scTplV2;
+                    if (*(s32 *)(SC_SLOT(e->a) + 0x50) != 0) {
+                        if (e->c != 0) {
+                            f = (f32)(u32)e->c / 10.0f;
+                        } else {
+                            f = 2.5f;
+                        }
+                        if (e->b == 13) {
+                            scFrame(m, SC_SLOT(e->a) + 0x88);
+                            m[9] = 0.0f;
+                            m[10] = 0.0f;
+                            m[11] = 0.0f;
+                            m[0] += m[9];
+                            m[1] += 0.1f;
+                            m[2] += m[9];
+                            scCue(e->b, 0xFFFF, m, v68, 1, f, 1.0f);
+                        } else {
+                            if (gCurrentLevel == 19) {
+                                v68[0] += v68[0];
+                                v68[1] += v68[1];
+                                v68[2] += v68[2];
+                            }
+                            for (i = 0; i < 8; i++) {
+                                if (scMatchKw(*(s32 *)(SC_SLOT(e->a) + 0x50), kw[i >> 1], i & 1) != 0) {
+                                    if (scHmtByName(*(s32 *)(SC_SLOT(e->a) + 0x50), kw[i >> 1], i & 1, m, 0, 0) != 0) {
+                                        m[9] = 0.0f;
+                                        m[10] = 0.0f;
+                                        m[11] = 0.0f;
+                                        if (SC_SLOT(e->a)[2] == 11) {
+                                            m[4] = 0.5f;
+                                            scNormalize(&m[3]);
+                                        }
+                                        scCue(e->b, 0xFFFF, m, v68, 1, f, 1.0f);
+                                    }
+                                }
+                            }
+                        }
+                        if (e->d != 0) {
+                            scBsearch(SC_H(e, 0x16), 0x7F, 0x40);
+                        }
+                    }
+                }
+                break;
+            case 9:
+                scAF6BC = e->a;
+                break;
+            case 10:
+                scB0B1C = 1;
+                break;
+            case 11:
+                if (e->c != 0) {
+                    scSchedule(SC_H(e, 0xA), (f32)(u32)e->b, arg3, (f32)(time + e->c) / (cf->f54 * cf->f50));
+                }
+                break;
+            case 12:
+                {
+                s32 hs = D_cinematic_overlay_800B1A20[e->a];
+                if (hs != -1) {
+                    scStopVoice(hs);
+                    D_cinematic_overlay_800B1A20[e->a] = -1;
+                }
+                }
+                break;
+            case 13:
+                *(f32 *)(SC_SLOT(e->a) + 0x68) = (f32)(u32)e->b / 10.0f;
+                break;
+            case 14:
+                scSimpleAudio(SC_B(e, 0xB), SC_H(e, 0xE), 0xFD);
+                break;
+            case 15:
+                scDebrisField(e);
+                break;
+            case 16:
+                scBurst(SC_B(e, 0xB), SC_B(e, 0xF), NULL, NULL);
+                break;
+            case 17:
+                scBounds2((f32)(u32)e->a, (f32)(u32)e->b);
+                break;
+            case 19:
+                D_cinematic_overlay_800B0B22 = SC_H(e, 0xA);
+                break;
+            case 20:
+                scDestroyChain(3);
+                break;
+            case 21:
+                scB0B24 = SC_H(e, 0xA);
+                break;
+            case 22:
+                scB0B14 = e->a != 0;
+                break;
+        }
+        if (++D_cinematic_overlay_800B0B20 == cf->nEv) {
+            break;
+        }
+    }
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", initCutsceneAudioChannels);
 
