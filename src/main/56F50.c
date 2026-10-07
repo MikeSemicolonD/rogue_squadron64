@@ -424,7 +424,184 @@ next:
     return NULL;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", addNpcToVisibilityBucket);
+typedef struct AvNode {
+    struct AvNode *next;
+    struct AvNode *prev;
+    void *data;
+    u8 padC[0x50];
+} AvNode;
+
+typedef struct {
+    u8 pad0[0x10];
+    AvNode *head;
+    u8 pad14[0x38];
+} AvEnt;
+
+typedef struct AvLink {
+    struct AvLink *next;
+    struct AvLink *prev;
+} AvLink;
+
+typedef struct {
+    u8 *def;
+    f32 *dists;
+    u16 fl;
+    u8 lod;
+    u8 bB;
+    AvLink link;
+} AvInst;
+
+extern u8 D_main_bss_80130B39;
+extern u32 D_main_bss_8013889C;
+extern f32 D_main_8009ECB0[];
+u8 avTransform(void *, s32, void *, f32, f32 *) __asm__("transformVec3ToNpcLocalWithScale");
+void avApplyFlags(void *, u32, u32) __asm__("applyFlagsToMeshdef1List");
+
+static __inline__ void avSetLod(u8 *inst, s32 lod) {
+    u8 *def = *(u8 **)inst;
+    u16 *ld = ((u16 **)((s32)def + (lod << 2)))[6];
+    void **src;
+    AvNode *nd;
+    AvNode *prev;
+    AvEnt *e;
+    s32 i;
+    s32 n;
+
+    if (ld == NULL) {
+        return;
+    }
+    nd = *(AvNode **)(def + 0x14);
+    if (((u16 *)nd)[1] < ld[1]) {
+        return;
+    }
+    src = (void **)(ld + 2);
+    n = ((u16 *)nd)[0];
+    nd = (AvNode *)(inst + (n * 0x4C + 0xC));
+    e = (AvEnt *)(inst + 0xC);
+    for (i = 0; i < n; i++, e++, src++) {
+        __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
+        if (*src != NULL) {
+            prev = NULL;
+            e->head = nd;
+        loop:
+            ld = (u16 *)((src[1] != NULL) ? nd + 1 : NULL);
+            nd->next = (AvNode *)ld;
+            nd->prev = prev;
+            prev = nd;
+            __asm__("" :: "r"(prev));
+            nd->data = *src;
+            nd++;
+            src++;
+            if (*src != NULL) goto loop;
+        } else {
+            e->head = NULL;
+        }
+    }
+    inst[0xA] = lod;
+}
+
+s32 avImpl(AvLink **list, AvInst *inst, void *pos, f32 scale) __asm__("addNpcToVisibilityBucket");
+s32 avImpl(AvLink **list, AvInst *inst, void *pos, f32 scale) {
+    u8 *def;
+    s32 lod;
+    f32 dist;
+    u16 fl;
+    AvLink *head;
+    u8 r;
+    s32 n;
+
+    def = inst->def;
+    lod = -1;
+    if (inst->bB != 0 && !(inst->fl & 0x20)) {
+        D_main_8013A498[++D_main_bss_8013A490] = inst->bB;
+        inst->bB = 0;
+    }
+    if (D_main_bss_80130B39 == 0) {
+        if (D_main_bss_8013889C & 1) {
+            fl = inst->fl;
+            if (fl & 0x80) goto check;
+            if (!(fl & 0x180)) {
+                if (D_main_bss_801394E2 < D_main_bss_801394E4) {
+                    inst->fl = fl | 0x80;
+                    D_main_bss_801394E2++;
+                } else {
+                    inst->fl = fl | 0x100;
+                    D_main_bss_801394E4++;
+                }
+            }
+            r = avTransform(list, 0, pos, scale, &dist);
+            if (r == 0) {
+                goto clear;
+            }
+            lod = 0;
+            inst->fl |= 0x200;
+        } else {
+            fl = inst->fl;
+            if (fl & 0x100) goto check;
+            if (!(fl & 0x180)) {
+                if (D_main_bss_801394E2 < D_main_bss_801394E4) {
+                    inst->fl = fl | 0x80;
+                    D_main_bss_801394E2++;
+                } else {
+                    inst->fl = fl | 0x100;
+                    D_main_bss_801394E4++;
+                }
+            }
+            r = avTransform(list, 0, pos, scale, &dist);
+            if (r == 0) {
+            clear:
+                inst->fl &= ~0x200;
+                return 0;
+            }
+            lod = 0;
+            inst->fl |= 0x200;
+        }
+    } else {
+        if (avTransform(list, 0, pos, scale, &dist) != 0) {
+            inst->fl |= 0x200;
+        } else {
+            inst->fl &= ~0x200;
+        }
+    }
+check:
+    if (!(inst->fl & 0x200)) {
+        return 0;
+    }
+    if (*(s32 *)(def + 0x1C) != 0 && lod == 0) {
+        f32 *dists = inst->dists;
+        if (dists == NULL) {
+            dists = D_main_8009ECB0;
+        }
+        do {
+            n = lod + 1;
+            if (((void **)((s32)def + (n << 2)))[6] == NULL || dist < dists[lod]) {
+                break;
+            }
+            lod = n;
+        } while (n < 4);
+        if (lod != inst->lod) {
+            avSetLod((u8 *)inst, lod);
+        }
+    }
+    if ((*(u32 *)&inst->fl & 0x8FF00) == 0x80000) {
+        if (*(u32 *)(def + 0x3C) <= D_main_bss_8013889C) {
+            *(u32 *)(def + 0x3C) = D_main_bss_8013889C + 1;
+            *(u16 *)(def + 0x38) ^= 0x10;
+            if (*(u16 *)(def + 0x38) & 0x10) {
+                avApplyFlags(*(void **)(def + 0x10), 0x120, 0x100000);
+            } else {
+                avApplyFlags(*(void **)(def + 0x10), 0xA0, 0x100000);
+            }
+        }
+    }
+    inst->link.next = head = *list;
+    if (head != NULL) {
+        head->prev = &inst->link;
+    }
+    inst->link.prev = NULL;
+    *list = &inst->link;
+    return 1;
+}
 
 typedef struct SmNode {
     struct SmNode *next;
