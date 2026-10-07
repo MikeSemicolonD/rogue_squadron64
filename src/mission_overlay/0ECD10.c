@@ -108,7 +108,80 @@ found:
     return hdr;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0ECD10", unlinkAndFreeChildNpcNode);
+typedef struct PoolNode {
+    u8 type;
+    u8 flags[4];
+    u8 pad5[3];
+    struct PoolNode *prev;
+    struct PoolNode *next;
+} PoolNode;
+typedef struct {
+    PoolNode *node;
+    u8 count;
+    u8 start;
+} PoolChild;
+s32 rs_free(s32);
+
+void ufImpl(PoolChild *arg0) __asm__("unlinkAndFreeChildNpcNode");
+void ufImpl(PoolChild *arg0) {
+    PoolNode *node;
+    u8 count;
+    u8 type;
+    s32 i;
+    u8 isFirst;
+    PoolNode **head;
+    node = arg0->node;
+    count = arg0->count;
+    type = node->type;
+
+    if (type + count == 4) {
+        if (type == 0) {
+            head = (PoolNode **)&sPoolFull;
+        } else {
+            head = (PoolNode **)&sPoolFree;
+        }
+        if (node->prev != NULL) {
+            node->prev->next = node->next;
+        }
+        if (node->next != NULL) {
+            node->next->prev = node->prev;
+        }
+        if (node == *head) {
+            *head = node->next;
+        }
+        rs_free((s32)node);
+        return;
+    }
+    isFirst = type == 0;
+    i = 0;
+    if (count != 0) {
+        do {
+            node->flags[arg0->start + i] = 1;
+            i++;
+        } while (i < arg0->count);
+    }
+    node->type += arg0->count;
+    if (isFirst == 1) {
+        if (node->prev != NULL) {
+            node->prev->next = node->next;
+        }
+        if (node->next != NULL) {
+            node->next->prev = node->prev;
+        }
+        if (node == (*(PoolNode **)&sPoolFull)) {
+            (*(PoolNode **)&sPoolFull) = node->next;
+        }
+        node->prev = NULL;
+        if ((*(PoolNode **)&sPoolFree) != NULL) {
+            node->next = (*(PoolNode **)&sPoolFree);
+            (*(PoolNode **)&sPoolFree)->prev = node;
+            (*(PoolNode **)&sPoolFree) = node;
+        } else {
+            (*(PoolNode **)&sPoolFree) = node;
+            node->next = NULL;
+        }
+    }
+}
 
 s32 clearObjectPoolStateFlag();
 s32 resetCraftSubsystemGlobal();
