@@ -2592,4 +2592,4 @@ f32 cinematicInterpRatio(void) {
     return var_ft0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", fake_func_800AF6A8);
+__asm__(".section .text\n.word 0x0C03A807, 0x00000000\n");
