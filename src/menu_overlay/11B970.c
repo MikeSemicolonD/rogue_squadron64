@@ -2683,7 +2683,6 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", strMenuTyOver);
 
 
 
-// LANDING: pre-edit src/menu_overlay/11B970.c: delete the INCLUDE_RODATA lines for D_menu_overlay_800A6FF8 and D_menu_overlay_800A7008 (the aggregate initialisers below emit them); see postLevelSaveInit_pre.py
 typedef struct {
     u8 c[4];
 } PlsCol;

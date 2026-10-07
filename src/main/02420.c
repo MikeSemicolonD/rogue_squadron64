@@ -232,71 +232,6 @@ void buildHeapFreeList(struct heapBlockHeader **arg0, u32 arg1, struct D_main_bs
     }
 }
 
-#if 0
-void initMainHeap(u32 arg0, struct D_main_bss_8010FF08_type *arg1, struct heapBlockHeader *arg2, struct heapBlockHeader *arg3) {
-    s32 temp_v1;
-    s32 var_t1;
-    struct heapBlockHeader *temp_t0;
-    struct D_main_bss_8010FF08_type *var_a1;
-    struct heapBlockHeader *var_a2;
-    struct heapBlockHeader *temp_a0;
-    u32 temp_a2;
-    u32 var_t2;
-    struct heapBlockHeader *temp_a3;
-    struct heapBlockHeader *temp_v1_2;
-
-    D_main_bss_8010FF08 = arg1;
-    D_main_bss_8010FF0C = arg0;
-    D_main_bss_8010FF10 = arg2;
-    D_main_bss_8010FF14 = arg3;
-    osCreateMesgQueue(&D_main_8010FEE0, &D_main_bss_8010FEF8, 1);
-    osSendMesg(&D_main_8010FEE0, NULL, 0);
-    D_main_bss_8010FF18 = arg2;
-    arg2->unk00 = 1;
-    arg2->flags = 0;
-    arg2->size = ((u32)arg3 - (u32)arg2) - 0x20;
-    do { } while (0); // ???
-    (arg3 - 1)->unk00 = 8;
-    (arg3 - 1)->flags = 0;
-    (arg3 - 1)->size = 0;
-    for (var_t2 = 0; var_t2 < arg0; var_t2++) {
-        var_a1 = &arg1[var_t2];
-        var_a2 = D_main_bss_8010FF18;
-        var_t1 = (var_a1->dataSize + 0xF) & ~0xF;
-        temp_a0 = (struct heapBlockHeader *)(var_a1->dataAddress - 0x10);
-        while (!(var_a2->unk00 & 8)) {
-            temp_a3 = (u32)var_a2 + var_a2->size;
-            temp_t0 = (u32)temp_a3 + 0x10;
-            if ((temp_a0 >= (u32) var_a2) & (temp_a0 < (u32) temp_t0)) {
-                temp_a0->unk00 = 6;
-                temp_a0->flags= 0;
-                if (temp_a0 != var_a2) {
-                    var_a2->size = ((u32)temp_a0 - (u32)var_a2) - 0x10;
-                }
-                temp_v1 = ((u32)temp_t0 - (u32)temp_a0) - 0x10;
-                temp_a2 = (u32)temp_v1 - var_t1;
-                if (temp_v1 != var_t1) {
-                    if (temp_a2 >= 0x21U) {
-                        temp_v1_2 = (u32)temp_a0 + var_t1;
-                        (temp_v1_2 + 1)->unk00 = 1;
-                        (temp_v1_2 + 1)->flags = 0;
-                        (temp_v1_2 + 1)->size = (s32) (temp_a2 - 0x10);
-                    } else {
-                        var_t1 = temp_v1;
-                    }
-                }
-                temp_a0->size= var_t1;
-                break;
-            } else {
-                var_a2 = temp_t0;
-            }
-        }
-    }
-    D_main_bss_8010FF00 = NULL;
-    D_main_bss_8010FEFC = NULL;
-}
-#else
-// LANDING: replace_asm puts this in the #else of the old '#if 0' initMainHeap draft in src/main/02420.c; delete that #if 0/#else/#endif block when landing (2.7.2 file).
 static __inline__ void imhInit(void) {
     OSMesg pad[4];
     osCreateMesgQueue(&D_main_8010FEE0, &D_main_bss_8010FEF8, 1);
@@ -381,6 +316,5 @@ void initMainHeap(u32 arg0, struct D_main_bss_8010FF08_type *arg1, struct heapBl
     D_main_bss_8010FF00 = NULL;
     D_main_bss_8010FEFC = NULL;
 }
-#endif
 
 INCLUDE_ASM("asm/nonmatchings/main/02420", coalesceFreeHeapBlocks);
