@@ -191,7 +191,138 @@ void ugcsV(f32 *pos) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/47220", parseDatItemSubtypes1To5);
+typedef struct { u8 pad0[8]; u16 h8; u8 padA[0x1E]; u8 mtx[0x30]; } PdMesh;
+typedef struct { s32 w0; u8 pad4[0xC]; f32 f10, f14, f18; s32 w1C, w20, w24; f32 f28, f2C, f30; u8 pad34[0x28]; s32 p5C; } PdRec;
+typedef struct { PdMesh *mesh; PdRec *rec; f32 x, y, z; u8 pad14[0x24]; s32 w38; f32 f3C; u8 tree; } PdSelf;
+typedef struct { u8 pad0[4]; PdSelf *self; void *p8; void *pC; u8 pad10[6]; u16 h16; } PdNpc;
+extern u8 D_main_bss_80130B39;
+extern u16 D_main_bss_80139574;
+extern s32 D_main_bss_801375F8;
+extern s32 D_8010CA1C;
+u8 applyNamedEffectParameterDefault(s32, void *, void *, s32);
+PdMesh *pdWalk(s32) __asm__("walkMeshdef0List");
+void destroyNpcSlotByIndex(u16);
+void buildRotationMatrixSlot0(void *, s32);
+void composeRotationMatrixSlot1(void *, s32);
+void composeRotationMatrixSlot2(void *, s32);
+void applyScaleToMat3x4(void *, f32, f32, f32);
+void addVec3At0x24(void *, f32, f32, f32);
+void popNpcSlotFromTail(u16, void *);
+void dispatchDatSubtypeByRandomIndex(void *, void *);
+void pdCommon(void *, void *) __asm__("parseDatItemCommon");
+void walkDatTreeAndCollectSubtypes(void *, void *);
+void releaseMeshAsset(void *);
+s32 *getCraftRecordByIdx(s32);
+f32 *getCutsceneRuntimeContext();
+void walkDatTreeAndScaleLeafByFloat(void *, void *, s32);
+s32 addNpcToVisibilityBucket(s32, void *, void *, f32);
+void walkDatTreeAndVisitChildren(void *, void *, void *);
+
+static __inline__ s32 pdInRange(f32 *arg0) {
+    s32 *var_a0;
+    s32 *var_v0;
+
+    if (D_main_bss_80130B39 == 0) {
+        if (!(D_8010CA1C & 8)) {
+            var_a0 = getCraftRecordByIdx(0);
+        } else {
+            var_v0 = &D_main_bss_801375F8;
+            goto block_5;
+        }
+    } else {
+        var_v0 = (s32 *)getCutsceneRuntimeContext();
+block_5:
+        var_a0 = var_v0;
+    }
+    return isPointXzWithinRangeOfRef((f32 *) var_a0, arg0);
+}
+
+s32 parseDatItemSubtypes1To5(PdNpc *arg0, u16 arg1, PdRec *arg2) {
+    PdSelf *self = arg0->self;
+    PdRec *r;
+    s32 nm;
+    PdMesh *m;
+    f32 v;
+    u8 buf[0x10];
+
+    switch (arg1) {
+    case 1:
+        r = arg2;
+        nm = arg2->p5C;
+        if (D_main_bss_80130B39 == 1 && applyNamedEffectParameterDefault(nm, buf, &arg2->f10, 0) != 0) {
+            nm = (s32)buf;
+        }
+        m = pdWalk(nm);
+        self->mesh = m;
+        if (m == NULL) {
+            destroyNpcSlotByIndex(arg0->h16);
+            return 0;
+        }
+        m->h8 |= 0x20;
+        self->x = r->f10;
+        self->y = r->f14;
+        self->z = r->f18;
+        buildRotationMatrixSlot0(self->mesh->mtx, r->w1C);
+        composeRotationMatrixSlot1(self->mesh->mtx, r->w20);
+        composeRotationMatrixSlot2(self->mesh->mtx, r->w24);
+        applyScaleToMat3x4(self->mesh->mtx, r->f28, r->f2C, r->f30);
+        addVec3At0x24(self->mesh->mtx, self->x, self->y, self->z);
+        arg0->p8 = &self->x;
+        *(void **)((u8 *)arg0 + 0xC) = self->mesh;
+        popNpcSlotFromTail(D_main_bss_80139574, arg0);
+        self->w38 = 0;
+        self->rec = r;
+        if (r->f2C > r->f28) {
+            if (r->f30 < r->f2C) {
+                self->mesh->h8 |= 0x400;
+                v = self->rec->f2C;
+            } else {
+                goto l800;
+            }
+        } else if (r->f28 < r->f30) {
+l800:
+            self->mesh->h8 |= 0x800;
+            v = self->rec->f30;
+        } else {
+            v = r->f28;
+        }
+        self->f3C = (*(f32 **)self->mesh)[0x44 / 4] * v;
+        dispatchDatSubtypeByRandomIndex(&self->tree, self->mesh);
+        return 1;
+    case 2:
+        if (self->mesh != NULL) {
+            pdCommon(self->rec, &self->rec->f10);
+            walkDatTreeAndCollectSubtypes(&self->tree, self->mesh);
+            releaseMeshAsset(self->mesh);
+        }
+        arg0->h16 = 0xFFFF;
+        break;
+    case 3:
+        if (pdInRange(&self->x) != 0) {
+            self->w38 = 0;
+        } else if (++self->w38 >= 0x15) {
+            destroyNpcSlotByIndex(arg0->h16);
+            return 1;
+        }
+        if (self->tree != 0xFF) {
+            walkDatTreeAndScaleLeafByFloat(&self->tree, self->mesh, arg2->w0);
+            return 1;
+        }
+        return 1;
+    case 5:
+        if (*(u16 *)arg2 != 0xFFFF) {
+            *(u16 *)arg2 = 0xFFFF;
+            break;
+        }
+        return 1;
+    case 4:
+        if (addNpcToVisibilityBucket(arg2->w0, self->mesh, &self->x, self->f3C) != 0 && self->tree != 0xFF) {
+            walkDatTreeAndVisitChildren(&self->tree, self->mesh, arg2);
+        }
+        break;
+    }
+    return 1;
+}
 
 s32 rs_free(s32);
 extern s32 D_main_bss_801375D0;
