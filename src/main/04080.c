@@ -564,7 +564,56 @@ u32 get_asset_size_extra(u32 seg, u8 *entry_name) {
     return entry->compressed_size + extra;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/04080", setupAssetDma);
+extern s32 getServiceMessagePayload(u16 *);
+typedef struct { u16 type; } SaRep;
+typedef struct {
+    u16 type;
+    u8 pad02[0xE];
+    void *next;
+    u32 f14;
+    void *source;
+    u32 offset;
+    s32 f20;
+    void *dest;
+} SaMsg;
+
+s32 setupAssetDma(u32 arg0, u16 *arg1, void *arg2, u32 arg3, s32 arg4, void *arg5) {
+    u16 sp10[12];
+    SaMsg *msg;
+    u16 *reply;
+    s32 idx;
+    s32 next;
+
+    idx = D_main_bss_80111248;
+    next = idx + 1;
+    D_main_bss_80111248 = next % 8;
+    D_main_bss_80111250 -= 1;
+    { union D_80111100_type *b = gServiceWorkerMesgBuf; msg = (SaMsg *)&b[idx]; }
+    msg->type = 0x8002;
+    msg->f14 = arg0;
+    msg->source = arg2;
+    msg->offset = arg3;
+    msg->f20 = arg4;
+    msg->dest = arg5;
+    if (arg1 == NULL) {
+        msg->next = sp10;
+        sp10[0] = 0x80FF;
+        sendServiceMessage(arg0, D_main_bss_80110D54, msg, 1);
+        do {
+            reply = (u16 *)recvServiceMessage(arg0);
+            if (*reply == 0x80FF) {
+                break;
+            }
+            postMessageToServiceWorker(arg0, reply);
+        } while (*reply != 0x80FF);
+        yieldThreadRet1(arg0);
+        return getServiceMessagePayload(reply) & 0xFF;
+    }
+    ((SaRep *)arg1)->type = 0xFFFF;
+    msg->next = arg1;
+    sendServiceMessage(arg0, D_main_bss_80110D54, msg, 1);
+    return 0;
+}
 
 void spillArgsNoopHandler(s32 a0, ...) {
 }
