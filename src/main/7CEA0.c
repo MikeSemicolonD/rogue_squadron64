@@ -692,7 +692,97 @@ void submitOrientedEffectMesh(u8 *arg0, f32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", twoPointPositionedNpcHandler);
+typedef struct {
+    f32 x, y, z;
+    f32 f0C, f10, f14, f18, f1C, f20;
+    u8 pad24[0xC];
+    u8 *mesh;
+    f32 f34;
+    f32 f38;
+    f32 ax[3];
+    f32 f48;
+} TpState;
+
+typedef struct {
+    u8 pad0[4];
+    f32 x, y, z;
+    u8 pad10[0xC];
+    f32 f1C;
+    u8 pad20[0x50];
+    u16 h70;
+    u16 h72;
+} TpPt;
+
+typedef struct {
+    TpPt *p0;
+    TpPt *p1;
+    f32 dt;
+    s32 *pC;
+} TpArg;
+
+s16 rand(void);
+u8 *walkMeshdef0List(char *);
+void releaseMeshAsset(void *);
+s32 addNpcToVisibilityBucket(s32, void *, void *, f32);
+extern void tpQuat(f32 *, f32 *, f32) __asm__("quatFromAxisAngle");
+extern void tpRot(f32 *, f32 *, f32 *) __asm__("rotateVec3ByQuat");
+extern void tpMat(void *, void *, f32) __asm__("mat34CrossRowsAndCopyPos");
+extern f32 tpLen(f32 *) __asm__("vec3Length");
+extern void tpNorm(f32 *) __asm__("normalize_vector");
+
+s32 twoPointPositionedNpcHandler(u8 *npc, u16 cmd, TpArg *a) {
+    TpState *s = *(TpState **)(npc + 4);
+    f32 q[4];
+    f32 t;
+    f32 dt;
+
+    switch (cmd) {
+    case 1:
+        s->mesh = walkMeshdef0List("debris1");
+        s->x = a->p0->x + a->p1->x;
+        s->y = a->p0->y + a->p1->y;
+        s->z = a->p0->z + a->p1->z;
+        s->f0C = 0.0f;
+        s->f10 = 0.0f;
+        s->f14 = 1.0f;
+        s->f18 = 0.0f;
+        s->f1C = 1.0f;
+        s->f20 = 0.0f;
+        s->f34 = (f32)a->p0->h70 * 0.00390625f * 0.2f;
+        t = (f32)a->p0->h72 * 0.00390625f * 0.2f - s->f34;
+        if (a->p1->f1C != 0.0f) {
+            s->f38 = t / a->p1->f1C;
+        } else {
+            s->f38 = 0.0f;
+        }
+        do {
+            s->ax[0] = ((f32)(rand() & 0x7F) - 64.0f) * 0.015625f;
+            s->ax[1] = ((f32)(rand() & 0x7F) - 64.0f) * 0.015625f;
+            s->ax[2] = ((f32)(rand() & 0x7F) - 64.0f) * 0.015625f;
+        } while (tpLen(s->ax) == 0.0f);
+        tpNorm(s->ax);
+        s->f48 = ((f32)(rand() & 0x7F) - 64.0f) / 0.35555556f;
+        break;
+    case 2:
+        releaseMeshAsset(s->mesh);
+        break;
+    case 4:
+        dt = a->dt;
+        s->x = a->p0->x + a->p1->x;
+        s->y = a->p0->y + a->p1->y;
+        s->z = a->p0->z + a->p1->z;
+        tpQuat(q, s->ax, s->f48 * dt);
+        tpRot(q, &s->f0C, &s->f0C);
+        tpRot(q, &s->f18, &s->f18);
+        t = s->f34 + s->f38 * dt;
+        if (t != 0.0f) {
+            tpMat(s->mesh + 0x28, s, t);
+            addNpcToVisibilityBucket(*a->pC, s->mesh, s, 1.0f);
+        }
+        break;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", spawnWorldDevastatorVacuumDebris);
 
