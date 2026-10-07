@@ -426,7 +426,143 @@ next:
 
 INCLUDE_ASM("asm/nonmatchings/main/56F50", addNpcToVisibilityBucket);
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", selectMeshLodAndSubmitForRender);
+typedef struct SmNode {
+    struct SmNode *next;
+    struct SmNode *prev;
+    void *data;
+    u8 padC[0x50];
+} SmNode;
+
+typedef struct {
+    u8 pad0[0x10];
+    SmNode *head;
+    u8 pad14[0x38];
+} SmEnt;
+
+typedef struct SmLink {
+    struct SmLink *next;
+    struct SmLink *prev;
+} SmLink;
+
+typedef struct {
+    u8 *def;
+    f32 *dists;
+    u16 fl;
+    u8 lod;
+    u8 bB;
+    SmLink link;
+} SmInst;
+
+extern u32 D_main_bss_8013889C;
+extern f32 D_main_8009ECB0[];
+u8 smTransform(void *, s32, void *, f32, f32 *) __asm__("transformVec3ToNpcLocalWithScale");
+void smApplyFlags(void *, u32, u32) __asm__("applyFlagsToMeshdef1List");
+
+static __inline__ void smSetLod(u8 *inst, s32 lod) {
+    u8 *def = *(u8 **)inst;
+    u16 *ld = ((u16 **)((s32)def + (lod << 2)))[6];
+    void **src;
+    SmNode *nd;
+    SmNode *prev;
+    SmEnt *e;
+    s32 i;
+    s32 n;
+
+    if (ld == NULL) {
+        return;
+    }
+    nd = *(SmNode **)(def + 0x14);
+    if (((u16 *)nd)[1] < ld[1]) {
+        return;
+    }
+    src = (void **)(ld + 2);
+    n = ((u16 *)nd)[0];
+    nd = (SmNode *)(inst + (n * 0x4C + 0xC));
+    e = (SmEnt *)(inst + 0xC);
+    for (i = 0; i < n; i++, e++, src++) {
+        __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
+        if (*src != NULL) {
+            prev = NULL;
+            e->head = nd;
+        loop:
+            ld = (u16 *)((src[1] != NULL) ? nd + 1 : NULL);
+            nd->next = (SmNode *)ld;
+            nd->prev = prev;
+            prev = nd;
+            __asm__("" :: "r"(prev));
+            nd->data = *src;
+            nd++;
+            src++;
+            if (*src != NULL) goto loop;
+        } else {
+            e->head = NULL;
+        }
+    }
+    inst[0xA] = lod;
+}
+
+void mat34CrossRowsAndCopyPos(void *, void *, f32);
+
+s32 smImpl(SmLink **list, SmInst *inst, void *pos, f32 scale, f32 k) __asm__("selectMeshLodAndSubmitForRender");
+s32 smImpl(SmLink **list, SmInst *inst, void *pos, f32 scale, f32 k) {
+    u8 *def;
+    s32 lod;
+    f32 dist;
+    SmLink *head;
+    s32 n;
+
+    def = inst->def;
+    if (inst->bB != 0 && !(inst->fl & 0x20)) {
+        D_main_8013A498[++D_main_bss_8013A490] = inst->bB;
+        inst->bB = 0;
+    }
+    if (smTransform(list, 0, pos, *(f32 *)(def + 0x44) * (scale + k), &dist) != 0) {
+    if (*(s32 *)(def + 0x1C) != 0) {
+        f32 *dists = inst->dists;
+        lod = 0;
+        if (dists == NULL) {
+            dists = D_main_8009ECB0;
+        }
+        do {
+            n = lod + 1;
+            if (((void **)((s32)def + (n << 2)))[6] == NULL || dist < dists[lod]) {
+                break;
+            }
+            lod = n;
+        } while (n < 4);
+        if (lod != inst->lod) {
+            smSetLod((u8 *)inst, lod);
+        }
+    }
+    if ((*(u32 *)&inst->fl & 0x8FF00) == 0x80000) {
+        if (*(u32 *)(def + 0x3C) <= D_main_bss_8013889C) {
+            *(u32 *)(def + 0x3C) = D_main_bss_8013889C + 1;
+            *(u16 *)(def + 0x38) ^= 0x10;
+            if (*(u16 *)(def + 0x38) & 0x10) {
+                smApplyFlags(*(void **)(def + 0x10), 0x120, 0x100000);
+            } else {
+                smApplyFlags(*(void **)(def + 0x10), 0xA0, 0x100000);
+            }
+        }
+    }
+    dist = dist / ((f32 *)list)[10];
+    if (1.0f < dist) {
+        dist = k;
+    } else {
+        dist = dist * k;
+    }
+    mat34CrossRowsAndCopyPos((u8 *)inst + 0x28, pos, scale + dist);
+    inst->link.next = head = *list;
+    if (head != NULL) {
+        head->prev = &inst->link;
+    }
+    inst->link.prev = NULL;
+    *list = &inst->link;
+    return 1;
+    }
+    mat34CrossRowsAndCopyPos((u8 *)inst + 0x28, pos, scale);
+    return 0;
+}
 
 typedef struct HmtNode {
     u8 pad0[8];
