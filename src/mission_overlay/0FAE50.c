@@ -865,7 +865,70 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0FAE50", D_mission_overlay_800A9028);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FAE50", choosePlayerCraftAssets);
+typedef struct {
+    u8 active;
+    u8 pad1[0x291];
+    u16 h292;
+    s32 craft;
+    u8 pad298[8];
+} CpaPlayer;
+
+typedef struct { u8 pad0[0x18]; u32 f18; u8 pad1C[0xC]; s32 f28; } CpaGs;
+
+extern CpaPlayer cpaPlayers[] __asm__("gPlayers");
+extern CpaGs cpaGs __asm__("gGameSettings");
+extern f32 cpaDesc[] __asm__("D_main_bss_80136DC0");
+extern f32 cpaCE8[] __asm__("D_main_bss_80137CE8");
+extern char *playerCraftHobObjectNames[];
+extern void *playerCraftUpdateFunctions[];
+extern char *D_mission_overlay_8010A0FC[];
+extern int sprintf(char *, const char *, ...);
+extern void load_hmt_and_hob(char *, s32, s32, s32);
+extern u8 isHobObjectLoaded(char *);
+extern void playerAtStUpdate(void);
+extern void hangarVehicleDisplayNpcHandler(void);
+
+void choosePlayerCraftAssets(s32 *craft) {
+    union { char s[0x50]; s32 w[0x14]; } buf;
+    struct { f32 f0; u8 pad[0x1C]; } args;
+    s32 i;
+    CpaPlayer *p;
+
+    cpaCE8[0] = cpaDesc[8] + (cpaDesc[9] - cpaDesc[8]) * 0.5f;
+    cpaCE8[1] = 0.0f;
+    cpaCE8[2] = cpaDesc[11] + (cpaDesc[12] - cpaDesc[11]) * 0.5f;
+    if (gCurrentLevel == 20) {
+        cpaPlayers[0].craft = 0;
+        sprintf(buf.s, "imp_stuff/atst_hi");
+        load_hmt_and_hob(buf.s, 0, 0, 0);
+        *(s32 *)&args.f0 = 0;
+        spawnNpcOfType(playerAtStUpdate, &args, 2, 0x64);
+        sprintf(buf.s, "pl_crafts/%s", D_mission_overlay_8010A0FC[0]);
+        load_hmt_and_hob(buf.s, 0, 0, 0);
+        cpaPlayers[0].h292 = spawnNpcOfType(hangarVehicleDisplayNpcHandler, &args, 4, 0x64);
+        return;
+    }
+    for (i = 0; i < 1; i++) {
+        p = &cpaPlayers[i];
+        if (p->active != 0) {
+            p->craft = craft[i];
+            if (!isHobObjectLoaded(playerCraftHobObjectNames[p->craft])) {
+                sprintf(buf.s, "%s/%s", (p->craft != 6) ? "pl_crafts" : "imp_stuff", playerCraftHobObjectNames[p->craft]);
+                if (p->craft == 3 && (cpaGs.f18 & 2)) {
+                    __builtin_memcpy(buf.s, "pl_crafts/rmobil", 17);
+                }
+                load_hmt_and_hob(buf.s, (p->craft == 8) ? cpaGs.f28 : 0, (p->craft == 8) ? -0x7FFF : 1, 0x10000);
+            }
+            args.f0 = i;
+            spawnNpcOfType(playerCraftUpdateFunctions[p->craft], &args, 4, 0x64);
+            if (!isHobObjectLoaded(D_mission_overlay_8010A0FC[p->craft])) {
+                sprintf(buf.s, "pl_crafts/%s", D_mission_overlay_8010A0FC[p->craft]);
+                load_hmt_and_hob(buf.s, 0, 1, 0x10000);
+            }
+            p->h292 = spawnNpcOfType(hangarVehicleDisplayNpcHandler, &args, 4, 0x64);
+        }
+    }
+}
 
 void stopAllMusicWithFade(f32);
 void resetSpeechSubsystem(void);
