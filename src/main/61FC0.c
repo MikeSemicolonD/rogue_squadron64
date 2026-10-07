@@ -262,7 +262,81 @@ INCLUDE_ASM("asm/nonmatchings/main/61FC0", samplePlayerAnimChannel);
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", measurePlayerSlotTextLayout);
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", startPlayerSlotAnimationChannelExt);
+typedef struct {
+    u8 b0;
+    s8 speed;
+    u8 pad2[2];
+    f32 pos;
+    u8 b8;
+    u8 b9;
+    s16 hA;
+    s16 hC;
+    u8 bE;
+    u8 padF;
+    s32 w10;
+    void *w14;
+} SxAnim;
+void measurePlayerSlotTextLayout(s32, struct ui_element *, u16, s32, s32, s32);
+void setLookupEntryField5ByKey(void *, struct ui_element *, s32);
+void sxAdvance(SxAnim *, f32, f32) __asm__("advancePlayerAnimationPhase");
+
+SxAnim *startPlayerSlotAnimationChannelExt(u16 slot, s32 text, u16 b, u16 ch, s16 x, s16 y) {
+    SxAnim *a;
+    struct someFontThing *t;
+    struct ui_element *e;
+    u8 *s2;
+    struct someFontThing *t2;
+    struct ui_element *e2;
+    u8 *s3;
+    u16 idx;
+
+    t = D_main_8009FC10[slot];
+    t->unk030 |= 1 << ch;
+    t->unk084[ch] = t->unk01F;
+    s2 = (u8 *)t + (ch * 4);
+    e = t->unk034[ch];
+    e->xy_offset_pointer = (void *)((u8 *)t->unk0EC + (*(u16 *)&t->unk0E8 * ch * 4));
+    e->texture_id_pointer = (void *)((u8 *)t->unk0F0 + (*(u16 *)&t->unk0E8 * ch * 2));
+    measurePlayerSlotTextLayout(slot, e, *(u16 *)&t->unk0E8, text, (s16)x, (s16)y);
+    if (t->unk0F4 != NULL) {
+        setLookupEntryField5ByKey(t->unk0F4, t->unk034[ch], e->texture_count != 0);
+    }
+    if (t->unk01F == 0) {
+        e->flags |= 1;
+    }
+    *(s16 *)(s2 + 0x98) = x;
+    *(s16 *)(s2 + 0x9A) = y;
+    idx = ch + 1;
+    t2 = D_main_8009FC10[slot];
+    t2->unk030 |= 1 << idx;
+    t2->unk084[idx] = t2->unk01F;
+    s3 = (u8 *)t2 + (idx * 4);
+    e2 = t2->unk034[idx];
+    e2->xy_offset_pointer = (void *)((u8 *)t2->unk0EC + (*(u16 *)&t2->unk0E8 * idx * 4));
+    e2->texture_id_pointer = (void *)((u8 *)t2->unk0F0 + (*(u16 *)&t2->unk0E8 * idx * 2));
+    measurePlayerSlotTextLayout(slot, e2, *(u16 *)&t2->unk0E8, text, (s16)x, (s16)y);
+    if (t2->unk0F4 != NULL) {
+        setLookupEntryField5ByKey(t2->unk0F4, t2->unk034[idx], e2->texture_count != 0);
+    }
+    if (t2->unk01F == 0) {
+        e2->flags |= 1;
+    }
+    *(s16 *)(s3 + 0x98) = x;
+    *(s16 *)(s3 + 0x9A) = y;
+    a = rs_malloc(0x18, 0);
+    a->b0 = 0;
+    a->speed = 0;
+    a->pos = 0.0f;
+    a->b8 = slot;
+    a->b9 = ch;
+    a->hA = x;
+    a->hC = y;
+    a->bE = b;
+    a->w10 = text;
+    a->w14 = t->unk0F4;
+    sxAdvance(a, 1.0f, 0.0f);
+    return a;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", startPlayerSlotAnimationChannel);
 
