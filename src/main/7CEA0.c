@@ -387,7 +387,89 @@ void aimOrientNpcTowardTarget(void *arg0, f32 dt) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", spawnDatDrivenAudioVisualEmitters);
+typedef struct {
+    void *item;
+    f32 m[12];
+    f32 scale;
+    u16 ctx;
+    s16 kind;
+    s32 pad3C;
+} SdA;
+
+typedef struct {
+    f32 m[12];
+    f32 scale;
+    u8 v34[16];
+    u16 ctx;
+    u16 pad46;
+} SdB;
+
+void *getLevelDatItemByName(u8 *);
+u8 readFirstNameTreeEntry(s32, char *);
+u8 readFirstNameTreeEntryFromNode(char *);
+u8 *sdGetCtx(u16) __asm__("getNpcContextByIndex");
+u16 sdSpawn(void *, void *, s32, u8) __asm__("spawnNpcOfType");
+s32 sdIter(s32, s32, void *) __asm__("slotDispatcherIter");
+void sdCopy(void *, void *, u32) __asm__("zmemcpy");
+extern u8 sdAv[] __asm__("attachedAudioVisualEmitterNpcHandler");
+extern u8 sdSg[] __asm__("npcShieldGeneratorUpdate");
+
+void spawnDatDrivenAudioVisualEmitters(u8 *npc) {
+    char it[16];
+    SdA a;
+    SdB b;
+    void *items[5];
+    f32 dt;
+    s32 i;
+    u16 h;
+    u8 r;
+
+    dt = 0.033333335f;
+    a.scale = *(f32 *)(*(u8 **)(npc + 0x34) + 0x28);
+    items[0] = getLevelDatItemByName((u8 *)(*(s32 *)(*(s32 *)(npc + 0x34) + 0xE4) + *(s32 *)(npc + 0x34)));
+    items[1] = getLevelDatItemByName((u8 *)(*(s32 *)(*(s32 *)(npc + 0x34) + 0xE8) + *(s32 *)(npc + 0x34)));
+    items[2] = getLevelDatItemByName((u8 *)(*(s32 *)(*(s32 *)(npc + 0x34) + 0xEC) + *(s32 *)(npc + 0x34)));
+    items[3] = getLevelDatItemByName((u8 *)(*(s32 *)(*(s32 *)(npc + 0x34) + 0xF0) + *(s32 *)(npc + 0x34)));
+    items[4] = getLevelDatItemByName((u8 *)(*(s32 *)(*(s32 *)(npc + 0x34) + 0xF4) + *(s32 *)(npc + 0x34)));
+    a.ctx = *(u16 *)(*(u8 **)(npc + 0x38) + 0x198);
+    for (i = 0; i < 5; i++) {
+        if (items[i] == NULL) {
+            return;
+        }
+    }
+    *(s16 *)(npc + 0x1B4) = 0;
+    for (r = readFirstNameTreeEntry(*(s32 *)(npc + 0x30), it); r; r = readFirstNameTreeEntryFromNode(it)) {
+        {
+            s32 w;
+            lookupHmtTextureByName(*(s32 *)(npc + 0x30), it, 0, a.m, 0, 0);
+            w = *(s32 *)it & ~0xFF;
+#define SDSPAWN(K, I)                 a.kind = K;                 a.item = items[I];                 h = sdSpawn(sdAv, &a, 2, sdGetCtx(*(u16 *)(*(u8 **)(npc + 0x38) + 0x198))[0x19] + 1);
+            if (w == 0x73707400) {
+                SDSPAWN(3, 4)
+            } else if (w == 0x62746D00) {
+                SDSPAWN(4, 3)
+            } else if (w == 0x73646800) {
+                SDSPAWN(2, 1)
+            } else if (w == 0x74707400) {
+                SDSPAWN(0, 0)
+            } else if (w == 0x62746700) {
+                SDSPAWN(1, 2)
+            } else {
+                continue;
+            }
+            if (h != 0xFFFF) {
+                sdIter(h, 3, &dt);
+                *(u16 *)((s32)npc + ((*(s16 *)(npc + 0x1B4))++ << 1) + 0x1B6) = h;
+            }
+        }
+    }
+    sdCopy(b.v34, *(u8 **)(npc + 0x34) + 0xBC, 0x10);
+    b.scale = *(f32 *)(*(u8 **)(npc + 0x34) + 0x28);
+    b.ctx = *(u16 *)(*(u8 **)(npc + 0x38) + 0x198);
+    lookupHmtTextureByName(*(s32 *)(npc + 0x30), "shld", 0, &b, 0, 0);
+    *(u16 *)(npc + 0x1F6) = sdSpawn(sdSg, &b, 2, sdGetCtx(*(u16 *)(*(u8 **)(npc + 0x38) + 0x198))[0x19] + 1);
+    sdIter(*(u16 *)(npc + 0x1F6), 3, &dt);
+}
 
 typedef struct { f32 m[12]; } SnMat;
 typedef struct {
