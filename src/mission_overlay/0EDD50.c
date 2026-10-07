@@ -722,7 +722,138 @@ void popActiveSoundDescriptor(void) {
     D_mission_overlay_8010C170.unkA = D_mission_overlay_8010C320[D_mission_overlay_8010C310].unk8;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0EDD50", preloadSceneReferencedSongs);
+typedef struct {
+    s16 h0;
+    s16 h2;
+    s16 h4;
+    s16 h6;
+} PsNode;
+typedef struct {
+    u16 a;
+    u16 b;
+    u8 c;
+    u8 d;
+} PsD;
+typedef struct {
+    u8 pad[0x34];
+    u32 fl;
+    u8 pad38[4];
+    u32 s3C;
+    u32 s40;
+    u32 s44;
+    u32 s48;
+} PsObj;
+typedef struct {
+    u8 pad[0x30];
+    u32 cnt;
+    PsObj **objs;
+} PsList;
+extern PsList *psList __asm__("D_main_bss_801375D8");
+extern u8 D_mission_overlay_8010B2EC[];
+extern s32 gCurrentLevel;
+extern s32 D_main_bss_80138920;
+void *rs_malloc(u32, u16);
+void rs_free(void *);
+void rs_memset(u8 *, u8, u32);
+void parseLoadedSndSection(s32);
+void loadSongAssetByName(s32, s32);
+
+void psImpl(void) __asm__("preloadSceneReferencedSongs");
+void psImpl(void) {
+    s32 n;
+    s32 i;
+    s32 k;
+    s32 cur;
+    s32 cnt;
+    s32 m;
+    s32 t;
+    u8 *flags;
+    PsNode *list;
+    PsNode *e;
+    PsNode *p;
+    PsNode *q;
+    PsObj *o;
+    u8 lvl;
+    typeof(&D_mission_overlay_8010B1C0[0]) tbl;
+
+    n = 0;
+    while (D_mission_overlay_8010B1C0[n].a != 0xFFFF) {
+        n++;
+    }
+    flags = rs_malloc(n, 0);
+    rs_memset(flags, 0, n);
+    for (i = 0; (u32)i < psList->cnt; i++) {
+        o = psList->objs[i];
+        if (o->fl & 0x80) {
+            if (o->s3C >= 2) {
+                flags[o->s3C - 2] = 1;
+            }
+            if (o->s40 >= 2) {
+                flags[o->s40 - 2] = 1;
+            }
+            if (o->s44 >= 2) {
+                flags[o->s44 - 2] = 1;
+            }
+            if (o->s48 >= 2) {
+                flags[o->s48 - 2] = 1;
+            }
+        }
+    }
+    cur = gCurrentLevel;
+    tbl = D_mission_overlay_8010B1C0;
+    lvl = D_mission_overlay_8010B2EC[cur];
+    k = 0;
+    while (tbl[k].b != lvl) {
+        k++;
+    }
+    flags[k] = 1;
+    cnt = 0;
+    for (i = 0; i < n; i++) {
+        if (flags[i] != 0) {
+            cnt++;
+        }
+    }
+    if (cnt > 0) {
+        m = cnt + 1;
+        list = rs_malloc(m * 8, 0);
+        t = 1;
+        list[0].h2 = -1;
+        list[0].h6 = -1;
+        for (i = 0; i < cnt + 1; i++) {
+            list[i].h0 = i;
+        }
+        for (i = 0; i < n; i++) {
+            if (flags[i] != 0) {
+                e = &list[t];
+                t++;
+                e->h2 = ((PsD *)D_mission_overlay_8010B1C0)[i].d;
+                e->h4 = ((PsD *)D_mission_overlay_8010B1C0)[i].a;
+                p = list;
+                while (p->h6 != -1) {
+                    q = (PsNode *)(p->h6 * 8 + (s32)list);
+                    if (e->h2 < q->h2) {
+                        break;
+                    }
+                    p = q;
+                }
+                e->h6 = p->h6;
+                p->h6 = e->h0;
+            }
+        }
+        p = list;
+        while (p->h6 != -1) {
+            p = &list[p->h6];
+            parseLoadedSndSection(p->h4);
+        }
+        for (i = 0; i < n; i++) {
+            if (flags[i] != 0) {
+                loadSongAssetByName(D_main_bss_80138920, D_mission_overlay_8010B1C0[i].b);
+            }
+        }
+        rs_free(list);
+    }
+    rs_free(flags);
+}
 
 extern SoundDescriptor D_mission_overlay_8010C1A0;
 extern s32 D_mission_overlay_8010C140;
