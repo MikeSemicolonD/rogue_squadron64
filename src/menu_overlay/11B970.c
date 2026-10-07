@@ -3222,7 +3222,98 @@ s32 tickMenuSelectionActiveState(MsaState *arg0, f32 dt) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", transformSceneMeshVertices);
+typedef struct { f32 x, y, z; } TsV3;
+typedef struct {
+    u8 pad0[8];
+    u32 *faces;
+    s32 count;
+} TsHdr;
+typedef struct {
+    u8 pad0[0x20];
+    TsHdr *hdr;
+    s16 (*pos)[4];
+    s16 (*nrm)[4];
+} TsMdl;
+
+extern u16 D_menu_overlay_800CFA80[64];
+extern TsV3 D_menu_overlay_800CFB10[64];
+void tsRot(void *, void *, void *) __asm__("rotateVec3ByMat3x3");
+void tsNorm(void *) __asm__("normalize_vector");
+void tsXf(void *, void *, void *) __asm__("transformVec3ByMat34");
+
+void tsImpl(TsMdl *mdl, f32 *mtx, f32 *cam, f32 scale) __asm__("transformSceneMeshVertices");
+void tsImpl(TsMdl *mdl, f32 *mtx, f32 *cam, f32 scale) {
+    TsV3 v;
+    TsV3 d;
+    s32 i;
+    s32 n;
+    u32 *f;
+    u16 *a;
+    u16 *b;
+    u16 *uv;
+    s32 k;
+    u32 w;
+    u32 idx;
+    s16 *sv;
+    TsV3 *p;
+    u16 *hp;
+    f32 dot;
+
+    {
+        register s32 ff asm("$3") = 0xFFFF;
+        register s32 j asm("$5");
+        j = 0x3F;
+        hp = D_menu_overlay_800CFA80 + j;
+        do {
+            *hp-- = ff;
+        } while (--j >= 0);
+    }
+    n = mdl->hdr->count;
+    f = mdl->hdr->faces;
+    for (; n > 0; n--) {
+        w = f[1];
+        a = (u16 *)((u8 *)f + ((w & 0xFC0) >> 4));
+        b = (u16 *)((u8 *)f + ((w >> 16) & 0xFC));
+        uv = (u16 *)((u8 *)f + ((w & 0x3F) << 2));
+        if (f[0] & 4) {
+            k = 2;
+            if (f[0] & 8) {
+                k = 3;
+            }
+            for (; k >= 0; k--) {
+                idx = *a++;
+                p = &D_menu_overlay_800CFB10[idx & 0x3F];
+                if (D_menu_overlay_800CFA80[idx & 0x3F] != idx) {
+                    D_menu_overlay_800CFA80[idx & 0x3F] = idx;
+                    sv = mdl->nrm[idx];
+                    v.x = sv[0];
+                    v.y = sv[1];
+                    v.z = sv[2];
+                    tsRot(mtx, &v, p);
+                    tsNorm(p);
+                }
+                sv = mdl->pos[*b++];
+                v.x = sv[0] * 0.00390625f;
+                v.y = sv[1] * 0.00390625f;
+                v.z = sv[2] * 0.00390625f;
+                tsXf(mtx, &v, &d);
+                d.x -= cam[0];
+                d.y -= cam[1];
+                d.z -= cam[2];
+                tsNorm(&d);
+                dot = p->x * d.x + p->y * d.y + p->z * d.z;
+                dot = dot + dot;
+                d.x = d.x - dot * p->x;
+                d.y = d.y - dot * p->y;
+                d.z = d.z - dot * p->z;
+                uv[0] = (u32)(scale * (1.0f - d.x) * 4096.0f);
+                uv[1] = (u32)(scale * (1.0f - d.z) * 4096.0f);
+                uv += 2;
+            }
+        }
+        f = (u32 *)((u8 *)f + ((f[1] >> 22) & 0xFC));
+    }
+}
 
 extern f32 gMvPhase __asm__("D_menu_overlay_800CF074");
 extern u8 D_main_bss_80130B63;
