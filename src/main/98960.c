@@ -743,7 +743,119 @@ void dispatchPrioritizedSoundQueue(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", update3DAudioFrame);
+extern s32 D_main_bss_8015341C;
+extern const f32 D_main_8003DEDC;
+extern const f32 D_main_8003DEE0;
+s32 validateVoiceHandle(s32);
+
+void update3DAudioFrame(void) {
+    f32 a;
+    f32 b;
+    f32 c;
+    f32 d;
+    f32 e;
+    u8 *v;
+    u8 *next;
+    u32 fl;
+    s32 h;
+    s32 r;
+    s32 n;
+    u32 f0;
+    f32 t;
+
+    v = (u8 *)D_main_bss_80153414;
+    D_main_bss_8015341C = 0;
+    D_main_bss_80152EF0 = 0;
+    D_main_bss_80153280 = 0;
+    D_main_bss_80153410 = 0;
+    if (v != NULL) {
+        do {
+            n = D_main_bss_8015341C + 1;
+            f0 = *(u32 *)(v + 8);
+            next = *(u8 **)v;
+            D_main_bss_8015341C = n;
+            if (f0 & 0x40000) {
+                if (*(void **)v != NULL) {
+                    ((void **)*(void **)v)[1] = ((void **)v)[1];
+                }
+                if (((void ***)v)[1] != NULL) {
+                    *((void ***)v)[1] = *(void **)v;
+                } else {
+                    D_main_bss_80153414 = *(s32 *)v;
+                }
+                h = *(s32 *)(v + 0x34);
+                *(u32 *)(v + 8) = *(u16 *)(v + 0xA);
+                if (h != -1) {
+                    flagVoiceChainForStop(h);
+                }
+            } else {
+                if (f0 & 0x20001) {
+                    compute3DSourceSpatialMix(v, &a, &b, &c, &d, &e);
+                }
+                fl = *(u32 *)(v + 8);
+                if (!(fl & 0x80000)) {
+                    if (fl & 0x20000) {
+                        if (a == 0.0f && (fl & 4)) {
+                            *(u32 *)(v + 8) = (fl | 0x80000) & 0xFFFDFFFF;
+                        } else if (*(u32 *)(v + 8) & 1) {
+                            if ((u8)enqueueSpatialSoundInPriorityGroup(v, a, c, d, e, b)) {
+                                goto next;
+                            }
+                        } else {
+                            r = musyxNoteEventLockedDispatch(*(u16 *)(v + 0x3C), 0x7F, 0x40);
+                            *(s32 *)(v + 0x34) = r;
+                            if (r == -1) {
+                                fl = *(u32 *)(v + 8);
+                                if (fl & 2) {
+                                    goto next;
+                                }
+                                *(u32 *)(v + 8) = (fl | 0x40000) & 0xFFFDFFFF;
+                            }
+                        }
+                    } else {
+                        r = validateVoiceHandle(*(s32 *)(v + 0x34));
+                        *(s32 *)(v + 0x34) = r;
+                        if (r == -1) {
+                            fl = *(u32 *)(v + 8);
+                            if (fl & 2) {
+                                *(u32 *)(v + 8) = fl | 0x20000;
+                            } else {
+                                *(u32 *)(v + 8) = fl | 0x40000;
+                            }
+                        }
+                    }
+                    if (*(s32 *)(v + 0x34) != -1) {
+                        if (*(u32 *)(v + 8) & 1) {
+                            enqueueSoundInPriorityGroup(v, a);
+                        }
+                        if (a == 0.0f && ((fl = *(u32 *)(v + 8)) & 4)) {
+                            *(u32 *)(v + 8) = fl | 0x80000;
+                            flagVoiceChainForStop(*(s32 *)(v + 0x34));
+                            *(s32 *)(v + 0x34) = -1;
+                        } else {
+                            applyVoice3DMixParams(v, a, c, d, e, b);
+                        }
+                    }
+                    if (*(u32 *)(v + 8) & 0x100000) {
+                        t = *(f32 *)(v + 0x40) + D_main_8003DEDC;
+                        *(f32 *)(v + 0x40) = t;
+                        if (D_main_8003DEE0 <= t) {
+                            *(u32 *)(v + 8) &= 0xFFEFFFFF;
+                        }
+                    }
+                } else {
+                    if (a == 0.0f) {
+                        goto next;
+                    }
+                    *(u32 *)(v + 8) = (fl & 0xFFF7FFFF) | 0x20000;
+                }
+            }
+        next:
+            v = next;
+        } while (v != NULL);
+    }
+    dispatchPrioritizedSoundQueue();
+}
 
 extern s32 D_main_bss_80153414;
 extern s32 D_main_bss_80153418;
