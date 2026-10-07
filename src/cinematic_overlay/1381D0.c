@@ -622,7 +622,189 @@ rot:
     return D_cinematic_overlay_800B0950;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", spawnCutsceneObjectsFromList);
+typedef struct {
+    char path[0x20];
+    char name[0x10];
+    char anim[0xC];
+    char animName[0x1C];
+    union { u32 f58; struct { u8 p[3]; u8 b5B; } b; } u;
+} ScEnt;
+typedef struct {
+    u16 h0;
+    u16 h2;
+    f32 f4;
+    f32 f8;
+    u8 padC[8];
+} ScCraft;
+extern ScEnt scTbl[] __asm__("D_800AF92C");
+extern ScCraft scCraft[] __asm__("D_800B04AC");
+extern void *scAnim[] __asm__("D_cinematic_overlay_800B0B40");
+extern s32 scFlags58 __asm__("D_main_bss_80130B58");
+extern s32 scFlags50 __asm__("D_main_bss_80130B50");
+extern char strCinPlCraftsVwing[];
+s32 scStrcmp(char *, char *) __asm__("rs_strcmp");
+char *scStrcpy(char *, char *) __asm__("rs_strcpy");
+u32 strlen(const char *);
+s32 scLoadHob(char *, s32, s32, s32) __asm__("load_hmt_and_hob");
+void *instantiateNamedMeshInstance(char *);
+void *scWalk(char *) __asm__("walkMeshdef0List");
+void scApplyFlags(void *, s32, s32, s32) __asm__("applyFlagsToMeshTreeOrList");
+void dispatchDatSubtypeByRandomIndex(void *, void *);
+void *allocAndSetupModelInstance(void *);
+void *allocateAndInitCraftNpcContext(f32, f32, u16);
+void *load_asset_with_malloc_flags_l(void *, s32) __asm__("load_asset_with_malloc_flags");
+void model_animation_offset_convert(void *);
+s32 flattenAnimTreeAndAllocateSlot(void *, void *);
+s32 markModelAnimChannelEntryActive(s32, s32);
+void setModelAnimSlotCycleDuration(s32, f32);
+void releaseSceneObjectMeshTree(void *);
+void spawnNamedTexturedEmitterNpc(s32, void *);
+
+static __inline__ s32 scDiffer(u8 *arg0, u8 *arg1, u32 arg2) {
+    u16 var_a3;
+
+    for (var_a3 = 0; var_a3 < arg2; ++var_a3) {
+        if (arg0[var_a3] != arg1[var_a3]) return 1;
+    }
+    return 0;
+}
+
+#define SC_SLOT(off) ((u8 *)((off) + (s32)D_cinematic_overlay_800B1900))
+
+typedef struct { char name[0x4C]; } ScLcEnt;
+typedef struct { u8 pad[0x4A]; u16 count; u8 pad2[0x13D8 - 0x4C]; ScLcEnt ents[60]; } ScLcFile;
+void scoImpl(ScLcFile *arg0, u8 arg1, u8 arg2) __asm__("spawnCutsceneObjectsFromList");
+void scoImpl(ScLcFile *arg0, u8 arg1, u8 arg2) {
+    char name[0x40];
+    char path[0x40];
+    char loaded[60][0x20];
+    s16 i;
+    s16 j;
+    s16 k;
+    u8 idx;
+    u8 found;
+    u8 m;
+    u8 cnt;
+    s32 d;
+    char *src;
+    void *v;
+
+    cnt = 0;
+    for (i = 0; i < 0x20; i++) {
+        scAnim[i] = 0;
+    }
+    for (i = 0; i < arg0->count; i++) {
+        if (!(arg0->ents[i].name[0x1F] & 0x80)) {
+            continue;
+        }
+        scStrcpy(name, arg0->ents[i].name);
+        name[SC_SLOT(i * 0x13C)[1] + 1] = 0;
+        for (j = strlen(name) - 1; j >= 0; j--) {
+            if (name[j] == '/') {
+                j++;
+                break;
+            }
+        }
+        if (j < 0) {
+            j = 0;
+        }
+        if (!((d = scDiffer((u8 *)name + j, D_cinematic_overlay_800A52B4, 2)) & 0xFF)) {
+            j += 2;
+        }
+        scStrcpy(path, name);
+        for (k = j; k < strlen(path + j); k += 2) {
+            if ((u8)(path[k] - 'A') < 26) {
+                path[k] |= 0x20;
+            }
+        }
+        for (idx = 0; ; idx++) {
+            if (scStrcmp(scTbl[idx].name, "***") == 0) {
+                break;
+            }
+            if (scStrcmp(path + j, scTbl[idx].name) == 0) {
+                break;
+            }
+        }
+        if (((d = scDiffer((u8 *)name, D_cinematic_overlay_800A52B4, 2)) & 0xFF)) {
+            found = 0;
+            if (strlen(scTbl[idx].path) != 0) {
+                src = scTbl[idx].path;
+            } else {
+                src = name;
+            }
+            if (arg1 == 0x13 && (scFlags58 & 2) && scStrcmp(src, strCinPlCraftsVwing) == 0) {
+                src = "pl_crafts/rmobil";
+            }
+            for (m = 0; m < cnt; m++) {
+                if (scStrcmp(loaded[m], src) == 0) {
+                    found = 1;
+                    break;
+                }
+            }
+            if (found == 0 && arg2 == 0) {
+                scLoadHob(src, 0, (scTbl[idx].u.f58 >> 6) & 1, ((scTbl[idx].u.f58 & 0x20) != 0) << 16);
+                scStrcpy(loaded[cnt], src);
+                cnt++;
+            }
+        }
+        if (arg2 == 0) {
+            continue;
+        }
+        SC_SLOT(i * 0x13C)[2] = idx;
+        SC_SLOT(i * 0x13C)[3] = scTbl[idx].u.b.b5B;
+        if (SC_SLOT(i * 0x13C)[3] & 0x10) {
+            v = instantiateNamedMeshInstance(path + j);
+            *(void **)(SC_SLOT(i * 0x13C) + 0x50) = *(void **)(SC_SLOT(i * 0x13C) + 0x54) = v;
+            {
+                u8 *q = *(u8 **)(*(u8 **)(*(u8 **)v + 0x10) + 0x10);
+                *(s32 *)(q + 0xC) &= ~8;
+            }
+            *(s32 *)(*(u8 **)(SC_SLOT(i * 0x13C) + 0x54) + 0x64) &= ~8;
+        } else {
+            *(void **)(SC_SLOT(i * 0x13C) + 0x50) = scWalk(path + j);
+            *(void **)(SC_SLOT(i * 0x13C) + 0x54) = 0;
+            {
+                u8 b = SC_SLOT(i * 0x13C)[3];
+                if (b & 0x20) {
+                    if (!(b & 0x40)) {
+                        scApplyFlags(*(void **)(SC_SLOT(i * 0x13C) + 0x50), 0, 0x10000, 0);
+                    }
+                }
+            }
+            dispatchDatSubtypeByRandomIndex((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C + 0x104, *(void **)(SC_SLOT(i * 0x13C) + 0x50));
+        }
+        *(void **)(*(u8 **)(SC_SLOT(i * 0x13C) + 0x50) + 4) = scTbl[idx].anim;
+        *(void **)(SC_SLOT(i * 0x13C) + 0x60) = 0;
+        if (SC_SLOT(i * 0x13C)[3] & 1) {
+            *(void **)(SC_SLOT(i * 0x13C) + 0x60) = allocAndSetupModelInstance(*(void **)(SC_SLOT(i * 0x13C) + 0x50));
+        }
+        if (SC_SLOT(i * 0x13C)[3] & 4) {
+            u8 *c = allocateAndInitCraftNpcContext(scCraft[idx].f4, scCraft[idx].f8, scCraft[idx].h2);
+            *(void **)(SC_SLOT(i * 0x13C) + 0x6C) = c;
+            *(f32 *)(c + 0x14) = 7.0f;
+            *(f32 *)(*(u8 **)(SC_SLOT(i * 0x13C) + 0x6C) + 0x10) = 0.2f;
+        }
+        *(s32 *)(SC_SLOT(i * 0x13C) + 0x58) = 0xFFFF;
+        if (scTbl[idx].anim[0xC] != 0) {
+            if (scAnim[idx] == 0) {
+                scAnim[idx] = load_asset_with_malloc_flags_l(scTbl[idx].animName, 0x10);
+                model_animation_offset_convert(scAnim[idx]);
+            }
+            *(s32 *)(SC_SLOT(i * 0x13C) + 0x58) = flattenAnimTreeAndAllocateSlot(*(void **)(*(u8 **)(SC_SLOT(i * 0x13C) + 0x50) + 0x18), scAnim[idx]);
+            *(s32 *)(SC_SLOT(i * 0x13C) + 0x5C) = markModelAnimChannelEntryActive(*(s32 *)(SC_SLOT(i * 0x13C) + 0x58), 0);
+            setModelAnimSlotCycleDuration(*(s32 *)(SC_SLOT(i * 0x13C) + 0x58), 1.0f);
+        }
+        if (SC_SLOT(i * 0x13C)[3] & 8) {
+            if (!(scFlags50 & 1)) {
+                scApplyFlags(*(void **)(SC_SLOT(i * 0x13C) + 0x50), 0, 0x20000000, 0);
+                releaseSceneObjectMeshTree(*(void **)(SC_SLOT(i * 0x13C) + 0x50));
+            }
+        }
+        if (SC_SLOT(i * 0x13C)[2] == 0xE) {
+            spawnNamedTexturedEmitterNpc(0, *(void **)(SC_SLOT(i * 0x13C) + 0x50));
+        }
+    }
+}
 
 typedef struct CdNode { struct CdNode *next; struct CdNode *prev; struct CdNode *parent; struct CdNode *child; } CdNode;
 typedef struct { u8 pad0[0x44]; f32 f44; } CdMesh;
