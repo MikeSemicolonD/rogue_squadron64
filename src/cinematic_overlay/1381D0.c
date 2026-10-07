@@ -333,7 +333,50 @@ call:
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", cutscenePopulateSlotsFromLevelLists);
+typedef struct { f32 x, y, z; } CpV3;
+extern f32 D_cinematic_overlay_800B0940[];
+extern u16 D_cinematic_overlay_800B09B4;
+extern u16 D_cinematic_overlay_800B09B6;
+extern u8 D_cinematic_overlay_800B1910[];
+extern void *D_main_bss_80138D1C;
+void cpSlot(u8 *, f32 *, f32, f32, s32) __asm__("cinematicSlotUpdate");
+void cpTriplet(void *, f32, f32, f32) __asm__("initVec4TripletFromArgs");
+void cpQuat(void *, void *, f32) __asm__("quatFromAxisAngleSafe");
+void cpCompose(void *, void *) __asm__("composeQuatToMat3x4");
+void cpAdd(void *, f32, f32, f32) __asm__("addVec3At0x24");
+void cpInv(void *, void *) __asm__("mat3x3InverseInto");
+void cpBob(f32 *, void *) __asm__("buildBobbingObjectMatrix");
+
+f32 *cutscenePopulateSlotsFromLevelLists(u8 *arg0, u8 *arg1, u8 arg2, void *mat, f32 t) {
+    struct { f32 a18, a1C, a20, a24; f32 q[4]; f32 a38; } L;
+    u8 *s1 = arg1 + arg2 * 0x20;
+    f32 s;
+
+    cpSlot(arg1 + (*(s32 *)(s1 + 0x1334) * 0xC + 0x25AC), (f32 *)(arg0 + 0x20), t, 8.0f, 1);
+    cpSlot(arg1 + (*(s32 *)(s1 + 0x1318) * 0xC + 0x25AC), &D_cinematic_overlay_800B0940[0], t, 8.0f, 0);
+    cpSlot(arg1 + (*(s32 *)(s1 + 0x131C) * 0xC + 0x25AC), &D_cinematic_overlay_800B0940[1], t, 8.0f, 0);
+    cpSlot(arg1 + (*(s32 *)(s1 + 0x1320) * 0xC + 0x25AC), &D_cinematic_overlay_800B0940[2], t, 8.0f, 0);
+    cpSlot(arg1 + (*(s32 *)(s1 + 0x1330) * 0xC + 0x25AC), &L.a38, t, 2.5f, 1);
+    cpSlot(arg1 + (*(s32 *)(s1 + 0x1324) * 0xC + 0x25AC), &L.a18, t, 2.5f, 1);
+    cpSlot(arg1 + (*(s32 *)(s1 + 0x1328) * 0xC + 0x25AC), &L.a1C, t, 2.5f, 1);
+    cpSlot(arg1 + (*(s32 *)(s1 + 0x132C) * 0xC + 0x25AC), &L.a20, t, 2.5f, 1);
+    D_cinematic_overlay_800B0940[0] *= 0.25f;
+    D_cinematic_overlay_800B0940[1] *= 0.25f;
+    D_cinematic_overlay_800B0940[2] *= 0.25f;
+    s = (f32)D_cinematic_overlay_800B09B4 / (f32)D_cinematic_overlay_800B09B6;
+    cpTriplet(mat, s, s, 1.0f);
+    cpQuat(L.q, &L.a18, L.a38);
+    cpCompose(mat, L.q);
+    cpAdd(mat, D_cinematic_overlay_800B0940[0], D_cinematic_overlay_800B0940[1], D_cinematic_overlay_800B0940[2]);
+    {
+        u8 *p;
+        D_main_bss_80138D1C = p = D_cinematic_overlay_800B1910;
+        *(CpV3 *)(p + 0x10) = *(CpV3 *)D_cinematic_overlay_800B0940;
+    }
+    cpInv(arg0 + 0x2C, mat);
+    cpBob(D_cinematic_overlay_800B0940, L.q);
+    return D_cinematic_overlay_800B0940;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A52B4);
 
