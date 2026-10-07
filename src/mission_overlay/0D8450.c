@@ -140,7 +140,66 @@ done:
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A7834);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcWingmanState1);
+extern char D_mission_overlay_800A7834[];
+extern void setObjectSubstructF10IfReady(s32, f32, s32);
+
+s32 nws1Impl(void *arg0, s32 arg1) __asm__("npcWingmanState1");
+s32 nws1Impl(void *arg0, s32 arg1) {
+    u8 sp28[0x30];
+    u8 *npc = *(u8 **)((u8 *)arg0 + 4);
+    char *name = NULL;
+    s32 idx = 0;
+    u8 st = npc[0x53];
+    s32 t = st;
+
+    if (st == 1) goto c1;
+    if (t >= 2) {
+        if (st == 4) goto c4;
+    }
+    {
+        switch (npc[0x5E]) {
+        case 0:
+            name = D_mission_overlay_800A781C;
+            idx = 0;
+            break;
+        case 1:
+            name = D_mission_overlay_800A781C;
+            idx = 1;
+            break;
+        }
+        npc[0x5E] ^= 1;
+        lookupHmtTextureByName(*(s32 *)(npc + 0x30), name, idx, sp28, 0, 0);
+        st = npcWingmanStateEffectShared(npc, sp28, 0.0f, npc[0x53]);
+        if (arg1 == 0) {
+            setObjectSubstructF10IfReady(*(s32 *)(npc + 0x38), 0.033333335f, 0);
+        }
+        if (st == 1) {
+            play3DSoundEvent(0, npc, npc + 0x24, 20.0f, 0.2f, 0, 2, 0x5A, 0x28);
+        }
+    }
+    goto done;
+c1:
+    {
+        if (npc[0x5E] == 0) {
+            name = D_mission_overlay_800A7824;
+        }
+        lookupHmtTextureByName(*(s32 *)(npc + 0x30), name, 0, sp28, 0, 0);
+        if (npcWingmanStateEffectShared(npc, sp28, 0.0f, npc[0x53]) == st) {
+            play3DSoundEvent(0, npc, npc + 0x24, 20.0f, 0.2f, 0, 0x34, 0x78, 0x3C);
+        }
+    }
+    goto done;
+c4:
+    {
+        lookupHmtTextureByName(*(s32 *)(npc + 0x30), D_mission_overlay_800A7834, 0, sp28, 0, 0);
+        ((f32 *)sp28)[9] = *(f32 *)(npc + 0x24);
+        ((f32 *)sp28)[10] = *(f32 *)(npc + 0x28) + 4.0f;
+        ((f32 *)sp28)[11] = *(f32 *)(npc + 0x2C);
+        npcWingmanStateEffectShared(npc, sp28, 0.0f, npc[0x53]);
+    }
+done:
+    return 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D8450", D_mission_overlay_800A7844);
 
