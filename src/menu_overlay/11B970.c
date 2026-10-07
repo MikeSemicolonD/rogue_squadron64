@@ -1624,7 +1624,77 @@ void updateTieInterceptorAnimFlag(u8 *arg0, u8 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", integrateTieInterceptorPhysics);
+typedef struct {
+    u8 pad0[8];
+    u16 n;
+    u16 cnt;
+    u16 *arr;
+} ItHdr;
+typedef struct {
+    u8 pad0[0xC];
+    ItHdr *hdr;
+    u8 pad10[4];
+    u16 *a14;
+} ItNode;
+typedef struct {
+    f32 t;
+    ItNode *p4;
+    ItNode *p8;
+    u8 bC;
+    u8 padD[3];
+    s32 w10;
+} ItObj;
+void playerTieInterceptorMainUpdate(void *);
+
+s32 integrateTieInterceptorPhysics(ItObj *o, f32 dt) {
+    s32 n;
+    u8 ret;
+    s32 k;
+    u16 i;
+    u16 t;
+
+    n = o->p4->hdr->n;
+    ret = 0;
+    playerTieInterceptorMainUpdate(o);
+    o->t += dt * 10.5f;
+    switch (o->bC) {
+    case 0:
+        k = (s32)o->t - 2;
+        if (k != o->w10 && k >= 0 && k < n) {
+            for (i = 0; i < o->p4->hdr->cnt; i++) {
+                t = o->p4->hdr->arr[i * n + k];
+                o->p4->hdr->arr[i * n + k] = o->p8->hdr->arr[i * n + k];
+                o->p8->hdr->arr[i * n + k] = t;
+                t = o->p4->a14[i * n + k];
+                o->p4->a14[i * n + k] = o->p8->a14[i * n + k];
+                o->p8->a14[i * n + k] = t;
+            }
+            o->w10 = k;
+        }
+        if (k >= o->p4->hdr->n) {
+            ret = 1;
+        }
+        break;
+    case 1:
+        { s32 m = n + 1; k = m - (s32)o->t; }
+        if (k != o->w10 && k >= 0 && k < n) {
+            for (i = 0; i < o->p4->hdr->cnt; i++) {
+                t = o->p4->hdr->arr[i * n + k];
+                o->p4->hdr->arr[i * n + k] = o->p8->hdr->arr[i * n + k];
+                o->p8->hdr->arr[i * n + k] = t;
+                t = o->p4->a14[i * n + k];
+                o->p4->a14[i * n + k] = o->p8->a14[i * n + k];
+                o->p8->a14[i * n + k] = t;
+            }
+            o->w10 = k;
+        }
+        if (k < 0) {
+            ret = 1;
+        }
+        break;
+    }
+    return ret;
+}
 
 typedef struct {
     u8 r, g, b, a;
