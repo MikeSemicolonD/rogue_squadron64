@@ -212,7 +212,102 @@ GridCellG *getGridCellValueAt(s32 x, s32 y, s32 flag)
   return r;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/48A50", clampGridCellLookup);
+typedef struct {
+    u8 pad0[4];
+    u16 prev;
+    u16 next;
+    u16 h8;
+    u8 padA[0xA];
+    u16 flags;
+    u16 self;
+    s16 x;
+    s16 y;
+    u8 pad1C[0x9C];
+} TCell;
+
+typedef struct {
+    u8 pad0[8];
+    u16 *grid;
+    u8 padC[0x2C];
+    u16 w;
+    u16 h;
+} TDesc;
+
+typedef struct {
+    u8 pad0[8];
+    TCell *cell;
+} TPoolNode;
+
+extern TDesc D_main_bss_80136DC0;
+extern TCell *sTCells __asm__("D_main_bss_80137A5C");
+extern TPoolNode *gDoublyLinkedNodePool12;
+TCell *gcvaL(s32, s32, s32) __asm__("getGridCellValueAt");
+void processGridCellByDistance(TCell *, f32);
+
+TCell *cgclImpl(s32, s32) __asm__("clampGridCellLookup");
+TCell *cgclImpl(s32 x, s32 y) {
+    s32 cx;
+    s32 cy;
+    u16 v;
+    TCell *node;
+    TCell *c;
+    u16 i;
+    s32 vv;
+
+retry:
+    {
+        if (x < 0) {
+            cx = 0;
+            cy = (y < 0) ? 0 : (y < D_main_bss_80136DC0.h) ? y : D_main_bss_80136DC0.h - 1;
+        } else if (x >= D_main_bss_80136DC0.w) {
+            cx = D_main_bss_80136DC0.w - 1;
+            cy = (y < 0) ? 0 : (y < D_main_bss_80136DC0.h) ? y : D_main_bss_80136DC0.h - 1;
+        } else if (y < 0) {
+            cx = (x < 0) ? 0 : (x < D_main_bss_80136DC0.w) ? x : D_main_bss_80136DC0.w - 1;
+            cy = 0;
+        } else {
+            cx = (x < 0) ? 0 : (x < D_main_bss_80136DC0.w) ? x : D_main_bss_80136DC0.w - 1;
+            cy = D_main_bss_80136DC0.h - 1;
+        }
+        v = D_main_bss_80136DC0.grid[cx + cy * D_main_bss_80136DC0.w];
+        vv = v;
+        if (vv != 0xFFFF && (v & 0x8000)) {
+            node = gDoublyLinkedNodePool12[vv & 0x7FFF].cell;
+            for (i = node->next; i != 0xFFFF; i = c->next) {
+                c = &sTCells[i];
+                if (c->x == x && c->y == y) {
+                    break;
+                }
+            }
+            if (i != 0xFFFF) {
+                return c;
+            }
+            processGridCellByDistance(node, 1.0f);
+            __asm__("" :: "r"(node));
+            c = gcvaL(cx, cy, 0);
+            if (c == NULL) {
+                return NULL;
+            }
+            c->x = x;
+            c->y = y;
+            c->flags |= 0x20;
+            c->next = node->next;
+            if (c->next != 0xFFFF) {
+                sTCells[node->next].prev = c->self;
+            }
+            c->prev = c->h8 = node->self;
+            node->next = c->self;
+            __asm__("");
+            return c;
+        }
+        node = gcvaL(cx, cy, 1);
+        if (node == NULL) {
+            return NULL;
+        }
+        processGridCellByDistance(node, 1.0f);
+        goto retry;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/48A50", processGridCellByDistance);
 
