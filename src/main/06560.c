@@ -150,7 +150,53 @@ out:
 
 INCLUDE_ASM("asm/nonmatchings/main/06560", writeSaveDataBodyToEeprom);
 
-INCLUDE_ASM("asm/nonmatchings/main/06560", copySaveUnk08);
+typedef struct {
+    u32 gameCode;
+    u8 pad4[8];
+    u16 companyCode;
+    u16 count;
+    u8 name[0x10];
+} CsAsset;
+extern CsAsset gCsAsset __asm__("gGamesaveAsset");
+s32 csFind(void *, u16, u32, u8 *, u8 *, s32 *) __asm__("osPfsFindFile");
+
+void copySaveUnk08(s32 arg0, u8 *arg1) {
+    u8 ext[8];
+    s32 fileNo;
+    s32 i;
+    PfsW *pfs;
+    SaveHdrW *hdr;
+    u8 *p8;
+    u8 *dst;
+
+    i = 0;
+    if (gCsAsset.count != 0) {
+    pfs = &D_main_bss_80112730[arg0];
+    do {
+        dst = arg1 + i * 0x10;
+        __asm__("" :: "r"(dst));
+        if (initMemoryPack(arg0) == 0) {
+            rs_memset(ext, 0, 4);
+            if (i != 0) {
+                ext[0] = i + 0x11;
+            } else {
+                ext[0] = 0;
+            }
+            if (csFind(pfs, gCsAsset.companyCode, gCsAsset.gameCode, gCsAsset.name, ext, &fileNo) == 0 && osPfsReadWriteFile(pfs, fileNo, 0, 0, 0x20, (u8 *)gSaveDataBuffer) == 0) {
+                hdr = (SaveHdrW *)gSaveDataBuffer;
+                p8 = (u8 *)hdr + 8;
+                if (hdr->unk4 == adler32(adler32(0, 0, 0), p8, 0x10)) {
+                    memcpy(dst, p8, 0x10);
+                    goto next;
+                }
+            }
+            rs_memset(dst, 0, 0x10);
+        }
+    next:
+        i++;
+    } while (i < gCsAsset.count);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/06560", initSaveData);
 
