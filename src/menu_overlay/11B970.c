@@ -831,7 +831,44 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A699C);
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A69BC);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", loadVwingMeshAssets);
+typedef struct { s32 pad[3]; s32 flags; } LvMat;
+typedef struct { LvMat *mat; } LvNode;
+s32 applyFlagsToMeshTreeOrList(s32, s32, s32, s32);
+s32 load_hmt_and_hob(s32 *, s32, s32, s32);
+s32 walkMeshdef0List(s32 *);
+LvNode *lvFind(s32, char *) __asm__("findModelChildNodeByName");
+void lvSetMat(LvMat *, s32, u16) __asm__("setMaterialFlagByIdInMeshTree");
+extern s32 lvTbl[] __asm__("D_menu_overlay_800CF0F0");
+extern LvNode *lvSel __asm__("D_menu_overlay_800CFE10");
+extern u16 D_menu_overlay_800CFA6C;
+
+s32 loadVwingMeshAssets(u8 a, u8 b) {
+    u8 i;
+    s32 v;
+    LvNode *n;
+
+    load_hmt_and_hob((s32 *)"gnrc_stuff/r_logo_ref", 0, 0, 0);
+    i = 0;
+    v = 0;
+    while (a ? v < 3 : v <= 0) {
+        lvTbl[i & 0xFF] = walkMeshdef0List((s32 *)"r_logo_ref");
+        applyFlagsToMeshTreeOrList(lvTbl[i & 0xFF], 0, 0x460008, 0);
+        if (a) {
+            applyFlagsToMeshTreeOrList(lvTbl[i & 0xFF], 0, 0x200000, 0);
+        }
+        i++;
+        v = i & 0xFF;
+    }
+    if (b) {
+        n = lvFind(lvTbl[0], "wnd_a");
+        n->mat->flags &= ~8;
+        n->mat->flags |= 0x01000000;
+        lvSel = n;
+        lvSetMat(n->mat, 0xFFFF, D_menu_overlay_800CFA6C);
+    } else {
+        lvSel = NULL;
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A69F4);
 
