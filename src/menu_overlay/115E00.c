@@ -739,7 +739,34 @@ void handleLevelSelectStartConfirm(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", tickMenuTransitionState);
+void tickMenuTransitionState(void) {
+    if (*(u8 *)&D_menu_overlay_800CDABC != 0 && (u8)isStructUninitialized(D_menu_overlay_800CDFAC) != 0) {
+        D_menu_overlay_800CDAC0 = 1;
+        D_menu_overlay_800CDABC = 0;
+    }
+    if (D_menu_overlay_800CDAC0 == -1) {
+        if (D_menu_overlay_800CDB04 <= 0.3f) {
+            D_menu_overlay_800CDB04 = 0.3f;
+            D_menu_overlay_800CDAC0 = 0;
+        } else {
+            D_menu_overlay_800CDB04 -= bridgeRotationVelocityMultiplier;
+            if (D_menu_overlay_800CDB04 <= 0.0f) {
+                D_menu_overlay_800CDB04 = 0.0f;
+            }
+        }
+    } else if (D_menu_overlay_800CDAC0 == 1) {
+        if (1.0f <= D_menu_overlay_800CDB04) {
+            D_menu_overlay_800CDB04 = 1.0f;
+            D_menu_overlay_800CDAC0 = 0;
+            D_menu_overlay_800CDABB = 0;
+        } else {
+            D_menu_overlay_800CDB04 += bridgeRotationVelocityMultiplier;
+            if (1.0f <= D_menu_overlay_800CDB04) {
+                D_menu_overlay_800CDB04 = 1.0f;
+            }
+        }
+    }
+}
 
 extern f32 D_menu_overlay_800CDB08;
 s16 rand(void);
