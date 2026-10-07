@@ -527,27 +527,26 @@ void convertMat3x4ToQuat(Mat4x3 arg0, Vec4f arg1) {
 }
 #endif
 
-#if 0
 void slerpQuaternions(Vec4f arg0, Vec4f arg1, f32 arg2, Vec4f arg3) {
     f32 temp_ft3;
-    f64 temp_fa0;
     f64 temp_fs0;
     f64 temp_fs0_2;
-    f64 temp_fs1;
-    f64 temp_fs2;
+    register f64 temp_fs1 asm("$f22");
     f64 var_fa0;
     f64 var_fs2;
 
     temp_ft3 = arg0[2];
     temp_fs0 = (arg0[1] * arg1[1]) + (temp_ft3 * arg1[2]) + (arg0[3] * arg1[3]) + (arg0[0] * arg1[0]);
-    if ((temp_fs0 + 1.0) > 1e-5) {
-        if ((1.0 - temp_fs0) > 1e-5) {
+    if ((temp_fs0 + 1.0) > 1e-5f) {
+        if ((1.0 - temp_fs0) > 1e-5f) {
             temp_fs1 = M_HALF_PI_F - sinfApprox(temp_fs0);
-            temp_fs0_2 = sqrtf(1.0f - (f32) (temp_fs0 * temp_fs0));
-            var_fs2 = sinf((1.0f - arg2) * temp_fs1);
-            var_fa0 = sinf(arg2 * temp_fs1);
-            var_fs2 /= temp_fs0_2;
-            var_fa0 /= temp_fs0_2;
+            {
+                register f32 sq asm("$f20");
+                SQRTF_ASM(sq, 1.0f - (f32) (temp_fs0 * temp_fs0));
+                temp_fs0 = sq;
+            }
+            var_fs2 = sinf((1.0f - arg2) * temp_fs1) / temp_fs0;
+            var_fa0 = sinf(arg2 * temp_fs1) / temp_fs0;
         } else {
             var_fa0 = arg2;
             var_fs2 = 1.0f - arg2;
@@ -561,16 +560,13 @@ void slerpQuaternions(Vec4f arg0, Vec4f arg1, f32 arg2, Vec4f arg3) {
         arg3[2] = (f32) arg0[1];
         arg3[3] = (f32) -arg0[0];
         arg3[0] = (f32) arg0[3];
-        temp_fs2 = (f64) sinf((1.0f - arg2) * M_HALF_PI_F);
-        temp_fa0 = (f64) sinf(arg2 * M_HALF_PI_F);
-        arg3[1] = (f32) ((temp_fs2 * (f64) arg0[1]) + (temp_fa0 * (f64) arg3[1]));
-        arg3[2] = (f32) ((temp_fs2 * (f64) arg0[2]) + (temp_fa0 * (f64) arg3[2]));
-        arg3[3] = (f32) ((temp_fs2 * (f64) arg0[3]) + (temp_fa0 * (f64) arg3[3]));
+        var_fs2 = (f64) sinf((1.0f - arg2) * M_HALF_PI_F);
+        var_fa0 = (f64) sinf(arg2 * M_HALF_PI_F);
+        arg3[1] = (f32) ((var_fs2 * (f64) arg0[1]) + (var_fa0 * (f64) arg3[1]));
+        arg3[2] = (f32) ((var_fs2 * (f64) arg0[2]) + (var_fa0 * (f64) arg3[2]));
+        arg3[3] = (f32) ((var_fs2 * (f64) arg0[3]) + (var_fa0 * (f64) arg3[3]));
     }
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/1D000", slerpQuaternions);
-#endif
 
 void composeQuatToMat3x4(Mat4x3 arg0, Vec4f arg1) {
     Mat4x3 sp10;
