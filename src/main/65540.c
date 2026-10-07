@@ -7,7 +7,426 @@
 
 INCLUDE_RODATA("asm/nonmatchings/main/65540", D_main_8003B830);
 
-INCLUDE_ASM("asm/nonmatchings/main/65540", load_dat_file_assets);
+typedef struct {
+    u16 id;
+    u8 pad2;
+    u8 hiDetailOnly;
+    u8 pad4[0x6C];
+    s32 unk70;
+    u8 pad74[0x18];
+    u32 unk8C;
+} LdDatItem;
+
+typedef struct {
+    u32 count;
+    LdDatItem **items;
+} LdDatHeader;
+
+typedef struct {
+    u8 pad[0x23];
+    u8 unk23;
+} LdSettings;
+
+extern LdDatHeader *D_main_bss_801375D8;
+extern LdSettings gGameSettingsLd __asm__("gGameSettings");
+extern s32 gCurrentLevelLd __asm__("gCurrentLevel");
+extern u8 D_main_bss_80139990[];
+extern u8 D_main_bss_801399F8[];
+extern u16 D_main_bss_801399E8[];
+extern u8 D_main_bss_801399C2;
+extern u8 D_main_bss_801399CB;
+extern u8 D_main_bss_801399CC;
+extern u8 D_main_bss_801399CD;
+extern u8 D_main_bss_801399E0;
+extern u8 D_main_bss_80130B63;
+extern u8 D_main_8009FC40[];
+extern char D_main_8003B830[];
+void rs_memset(u8 *, u8, u32);
+s32 isCraftAvailableByIdx(s32);
+s32 isHobObjectLoaded(char *);
+u16 loadAssetIntoNewSlot(char *, char *);
+void loadCraftShadowTextures(s32);
+void loadShieldPalette(void);
+void load_hmt_and_hob(char *, void *, s32, s32);
+void load_model_animation(char *);
+void setPoolEntryPhaseAndMarkActive(u16, f32, s32);
+s32 sprintf(char *, const char *, ...);
+
+s32 load_dat_file_assets(void) {
+    char buf[0x28];
+    u32 i;
+    void *anim;
+    char *name;
+    char *prefix;
+    u8 full;
+    s32 id;
+    s32 n;
+    f32 phase;
+
+    anim = NULL;
+    rs_memset(D_main_bss_801399F8, 1, 6);
+    rs_memset(D_main_bss_80139990, 0, 0x53);
+    rs_memset((u8 *)D_main_bss_801399E8, 0xFF, 0x10);
+    name = NULL;
+    for (i = 0; i < D_main_bss_801375D8->count; i++) {
+        {
+            if (D_main_bss_801375D8->items[i]->hiDetailOnly == 0 || gGameSettingsLd.unk23 != 0) {
+                anim = NULL;
+                id = D_main_bss_801375D8->items[i]->id;
+                prefix = D_main_8003B830;
+                full = 1;
+                if (D_main_bss_80139990[id] == 0) {
+                    D_main_bss_80139990[id] = 1;
+                    switch (id) {
+                        case 0xC:
+                            prefix = "imp_stuff/";
+                            name = "tiefighter";
+                            break;
+                        case 0x12:
+                            prefix = "imp_stuff/";
+                            name = "tieinter";
+                            break;
+                        case 0x13:
+                            loadCraftShadowTextures(0xD);
+                            prefix = "imp_stuff/";
+                            name = "tiebomber";
+                            break;
+                        case 0x29:
+                            prefix = "imp_stuff/";
+                            if (gGameSettingsLd.unk23 != 0) {
+                                name = "tie_d";
+                            } else {
+                                name = "tie_dl";
+                            }
+                            break;
+                        case 0xD:
+                            prefix = "imp_stuff/";
+                            if (isCraftAvailableByIdx(4) != 0) {
+                                name = "gun_turretl";
+                            } else {
+                                name = "gun_turret";
+                            }
+                            break;
+                        case 0xE:
+                            prefix = "imp_stuff/";
+                            name = "prbdroid";
+                            break;
+                        case 0x1E:
+                            prefix = "imp_stuff/";
+                            if (isCraftAvailableByIdx(4) != 0) {
+                                name = "mis_turret";
+                            } else {
+                                name = "mis_turretl";
+                            }
+                            break;
+                        case 0x14:
+                            prefix = "gnrc_stuff/";
+                            name = "destbuild";
+                            break;
+                        case 0x2A:
+                            prefix = "gnrc_stuff/";
+                            name = "radardish";
+                            break;
+                        case 0x24:
+                            prefix = "imp_stuff/";
+                            name = "shuttle";
+                            break;
+                        case 0x25:
+                            prefix = "imp_stuff/";
+                            name = "tankdroid";
+                            break;
+                        case 0x2B:
+                            prefix = "reb_stuff/";
+                            name = "r_transp";
+                            break;
+                        case 0x2D:
+                            prefix = "imp_stuff/";
+                            name = "cargo01";
+                            break;
+                        case 0x3E:
+                            prefix = "imp_stuff/";
+                            name = "assboat";
+                            break;
+                        case 0x40:
+                            prefix = "imp_stuff/";
+                            name = "wskimmer";
+                            break;
+                        case 0x2E:
+                            prefix = "reb_stuff/";
+                            name = "r_combat";
+                            break;
+                        case 0x32:
+                            prefix = "gnrc_stuff/";
+                            if (D_main_bss_801375D8->items[i]->unk70 != 0) {
+                                name = "shield_h";
+                            } else {
+                                name = "shield";
+                            }
+                            full = 0;
+                            break;
+                        case 0x37:
+                            load_hmt_and_hob("imp_stuff/wrld_dvfx", anim, 0, 0);
+                            prefix = "imp_stuff/";
+                            name = "wrld_dvstr";
+                            break;
+                        case 0x3B:
+                            prefix = "imp_stuff/";
+                            name = "trooper";
+                            break;
+                        case 0x50:
+                            prefix = "imp_stuff/";
+                            name = "bsoldier";
+                            break;
+                        case 0x3C:
+                            prefix = "reb_stuff/";
+                            name = "r_pilot";
+                            break;
+                        case 0x3D:
+                            prefix = "gnrc_stuff/";
+                            name = "civilian";
+                            break;
+                        case 0x41:
+                            prefix = "reb_stuff/";
+                            name = "r_turret";
+                            break;
+                        case 0x42:
+                            prefix = "imp_stuff/";
+                            name = "tal_turret";
+                            break;
+                        case 0x43:
+                            prefix = "gnrc_stuff/";
+                            name = "cloudcar";
+                            break;
+                        case 0x44:
+                            load_hmt_and_hob(isCraftAvailableByIdx(3) != 0 ? "imp_stuff/lplatformlo" : "imp_stuff/lplatform", anim, 1, 0x10000);
+                            continue;
+                        case 0x4A:
+                            prefix = "imp_stuff/";
+                            name = "pwrgen";
+                            break;
+                        case 0x4C:
+                            prefix = "gnrc_stuff/";
+                            name = "powerup";
+                            full = 0;
+                            break;
+                        case 0x4D:
+                            prefix = "imp_stuff/";
+                            name = "raptor";
+                            break;
+                        case 0x2C:
+                            prefix = "imp_stuff/";
+                            name = "hvyshut";
+                            break;
+                        case 0x48:
+                            prefix = "imp_stuff/";
+                            name = "bosshut";
+                            break;
+                        case 0xF:
+                            prefix = "imp_stuff/";
+                            if (gGameSettingsLd.unk23 != 0) {
+                                name = "atat";
+                            } else {
+                                name = "atat_lo";
+                            }
+                            if (gCurrentLevelLd == 6) {
+                                anim = D_main_8009FC40;
+                            }
+                            load_model_animation("imp_stuff/atat_walk");
+                            load_model_animation("imp_stuff/atat_die");
+                            break;
+                        case 0x1F:
+                            prefix = "imp_stuff/";
+                            if (isCraftAvailableByIdx(1) != 0) {
+                                name = "atst_hi";
+                            } else {
+                                name = "atst";
+                            }
+                            if (gCurrentLevelLd == 6) {
+                                anim = D_main_8009FC40;
+                            }
+                            load_model_animation("imp_stuff/atst_walk");
+                            load_model_animation("imp_stuff/atst_start");
+                            load_model_animation("imp_stuff/atst_stop");
+                            break;
+                        case 0x47:
+                            prefix = "reb_stuff/";
+                            if (gGameSettingsLd.unk23 != 0) {
+                                name = "atpt_i_hi";
+                            } else {
+                                name = "atpt_i";
+                            }
+                            load_model_animation("reb_stuff/atpt_walk");
+                            load_model_animation("reb_stuff/atpt_start");
+                            load_model_animation("reb_stuff/atpt_stop");
+                            break;
+                        case 0x28:
+                            prefix = "imp_stuff/";
+                            switch (gCurrentLevelLd) {
+                                case 4:
+                                    name = "g5turret";
+                                    break;
+                                case 0x11:
+                                    name = "dsturret";
+                                    break;
+                                default:
+                                    name = "megaturret";
+                                    break;
+                            }
+                            break;
+                        case 0x2F:
+                        case 0x30:
+                        case 0x31:
+                            prefix = "imp_stuff/";
+                            name = "train";
+                            D_main_bss_80139990[0x31] = 1;
+                            D_main_bss_80139990[0x30] = 1;
+                            D_main_bss_80139990[0x2F] = 1;
+                            break;
+                        case 0x33:
+                            prefix = "imp_stuff/";
+                            name = "train_pil";
+                            break;
+                        case 0x34:
+                        case 0x35:
+                            prefix = "reb_stuff/";
+                            name = "r_train";
+                            D_main_bss_80139990[0x35] = 1;
+                            D_main_bss_80139990[0x34] = 1;
+                            break;
+                        case 0x36:
+                            prefix = "reb_stuff/";
+                            name = "r_tr_pil";
+                            break;
+                        case 0x27:
+                            D_main_bss_80139990[id] = 0;
+                            switch (D_main_bss_801375D8->items[i]->unk8C) {
+                                default:
+                                case 0:
+                                    name = "wmxwng";
+                                    n = 2;
+                                    break;
+                                case 1:
+                                    name = "wmywng";
+                                    n = 3;
+                                    break;
+                                case 2:
+                                    name = "wmawng";
+                                    n = 0;
+                                    break;
+                                case 3:
+                                    name = "wmvwng";
+                                    n = 1;
+                                    break;
+                                case 4:
+                                    name = "wmspdr";
+                                    n = 4;
+                                    break;
+                                case 5:
+                                    name = "wmfalc";
+                                    n = 5;
+                                    break;
+                                case 6:
+                                    name = "tie";
+                                    n = 7;
+                                    break;
+                                case 7:
+                                    name = "t16";
+                                    n = 6;
+                                    break;
+                            }
+                            if (!(isHobObjectLoaded(name) & 0xFF)) {
+                                sprintf(buf, "pl_crafts/%s", name);
+                                load_hmt_and_hob(buf, anim, 1, 0);
+                            }
+                            loadCraftShadowTextures(n);
+                            continue;
+                        case 0x45:
+                            break;
+                        default:
+                            name = NULL;
+                            break;
+                    }
+                    if (name != NULL) {
+                        sprintf(buf, "%s%s", prefix, name);
+                        if (full) {
+                            load_hmt_and_hob(buf, anim, 1, 0);
+                        } else {
+                            load_hmt_and_hob(buf, anim, 0, 0);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    switch (gCurrentLevelLd) {
+        case 5:
+        case 6:
+        case 9:
+        case 11:
+        case 13:
+        case 14:
+            load_hmt_and_hob("gnrc_stuff/lamps", anim, 1, 0x10000);
+            break;
+    }
+    name = NULL;
+    if (D_main_bss_801399C2 != 0 || gCurrentLevelLd == 0xF) {
+        loadShieldPalette();
+    }
+    if (D_main_bss_801399CB != 0) {
+        prefix = "imp_stuff/";
+        if (D_main_bss_80130B63 != 0) {
+            sprintf(buf, "%strp_anm_run", prefix);
+            D_main_bss_801399E8[0] = loadAssetIntoNewSlot("st_run", buf);
+            sprintf(buf, "%strp_anm_sht", prefix);
+            D_main_bss_801399E8[1] = loadAssetIntoNewSlot("st_sht", buf);
+            phase = 12.0f;
+            setPoolEntryPhaseAndMarkActive(D_main_bss_801399E8[0], phase, 0);
+            setPoolEntryPhaseAndMarkActive(D_main_bss_801399E8[1], phase, 0);
+        } else {
+            sprintf(buf, "%strp_anm_run_lo", prefix);
+            D_main_bss_801399E8[0] = loadAssetIntoNewSlot("st_run", buf);
+            setPoolEntryPhaseAndMarkActive(D_main_bss_801399E8[0], 2.4f, 0);
+            D_main_bss_801399E8[1] = 0xFFFF;
+        }
+    }
+    if (D_main_bss_801399CC != 0) {
+        prefix = "reb_stuff/";
+        if (D_main_bss_80130B63 != 0) {
+            sprintf(buf, "%sr_pilot_anm", prefix);
+            D_main_bss_801399E8[2] = loadAssetIntoNewSlot("rp_run", buf);
+            setPoolEntryPhaseAndMarkActive(D_main_bss_801399E8[2], 12.0f, 0);
+        } else {
+            sprintf(buf, "%sr_pilot_anm_lo", prefix);
+            D_main_bss_801399E8[2] = loadAssetIntoNewSlot("rp_run", buf);
+            setPoolEntryPhaseAndMarkActive(D_main_bss_801399E8[2], 2.4f, 0);
+        }
+    }
+    if (D_main_bss_801399CD != 0) {
+        prefix = "gnrc_stuff/";
+        if (D_main_bss_80130B63 != 0) {
+            sprintf(buf, "%sciv_anm_run", prefix);
+            D_main_bss_801399E8[4] = loadAssetIntoNewSlot("civ_run", buf);
+            setPoolEntryPhaseAndMarkActive(D_main_bss_801399E8[4], 12.0f, 0);
+        } else {
+            sprintf(buf, "%sciv_anm_run_lo", prefix);
+            D_main_bss_801399E8[4] = loadAssetIntoNewSlot("civ_run", buf);
+            setPoolEntryPhaseAndMarkActive(D_main_bss_801399E8[4], 2.4f, 0);
+        }
+    }
+    if (D_main_bss_801399E0 != 0) {
+        prefix = "imp_stuff/";
+        if (D_main_bss_80130B63 != 0) {
+            sprintf(buf, "%sblk_anm_run", prefix);
+            D_main_bss_801399E8[6] = loadAssetIntoNewSlot("ibu_run", buf);
+            setPoolEntryPhaseAndMarkActive(D_main_bss_801399E8[6], 12.0f, 0);
+        } else {
+            sprintf(buf, "%sblk_anm_run_lo", prefix);
+            D_main_bss_801399E8[6] = loadAssetIntoNewSlot("ibu_run", buf);
+            setPoolEntryPhaseAndMarkActive(D_main_bss_801399E8[6], 2.4f, 0);
+        }
+    }
+    return 1;
+}
 
 s32 slotDispatcherIter(u16, s32, void *);
 s32 spawnNpcOfType();
