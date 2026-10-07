@@ -773,7 +773,49 @@ void gameStateByteGatedNpcHelper(s32 arg0, s32 arg1, s32 arg2, f32 arg3, f32 arg
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnMultiEventNpcWrapper);
+s32 multiEventTemplateNpcHandler(struct D_80130BB8_type *self, u16 arg1, void *arg2);
+s32 getPlayerField2(s32);
+extern s32 D_main_bss_8013A894;
+
+typedef struct {
+    u16 idx;
+    s16 cnt;
+    u8 pad4[4];
+    s32 w18;
+    f32 f1C;
+    s32 w20;
+    s32 w24;
+    u8 b28;
+    u8 b29;
+    u8 pad2A[2];
+} MeArgs;
+
+u16 spawnMultiEventNpcWrapper(u16 idx, f32 arg1, s32 cnt, s32 arg3, s32 arg4, u8 arg5, u8 arg6) {
+    MeArgs args;
+    u8 *ctx;
+
+    ctx = (u8 *)getNpcContextByIndex(idx);
+    if (ctx != NULL) {
+        if (D_main_bss_80130B63 == 0) {
+            if (idx != (u16)getPlayerField2(0) && D_main_bss_8013A894 >= 0xB) {
+                return 0xFFFF;
+            }
+        }
+        args.idx = idx;
+        args.b28 = arg5;
+        args.b29 = arg6;
+        args.w20 = arg3;
+        args.cnt = cnt;
+        if (args.cnt <= 0) {
+            args.cnt = 1;
+        }
+        args.w18 = -1;
+        args.f1C = arg1;
+        args.w24 = arg4;
+        return spawnNpcOfType((npc_update)multiEventTemplateNpcHandler, &args, 4, ctx[0x19] + 1);
+    }
+    return 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", spawnNpcChildForActivePlayerCell);
 
