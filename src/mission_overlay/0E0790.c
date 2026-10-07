@@ -612,9 +612,74 @@ void buildDebrisTransformStack(void *argv, f32 dt) {
     mat34CrossRowsAndCopyPos(*(u8 **)(arg0 + 0x30) + 0x28, arg0, *(f32 *)(arg0 + 0x88));
 }
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A805C);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", slerpFrameTowardTargetAxis);
+typedef struct { f32 v[3]; } SfV3;
+typedef struct {
+    f32 f0, f4, f8;
+    SfV3 fwd;
+    SfV3 up;
+    f32 f24, f28, f2C;
+    u8 pad30[0xB8 - 0x30];
+    f32 fB8;
+    f32 fBC;
+    u8 padC0[4];
+    u8 bC4;
+} SfObj;
+
+extern f32 vec3Dot(f32 *, f32 *);
+extern f32 constMinusSinfApprox(f32);
+extern void vec3Cross(f32 *, f32 *, f32 *);
+extern f32 vec3Length(f32 *);
+extern void quatFromAxisAngle(f32 *, f32 *, f32);
+extern void quatFromCardinalAxis(f32 *, u8, f32);
+extern void quatMultiply(f32 *, f32 *, f32 *);
+extern void rotateVec3ByQuat(f32 *, f32 *, f32 *);
+extern void orthonormalizeFrame(void *);
+extern f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+extern u8 D_main_bss_80138058[];
+
+u8 sfImpl(SfObj *s, f32 dt) __asm__("slerpFrameTowardTargetAxis");
+u8 sfImpl(SfObj *s, f32 dt) {
+    f32 up[3] = { 0.0f, 1.0f, 0.0f };
+    f32 q[4];
+    f32 axis[3];
+    f32 q2[4];
+    f32 q3[4];
+    f32 ang;
+    f32 h;
+
+    ang = constMinusSinfApprox(vec3Dot(up, s->fwd.v)) * 57.29578f;
+    __asm__ volatile("abs.s %0, %1" : "=f"(h) : "f"(ang));
+    if (h > 1.0f) {
+        vec3Cross(axis, s->fwd.v, up);
+        if (vec3Length(axis) > 1e-5f) {
+            if (ang < 0.0f) {
+                quatFromAxisAngle(q, axis, (ang < -5.0f) ? -5.0f : ang);
+            } else if (ang > 0.0f) {
+                quatFromAxisAngle(q, axis, (ang > 5.0f) ? 5.0f : ang);
+            }
+            quatFromCardinalAxis(q2, s->bC4, s->fBC);
+            s->fBC += dt * 10.0f;
+            quatMultiply(q2, q, q3);
+            rotateVec3ByQuat(q3, s->fwd.v, axis);
+            s->fwd = *(SfV3 *)axis;
+            rotateVec3ByQuat(q3, s->up.v, axis);
+            s->up = *(SfV3 *)axis;
+            orthonormalizeFrame(s);
+        }
+    }
+    s->fB8 += dt * 0.6f;
+    s->f28 += s->fB8;
+    s->f0 += s->f24 * dt;
+    s->f4 += s->f28 * dt;
+    s->f8 += s->f2C * dt;
+    ang = wrapAngleToCyclicRange(s->f0, s->f8, D_main_bss_80138058, 0);
+    if (ang <= s->f4) {
+        s->f4 = ang;
+        return 1;
+    }
+    return 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A8084);
 
