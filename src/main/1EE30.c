@@ -80,7 +80,39 @@ u16 *packTlutEntriesRgba5551(u16 *dst, s32 flags, u8 *src, s16 count, u8 *key) {
     return dst;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", allocTextureTlutBlock);
+u16 allocTextureTlutBlock(u16 tl, u32 arg0, u16 fl, u32 *key) {
+    u16 n;
+
+    switch (fl & 0xF) {
+    case 0:
+        n = 0x10;
+        break;
+    case 1:
+        n = 0x100;
+        break;
+    default:
+        return 0xFFFF;
+    }
+    if ((arg0 & 0xFF000000) != 0x80000000) {
+        return arg0;
+    }
+    if (tl == 0xFFFF) {
+        for (tl = 0; tl < D_main_bss_80128F04; tl++) {
+            if (D_main_bss_80128EFC[tl] == NULL) {
+                break;
+            }
+        }
+        if (tl == D_main_bss_80128F04) {
+            return 0xFFFF;
+        }
+        D_main_bss_8011A7D0 -= n * 2;
+        D_main_bss_80128EFC[tl] = (u16 *)D_main_bss_8011A7D0;
+        packTlutEntriesRgba5551((u16 *)D_main_bss_8011A7D0, fl, (u8 *)arg0, n, (u8 *)key);
+    } else {
+        packTlutEntriesRgba5551(D_main_bss_80128EFC[tl], fl, (u8 *)arg0, n, (u8 *)key);
+    }
+    return tl;
+}
 
 void ftlbImpl(u16 idx, u8 fmt) __asm__("freeTextureTlutBlock");
 
