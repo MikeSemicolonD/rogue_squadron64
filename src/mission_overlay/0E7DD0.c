@@ -1,7 +1,61 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E7DD0", transformCraftAnchorsApplySubFx3);
+typedef struct {
+    f32 m[12];
+} Tca3Mtx;
+typedef struct {
+    Tca3Mtx mtx;
+    u8 pad30[8];
+    s32 obj;
+    u8 pad3C[0xC];
+    f32 f48;
+    f32 f4C;
+    u8 pad50[0x14];
+    s16 h64;
+} Tca3Npc;
+u8 isPendingChildNpcActive(s32);
+u8 validateActorTargetLOS(s32);
+void buildRotationMatrixSlot0(void *, f32);
+void composeRotationMatrixSlot1(void *, f32);
+void transformVec3ByMat34(void *, void *, void *);
+extern u8 D_main_bss_80130B63;
+s32 playAttachmentCueNoTexture(void *arg0);
+extern void tca3InitAnim(s32, f32, f32, f32, f32, void *, s32, f32, f32, f32) __asm__("initObjectAnimSubstruct");
+extern void applyToObjectSubstructByFlag(s32, f32, f32, s32);
+
+void transformCraftAnchorsApplySubFx3(Tca3Npc *npc, f32 dt) {
+    Tca3Mtx saved;
+    f32 m[12];
+    u8 r;
+    u8 r2;
+
+    if (isPendingChildNpcActive(npc->obj) == 1) {
+        saved = npc->mtx;
+        buildRotationMatrixSlot0(m, npc->f4C);
+        composeRotationMatrixSlot1(m, npc->f48);
+        transformVec3ByMat34(m, &saved.m[3], &npc->mtx.m[3]);
+        transformVec3ByMat34(m, &saved.m[6], &npc->mtx.m[6]);
+        r = validateActorTargetLOS(npc->obj);
+        if (r == 1) {
+            if (D_main_bss_80130B63 != 0) {
+                npc->h64 = 3;
+            } else {
+                r2 = isPendingChildNpcActive(npc->obj);
+                if (r2 == r && validateActorTargetLOS(npc->obj) == r2) {
+                    {
+                        union { s32 i; f32 f; } u1, u0;
+                        u1.i = 0x3F800000;
+                        u0.i = 0;
+                        tca3InitAnim(npc->obj, u1.f, u0.f, u1.f, u0.f, playAttachmentCueNoTexture, 0, 10.0f, 15.0f, u0.f);
+                    }
+                    applyToObjectSubstructByFlag(npc->obj, dt, 0.0f, 0);
+                }
+            }
+        }
+        npc->mtx = saved;
+    }
+}
 
 typedef struct {
     u8 pad0[0x38];
