@@ -541,7 +541,98 @@ void updateEffectObjectMotionOnTerrain(EoObj *o, f32 dt) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", applyObjectLocalToWorldTransform);
+typedef struct { f32 x, y, z; } AlV3;
+typedef struct {
+    u8 pad0[4];
+    u16 h4;
+    u8 pad6[0xA];
+    AlV3 pos;
+    AlV3 ang;
+    u8 pad28[8];
+    f32 f30;
+    u8 pad34[8];
+    f32 f3C;
+    u8 pad40[8];
+    f32 f48;
+    AlV3 p4C;
+} AlObj;
+extern struct { f32 x, y; } alStk __asm__("D_8010BDD8");
+extern u16 alB88 __asm__("D_main_bss_80130B88");
+extern u16 D_8010BE1E;
+extern u16 D_8010BE38;
+void buildTransformMatrixFromEulerAngles(void *, f32, f32, f32);
+void mat3x4Multiply(void *, void *, void *);
+extern void computeAngleToTargetFromTransform(u8 *, u8 *, u8 *);
+void applyPlayerVehicleStateUpdate(u8 *arg0);
+
+static __inline__ f32 alAbs(f32 x) {
+    f32 r;
+    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+    return r;
+}
+
+void applyObjectLocalToWorldTransform(AlObj *o, f32 dt) {
+    f32 m[12];
+    AlV3 t;
+    f32 speed;
+    f32 rx, ry, rz;
+    f32 f;
+
+    if (o->h4 != 0) {
+        return;
+    }
+    speed = 0.0f;
+    rz = speed;
+    ry = speed;
+    rx = speed;
+    if ((alB88 & D_8010BE1E) && (alAbs(alStk.x) > 0.1f || alAbs(alStk.y) > 0.1f)) {
+        if (alAbs(alStk.x) > 0.1f) {
+            rx = alStk.x * -90.0f * dt;
+        }
+        if (alAbs(alStk.y) > 0.1f) {
+            ry = alStk.y * 90.0f * dt;
+        }
+    } else if (alB88 & D_8010BE38) {
+        if (alAbs(alStk.x) > 0.1f) {
+            rz = alStk.x * -90.0f * dt;
+        }
+    } else {
+        if (alAbs(alStk.y) > 0.1f) {
+            speed = alStk.y * 2.5;
+        }
+        if (alAbs(alStk.x) > 0.1f) {
+            rx = alStk.x * -90.0f * dt;
+        }
+    }
+    if (alB88 & 0x2000) {
+        speed *= 10.0f;
+    }
+    if (alB88 & 2) {
+        speed /= 10.0f;
+    }
+    buildTransformMatrixFromEulerAngles(m, rx, ry, rz);
+    t.x = o->p4C.x;
+    t.y = o->p4C.y;
+    t.z = o->p4C.z;
+    mat3x4Multiply((u8 *)o + 0x28, m, (u8 *)o + 0x28);
+    o->p4C.x = t.x;
+    o->p4C.y = t.y;
+    o->p4C.z = t.z;
+    computeAngleToTargetFromTransform((u8 *)o + 0x28, (u8 *)&o->pos, (u8 *)&o->ang);
+    if (speed != 0.0f) {
+        f = speed * dt;
+        t.x = o->f30;
+        t.y = o->f3C;
+        t.z = o->f48;
+        o->pos.x += f * t.x;
+        o->pos.y += f * t.y;
+        o->pos.z += f * t.z;
+        o->p4C.x = o->pos.x;
+        o->p4C.y = o->pos.y;
+        o->p4C.z = o->pos.z;
+    }
+    applyPlayerVehicleStateUpdate((u8 *)o);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", updateEffectObjectOrientationQuat);
 
