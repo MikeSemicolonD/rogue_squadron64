@@ -46,7 +46,57 @@ void piDmaWorker(void *arg) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/06170", submitDmaRequestBatch);
+typedef struct {
+    s32 size;
+    void *dev;
+    void *ram;
+} SdrbReq;
+extern void sendServiceMessage(s32, s32, void *, s32);
+extern s32 sdrbB8 __asm__("D_main_bss_801126B8");
+
+static __inline__ u8 sdrbDispatch(void) {
+    u8 msg[0x18];
+
+    if (D_main_bss_801126B0 != D_main_bss_801126B4) {
+        if (sdrbB8 == 0) {
+            sendServiceMessage(D_main_bss_801126BC, D_main_bss_801126BC, msg, 0);
+        }
+        return 1;
+    }
+    return 0;
+}
+
+s32 submitDmaRequestBatch(SdrbReq *reqs, s32 n, OSMesgQueue *mq) {
+    s32 d;
+    s32 i;
+    PiDmaRequest *e;
+
+    if (D_main_bss_801126B0 >= D_main_bss_801126B4) {
+        d = D_main_bss_801126B0 - D_main_bss_801126B4;
+    } else {
+        d = D_main_bss_801126B4 - D_main_bss_801126B0;
+    }
+    if (d + n + 1 >= 0x100) {
+        return 0;
+    }
+    if (getDmaSlotMutex() == 2) {
+        return 0;
+    }
+    for (i = 0; i < n; reqs++, i++) {
+        D_main_801112B0[D_main_bss_801126B4].size = reqs->size;
+        D_main_801112B0[D_main_bss_801126B4].devAddr = (u32)reqs->dev;
+        D_main_801112B0[D_main_bss_801126B4].vAddr = reqs->ram;
+        D_main_801112B0[D_main_bss_801126B4].skip = 0;
+        D_main_bss_801126B4 = (D_main_bss_801126B4 + 1) % 256;
+    }
+    D_main_801112B0[D_main_bss_801126B4].skip = 1;
+    D_main_801112B0[D_main_bss_801126B4].mq = mq;
+    D_main_bss_801126B4 = (D_main_bss_801126B4 + 1) % 256;
+    if (getDmaSlotMutex() == 0) {
+        sdrbDispatch();
+    }
+    return 1;
+}
 
 extern OSMesg D_main_80111288[];
 extern OSMesgQueue D_main_80111290;
