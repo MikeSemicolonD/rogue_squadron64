@@ -2401,7 +2401,35 @@ s32 checkObjectiveHandles(f32 arg0) {
 //     return 1;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", checkObjectiveHandles);
+s32 checkObjectiveHandles(f32 arg0) {
+    s32 i;
+    struct simpleCheckHandle *e;
+
+    for (i = 0, e = simpleCheckHandles; i < 0x30; i++, e++) {
+        if (e->active != 1) continue;
+
+        switch (e->checkType) {
+            case 0:
+                if ((e->checks.boolcount.objectiveBooleanIndex != 0) && (gObjectiveBooleans[e->checks.boolcount.objectiveBooleanIndex - 1] != e->checks.boolcount.objectiveBooleanValue)) continue;
+                if (e->checks.boolcount.objectiveCountIndex == 0) break;
+                if ((e->checks.boolcount.unk07 == 0) && (gObjectiveCounts[e->checks.boolcount.objectiveCountIndex - 1] < e->objectiveCountValue)) continue;
+                if (e->checks.boolcount.unk07 != 1) break;
+                if (gObjectiveCounts[e->checks.boolcount.objectiveCountIndex - 1] >= e->objectiveCountValue) continue;
+                break;
+            case 1:
+                e->checks.timer.timer -= arg0;
+                if (e->checks.timer.timer > 0.0f) continue;
+                break;
+            default:
+                continue;
+        }
+        e->active = 0;
+        if (e->unk0D == 0) {
+            e->handle();
+        }
+    }
+    return 1;
+}
 #endif
 
 s32 initializeObjectiveHandles(void) {
