@@ -319,7 +319,97 @@ void aimOrientNpcTowardTarget(void *arg0, f32 dt) {
 
 INCLUDE_ASM("asm/nonmatchings/main/7CEA0", spawnDatDrivenAudioVisualEmitters);
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", spawnNamedTexturedEmitterNpc);
+typedef struct { f32 m[12]; } SnMat;
+typedef struct {
+    SnMat m;
+    f32 scale[3];
+    u16 ctx;
+    u16 idx;
+    void *name;
+    s32 pad44;
+} SnArgs;
+
+typedef struct {
+    u8 pad0[0xFC];
+    u16 hFC[4];
+    u16 h104[4];
+    u16 h10C[4];
+    u16 h114[4];
+    u16 h11C[4];
+} SnNpc;
+
+extern u8 D_main_bss_80130B39;
+extern u8 snVortex[] __asm__("npcVortexUpdate");
+extern u8 snHeavy[] __asm__("heavyAttachedAudioEmitterNpcHandler");
+u8 *snGetCtx(u16) __asm__("getNpcContextByIndex");
+u16 spawnNpcOfType(void *, void *, s32, u8);
+s32 slotDispatcherIter(s32, s32, void *);
+u16 spawnInheritedNpcVariantB(u16, void *);
+s32 sprintf(char *, const char *, ...);
+
+void spawnNamedTexturedEmitterNpc(u8 *npc, s32 model) {
+    char name[8];
+    f32 d[3];
+    f32 m1[12];
+    f32 m2[12];
+    SnArgs a;
+    SnArgs b;
+    f32 dt;
+    s32 i;
+
+    dt = 0.033333335f;
+    if (D_main_bss_80130B39 == 0) {
+        a.scale[0] = *(f32 *)(*(u8 **)(npc + 0x34) + 0x28) * 100.0f;
+        a.scale[1] = *(f32 *)(*(u8 **)(npc + 0x34) + 0x28) * 100.0f;
+        a.scale[2] = *(f32 *)(*(u8 **)(npc + 0x34) + 0x28) * 100.0f;
+        a.ctx = *(u16 *)(*(u8 **)(npc + 0x38) + 0x198);
+    } else {
+        a.ctx = 0xFFFF;
+        a.name = (void *)model;
+        a.scale[0] = 5.0f;
+        a.scale[1] = 5.0f;
+        a.scale[2] = 5.0f;
+    }
+    for (i = 0; i < 4; i++) {
+        name[0] = '0';
+        name[1] = i + '1';
+        name[2] = 0;
+        lookupHmtTextureByName(D_main_bss_80130B39 ? model : *(s32 *)(npc + 0x30), name, 0, &a, 0, 0);
+        a.idx = i;
+        a.m.m[6] = -a.m.m[6];
+        a.m.m[7] = -a.m.m[7];
+        a.m.m[8] = -a.m.m[8];
+        if (D_main_bss_80130B39 == 0) {
+            ((SnNpc *)npc)->hFC[i] = spawnNpcOfType(snVortex, &a, 4, snGetCtx(*(u16 *)(*(u8 **)(npc + 0x38) + 0x198))[0x19] + 1);
+            slotDispatcherIter(((SnNpc *)npc)->hFC[i], 3, &dt);
+            ((SnNpc *)npc)->h104[i] = 0xFFFF;
+        } else {
+            slotDispatcherIter(spawnNpcOfType(snVortex, &a, 4, 0x56), 3, &dt);
+        }
+        if (D_main_bss_80130B39 == 0) {
+            a.m.m[1] -= a.scale[1] * 0.25f;
+            ((SnNpc *)npc)->h114[i] = spawnInheritedNpcVariantB(*(u16 *)(*(u8 **)(npc + 0x38) + 0x198), &a);
+            mat34CrossRowsAndCopyPos(m1, npc, 1.0f);
+            m1[9] = m1[10] = m1[11] = 0.0f;
+            mat3x3InverseInto(m2, m1);
+            d[0] = a.m.m[0] - ((f32 *)npc)[0];
+            d[1] = a.m.m[1] - ((f32 *)npc)[1];
+            d[2] = a.m.m[2] - ((f32 *)npc)[2];
+            transformVec3ByMat34(m2, d, (f32 *)&npc[i * 12 + 0xA8]);
+            b.scale[0] = *(f32 *)(*(u8 **)(npc + 0x34) + 0x28) * 100.0f;
+            b.scale[1] = *(f32 *)(*(u8 **)(npc + 0x34) + 0x2C) * 100.0f;
+            b.scale[2] = *(f32 *)(*(u8 **)(npc + 0x34) + 0x30) * 100.0f;
+            b.ctx = *(u16 *)(*(u8 **)(npc + 0x38) + 0x198);
+            b.name = name;
+            sprintf(name, "wshld%d", i + 1);
+            b.m = a.m;
+            b.m.m[1] += b.scale[1] * 0.08f;
+            ((SnNpc *)npc)->h10C[i] = spawnNpcOfType(snHeavy, &b, 4, snGetCtx(*(u16 *)(*(u8 **)(npc + 0x38) + 0x198))[0x19] + 1);
+            slotDispatcherIter(((SnNpc *)npc)->h10C[i], 3, &dt);
+            ((SnNpc *)npc)->h11C[i] = 0xFFFF;
+        }
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/7CEA0", D_main_8003D708);
 
