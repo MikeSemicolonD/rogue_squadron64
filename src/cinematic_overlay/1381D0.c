@@ -1036,7 +1036,188 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", spawnCutsceneDebrisField);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", npcIncomingMissileUpdate);
+typedef struct { u8 r, g, b, a; } NimCol;
+typedef struct D_cinematic_overlay_800B0D00_type NimSlot;
+typedef struct NimNode {
+    struct NimNode *next;
+    struct NimNode *prev;
+} NimNode;
+typedef struct NimMesh {
+    u8 pad0[0xC];
+    NimNode node;
+} NimMesh;
+
+extern NimCol D_cinematic_overlay_800A52FC;
+s16 rand(void);
+void zmemcpy(u8 *, u8 *, u32);
+extern void *rs_memset(void *, s32, s32);
+f32 quadraticEaseInOut(f32);
+f32 sinf(f32);
+void nimCompRandRot(f32 *, f32 *, f32, s32, s32, s32) __asm__("composeRandomRotationMatrix");
+void nimScaleRand(f32 *, f32, f32) __asm__("scaleVec3ByRandomRange");
+void nimDebris1(f32 *, f32 *, f32, f32, f32) __asm__("spawnDebris1Npc");
+void nimType0xA(f32 *, f32) __asm__("spawnNpcType0xAFromTemplate");
+void nimOriented(s32, f32 *, f32 *, NimCol *, f32, f32, f32, f32) __asm__("spawnOrientedNpc");
+NimMesh *nimWalkMeshdef0(char *) __asm__("walkMeshdef0List");
+void nimPlay3D(s32, f32 *, u8 *, f32, f32, s32, s32, s32, s32) __asm__("play3DSoundEvent");
+void nimBurst(s32, s32, f32 *, f32 *) __asm__("spawnNpcBurstAlongSegment");
+void nimRelease(NimMesh *) __asm__("releaseMeshAsset");
+void nimInitTriplet(void *, f32, f32, f32) __asm__("initVec4TripletFromArgs");
+void nimRotSlot0(void *, f32) __asm__("composeRotationMatrixSlot0");
+void nimAddVec(void *, f32, f32, f32) __asm__("addVec3At0x24");
+
+static __inline__ void nimInsertSlot(NimSlot *arg0) {
+    u32 var_v1;
+
+    for (var_v1 = 0; var_v1 < 0x40; var_v1++) {
+        if (D_cinematic_overlay_800B0D00[var_v1].unk00 == 0) {
+            zmemcpy((u8 *)&D_cinematic_overlay_800B0D00[var_v1], (u8 *)arg0, sizeof(NimSlot));
+            break;
+        }
+    }
+}
+
+void npcIncomingMissileUpdate(NimNode **list, f32 dt) {
+    f32 p28[3];
+    f32 p38[3];
+    f32 v48[3];
+    u8 snd[0xC];
+    NimSlot tmp;
+    NimCol col;
+    NimSlot *s;
+    u32 i;
+    u32 j;
+    f32 sc;
+    f32 k;
+    f32 a;
+    f32 b;
+
+    rs_memset(snd, 0, 0xC);
+    for (i = 0; i < 0x40; i++) {
+        s = &D_cinematic_overlay_800B0D00[i];
+        if (s->unk00 != 0) {
+            s->unk24 -= dt;
+            if (s->unk24 < 0.0f) {
+                s->unk24 = 0.0f;
+                s->unk00 = 0;
+            }
+        }
+        switch (s->unk00) {
+        case 0:
+            break;
+        case 1:
+            if (rand() % s->unk02 == 0) {
+                p28[0] = s->unk04[0] + ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->unk10[0]);
+                p28[1] = s->unk04[1] + ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->unk10[1]);
+                p28[2] = s->unk04[2] + ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->unk10[2]);
+                nimType0xA(p28, s->unk1C + ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->unk20));
+            }
+            break;
+        case 2:
+            j = 0;
+            k = 2.0f;
+            for (; j < 3; j++) {
+                if (rand() & 1) {
+                    sc = (1.0f < s->unk24) ? 1.0f : s->unk24;
+                    nimCompRandRot(p38, v48, k, 0x23, 0x60, -2);
+                    nimScaleRand(v48, k, 8.0f);
+                    a = ((f32)(rand() & 0x7F) - 64.0f) / 12.8f + 14.0f;
+                    b = (((f32)(rand() & 0x7F) - 64.0f) * 0.00390625f + 1.25f) * sc;
+                    nimDebris1(s->unk04, v48, a, b, ((f32)(rand() & 0x7F) - 64.0f) / 320.0f + 0.6f);
+                }
+            }
+            break;
+        case 3:
+            s->unk10[0] += dt;
+            if (0.075f < s->unk10[0]) {
+                col = D_cinematic_overlay_800A52FC;
+                p38[0] = s->unk04[0];
+                p38[1] = s->unk04[1];
+                p38[2] = s->unk04[2] + ((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f * 30.0f;
+                quadraticEaseInOut(s->unk24 / 3.5f);
+                v48[0] = 0.0f;
+                v48[1] = 1.0f;
+                v48[2] = 0.0f;
+                nimOriented(2, p38, v48, &col, 0.5f, 3.0f, 1.0f, 0.35f);
+                for (j = 0; j < 8; j++) {
+                    p28[0] = p38[0] + ((f32)(rand() & 0x7F) - 64.0f) / 42.666668f;
+                    p28[1] = p38[1];
+                    p28[2] = p38[2] + ((f32)(rand() & 0x7F) - 64.0f) / 25.6f;
+                    nimType0xA(p28, ((f32)(rand() & 0x7F) - 64.0f) / 28.444445f + 4.0f);
+                }
+                s->unk10[0] = 0.0f;
+            }
+            break;
+        case 4:
+            switch (s->unk02) {
+            case 0:
+                s->unk2C = (void *)nimWalkMeshdef0("i_missile");
+                s->unk28 = 0.0f;
+                s->unk02 = 1;
+                p38[0] = s->unk04[0];
+                p38[1] = s->unk04[1] + 1.5f;
+                p38[2] = s->unk04[2];
+                if (!(rand() & 1)) {
+                    s32 snd2;
+                    if (!(rand() & 1)) {
+                        snd2 = 0x35;
+                    } else {
+                        snd2 = 0x30;
+                    }
+                    nimPlay3D(0, p38, snd, 24.0f, 0.2f, 0, snd2, 0x55, 0);
+                }
+            case 1:
+                s->unk28 += dt * 1.1f;
+                p38[0] = s->unk04[0];
+                p38[1] = s->unk04[1] + sinf((1.0f - s->unk28) * 1.5707964f) * 1.5f;
+                p38[2] = s->unk04[2];
+                if (1.0f < s->unk28) {
+                    f32 up[3] = { 0.0f, -1.0f, 0.0f };
+                    nimBurst(0, 6, s->unk04, up);
+                    if (!(rand() & 1)) {
+                        nimPlay3D(0, p38, snd, 24.0f, 0.2f, 0, 0xC, 0x78, 0);
+                    }
+                    s->unk28 = 0.0f;
+                    s->unk02 = 2;
+                } else {
+                    NimNode *h;
+                    nimInitTriplet((u8 *)s->unk2C + 0x28, 0.1f, 0.1f, 0.1f);
+                    nimRotSlot0((u8 *)s->unk2C + 0x28, 90.0f);
+                    nimAddVec((u8 *)s->unk2C + 0x28, p38[0], p38[1], p38[2]);
+                    ((NimMesh *)s->unk2C)->node.next = h = *list;
+                    if (h != NULL) {
+                        ((NimMesh *)s->unk2C)->node.next->prev = &((NimMesh *)s->unk2C)->node;
+                    }
+                    ((NimMesh *)s->unk2C)->node.prev = NULL;
+                    *list = &((NimMesh *)s->unk2C)->node;
+                }
+                break;
+            case 2:
+                s->unk28 += 1.0f;
+                if (3.0f < s->unk28) {
+                    nimRelease((NimMesh *)s->unk2C);
+                    s->unk24 = 0.0f;
+                }
+                break;
+            }
+            break;
+        case 5:
+            s->unk28 += dt;
+            if (0.3f < s->unk28) {
+                tmp.unk04[0] = s->unk04[0] + ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->unk10[0]);
+                tmp.unk04[1] = s->unk04[1] + ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->unk10[1]);
+                tmp.unk04[2] = s->unk04[2] + ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->unk10[2]);
+                tmp.unk02 = 0;
+                tmp.unk28 = 0.0f;
+                tmp.unk00 = 4;
+                tmp.unk24 = 99.0f;
+                nimInsertSlot(&tmp);
+                s->unk28 = 0.0f;
+            }
+            break;
+        }
+    }
+}
 
 extern void *rs_malloc(u32, u16);
 extern u8 *D_cinematic_overlay_800B1AE0[];
@@ -1091,69 +1272,37 @@ void buildCutsceneGradientBuffers(void) {
     }
 }
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5820);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A582C);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5830);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", jtbl_cinematic_overlay_800A5838);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5850);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5854);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5858);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A585C);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5860);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5864);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5868);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A586C);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5870);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5874);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5878);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A587C);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5880);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5884);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5888);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A588C);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5890);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5894);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5898);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A589C);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A58A0);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A58A4);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A58A8);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A58AC);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A58B0);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A58B4);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A58B8);
 
-INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A58BC);
 
 INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", spawnNpcBurstAlongSegment);
 
