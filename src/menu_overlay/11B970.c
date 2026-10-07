@@ -878,7 +878,59 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6A14);
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A6A1C);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", buildVwingRenderMatrices);
+typedef struct { f32 m[12]; } BvrMat;
+extern char D_menu_overlay_800A6A1C[];
+extern s32 D_menu_overlay_800CF100;
+extern f32 bvrPhase __asm__("D_menu_overlay_800CF074");
+void setupCameraMatrices(void *);
+void initRenderStateArrays(void);
+void *lookupHmtMaterialByName(s32, s32 *, s32);
+void initVec4TripletFromArgs(void *, f32, f32, f32);
+f32 sinf(f32);
+void composeRotationMatrixSlot0(void *, f32);
+void composeRotationMatrixSlot1(void *, f32);
+void addVec3At0x24(void *, f32, f32, f32);
+void sprintf(char *, const char *, ...);
+
+void bvrImpl(void **list, f32 t) __asm__("buildVwingRenderMatrices");
+void bvrImpl(void **list, f32 t) {
+    char buf[16];
+    BvrMat mat;
+    f32 a;
+    s32 i;
+    u8 *m;
+    u8 *prev;
+
+    setupCameraMatrices(list);
+    initRenderStateArrays();
+    *list = NULL;
+    if (0.05f < t) {
+        a = t * 0.12f;
+        t = t * 0.11f;
+        initVec4TripletFromArgs(&mat, a, t, a);
+        a = sinf(bvrPhase / 45.0f);
+        composeRotationMatrixSlot0(&mat, a + a + 2.5f);
+        composeRotationMatrixSlot1(&mat, sinf(bvrPhase / 35.0f) * 4.5f);
+        i = 0;
+        addVec3At0x24(&mat, 0.0f, 0.1f, 2.41421008f);
+        do {
+            sprintf(buf, D_menu_overlay_800A6A1C, 1 - (i & 0xFF));
+            m = lookupHmtMaterialByName(D_menu_overlay_800CF100, (s32 *)buf, 0);
+            do { *((BvrMat *)(m + 0x1C)) = mat; prev = *list; *((u8 **)m) = prev; if (prev != 0) { *((u8 **)(prev + 4)) = m; } *((s32 *)(m + 4)) = 0; *list = m; } while (0);
+            i += 1;
+        } while (((u32)(i & 0xFF)) < 2U);
+        setupCameraMatrices(list);
+        initRenderStateArrays();
+        i = 0;
+        *list = NULL;
+        do {
+            sprintf(buf, D_menu_overlay_800A6A1C, 3 - (i & 0xFF));
+            m = lookupHmtMaterialByName(D_menu_overlay_800CF100, (s32 *)buf, 0);
+            do { *((BvrMat *)(m + 0x1C)) = mat; prev = *list; *((u8 **)m) = prev; if (prev != 0) { *((u8 **)(prev + 4)) = m; } *((s32 *)(m + 4)) = 0; *list = m; } while (0);
+            i += 1;
+        } while (((u32)(i & 0xFF)) < 2U);
+    }
+}
 
 typedef struct { f32 m[12]; } VwMat;
 extern char D_menu_overlay_800A6A1C[];
