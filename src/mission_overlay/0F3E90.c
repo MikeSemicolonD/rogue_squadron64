@@ -1167,7 +1167,95 @@ void executeActorType3Effect(void *arg0, f32 dt) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F3E90", initActorAsType4);
+typedef struct { f32 x, y, z; } T4V3;
+extern void t4Memset(void *, s32, s32) __asm__("rs_memset");
+
+s32 initActorAsType4(u8 *a0, char *name, f32 a2, f32 a3, s32 a4) {
+    u8 *p = a0 + 8;
+    f32 *q = (f32 *)(a0 + 0x50);
+    u8 *item;
+    f32 t;
+    f32 x;
+
+    a0[0x112] = 4;
+    if (name[0] != 0) {
+        item = getLevelDatItemByName(name);
+        if (item != NULL) {
+            switch (item[2]) {
+            case 6:
+                *(s16 *)(p + 0xEC) = 1;
+                *(T4V3 *)(a0 + 0xD0) = *(T4V3 *)(item + 0x10);
+                *(T4V3 *)(a0 + 0xE8) = *(T4V3 *)(item + 0x28);
+                *(f32 *)(p + 0xD4) = *(f32 *)(item + 0x10) + *(f32 *)(item + 0x28) * 0.5f;
+                *(f32 *)(p + 0xD8) = *(f32 *)(item + 0x14) + *(f32 *)(item + 0x2C) * 0.5f;
+                *(f32 *)(p + 0xDC) = *(f32 *)(item + 0x18) + *(f32 *)(item + 0x30) * 0.5f;
+                goto common;
+            case 7:
+                *(s16 *)(p + 0xEC) = 2;
+                *(T4V3 *)(a0 + 0xD0) = *(T4V3 *)(item + 0x10);
+                *(f32 *)(p + 0xE0) = *(f32 *)(item + 0x1C);
+                *(f32 *)(p + 0xD4) = *(f32 *)(p + 0xC8);
+                *(f32 *)(p + 0xDC) = *(f32 *)(p + 0xD0);
+                *(f32 *)(p + 0xD8) = *(f32 *)(p + 0xCC) - *(f32 *)(p + 0xE0) * 0.5f;
+                goto common;
+            }
+        }
+    }
+    {
+        T4V3 *v = getNpcContextField8(*(u16 *)(a0 + 0x198));
+        *(T4V3 *)(p + 0xD4) = *v;
+        *(T4V3 *)(p + 0xC8) = *(T4V3 *)(p + 0xD4);
+        *(s16 *)(p + 0xEC) = 0;
+    }
+common:
+    *(T4V3 *)(p + 0x98) = *(T4V3 *)(p + 0xD4);
+    *(f32 *)(p + 0xA4) = 0.0f;
+    *(f32 *)(p + 0xA8) = 0.0f;
+    *(f32 *)(p + 0xB0) = 0.0f;
+    *(f32 *)(p + 0xB8) = 0.0f;
+    *(f32 *)(p + 0xBC) = 0.0f;
+    *(f32 *)(p + 0xC0) = 0.0f;
+    *(f32 *)(p + 0xC4) = 0.0f;
+    p[0x96] = 0;
+    *(f32 *)(p + 0x18) = a2;
+    *(f32 *)(p + 0x20) = a2;
+    *(f32 *)(p + 0x3C) = a2;
+    *(f32 *)(p + 0x2C) = 0.0f;
+    *(f32 *)(p + 0x30) = 0.0f;
+    *(f32 *)(p + 0xAC) = 1.0f;
+    *(f32 *)(p + 0xB4) = 1.0f;
+    if (a3 < 10.0f) {
+        a3 = 10.0f;
+    }
+    if (180.0f < a3) {
+        a3 = 180.0f;
+    }
+    t = (f32)a4 / 10.0f;
+    *(f32 *)(p + 0x1C) = a3;
+    *(f32 *)(p + 0x24) = a3;
+    x = 1.0f - t;
+    *(f32 *)(p + 0x34) = x;
+    if (x < 0.1f) {
+        *(f32 *)(p + 0x34) = 0.1f;
+    }
+    *(f32 *)(p + 0x28) = *(f32 *)(p + 0xF8) = 10000000.0f;
+    *(s32 *)(p + 0xF4) = 0;
+    *(s16 *)(p + 0xF2) = 0;
+    *(f32 *)(p + 0x38) = t + 1.0f;
+    q[0] = 11.25f;
+    q[1] = 22.5f;
+    q[2] = *(f32 *)(p + 0x34) * 5.0f;
+    if (q[2] < 1.8f) {
+        q[2] = 1.0f;
+    }
+    q[3] = *(f32 *)(p + 0x34) + *(f32 *)(p + 0x34);
+    if (q[3] < 1.0f) {
+        q[3] = 0.4f;
+    }
+    *(s32 *)(p + 0x100) = 0;
+    t4Memset(q + 4, 0xFF, 0x15);
+    return 1;
+}
 
 f32 sinfApprox(f32);
 typedef struct { f32 f0; u8 pad4[4]; f32 f8; } SwIn;
