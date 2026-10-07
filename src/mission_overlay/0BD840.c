@@ -187,7 +187,92 @@ void computeT16TransformImpl(T16Arg *arg0, f32 dt) {
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BD840", D_mission_overlay_800A6074);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BD840", playerT16MainUpdate);
+typedef struct {
+    s32 unk0;
+    u8 pad4[0x28 - 4];
+    f32 unk28;
+    u8 pad2C[0xB6 - 0x2C];
+    u16 unkB6;
+    s32 unkB8;
+    u8 padBC[0x158 - 0xBC];
+    u16 unk158;
+    u8 pad15A[2];
+    s32 unk15C;
+    f32 unk160;
+    f32 unk164;
+    u8 pad168[0x16C - 0x168];
+    f32 unk16C;
+    u8 pad170[0x178 - 0x170];
+    s32 unk178;
+    u8 pad17C[4];
+    u16 unk180;
+    u8 pad182[0x2A0 - 0x182];
+} T16MuPlayer;
+
+typedef struct {
+    u8 pad0[0x1A];
+    u16 mask1A;
+    u8 pad1C;
+    u8 mask1D;
+    u16 mask1E;
+    u8 pad20[4];
+} T16HudDef;
+
+typedef struct {
+    s16 unk0;
+    u8 pad2[0x16];
+    f32 unk18;
+    u8 pad1C[4];
+} T16MuSlotArgs;
+
+#define T16P ((T16MuPlayer *)D_main_bss_80137DBC)
+extern u16 t16Btn[][3] __asm__("D_main_bss_80130B88");
+extern T16HudDef t16Hud[] __asm__("D_mission_overlay_8010BE18");
+extern char D_mission_overlay_800A6074[];
+extern u8 D_mission_overlay_80109A48[];
+void lookupHmtTextureByName(void *, char *, s32, void *, s32, s32);
+u16 dispatchCueByCategory(s32, u16, void *, void *, s32, f32, f32);
+s32 slotDispatcherIter(u16, s32, void *);
+void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
+extern void tickCraftAnimationSlot(s32, f32);
+extern u8 tickHudInstanceTargetingAndSpawns(s32, f32, void *, s32, s32, void *, s32);
+extern void dispatchHudInstanceWeaponEffect(s32, s32, void *, s32, s32, s32, s32);
+
+void t16MuImpl(s32 *arg0, f32 dt) __asm__("playerT16MainUpdate");
+void t16MuImpl(s32 *arg0, f32 dt) {
+    u8 tex[0x30];
+    T16MuSlotArgs args;
+    u16 out[2];
+    T16MuPlayer *p;
+    u16 cue;
+
+    p = &T16P[*arg0];
+    if (*(u16 *)((u8 *)D_main_bss_80137DBC + p->unkB8 * 0x2A0 + 0x180) & 1) {
+        if (0.0f < p->unk160) {
+            p->unk160 = p->unk160 - dt;
+        } else if (t16Btn[*arg0][0] & t16Hud[*arg0].mask1A) {
+            p->unk160 = p->unk160 + p->unk164;
+            {
+                T16MuPlayer *q = &T16P[*arg0];
+                lookupHmtTextureByName((void *)q->unk0, D_mission_overlay_800A6074, p->unk158 & 1, tex, 0, 0);
+                cue = dispatchCueByCategory(0, q->unkB6, tex, D_mission_overlay_80109A48, 1, 12.5f, q->unk16C);
+                args.unk0 = 1;
+                args.unk18 = 0.7f;
+                slotDispatcherIter(cue, 10, &args);
+                play3DSoundEvent(0, tex, &q->unk28, 20.0f, 0.2f, 0, 0x31, 0x64, 0x32);
+            }
+            p->unk158 ^= 1;
+        }
+        if (tickHudInstanceTargetingAndSpawns(0, dt, (u8 *)p + 4, p->unk0, (t16Btn[*arg0][0] & 0xFF) & t16Hud[*arg0].mask1D, out, p->unkB6)) {
+            dispatchHudInstanceWeaponEffect(0, p->unkB6, (u8 *)p + 4, p->unk0, p->unk178, p->unk158, out[0]);
+        }
+        if (t16Btn[*arg0][0] & t16Hud[*arg0].mask1E) {
+            p->unk158 = 0;
+            p->unk15C = (p->unk15C + 1) & 3;
+        }
+    }
+    tickCraftAnimationSlot(0, dt);
+}
 
 #include "main/3F160.h"
 #include "main/02420.h"
