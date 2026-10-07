@@ -124,7 +124,87 @@ void cinematicSlotUpdateU8(u8 *arg0, f32 *arg1, f32 arg2, f32 arg3, u8 arg4) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", setupCutsceneLevel);
+extern f32 D_main_bss_80136FBC;
+extern f32 D_main_bss_80136FAC;
+extern u16 D_cinematic_overlay_800B090C[];
+extern u16 scNpc __asm__("D_main_bss_80130BA2");
+extern u8 scFlag __asm__("D_main_bss_80130B38");
+extern u8 scVoice __asm__("D_main_bss_80130B62");
+extern u8 scLvl[] __asm__("D_main_bss_80136E18");
+extern void *scB00 __asm__("D_cinematic_overlay_800B0B00");
+extern void *scB04 __asm__("D_cinematic_overlay_800B0B04");
+extern void *scB08 __asm__("D_cinematic_overlay_800B0B08");
+extern void *scB0C __asm__("D_cinematic_overlay_800B0B0C");
+extern void *scB10 __asm__("D_cinematic_overlay_800B0B10");
+extern u8 scActor[] __asm__("cutsceneActorNpcHandler");
+void initNpcBookkeepingTables(void);
+void setMissionLevelInitByte(s32);
+void loadLevelAssets(u16);
+void scBounds(f32, f32) __asm__("setGridLayerScrollBounds");
+void setGridLayerScrollX(f32);
+u16 scSpawn(void *, void *, s32, s32) __asm__("spawnNpcOfType");
+void *scBackdrop(char *, s32, s32, s32) __asm__("loadBackdropAsset");
+void *scSub(void *) __asm__("getCinematicStateSubObject");
+void scInsert(void *, void *, s32) __asm__("insertLookupEntry");
+void buildCutsceneGradientBuffers(void);
+s32 scLoadHob(char *, s32, s32, s32) __asm__("load_hmt_and_hob");
+void loadWeaponsHobObjects(void);
+void allocAnimationPhasePool(s32);
+void clearTrackedNpcSlots(void);
+void allocAndInitParticlePool(void);
+void scSpeech(s32, u8) __asm__("initSpeechSubsystem");
+
+void setupCutsceneLevel(s32 level) {
+    initNpcBookkeepingTables();
+    D_main_bss_80136FBC = 0.9f;
+    D_main_bss_80136FAC = 5.0f;
+    setMissionLevelInitByte(1);
+    loadLevelAssets(D_cinematic_overlay_800B090C[level]);
+    scBounds(16.0f, 24.0f);
+    setGridLayerScrollX(1.4117647f);
+    scNpc = scSpawn(scActor, NULL, 4, 0x64);
+    switch (level) {
+    case 2:
+        D_main_bss_80136FBC = 0.3f;
+        break;
+    case 3:
+        if (scFlag != 0) {
+            scLvl[0] = 0;
+            scLvl[1] = 0;
+            scLvl[2] = 0;
+            scB10 = scBackdrop("big_cor", 0x40, 0x20, 0);
+            scInsert(scB00, scSub(scB10), 0x14);
+            buildCutsceneGradientBuffers();
+        }
+        break;
+    case 6:
+        scLoadHob("imp_stuff/atst", 0, 1, 0);
+        scLoadHob("imp_stuff/atat", 0, 1, 0);
+        break;
+    case 15:
+        scLoadHob("imp_stuff/wrld_dvfx", 0, 0, 0);
+        break;
+    case 19:
+        setGridLayerScrollX(1.0f);
+        scLvl[0] = 0xFF;
+        scLvl[1] = 0xFF;
+        scLvl[2] = 0xFF;
+        scB04 = scBackdrop("nin", 0x40, 0x40, 0);
+        scB08 = scBackdrop("f5", 0x40, 0x20, 0);
+        scB0C = scBackdrop("factor", 0x80, 0x20, 1);
+        scInsert(scB00, scSub(scB04), 0x14);
+        scInsert(scB00, scSub(scB08), 0x16);
+        scInsert(scB00, scSub(scB0C), 0x14);
+        D_main_bss_80136FBC = 0.975f;
+        D_main_bss_80136FAC = 5.0f;
+        break;
+    }
+    loadWeaponsHobObjects();
+    allocAnimationPhasePool(0x10);
+    clearTrackedNpcSlots();
+    allocAndInitParticlePool();
+    scSpeech(0, scVoice);
+}
 
 typedef struct {
     s32 unk0;
