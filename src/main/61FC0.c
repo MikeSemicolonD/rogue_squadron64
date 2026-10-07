@@ -256,7 +256,68 @@ void loadFontAsset(u8 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", activateAnimationKeyframe);
+struct ui_element *getPlayerSlotFieldAt34(u16, u16);
+void setLookupEntryField5ByKey(void *, struct ui_element *, s32);
+extern u16 D_main_bss_80139970[];
+extern u16 D_main_bss_80139980[];
+
+void activateAnimationKeyframe(s32 slot, s32 ch, u8 flag) {
+    struct someFontThing *t;
+    struct ui_element *e;
+    u32 i;
+    u32 j;
+
+    t = D_main_8009FC10[(u16)slot];
+    if (t->unk030 & (1 << ch)) {
+        if (flag == 0xFF && t->unk01F == 0) {
+            flag = 0xFE;
+        }
+        e = getPlayerSlotFieldAt34(slot, ch);
+        if (flag == 0xFF) {
+            if (t->unk084[(u16)ch] == 0) {
+                for (j = 0; j < e->texture_count; j++) {
+                    for (i = 0; i < t->symbolCount; i++) {
+                        if (e->texture_id_pointer[j] == t->unk024[i]) {
+                            e->texture_id_pointer[j] = t->unk028[i];
+                            break;
+                        }
+                    }
+                    for (i = 0; i < 6; i++) {
+                        if (e->texture_id_pointer[j] == D_main_bss_80139980[i]) {
+                            e->texture_id_pointer[j] = D_main_bss_80139970[i];
+                            break;
+                        }
+                    }
+                }
+                t->unk084[(u16)ch] = 1;
+            }
+            e->flags &= ~1;
+        } else {
+            if (t->unk084[(u16)ch] != 0) {
+                for (j = 0; j < e->texture_count; j++) {
+                    for (i = 0; i < t->symbolCount; i++) {
+                        if (e->texture_id_pointer[j] == t->unk028[i]) {
+                            e->texture_id_pointer[j] = t->unk024[i];
+                            break;
+                        }
+                    }
+                    for (i = 0; i < 6; i++) {
+                        if (e->texture_id_pointer[j] == D_main_bss_80139970[i]) {
+                            e->texture_id_pointer[j] = D_main_bss_80139980[i];
+                            break;
+                        }
+                    }
+                }
+                t->unk084[(u16)ch] = 0;
+            }
+            e->flags |= 1;
+        }
+        e->rgba.a = flag;
+        if (t->unk0F4 != NULL) {
+            setLookupEntryField5ByKey(t->unk0F4, e, flag && e->texture_count);
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", samplePlayerAnimChannel);
 
