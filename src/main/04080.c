@@ -340,7 +340,77 @@ INCLUDE_ASM("asm/nonmatchings/main/04080", processAssetLoadStep);
 
 INCLUDE_ASM("asm/nonmatchings/main/04080", mainEventQueueWorker);
 
-INCLUDE_ASM("asm/nonmatchings/main/04080", initDmaSlots);
+extern u8 D_40[];
+__asm__(".set D_40, 0x40");
+extern struct { u8 pad[0x31]; u8 flag; } *D_main_bss_8010FCB0;
+extern u8 D_B0144340;
+extern u8 D_B0144380;
+extern void mainEventQueueWorker(void);
+extern void initPiDmaWorker(void);
+extern void initRsMallocHeap(u8 *, s32);
+extern s32 registerServiceWorker(s32, s32, s32, void *);
+
+s32 initDmaSlots(s32 arg0) {
+    s32 i;
+    OSMesgQueue *q;
+    OSMesg *m;
+    struct D_80110A80_entry *e;
+    struct D_80110BC0_type *r;
+    u32 size;
+    s32 id;
+
+    dmaSlotMaxTxStepSize = 0x4000;
+    i = 0;
+    m = dmaSlotMesgBuffer;
+    q = dmaSlotMesgQueue;
+    do {
+        osCreateMesgQueue(q, m, 1);
+        m++;
+        i++;
+        q++;
+    } while (i < 8);
+    osCreateMesgQueue(&gDmaSlotLockQueue, &gDmaSlotLockMesg, 1);
+    osSendMesg(&gDmaSlotLockQueue, (OSMesg)1, 0);
+    osCreatePiManager(0x96, &D_main_801107C0, D_main_801107A0, 8);
+    i = 3;
+    e = gManifestTable + i;
+    do {
+        e->one = 0;
+        i--;
+        e--;
+    } while (i >= 0);
+    i = 0xF;
+    r = D_main_80110BC0 + i;
+    do {
+        r->unk00 = 0;
+        i--;
+        r--;
+    } while (i >= 0);
+    if (D_main_bss_8010FCB0->flag != 0) {
+        D_main_bss_80110D4C = arg0;
+        D_main_bss_80110D48 = arg0;
+        if (arg0 != 0) {
+            D_main_bss_80110D50 = rs_malloc(arg0, 0x81);
+        }
+    } else {
+        D_main_bss_80110D4C = 0;
+        D_main_bss_80110D48 = 0;
+        D_main_bss_80110D50 = 0;
+    }
+    initRsMallocHeap(D_main_bss_80110D50, D_main_bss_80110D48);
+    i = (s32)D_40;
+    nextOpenDmaSlot = 0;
+    dmaSlotsAvailable = 8;
+    dmaSlotMutex = 0;
+    D_main_bss_80110D40 = (u32)i >> 5;
+    D_main_bss_80110A74 = rs_malloc(i, 0x81);
+    waitDmaSlotComplete(submitDmaSlot(&D_B0144340, (u8 *)D_main_bss_80110A74, i));
+    D_main_bss_80110D44 = &D_B0144380;
+    initPiDmaWorker();
+    id = registerServiceWorker(8, 0x2000, 0x20, mainEventQueueWorker);
+    D_main_bss_80110D54 = id;
+    return startServiceWorker(id) & 0xFF;
+}
 
 #if 0
 struct tyler {
