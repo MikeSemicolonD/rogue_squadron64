@@ -1491,7 +1491,79 @@ void initEffectObjectDefaults(s32 arg0, u16 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", spawnEffectObjectAtNpc);
+typedef struct { s32 w[62]; } SeBlob;
+typedef struct { s32 a, b, c; } SeV3;
+extern u8 D_main_8009EBBC;
+extern u16 seWatch __asm__("D_main_8009EBC4");
+f32 fabsf(f32);
+
+void seImpl(s32 idx, u8 *o) __asm__("spawnEffectObjectAtNpc");
+void seImpl(s32 idx, u8 *o) {
+    f32 v[3];
+    f32 k;
+    f32 c64;
+    f32 half;
+    u8 *ctx;
+    f32 t0;
+
+    if ((*(u16 *)D_main_bss_80138D18[idx].unk4 & 0x10) && *(s32 *)((u8 *)D_main_bss_80138D18[idx].unk4 + 8) != 3) {
+        D_main_8009EBBC = 0;
+        return;
+    }
+    *(SeBlob *)o = *(SeBlob *)D_main_bss_80138D18[idx].unk4;
+    *(u16 *)((u8 *)D_main_bss_80138D18[idx].unk4 + 0xF4) = 0xFFFF;
+    *(s32 *)(o + 8) = 2;
+    *(u16 *)(o + 2) = 2;
+    *(u16 *)(o + 4) = 0;
+    *(f32 *)(o + 0xEC) = 7.0f;
+    *(s32 *)(o + 0x98) = 0;
+    *(s32 *)(o + 0x9C) = 0;
+    c64 = 64.0f;
+    k = 0.015625f;
+    __asm__ volatile("abs.s %0, %1" : "=f"(t0) : "f"(((f32)(rand() & 0x7F) - c64) * k));
+    half = 0.5f;
+    if (t0 > half) {
+        f32 t = fabsf(((f32)(rand() & 0x7F) - c64) * k);
+        k = 37.5f;
+        if (t > half) {
+            k = -37.5f;
+        }
+        v[0] = k;
+        v[1] = -100.0f;
+        v[2] = 150.0f;
+        *(s32 *)(o + 0x78) = 0;
+        *(s32 *)(o + 0x7C) = 0;
+        *(s32 *)(o + 0x80) = 0;
+    } else {
+        f32 t = fabsf(((f32)(rand() & 0x7F) - c64) * k);
+        k = 50.0f;
+        if (t > half) {
+            k = -50.0f;
+        }
+        v[0] = k;
+        *(s32 *)&v[1] = 0;
+        v[2] = 112.5f;
+        *(s32 *)(o + 0x78) = 0;
+        *(f32 *)(o + 0x7C) = -12.5f;
+        *(f32 *)(o + 0x80) = 50.0f;
+    }
+    if (seWatch != 0xFFFF) {
+        ctx = getNpcContextByIndex(seWatch);
+        if (*(s32 *)(ctx + 0xC) != 0) {
+            u8 *m = (u8 *)*(s32 *)(ctx + 0xC) + 0x28;
+            *(u16 *)o = 0x33;
+            *(u8 **)(o + 0x74) = m;
+            transformVec3ByMat34(m, v, (f32 *)(o + 0x10));
+            *(SeV3 *)(o + 0x84) = *(SeV3 *)(o + 0x78);
+            *(s32 *)(o + 0x70) = 0;
+            *(s32 *)(o + 0x90) = 0;
+            *(f32 *)(o + 0x4C) = *(f32 *)(o + 0x10);
+            *(f32 *)(o + 0x50) = *(f32 *)(o + 0x14);
+            *(f32 *)(o + 0x54) = *(f32 *)(o + 0x18);
+            applyPlayerVehicleStateUpdate(o);
+        }
+    }
+}
 
 typedef struct {
     u16 f0;
