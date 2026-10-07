@@ -1114,7 +1114,96 @@ u8 spawnCutsceneEffectsAndCues(ScFile *cf, u32 time, u8 arg2, f32 arg3, u8 arg4)
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", initCutsceneAudioChannels);
+typedef struct {
+    s32 type;
+    s32 w4;
+    s32 flags;
+    u8 padC[0xC];
+} IcaEnt;
+
+extern s32 D_cinematic_overlay_800B1EE0;
+extern s32 D_cinematic_overlay_800B1EE4;
+extern s32 D_cinematic_overlay_800B1EA0[];
+extern s32 D_main_bss_80138920;
+extern void parseLoadedSndSection(u16);
+extern void loadSongAssetByName(s32, u16);
+extern void playSimpleAudioCmd(s32, s32, s32);
+
+static __inline__ s32 icaLookup(s32 arg0) {
+    u16 var_a1;
+    u16 ret = 0xFFFF;
+
+    for (var_a1 = 0; var_a1 < 0x5E; var_a1++) {
+        if (gCutsceneIdMappingTable[var_a1].unk0 == arg0) {
+            ret = gCutsceneIdMappingTable[var_a1].unk2;
+            break;
+        }
+    }
+    return ret;
+}
+
+typedef struct {
+    u8 pad[0x4E];
+    u16 n;
+} IcaCs;
+typedef struct {
+    u8 pad[0x58];
+    s32 type;
+    s32 w4;
+    s32 flags;
+} IcaEntB;
+#define ICA_E(cs, i) ((IcaEnt *)((cs) + 0x58 + (i) * 0x18))
+#define ICA_B(cs, i) ((IcaEntB *)((cs) + (i) * 0x18))
+
+void icaImpl(u8 *cs) __asm__("initCutsceneAudioChannels");
+void icaImpl(u8 *cs) {
+    u32 i;
+    u32 j;
+    s32 id;
+    IcaEnt *e;
+    s32 snd;
+
+    D_cinematic_overlay_800B1EE4 = 0;
+    D_cinematic_overlay_800B1EE0 = 0;
+    for (i = 0; i < ((IcaCs *)cs)->n; i++) {
+        if (ICA_B(cs, i)->type == 1) {
+            ICA_B(cs, i)->flags = *(u16 *)((u8 *)&ICA_B(cs, i)->flags + 2);
+        }
+    }
+    for (i = 0; i < ((IcaCs *)cs)->n; i++) {
+        e = ICA_E(cs, i);
+        if (e->type == 1) {
+            if (!(e->flags & 0x10000)) {
+                id = gCutsceneIdMappingTable[e->flags & 0xFFFF].unk0;
+                snd = icaLookup(id);
+                parseLoadedSndSection(snd);
+                D_cinematic_overlay_800B1EE0++;
+                for (j = i + 1; j < ((IcaCs *)cs)->n; j++) {
+                    if (ICA_B(cs, j)->type == 1 && icaLookup(gCutsceneIdMappingTable[*(u16 *)((u8 *)&ICA_B(cs, j)->flags + 2)].unk0) == snd) {
+                        ICA_B(cs, j)->flags |= 0x10000;
+                    }
+                }
+            }
+            if (!(e->flags & 0x20000)) {
+                id = gCutsceneIdMappingTable[e->flags & 0xFFFF].unk0;
+                loadSongAssetByName(D_main_bss_80138920, id);
+                D_cinematic_overlay_800B1EA0[D_cinematic_overlay_800B1EE4++] = id;
+                for (j = i + 1; j < ((IcaCs *)cs)->n; j++) {
+                    if (ICA_B(cs, j)->type == 1 && (ICA_B(cs, j)->flags & 0xFFFF) == *(u16 *)((u8 *)&e->flags + 2)) {
+                        ICA_B(cs, j)->flags |= 0x20000;
+                    }
+                }
+            }
+        }
+    }
+    playSimpleAudioCmd(0x7B, 0xFA, 0xFE);
+    playSimpleAudioCmd(0x7F, 0xFA, 0xFD);
+    for (i = 0; i < ((IcaCs *)cs)->n; i++) {
+        if (ICA_B(cs, i)->type == 1) {
+            ICA_B(cs, i)->flags = *(u16 *)((u8 *)&ICA_B(cs, i)->flags + 2);
+        }
+    }
+}
 
 struct M12 { f32 f[12]; };
 void clearVec4QuadStruct(void *);
