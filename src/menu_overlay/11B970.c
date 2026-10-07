@@ -3414,7 +3414,88 @@ void initMenuScreenRenderContext(void) {
     initFormatMessageWorker(5);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", runMenuContentStateMachine);
+typedef struct {
+    u8 *text;
+    u8 pad4[4];
+    f32 f8;
+    f32 fC;
+    s32 mask;
+    u8 state;
+    u8 b15;
+    u8 pad16[0x4A];
+    u8 b60;
+} RmState;
+extern u8 rmDone __asm__("D_menu_overlay_800CFE3C");
+s32 rmEnter(RmState *) __asm__("tickMenuSelectionEnterState");
+u8 rmActive(RmState *, f32) __asm__("tickMenuSelectionActiveState");
+void rmAlloc(RmState *) __asm__("allocMenuScreenState");
+
+void rmImpl(RmState *s, f32 fade, f32 dt) __asm__("runMenuContentStateMachine");
+void rmImpl(RmState *s, f32 fade, f32 dt) {
+    u8 i;
+    u8 a;
+
+    switch (s->state) {
+    case 0:
+        if ((s->mask = rmEnter(s)) != 0) {
+            for (i = 0; i < 16; i++) {
+                if (!(s->mask & (1 << i))) {
+                    setLookupEntryField5ByKey((s32)D_menu_overlay_800CF078, getPlayerSlotFieldAt34(9, i), 0);
+                }
+            }
+            s->fC = 0.0f;
+            s->state = 1;
+        } else if (s->b15 == 1) {
+            rmAlloc(s);
+            s->fC = 0.0f;
+            s->state = 4;
+            break;
+        }
+    case 1:
+        s->fC += dt * 3.0f;
+        if (s->fC > 1.0f) {
+            s->fC = 1.0f;
+            s->state = 2;
+            s->f8 = 6.0f;
+        }
+        break;
+    case 2:
+        s->f8 -= dt;
+        if (s->f8 < 0.0f) {
+            if (s->b60 != 0) {
+                rmDone = 1;
+            } else {
+                s->state = 3;
+            }
+        }
+        break;
+    case 3:
+        s->fC -= dt * 3.0f;
+        if (s->fC < 0.0f) {
+            s->fC = 0.0f;
+            s->state = 0;
+        }
+        break;
+    case 4:
+        s->fC += dt / 3.0f;
+        if (s->fC > 1.0f) {
+            s->fC = 1.0f;
+        }
+        if (rmActive(s, dt)) {
+            while (*s->text++ != '~') {
+            }
+            s->fC = 0.0f;
+            s->state = 0;
+        }
+        break;
+    }
+    a = (u32)(s->fC * fade * 254.0f);
+    for (i = 0; i < 16; i++) {
+        if (s->mask & (1 << i)) {
+            activateAnimationKeyframe(9, i, a);
+        }
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A70F4);
 
