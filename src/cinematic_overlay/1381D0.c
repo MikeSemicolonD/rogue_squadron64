@@ -1742,7 +1742,332 @@ INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_
 
 INCLUDE_RODATA("asm/nonmatchings/cinematic_overlay/1381D0", D_cinematic_overlay_800A5594);
 
-INCLUDE_ASM("asm/nonmatchings/cinematic_overlay/1381D0", spawnCutsceneDebrisField);
+typedef struct { f32 x, y, z; } DfV3;
+typedef struct {
+    u16 type;
+    u16 sub;
+    DfV3 pos;
+    DfV3 v10;
+    f32 f1C;
+    f32 f20;
+    f32 f24;
+    s32 f28;
+    void *p2C;
+} DfSlot;
+typedef struct {
+    u16 a;
+    u16 b;
+    u16 c;
+    u16 d;
+    DfV3 *posp;
+    s32 f5C;
+    DfV3 pos;
+    DfV3 dir;
+    s32 f78;
+    f32 f7C;
+    f32 f80;
+    char *name;
+} DfParams;
+typedef struct { char *name; } DfModel;
+typedef struct {
+    u8 pad0[0x48];
+    f32 f48;
+} DfR48;
+typedef struct {
+    u8 pad0[0x28];
+    f32 f28;
+} DfR28;
+typedef struct {
+    f32 x, y, z;
+    u8 pad0C[0x24];
+    DfR48 **p30;
+    DfR28 *p34;
+} DfObj;
+typedef struct {
+    u8 pad0[4];
+    DfObj *obj;
+    DfV3 *pos;
+    DfModel *model;
+} DfCtx;
+typedef struct { u8 r, g, b, a; } DfCol;
+
+extern DfCol dfTplCol __asm__("D_cinematic_overlay_800A52FC");
+extern u16 dfChain __asm__("D_main_bss_8013957C");
+extern u8 *dfSlots __asm__("D_cinematic_overlay_800B1900");
+s32 dfFindActive(u16, void *) __asm__("findActiveNpcInSlotChain");
+s32 dfRevalidate(void *) __asm__("revalidateNpcSlotIterator");
+DfCtx *dfCtxByIndex(u16) __asm__("getNpcContextByIndex");
+s32 dfStrcmp(char *, char *) __asm__("rs_strcmp");
+void dfInsert(DfSlot *) __asm__("insertCutsceneSlot");
+void dfDispatch(u16, s32, void *) __asm__("slotDispatcherIter");
+void dfOriented(s32, DfV3 *, DfV3 *, DfCol *, f32, f32, f32, f32) __asm__("spawnOrientedNpc");
+void dfRandRot(DfV3 *, DfV3 *, f32, s32, s32, s32) __asm__("composeRandomRotationMatrix");
+void dfScaleRand(DfV3 *, f32, f32) __asm__("scaleVec3ByRandomRange");
+void dfDebris1(DfV3 *, DfV3 *, f32, f32, f32) __asm__("spawnDebris1Npc");
+void dfBurst(s32, s32, DfV3 *, DfV3 *) __asm__("spawnNpcBurstAlongSegment");
+void dfNormalize(DfV3 *) __asm__("normalize_vector");
+void dfRamped(DfV3 *, s32, f32, f32, f32, f32, f32, f32, f32, f32) __asm__("spawnEffectNpcWithRampedScaleExt");
+s16 dfRand(void) __asm__("rand");
+static __inline__ f32 dfSqrt(f32 x) { f32 r; __asm__ volatile("sqrt.s %0, %1" : "=f"(r) : "f"(x)); return r; }
+static __inline__ f32 dfAbs(f32 x) { f32 r; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); return r; }
+
+static __inline__ DfCtx *dfFindByName(char *name, void *iter, u16 *out) {
+    s32 idx;
+    DfCtx *ctx;
+
+    for (idx = dfFindActive(dfChain, iter); (idx & 0xFFFF) != 0xFFFF; idx = dfRevalidate(iter)) {
+        ctx = dfCtxByIndex(idx);
+        if (ctx != NULL && ctx->model != NULL && dfStrcmp(name, ctx->model->name) == 0) {
+            if (out != NULL) {
+                *out = idx;
+            }
+            return ctx;
+        }
+    }
+    return NULL;
+}
+
+#define DF_SPOS (*(DfV3 *)(dfSlots + 0x2CE0))
+
+void dfImpl(ScEv *e) __asm__("spawnCutsceneDebrisField");
+void dfImpl(ScEv *e) {
+    DfCol col;
+    DfV3 v30;
+    DfV3 v40;
+    DfParams p;
+    DfV3 pos;
+    DfSlot s;
+    u8 iter[8];
+    DfSlot s2;
+    DfV3 v100;
+    u16 idx;
+    DfCtx *ctx;
+    DfObj *o;
+    f32 r;
+    f32 c;
+    f32 a;
+    f32 b;
+    u16 i;
+
+    col = dfTplCol;
+    p.a = 0xFFFF;
+    p.b = 0xFFFF;
+    p.c = 7;
+    p.d = 10000;
+    p.posp = &p.pos;
+    p.f78 = 0;
+    p.name = NULL;
+    p.dir.x = 0.0f;
+    p.dir.z = 0;
+    p.f7C = 2.0f;
+    p.f80 = 10.0f;
+    p.dir.y = 1.0f;
+    switch (e->a) {
+        case 0:
+            ctx = dfFindByName("b_fac_hi", iter, NULL);
+            if (ctx != NULL) {
+                o = ctx->obj;
+                s2.type = 1;
+                r = dfSqrt((*o->p30)->f48) * 0.25f;
+                s2.f20 = 6.0f;
+                s2.f1C = r;
+                s2.pos.x = o->x;
+                s2.pos.y = o->y - r * 0.5f * o->p34->f28;
+                s2.pos.z = o->z;
+                s2.f24 = 6.0f;
+                s2.sub = 3;
+                s2.v10.y = 5.0f;
+                s2.v10.x = 4.0f;
+                s2.v10.z = 4.0f;
+                dfInsert(&s2);
+            }
+            break;
+        case 1:
+            ctx = dfFindByName("b_fac_hi", iter, &idx);
+            if (ctx != NULL) {
+                p.pos = *ctx->pos;
+                p.pos.y -= 3.0f;
+                dfOriented(0, &p.pos, &p.dir, &col, 0.5f, 15.0f, 1.5f, 0.7f);
+                dfOriented(0, &p.pos, &p.dir, &col, 0.5f, 14.0f, 1.5f, 1.4f);
+                dfOriented(0, &p.pos, &p.dir, &col, 0.5f, 13.0f, 1.5f, 2.1f);
+                dfOriented(2, &p.pos, &p.dir, &col, 0.5f, 12.0f, 0.75f, 0.25f);
+                dfDispatch(idx, 5, &p);
+            }
+        case 3:
+            ctx = dfFindByName("b_pwrtran_hi", iter, &idx);
+            if (ctx != NULL) {
+                p.pos = *ctx->pos;
+                p.name = "cb_trns8";
+                p.pos.y -= 6.0f;
+                dfOriented(0, &p.pos, &p.dir, &col, 0.5f, 15.0f, 1.5f, 0.7f);
+                dfOriented(0, &p.pos, &p.dir, &col, 0.5f, 14.0f, 1.5f, 1.4f);
+                dfOriented(0, &p.pos, &p.dir, &col, 0.5f, 13.0f, 1.5f, 2.1f);
+                for (i = 0; i < 12; i++) {
+                    dfRandRot(&v30, &v40, 1.5f, 120, 0, 0);
+                    v30.x = p.pos.x + v30.x;
+                    v30.y = p.pos.y + v30.y;
+                    v30.z = p.pos.z + v30.z;
+                    dfScaleRand(&v40, 2.0f, 4.0f);
+                    a = dfAbs(((dfRand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
+                    b = (dfAbs(((dfRand() & 0x7F) - 64.0f) * 0.0078125f) + 1.0f) * 3.0f + 6.0f;
+                    c = (dfAbs(((dfRand() & 0x7F) - 64.0f) / 320.0f) + 0.6f) * 1.5f;
+                    dfDebris1(&v30, &v40, a, b, c);
+                }
+                dfDispatch(idx, 5, &p);
+            }
+        case 4:
+            ctx = dfFindByName("b_20sb_hi", iter, &idx);
+            if (ctx != NULL) {
+                p.pos = *ctx->pos;
+                p.pos.y -= 7.0f;
+                dfOriented(0, &p.pos, &p.dir, &col, 0.5f, 15.0f, 1.5f, 0.7f);
+                dfOriented(0, &p.pos, &p.dir, &col, 0.5f, 14.0f, 1.5f, 1.4f);
+                dfOriented(0, &p.pos, &p.dir, &col, 0.5f, 13.0f, 1.5f, 2.1f);
+                dfOriented(2, &p.pos, &p.dir, &col, 0.5f, 8.0f, 0.75f, 0.35f);
+                dfDispatch(idx, 5, &p);
+                v40.x = 0.0f;
+                v40.y = 1.0f;
+                v40.z = 0.0f;
+                v30.x = -3.2f;
+                v30.y = 4.0f;
+                v30.z = -1.2f;
+                v30.x = p.pos.x + v30.x;
+                v30.y = p.pos.y + v30.y;
+                v30.z = p.pos.z + v30.z;
+                dfBurst(0, 4, &v30, &v40);
+                v30.x = 2.5f;
+                v30.y = 4.0f;
+                v30.z = -0.8f;
+                v30.x = p.pos.x + v30.x;
+                v30.y = p.pos.y + v30.y;
+                v30.z = p.pos.z + v30.z;
+                dfBurst(0, 4, &v30, &v40);
+                v30.x = -1.0f;
+                v30.y = 4.0f;
+                v30.z = 1.2f;
+                v30.x = p.pos.x + v30.x;
+                v30.y = p.pos.y + v30.y;
+                v30.z = p.pos.z + v30.z;
+                dfBurst(0, 4, &v30, &v40);
+                v30.x = 2.8f;
+                v30.y = 4.0f;
+                v30.z = 1.7f;
+                v30.x = p.pos.x + v30.x;
+                v30.y = p.pos.y + v30.y;
+                v30.z = p.pos.z + v30.z;
+                dfBurst(0, 4, &v30, &v40);
+            }
+            break;
+        case 5:
+            pos.x = 191.93f;
+            pos.y = 4.04f;
+            pos.z = 152.96f;
+            pos.x = 47.9825f;
+            pos.y = 1.01f;
+            pos.z = 38.24f;
+            for (i = 0; i < 12; i++) {
+                dfRandRot(&v100, &v40, 2.0f, 25, 96, -2);
+                dfScaleRand(&v40, 2.0f, 8.0f);
+                {
+                f32 a5, b5;
+                a5 = ((dfRand() & 0x7F) - 64.0f) * 0.125f + 11.0f;
+                b5 = ((dfRand() & 0x7F) - 64.0f) * 0.00390625f + 1.25f;
+                dfDebris1(&pos, &v40, a5, b5, ((dfRand() & 0x7F) - 64.0f) / 320.0f + 0.6f);
+                }
+            }
+            dfOriented(2, &pos, &v40, &col, 0.7f, 0.7f * 1.2f, 1.0f, 0.55f);
+            dfOriented(2, &pos, &v40, &col, 0.5f, 1.05f * 1.2f, 1.0f, 0.5f);
+            dfOriented(2, &pos, &v40, &col, 0.3f, 1.4f * 1.2f, 1.0f, 0.45f);
+            s.type = 2;
+            s.pos = pos;
+            s.f24 = 3.0f;
+            dfInsert(&s);
+            s.type = 1;
+            s.sub = 1;
+            s.f1C = 1.7f;
+            s.f20 = 0.8f;
+            s.v10.x = 0.4f;
+            s.v10.y = 0.4f;
+            s.v10.z = 0.4f;
+            s.f24 = 1.5f;
+            dfInsert(&s);
+            break;
+        case 6:
+            pos.x = DF_SPOS.x - 1.25f;
+            pos.y = DF_SPOS.y;
+            pos.z = DF_SPOS.z + 0.5f;
+            s.pos = pos;
+            s.f24 = 3.5f;
+            s.v10.x = 0.0f;
+            s.type = 3;
+            dfInsert(&s);
+            s.type = 1;
+            s.sub = 2;
+            s.f20 = 2.0f;
+            s.f1C = 5.0f;
+            s.v10.x = 9.0f;
+            s.v10.y = 0.01f;
+            s.v10.z = 4.5f;
+            s.f24 = 2.5f;
+            dfInsert(&s);
+            s.f24 = 2.0f;
+            s.sub = 1;
+            s.v10.x *= 0.7077f;
+            s.v10.y *= 0.7077f;
+            s.v10.z *= 0.7077f;
+            dfInsert(&s);
+            v40.x = 1.0f;
+            v40.y = 0.1f;
+            v40.z = 0.1f;
+            dfNormalize(&v40);
+            dfOriented(0, &pos, &v40, &col, 0.5f, 22.0f, 1.5f, 1.2f);
+            dfOriented(0, &pos, &v40, &col, 0.5f, 21.0f, 1.5f, 2.4f);
+            dfOriented(0, &pos, &v40, &col, 0.5f, 20.0f, 1.5f, 3.6f);
+            dfOriented(0, &pos, &v40, &col, 0.5f, 19.0f, 1.5f, 4.8f);
+            break;
+        case 7:
+            pos.x = DF_SPOS.x - 1.25f;
+            pos.y = DF_SPOS.y;
+            pos.z = DF_SPOS.z + 0.5f;
+            pos.y += 2.9f;
+            dfRamped(&pos, 0xFFFF, 10.0f, 20.0f, 1.0f, 3.0f, 2.0f, 0.45f, 0.5f, 0.2f);
+            pos.y -= 2.9f;
+            col.r = 0x8C;
+            col.g = 0x1E;
+            col.b = 0x1E;
+            col.a = 0x40;
+            v40.x = 1.0f;
+            v40.y = 0.1f;
+            v40.z = 0.1f;
+            dfOriented(1, &pos, &v40, &col, 0.5f, 6.0f, 6.5f, 1.5f);
+            dfOriented(1, &pos, &v40, &col, 0.5f, 5.0f, 5.0f, 1.0f);
+            break;
+        case 8:
+            s.f28 = 0;
+            s.type = 5;
+            s.f24 = 6.0f;
+            s.pos.x = 82.5f;
+            s.pos.y = -1.6f;
+            s.pos.z = 77.5f;
+            s.v10.x = 1.6f;
+            s.v10.y = 0.3f;
+            s.v10.z = 1.6f;
+            dfInsert(&s);
+            break;
+        case 9:
+            s.f28 = 0;
+            s.type = 5;
+            s.f24 = 20.0f;
+            s.pos.x = 144.3f;
+            s.pos.y = -12.5f;
+            s.pos.z = 73.0f;
+            s.v10.x = 1.6f;
+            s.v10.y = 0.8f;
+            s.v10.z = 1.6f;
+            dfInsert(&s);
+            break;
+    }
+}
 
 typedef struct { u8 r, g, b, a; } NimCol;
 typedef struct D_cinematic_overlay_800B0D00_type NimSlot;
