@@ -269,7 +269,107 @@ void updateModelViewerAudioSource(f32 dt, f32 spin, u8 craft) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/intro_crawl_handling", loadModelViewerModels);
+typedef struct { f32 x, y, z; } MvV3a;
+typedef struct {
+    char *name;
+    u8 *mesh;
+    u8 *dat;
+    MvV3a pos;
+    MvV3a rot;
+    MvV3a scl;
+    u8 pad30[0];
+} MvSlot;
+typedef struct { f32 v[3]; } MvV3b;
+typedef struct {
+    u8 *mesh;
+    f32 f4;
+    u8 pad8[0x48];
+    u8 v50[0xC];
+    u8 v5C[0xC];
+    s32 w68;
+    s32 w6C;
+    s32 w70;
+    u8 n74[0xC];
+    MvV3b v80;
+    void *p8C;
+} MvCraft;
+extern MvSlot mvSlots[] __asm__("D_menu_overlay_800D00B0");
+extern MvCraft mvCrafts[] __asm__("D_menu_overlay_800D0120");
+extern struct { u8 r, g, b; } introCrawlYellowColor;
+extern u8 D_menu_overlay_800CD4FC[];
+u8 *mvWalk(char *) __asm__("walkMeshdef0List");
+char *extractTextBeforeFmtChar(char *);
+u8 *mvGetDat(s32, char *) __asm__("getDatItemByName");
+u8 *mvFindDat(s32, void *, char *) __asm__("findDatItemInTableByName");
+void mvAnimColors(void *, f32 *) __asm__("applyMeshdef1AnimColors");
+void composeRotationMatrixSlot0(void *, f32);
+void composeRotationMatrixSlot1(void *, f32);
+void composeRotationMatrixSlot2(void *, f32);
+void mvFlags(u8 *, s32, s32, s32) __asm__("applyFlagsToMeshTreeOrList");
+s32 mvLoadHob(char *, s32, s32, s32) __asm__("load_hmt_and_hob");
+void *mvAlloc(u8 *) __asm__("allocAndSetupModelInstance");
+s32 sprintf(char *, const char *, ...);
+void setupActorAnchorTransformType1(void *, void *, void *, void *, f32);
+
+void loadModelViewerModels(u8 craft) {
+    char buf[0x40];
+    f32 col[3];
+    u16 i;
+    MvSlot *s;
+    MvCraft *e;
+    u8 *m;
+    u8 *d;
+    f32 k;
+
+    i = 0;
+    mvSlots[0].name = "+starwars";
+    k = 0.00390625f;
+    mvSlots[1].name = "-starwars_logo";
+    do {
+        s = &mvSlots[i];
+        s->mesh = mvWalk(extractTextBeforeFmtChar(s->name));
+        if (i == 1) {
+            col[0] = introCrawlYellowColor.r * k;
+            col[1] = introCrawlYellowColor.g * k;
+            col[2] = introCrawlYellowColor.b * k;
+            mvAnimColors(*(u8 **)(*(u8 **)(*(u8 **)mvSlots[i].mesh + 0x10) + 0x10), col);
+        }
+        i++;
+        d = mvGetDat(D_menu_overlay_800D03CC, s->name + 1);
+        s->dat = d;
+        s->pos = ((MvSlot *)(d + 4))->pos;
+        s->rot = ((MvSlot *)(d + 4))->rot;
+        s->scl = ((MvSlot *)(d + 4))->scl;
+        m = s->mesh + 0x28;
+        initVec4TripletFromArgs(m, s->scl.x, s->scl.y, s->scl.z);
+        composeRotationMatrixSlot0(m, s->rot.x);
+        composeRotationMatrixSlot1(m, s->rot.y);
+        composeRotationMatrixSlot2(m, s->rot.z);
+        addVec3At0x24(m, s->pos.x, s->pos.y, s->pos.z);
+    } while (i < 2);
+    mvFlags(mvSlots[0].mesh, 0, 0x60000, 0);
+    mvFlags(mvSlots[1].mesh, 0, 0x60000, 0);
+    for (i = 0; i < 4; i++) {
+        if (gPostIntroCrawlHobFiles[craft][i] == NULL) {
+            break;
+        }
+        mvLoadHob(gPostIntroCrawlHobFiles[craft][i], 0, 1, 0x10000);
+    }
+    for (i = 0; i < gPostIntroCrawlNumCraft[craft]; i++) {
+        ((MvCraft *)D_menu_overlay_800D0120[i])->mesh = mvWalk(gPostIntroCrawlCraftObjectNames[craft][i]);
+        e = (MvCraft *)D_menu_overlay_800D0120[i];
+        *(u8 **)(e->mesh + 4) = D_menu_overlay_800CD4FC;
+        e->f4 = i * -0.05f;
+        e->p8C = mvAlloc(e->mesh);
+        sprintf(buf, "route_%d", i % 3);
+        d = mvFindDat(D_menu_overlay_800D03CC, D_menu_overlay_800D0120[i] + 0x74, buf);
+        e->v80 = *(MvV3b *)(d + 0x10);
+        setupActorAnchorTransformType1(D_menu_overlay_800D0120[i] + 0x74, D_menu_overlay_800D0120[i] + 0x80, D_menu_overlay_800D0120[i] + 0x50, D_menu_overlay_800D0120[i] + 0x5C, 0.0f);
+        e->w68 = 0;
+        e->w6C = 0;
+        e->w70 = 0;
+    }
+}
 
 #ifdef NONMATCHING_DATA
 // This probably can't be matched until the ro/data for this entire file is figured out.
