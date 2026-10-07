@@ -221,7 +221,52 @@ play:
     D_mission_overlay_801096B0 = 5.0f;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", integrateCraftVelocityAndCollide);
+extern s32 D_main_bss_80130B50;
+extern u32 D_mission_overlay_8010CA20;
+extern u8 D_mission_overlay_8010BBD0[][12];
+u8 isRumbleSlotActive(u8);
+s32 startRumbleEffect(u8, void *);
+s32 stopRumbleEffect(s32);
+extern f32 vec3Length(void *);
+
+static __inline__ void icRumble(u8 *arg0, s32 arg1) {
+    if (D_main_bss_80130B50 & 0x60) {
+        return;
+    }
+    if (D_mission_overlay_8010CA20 != 0) {
+        return;
+    }
+    if (arg1 < *(s32 *)(arg0 + 0x1C4) && isRumbleSlotActive(arg0[0xBB])) {
+        return;
+    }
+    if (*(s32 *)(arg0 + 0x1C0) != -1) {
+        stopRumbleEffect(*(s32 *)(arg0 + 0x1C0));
+    }
+    *(s32 *)(arg0 + 0x1C0) = startRumbleEffect(arg0[0xBB], D_mission_overlay_8010BBD0[arg1]);
+    if (*(s32 *)(arg0 + 0x1C0) != -1) {
+        *(s32 *)(arg0 + 0x1C4) = arg1;
+    }
+}
+
+void integrateCraftVelocityAndCollide(void *op, f32 dt) {
+    u8 *o = op;
+    f32 len;
+
+    *(f32 *)(o + 4) += *(f32 *)(o + 0x198) * dt;
+    *(f32 *)(o + 8) += *(f32 *)(o + 0x19C) * dt;
+    *(f32 *)(o + 0xC) += *(f32 *)(o + 0x1A0) * dt;
+    if (*(f32 *)(o + 0x198) != 0.0f || *(f32 *)(o + 0x19C) != 0.0f || *(f32 *)(o + 0x1A0) != 0.0f) {
+        len = vec3Length(o + 0x198);
+        if (len < 10.0f) {
+            icRumble(o, 3);
+        } else if (len < 20.0f) {
+            icRumble(o, 2);
+        } else {
+            icRumble(o, 1);
+        }
+    }
+    *(f32 *)(o + 0x198) = *(f32 *)(o + 0x19C) = *(f32 *)(o + 0x1A0) = 0.0f;
+}
 
 s32 isTerrainCellBlockedAtWorldXz(f32, f32, void *);
 void play3DSoundEvent(void *, void *, void *, f32, f32, s32, s32, s32, s32);
