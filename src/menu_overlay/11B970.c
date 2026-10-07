@@ -412,7 +412,83 @@ void updateShipPartAnimation(u8 *arg0, f32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", buildHudAmmoReadout);
+typedef struct {
+    u8 pad0[8];
+    u16 h8;
+    u16 hA;
+    u16 *wC;
+    u8 pad10[4];
+    s32 w14;
+    f32 f18;
+    f32 f1C;
+    u8 pad20[4];
+    f32 f24;
+    f32 f28;
+    u8 b2C;
+    u8 b2D;
+    u8 b2E;
+    u8 b2F;
+} HaElem;
+extern s32 D_menu_overlay_800CF104;
+extern s32 D_menu_overlay_800CF110;
+extern HaElem D_menu_overlay_800CF120;
+extern void *D_menu_overlay_800CF078;
+s32 haLoadTex(char *, s32, s32, s32) __asm__("loadNamedTextureDescriptor");
+HaElem *haField0xC(s32) __asm__("getStructField0xC");
+void haPos(s32, s16, s16) __asm__("setChildPosFromI16Pair");
+void haInsert(void *, void *, u8) __asm__("insertLookupEntry");
+void haCopy(void *, void *, u32) __asm__("zmemcpy");
+void *haMalloc(s32, s32) __asm__("rs_malloc");
+void sprintf(char *, const char *, ...);
+
+void buildHudAmmoReadout(void) {
+    char buf[16];
+    HaElem *e;
+    s32 lvl;
+    u16 i;
+    u16 j;
+
+    D_menu_overlay_800CF104 = haLoadTex("logo", 0x40, 0x20, 0);
+    e = haField0xC(D_menu_overlay_800CF104);
+    e->w14 |= 3;
+    e->f24 = e->f28 = 1.075f;
+    haPos(D_menu_overlay_800CF104, -0xD0, -0xC5);
+    haInsert(D_menu_overlay_800CF078, e, 0x23);
+    haCopy(&D_menu_overlay_800CF120, e, 0x30);
+    D_menu_overlay_800CF120.f18 = e->f18 + 5.0f;
+    D_menu_overlay_800CF120.f1C = e->f1C + 5.0f;
+    D_menu_overlay_800CF120.b2C = 0;
+    D_menu_overlay_800CF120.b2D = 0;
+    D_menu_overlay_800CF120.b2E = 0;
+    D_menu_overlay_800CF120.b2F = 0;
+    D_menu_overlay_800CF120.wC = haMalloc(e->h8 * (e->hA << 1), 0);
+    haCopy(D_menu_overlay_800CF120.wC, e->wC, e->h8 * (e->hA << 1));
+    for (j = 0; j < e->hA - 1; j++) {
+        for (i = 0; i < e->h8 - 1; i++) {
+            D_menu_overlay_800CF120.wC[j * e->h8 + i] = 0xFFFF;
+        }
+    }
+    haInsert(D_menu_overlay_800CF078, &D_menu_overlay_800CF120, 0x25);
+    lvl = (gGameSettings.cheatCodeFlags[0] >> 7) & 1;
+    if (gGameSettings.cheatCodeFlags[0] & 0x100) lvl = 2;
+    if (gGameSettings.cheatCodeFlags[0] & 0x200) lvl = 3;
+    if (gGameSettings.cheatCodeFlags[0] & 0x400) lvl = 4;
+    if (gGameSettings.cheatCodeFlags[0] & 0x800) lvl = 5;
+    if (gGameSettings.cheatCodeFlags[0] & 0x1000) lvl = 6;
+    if (gGameSettings.cheatCodeFlags[0] & 0x2000) lvl = 7;
+    if (gGameSettings.cheatCodeFlags[0] & 0x4000) lvl = 8;
+    if (gGameSettings.cheatCodeFlags[0] & 0x8000) lvl = 9;
+    if (gGameSettings.cheatCodeFlags[0] & 0x10000) lvl = 10;
+    if (gGameSettings.cheatCodeFlags[0] & 0x20000) lvl = 11;
+    if (gGameSettings.cheatCodeFlags[0] & 0x40000) lvl = 12;
+    sprintf(buf, "the_head%d", lvl);
+    D_menu_overlay_800CF110 = haLoadTex(buf, 0x20, 0x20, 0);
+    e = haField0xC(D_menu_overlay_800CF110);
+    e->w14 |= 3;
+    e->f24 = 0.8f;
+    haPos(D_menu_overlay_800CF110, 0x83, -0x86);
+    haInsert(D_menu_overlay_800CF078, e, 0x22);
+}
 
 typedef struct {
     s32 unk0; s16 unk4; s16 unk6; f32 unk8; s32 unkC; u8 pad10[4]; u8 unk14; u8 unk15; u8 unk16; u8 pad17;
