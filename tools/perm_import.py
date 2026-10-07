@@ -35,7 +35,7 @@ else:
         sys.exit(f"m2c: {err}")
 m = re.search(r'^INCLUDE_ASM\("[^"]+", ' + re.escape(func) + r'\);', base, re.M)
 ok, reason = False, ""
-for _ in range(6):
+for _ in range(40):
     a.write(c_path, base[:m.start()] + code.rstrip("\n").replace("\n", nl) + base[m.end():])
     ok, reason = a.rom_matches()
     und = re.search(r"`(\w+)' undeclared", reason)

@@ -113,7 +113,7 @@ def rom_matches():
     b = subprocess.run(["make", "-j16", "build/tyler.z64"], capture_output=True, text=True)
     if b.returncode:
         lines = (b.stdout + b.stderr).splitlines()
-        err = next((l for l in lines if re.search(r"\.c:\d+: (?!warning)", l) or re.search(r"undefined reference|multiple definition|Error:", l)), "")
+        err = next((l for l in lines if re.search(r"\.c:\d+: (?!warning|note)", l) or re.search(r"undefined reference|multiple definition|Error:", l)), "")
         return False, "build failed: " + err[:160]
     h = hashlib.sha1(pathlib.Path("build/tyler.z64").read_bytes()).hexdigest()
     return h == TARGET_SHA1, "rom differs" if h != TARGET_SHA1 else "match"
