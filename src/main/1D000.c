@@ -138,7 +138,52 @@ void mat3x3InverseInto(Mat4x3 arg0, Mat4x3 arg1) {
     arg0[3][2] = ((-arg1[3][0] * arg0[2][0]) - (arg1[3][1] * arg0[2][1])) - (arg1[3][2] * arg0[2][2]);
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/1D000", mat3x3InverseInto);
+void mat3x3InverseInto(Mat4x3 arg0, Mat4x3 arg1) {
+    f32 temp_fa0;
+    register f32 temp_fa1 asm("$f14");
+    register f32 temp_ft1 asm("$f6");
+    f32 temp_ft1_2;
+    f32 temp_ft2;
+    f32 temp_ft2_2;
+    register f32 temp_ft3 asm("$f10");
+    f32 temp_ft3_2;
+    f32 temp_fv0;
+    register f32 temp_fv1 asm("$f2");
+    f32 xa;
+    f32 xb;
+    f32 xc;
+    register f32 q asm("$f0");
+
+    temp_fa1 = arg1[1][1];
+    temp_ft1 = arg1[2][2];
+    xa = temp_fa1 * temp_ft1;
+    temp_fv1 = arg1[2][1];
+    temp_fv0 = arg1[1][2];
+    xb = temp_fv1 * temp_fv0;
+    temp_ft2 = arg1[1][0];
+    xc = temp_ft2 * temp_ft1;
+    temp_ft3 = arg1[2][0];
+    __asm__ volatile("");
+    q = temp_ft3 * temp_fv0;
+    temp_fa0 = xa - xb;
+    temp_ft1_2 = xc - q;
+    q = arg1[0][2];
+    temp_ft1_2 = -temp_ft1_2;
+    temp_ft2_2 = (temp_ft2 * temp_fv1) - (temp_ft3 * temp_fa1);
+    temp_ft3_2 = 1.0f / ((arg1[0][0] * temp_fa0) + (arg1[0][1] * temp_ft1_2) + (q * temp_ft2_2));
+    arg0[0][0] =  temp_ft3_2 * temp_fa0;
+    arg0[1][0] =  temp_ft3_2 * temp_ft1_2;
+    arg0[2][0] =  temp_ft3_2 * temp_ft2_2;
+    arg0[0][1] = -temp_ft3_2 * ((arg1[0][1] * arg1[2][2]) - (arg1[2][1] * arg1[0][2]));
+    arg0[1][1] =  temp_ft3_2 * ((arg1[0][0] * arg1[2][2]) - (arg1[2][0] * arg1[0][2]));
+    arg0[2][1] = -temp_ft3_2 * ((arg1[0][0] * arg1[2][1]) - (arg1[2][0] * arg1[0][1]));
+    arg0[0][2] =  temp_ft3_2 * ((arg1[0][1] * arg1[1][2]) - (arg1[1][1] * arg1[0][2]));
+    arg0[1][2] = -temp_ft3_2 * ((arg1[0][0] * arg1[1][2]) - (arg1[1][0] * arg1[0][2]));
+    arg0[2][2] =  temp_ft3_2 * ((arg1[0][0] * arg1[1][1]) - (arg1[1][0] * arg1[0][1]));
+    arg0[3][0] = ((-arg1[3][0] * arg0[0][0]) - (arg1[3][1] * arg0[0][1])) - (arg1[3][2] * arg0[0][2]);
+    arg0[3][1] = ((-arg1[3][0] * arg0[1][0]) - (arg1[3][1] * arg0[1][1])) - (arg1[3][2] * arg0[1][2]);
+    arg0[3][2] = ((-arg1[3][0] * arg0[2][0]) - (arg1[3][1] * arg0[2][1])) - (arg1[3][2] * arg0[2][2]);
+}
 #endif
 
 INCLUDE_ASM("asm/nonmatchings/main/1D000", floatMatrixToFixed);
