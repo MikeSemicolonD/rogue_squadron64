@@ -362,7 +362,164 @@ void copySaveUnk08(s32 arg0, u8 *arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/06560", initSaveData);
+typedef struct {
+    u8 pad0[4];
+    u32 size;
+    s32 bodySize;
+    u16 padC;
+    u16 count;
+} SaveAssetView;
+extern SaveAssetView gSaveAssetView __asm__("gGamesaveAsset");
+extern s32 gSaveDataBodySize;
+extern s32 gSaveDataBuffer;
+extern s32 D_main_bss_801126E0;
+extern s32 D_main_bss_801126E4_l __asm__("D_main_bss_801126E4");
+extern s32 D_main_bss_801126E8_l __asm__("D_main_bss_801126E8");
+extern s32 D_main_bss_801126F0;
+extern s32 gSaveCbAlias __asm__("D_main_bss_801126F0");
+extern s32 D_main_bss_80112720;
+extern s32 D_main_bss_801126C4;
+extern u8 D_main_bss_801126EC;
+extern u8 D_main_bss_801126ED;
+extern u8 D_main_bss_8011272C;
+extern u8 D_main_bss_80112700[];
+extern u8 gSIEventMesgQueue[];
+extern u8 gControllerBits[];
+extern u8 gControllerStatuses[];
+void waitForSerialIdle(void);
+void releaseSerialLock(void);
+void rs_memset(u8 *, s32, s32);
+void memcpy(u8 *, u8 *, s32);
+u32 adler32(u32, u8 *, u32);
+s32 rs_malloc(u32, s32);
+s32 rs_free(s32);
+s32 osEepromProbe(s32);
+s32 osEepromLongRead(s32, s32, u8 *, s32);
+s32 osEepromLongWrite(s32, s32, u8 *, s32);
+s32 bcmp(u32 *, u8 *, s32);
+
+s32 initSaveData(u8 *arg0, s32 arg1) {
+    u32 sum[8];
+    u8 *buf;
+    s32 r;
+    s32 e;
+    s32 i;
+    u8 *rec;
+    s32 off;
+
+    D_main_bss_801126F0 = arg1;
+    memcpy((u8 *)&gSaveAssetView, arg0, 0x20);
+    D_main_bss_8011272C = 1;
+    D_main_bss_801126E0 = (s32)gSIEventMesgQueue;
+    D_main_bss_801126E4_l = (s32)gControllerBits;
+    D_main_bss_801126E8_l = (s32)gControllerStatuses;
+    gSaveDataBodySize = gSaveAssetView.bodySize + 0x18;
+    gSaveDataBuffer = rs_malloc(gSaveAssetView.bodySize + 0x118, 0x81);
+    D_main_bss_80112720 = gSaveAssetView.size ? 1 : 2;
+    waitForSerialIdle();
+    D_main_bss_801126EC = osEepromProbe(D_main_bss_801126E0) != 0;
+    releaseSerialLock();
+    if (gSaveAssetView.size != 0) {
+        if (D_main_bss_801126EC == 0) {
+            if (D_main_bss_801126F0 != 0) {
+                ((void (*)(s32))D_main_bss_801126F0)(8);
+            }
+            return 0;
+        }
+        if (D_main_bss_801126EC == 1) {
+            sum[1] = 0xF5F5F5F5;
+            sum[5] = 0x47414D45;
+            sum[2] = 0x47535953;
+            sum[3] = 0xAAAAAAAA;
+            sum[7] = 0x55555555;
+            sum[6] = (*(u16 *)((u8 *)&gSaveAssetView + 0xA) << 16) | gSaveAssetView.count;
+            sum[0] = adler32(adler32(0, 0, 0), (u8 *)&sum[1], 0xC);
+            sum[4] = adler32(adler32(0, 0, 0), (u8 *)&sum[5], 0xC);
+loop_10:
+            waitForSerialIdle();
+            e = osEepromLongRead(D_main_bss_801126E0, 0, D_main_bss_80112700, 0x20);
+            releaseSerialLock();
+            if (e != 0) {
+                r = 0;
+                if (D_main_bss_801126F0 != 0) {
+                    r = ((s32 (*)(s32))D_main_bss_801126F0)(9);
+                }
+                if (r == 1) {
+                    goto loop_10;
+                }
+                D_main_bss_801126EC = 0;
+                D_main_bss_80112720 = 2;
+                return 0;
+            }
+            if (bcmp(sum, D_main_bss_80112700, 0x20) != 0) {
+                r = 0;
+                if (D_main_bss_801126F0 != 0) {
+                    r = ((s32 (*)(s32))D_main_bss_801126F0)(8);
+                }
+                if (r == 1) {
+                    goto loop_10;
+                }
+                if (r == 2) {
+                if (gSaveAssetView.size < gSaveAssetView.count * gSaveDataBodySize + 0x20) {
+                    if (gSaveCbAlias != 0) {
+                        ((void (*)(s32))gSaveCbAlias)(2);
+                    }
+                    return 0;
+                }
+                buf = (u8 *)rs_malloc(gSaveAssetView.size, 8);
+                rs_memset(buf, 0, gSaveAssetView.size);
+                i = 0;
+                if (gSaveAssetView.count != 0) {
+                    do {
+                        off = i * (gSaveAssetView.bodySize + 0x18) + 0x20;
+                        rec = buf + off;
+                        *(u32 *)(rec + 4) = adler32(adler32(0, 0, 0), rec + 8, 0x10);
+                        *(u32 *)rec = adler32(adler32(0, 0, 0), rec + 0x18, gSaveAssetView.bodySize);
+                        i++;
+                    } while (i < gSaveAssetView.count);
+                }
+loop_28:
+                waitForSerialIdle();
+                if (osEepromLongWrite(D_main_bss_801126E0, 0, buf, D_main_bss_801126C4) != 0) {
+                    releaseSerialLock();
+                    if (D_main_bss_801126F0 != 0) {
+                        r = ((s32 (*)(s32))D_main_bss_801126F0)(9);
+                    } else {
+                        r = 0;
+                    }
+                    if (r != 1) {
+                        D_main_bss_801126EC = 0;
+                        D_main_bss_80112720 = 2;
+                        rs_free((s32)buf);
+                        return 0;
+                    }
+                    goto loop_28;
+                }
+                e = osEepromLongWrite(D_main_bss_801126E0, 0, (u8 *)sum, 0x20);
+                releaseSerialLock();
+                if (e != 0) {
+                    r = 0;
+                    if (D_main_bss_801126F0 != 0) {
+                        r = ((s32 (*)(s32))D_main_bss_801126F0)(9);
+                    }
+                    if (r != 1) {
+                        D_main_bss_801126EC = 0;
+                        D_main_bss_80112720 = 2;
+                        rs_free((s32)buf);
+                        return 0;
+                    }
+                    goto loop_28;
+                }
+                rs_free((s32)buf);
+                goto loop_10;
+                }
+                return 0;
+            }
+        }
+    }
+    D_main_bss_801126ED = 0;
+    return 1;
+}
 
 s32 rs_free(s32);
 extern s32 gSaveDataBuffer;
