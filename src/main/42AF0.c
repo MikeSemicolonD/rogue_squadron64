@@ -427,7 +427,273 @@ void binPolygonIntoTerrainGrid(f32 *pts) {
     bpScan(v[3], v[2], v[1], sc);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", streamTerrainGridCellsByDistance);
+typedef struct {
+    u8 pad0[8];
+    s16 x;
+    s16 pad;
+    s16 z;
+    u8 padE[2];
+    u8 b10;
+} StFace;
+
+typedef struct {
+    u8 pad0[0x20];
+    StFace face;
+} StCell;
+
+typedef struct StNode {
+    struct StNode *a;
+    struct StNode *b;
+    f32 dist;
+    s32 col;
+    s32 row;
+    StCell *cell;
+} StNode;
+
+extern StNode *stGrid[][64] __asm__("D_main_bss_80132DC0");
+extern u16 stLimit __asm__("D_main_bss_80130C4C");
+extern StNode *stPool __asm__("D_main_bss_80136E1C");
+extern s8 D_main_bss_80130DB0[];
+extern s8 D_main_bss_80131DB0[];
+extern s32 D_main_bss_80132DB0;
+extern s32 D_main_bss_80132DB4;
+extern s32 D_main_bss_80132DB8;
+extern s32 D_main_bss_80132DBC;
+extern StCell *getGridCellValueAt(s32, s32, s32);
+extern void processGridCellByDistance(StCell *, f32);
+
+StNode *streamTerrainGridCellsByDistance(f32 *cam, f32 *org)
+{
+  StNode *cur = 0;
+  StNode *first = 0;
+  StNode *node;
+  StNode *nx;
+  s32 cnt = 0;
+  s32 clip = 0;
+  s32 w = D_main_bss_80132DB4;
+  f32 new_var;
+  s32 h = D_main_bss_80132DBC;
+  f32 dz = (((f32) D_main_bss_80132DB8) - cam[2]) + 0.5f;
+  f32 dx;
+  f32 d;
+  u16 *code;
+  u8 *info;
+  s8 *p5;
+  StFace *f;
+  s8 *p3;
+  s8 v;
+  s32 i;
+  s32 j;
+  s32 k;
+  s32 r;
+  s32 gb;
+  s32 gw;
+  s32 x0;
+  u16 *tbl;
+  gw = D_main_bss_80136DC0.unk38;
+  x0 = D_main_bss_80132DB0;
+  tbl = D_main_bss_80136DC0.unk0;
+  if (x0 < 0)
+  {
+    code = tbl;
+    clip = 1;
+  }
+  else
+    if (x0 >= gw)
+  {
+    code = tbl + (gw - 1);
+    clip = 1;
+  }
+  else
+  {
+    code = tbl + x0;
+  }
+  if (D_main_bss_80132DB8 >= D_main_bss_80136DC0.unk3A)
+  {
+    clip = 1;
+    code += D_main_bss_80136DC0.unk38 * (D_main_bss_80136DC0.unk3A - 1);
+  }
+  else
+    if (D_main_bss_80132DB8 < 0)
+  {
+    clip = 1;
+  }
+  else
+  {
+    code += D_main_bss_80136DC0.unk38 * D_main_bss_80132DB8;
+  }
+  if ((D_main_bss_80132DB0 + D_main_bss_80132DB4) >= D_main_bss_80136DC0.unk38)
+  {
+    clip = 1;
+  }
+  if ((D_main_bss_80132DB8 + D_main_bss_80132DBC) >= D_main_bss_80136DC0.unk3A)
+  {
+    clip = 1;
+  }
+  for (j = 0; j < h; j++)
+  {
+    dx = (((f32) D_main_bss_80132DB0) - cam[0]) + 0.5f;
+    i = 0;
+    if (i < w)
+    {
+      gb = (s32) stGrid;
+      do
+      {
+        k = i + (j << 6);
+        p5 = &D_main_bss_80130DB0[k];
+        v = *p5;
+        if ((v == (-0x80)) && (D_main_bss_80131DB0[k] == v))
+        {
+          goto empty;
+        }
+        info = D_main_bss_80136DC0.unk4 + (((*code) & 0x1FFF) * 0x1E);
+        if ((v < ((s8) info[3])) || ((p3 = &D_main_bss_80131DB0[k], ((s8) info[4]) < (*p3))))
+        {
+          D_main_bss_80131DB0[k] = 0x7F;
+          *p5 = 0x7F;
+          *((StNode **) (((j << 8) + (i * 4)) + gb)) = 0;
+          goto next;
+        }
+        node = &stPool[cnt];
+        cnt++;
+        if (cnt >= stLimit)
+        {
+          break;
+        }
+        if ((node->cell = getGridCellValueAt(i + D_main_bss_80132DB0, j + D_main_bss_80132DB8, 1)) != 0)
+        {
+          node->col = i;
+          node->row = j;
+          node->dist = (dx * dx) + (dz * dz);
+          processGridCellByDistance(node->cell, 1.0f);
+        }
+        if (node->cell == 0)
+        {
+          cnt--;
+          *p3 = 0x7E;
+          *p5 = 0x7E;
+          goto empty;
+        }
+        new_var = (f32) (i + D_main_bss_80132DB0);
+        *((StNode **) (((j << 8) + (i * 4)) + gb)) = node;
+        f = &node->cell->face;
+        f->x = ((((2.0f * new_var) + D_main_bss_80136DC0.unk20) - org[0]) * 512.0f) * 0.5f;
+        f->z = ((((2.0f * ((f32) (j + D_main_bss_80132DB8))) + D_main_bss_80136DC0.unk2C) - org[2]) * 512.0f) * 0.5f;
+        f->pad = 0;
+        f->b10 = 0;
+        if (cur == 0)
+        {
+          first = node;
+          first->b = 0;
+          first->a = 0;
+        }
+        else
+        {
+          d = node->dist;
+          if (cur->dist < d)
+          {
+            nx = cur->a;
+            while (cur->a != 0)
+            {
+              nx = cur->a;
+              if (d <= nx->dist)
+              {
+                break;
+              }
+              cur = nx;
+              nx = cur->a;
+            }
+
+            node->a = nx;
+            if (nx != 0)
+            {
+              nx->b = node;
+            }
+            else
+            {
+              first = node;
+            }
+            node->b = cur;
+            cur->a = node;
+          }
+          else
+          {
+            while ((nx = cur->b) != 0)
+            {
+              if (nx->dist <= d)
+              {
+                break;
+              }
+              cur = nx;
+            }
+
+            node->b = nx;
+            if (nx != 0)
+            {
+              nx->a = node;
+            }
+            node->a = cur;
+            cur->b = node;
+          }
+        }
+        cur = node;
+        goto next;
+        empty:
+        do { *((StNode **) (((j << 8) + (i * 4)) + gb)) = 0; } while (0);
+
+        next:
+        if ((clip == 0) || (((i + D_main_bss_80132DB0) >= 0) && ((i + D_main_bss_80132DB0 + 1) < D_main_bss_80136DC0.unk38)))
+        {
+          if (gb || node)
+          {
+            code++;
+          }
+          else
+          {
+            code++;
+          }
+        }
+
+        dx += 1.0f;
+        i++;
+      }
+      while (i < w);
+    }
+    if (clip == 0)
+    {
+      code += D_main_bss_80136DC0.unk38 - w;
+    }
+    else
+    {
+      if (D_main_bss_80132DB0 < 0)
+      {
+        code = D_main_bss_80136DC0.unk0;
+      }
+      else
+        if (D_main_bss_80132DB0 >= D_main_bss_80136DC0.unk38)
+      {
+        code = D_main_bss_80136DC0.unk0 + (D_main_bss_80136DC0.unk38 - 1);
+      }
+      else
+      {
+        code = D_main_bss_80136DC0.unk0 + D_main_bss_80132DB0;
+      }
+      r = D_main_bss_80132DB8 + j;
+      if (r + 1 >= D_main_bss_80136DC0.unk3A)
+      {
+        code += D_main_bss_80136DC0.unk38 * (D_main_bss_80136DC0.unk3A - 1);
+      }
+      else
+        if (r >= 0)
+      {
+        code += D_main_bss_80136DC0.unk38 * (r + 1);
+      }
+    }
+    dz += 1.0f;
+  }
+
+  return first;
+}
 
 typedef struct BgFace {
     struct BgFace *prev;
