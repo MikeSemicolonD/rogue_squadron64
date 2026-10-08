@@ -2049,7 +2049,86 @@ s32 reserveAlignedDLSpace(s32 gfx, u8 *out, u8 n, s32 *ptr, s32 arg4) {
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", heapFreeListDequeue);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", emitTexturedFaceGeometry);
+typedef struct { s16 x, y, z, w; } EtfVtx;
+typedef struct { u8 pad0[0xC]; u32 flags; u8 pad10[0x14]; void *p24; } EtfMesh;
+extern u8 *etfB4 __asm__("D_main_bss_801163B4");
+extern u8 D_main_80037640[];
+extern void transformAndEmitFaceVertices(u32 *, u16 *, u32 *, void *, u32, void *, s32, EtfMesh *);
+
+void emitTexturedFaceGeometry(u32 *face, u32 *out, u32 *col, EtfVtx *dst, EtfVtx *src, s32 arg5, EtfMesh *m, u8 mask, u8 count) {
+    u32 fl;
+    u16 *idx;
+    u32 *t6;
+    s32 n;
+    s32 bit;
+    s32 i;
+
+    idx = (u16 *)((u8 *)face + ((face[1] >> 16) & 0xFC));
+    fl = face[0];
+    t6 = (u32 *)((u8 *)face + ((face[1] >> 10) & 0xFC));
+    if (m->flags & 0x40) {
+        n = 3;
+        if (fl & 8) {
+            n = 4;
+        }
+        bit = 1;
+        if (m->flags & 1) {
+            f32 *pos = m->p24;
+            for (i = 0; i < n; i++, bit <<= 1) {
+                if (mask & bit) {
+                    f32 *v = &pos[idx[i] * 3];
+                    dst->x = v[0] * 256.0f;
+                    dst->y = v[1] * 256.0f;
+                    dst->z = v[2] * 256.0f;
+                    dst = (EtfVtx *)((s16 *)dst + 2);
+                    dst = (EtfVtx *)((s16 *)dst + 2);
+                }
+            }
+        } else {
+            EtfVtx *tb = m->p24;
+            for (i = 0; i < n; i++, bit <<= 1) {
+                if (mask & bit) {
+                    *dst = tb[idx[i]];
+                    dst++;
+                }
+            }
+        }
+    } else if (src != NULL) {
+        for (i = 0; i < count; i++) {
+            dst[i] = src[i];
+        }
+    }
+    if (m->flags & 0x20) {
+        if ((fl & 0x40) && !(m->flags & 0x100000)) {
+            transformAndEmitFaceVertices(out, idx, t6, (u8 *)face + ((face[1] & 0xFC0) >> 4), fl,
+                                         etfB4 != NULL ? etfB4 + ((u16 *)face)[4] * 16 : D_main_80037640, ({ __asm__ volatile(""); arg5; }), m);
+        } else {
+            out[0] = t6[0];
+            if (fl & 0x10) {
+                out[1] = t6[1];
+                out[2] = t6[2];
+                if (fl & 8) {
+                    out[3] = t6[3];
+                }
+            } else if (fl & 0x20) {
+                out[1] = t6[0];
+                out[2] = t6[0];
+                if (fl & 8) {
+                    out[3] = t6[0];
+                }
+            }
+        }
+    } else if (col != NULL) {
+        if (fl & 0x30) {
+            i = (fl & 8) ? 3 : 2;
+        } else {
+            i = 0;
+        }
+        for (; i >= 0; i--) {
+            out[i] = col[i];
+        }
+    }
+}
 
 f32 cosf(f32);
 f32 vec3Length(f32 *);
