@@ -264,7 +264,119 @@ INCLUDE_RODATA("asm/nonmatchings/main/700B0", strShockBig);
 
 INCLUDE_RODATA("asm/nonmatchings/main/700B0", strShockSml);
 
-INCLUDE_ASM("asm/nonmatchings/main/700B0", orientedNpcHandler);
+typedef struct { s32 a, b, c, d; } OriChunk;
+typedef struct { u8 r, g, b, a; } OriRgba;
+typedef struct {
+    u8 *mesh;
+    f32 mtx[12];
+    OriRgba col;
+    s32 flags;
+    f32 f3C, f40, f44, f48, f4C, f50;
+} OriNpc;
+typedef struct { f32 *mat; OriRgba *color; s32 kind; f32 f0C, f10, f14; } OriSpawn;
+extern u32 D_main_800A0A90[];
+extern u16 D_main_bss_80139574;
+
+extern u16 D_main_bss_80139900[];
+extern u16 oriTblA[] __asm__("D_main_bss_80139870");
+extern u8 *instantiateNamedMeshInstance(u32);
+extern void releaseMeshAsset(void *);
+extern void applyRgbaTintToMeshVertices(void *, void *);
+extern void setMaterialFlagByIdInMeshTree(void *, s32, u16);
+extern void mat34CrossRowsAndCopyPosPtr(void *, void *, f32 *);
+extern void buildRotationMatrixSlot1(void *, f32);
+extern void mat3x4Multiply(void *, void *, void *);
+extern void addNpcToVisibilityBucket(void *, void *, void *, f32);
+extern f32 sinf(f32);
+
+#define SP ((OriSpawn *)arg2)
+s32 orientedNpcHandler(struct D_80130BB8_type *self, u16 arg1, void *arg2) {
+    OriNpc *s = (OriNpc *)self->unk04;
+    f32 vec[3];
+    f32 rot[12];
+    f32 dt;
+    f32 a;
+    f32 b;
+    f32 r;
+    f32 w;
+    f32 al;
+    s32 k;
+    u16 *tbl;
+    void **ctx;
+
+    switch (arg1) {
+    case 1:
+        {
+            OriChunk *dst = (OriChunk *)s->mtx;
+            OriChunk *src = (OriChunk *)SP->mat;
+            OriChunk *end = src + 3;
+            do {
+                *dst = *src;
+                src++;
+                dst++;
+            } while (src != end);
+        }
+        self->unk08 = (void *)s->mtx;
+        k = SP->kind;
+        s->flags = k;
+        s->mesh = instantiateNamedMeshInstance(D_main_800A0A90[k & 0xFF]);
+        *(u32 *)(s->mesh + 0x64) = (*(u32 *)(s->mesh + 0x64) & 0xF03FFFFF) | 0x09000000;
+        s->f3C = SP->f0C;
+        s->f40 = SP->f10 - SP->f0C;
+        s->f44 = 1.0f;
+        s->f4C = 640.0f;
+        s->f50 = 0.0f;
+        s->f48 = 1.0f / SP->f14;
+        if (SP->color == NULL) {
+            s->col.r = 0xFF;
+            s->col.g = 0xFF;
+            s->col.b = 0xFF;
+        } else {
+            s->col = *SP->color;
+        }
+        popNpcSlotFromTail(D_main_bss_80139574, self);
+        return 1;
+    case 2:
+        releaseMeshAsset(s->mesh);
+        return 1;
+    case 3:
+        dt = *(f32 *)arg2;
+        s->f44 = s->f44 - dt * s->f48;
+        if (s->f44 <= 0.0f) {
+            destroyNpcSlotByIndex(self->unk16);
+            return 1;
+        }
+        s->f50 += s->f4C * dt;
+        break;
+    case 4:
+        ctx = (void **)arg2;
+        s->col.a = (u32)(s->f44 * 255.0f);
+        applyRgbaTintToMeshVertices(s->mesh, &s->col);
+        if ((u8)s->flags == 2) {
+            al = s->f44; w = 1.0f; w -= al; w *= 20.0f;
+            setMaterialFlagByIdInMeshTree(s->mesh + 0x58, 0xFFFF, oriTblA[(s32)w]);
+        } else if ((u8)s->flags == 3) {
+            al = s->f44; w = 1.0f; w -= al; w *= 6.0f;
+            setMaterialFlagByIdInMeshTree(s->mesh + 0x58, 0xFFFF, D_main_bss_80139900[(s32)w]);
+        }
+        if (!(s->flags & 0x8000)) {
+            r = s->f3C + sinf((1.0f - s->f44) * 3.1415927f * 0.5f) * s->f40;
+        } else if (s->f44 > 0.5f) {
+            r = s->f3C + sinf((1.0f - s->f44) * 3.1415927f) * s->f40;
+        } else {
+            r = sinf((1.0f - s->f44) * 3.1415927f) * (s->f3C + s->f40);
+        }
+        vec[0] = s->mtx[9] * r;
+        vec[1] = s->mtx[10] * r;
+        vec[2] = s->mtx[11] * r;
+        mat34CrossRowsAndCopyPosPtr(s->mesh + 0x28, s->mtx, vec);
+        buildRotationMatrixSlot1(rot, s->f50);
+        mat3x4Multiply(s->mesh + 0x28, rot, s->mesh + 0x28);
+        addNpcToVisibilityBucket(*ctx, s->mesh, s->mtx, r + r);
+        break;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/700B0", multiEventTemplateNpcHandler);
 
