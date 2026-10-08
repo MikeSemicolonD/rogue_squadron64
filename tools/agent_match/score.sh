@@ -22,6 +22,8 @@ for d in "$@"; do
   if ! make -s $o >$T/log 2>&1; then echo "$(basename $d) compile-failed $(grep -m1 -E ':[0-9]+: [^w]' $T/log)"; continue; fi
   mips-linux-gnu-objdump -dr --no-show-raw-insn $o | awk -v f="<$FUNC>:" '$2==f{p=1;next} p&&/^$/{exit} p' > $T/b.raw
   python3 $H/norm.py obj $T/b.raw > $T/b.txt
+  cp $T/t.txt $T/t0.txt
+  python3 $H/normpair.py $T/t.raw $T/b.raw $T/t.txt $T/b.txt || cp $T/t0.txt $T/t.txt
   n=$(diff $T/t.txt $T/b.txt | grep -c '^[<>]')
   R='s/(\$f[0-9]+|\b(zero|at|v[01]|a[0-3]|t[0-9]|s[0-8]|fp|ra)\b)/R/g'
   sn=$(diff <(sed -E "$R" $T/t.txt) <(sed -E "$R" $T/b.txt) | grep -c '^[<>]')
