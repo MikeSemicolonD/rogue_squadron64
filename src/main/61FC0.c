@@ -194,12 +194,7 @@ void loadCharTextureSet(s32 arg0, u16 arg1, u16 arg2, u16 arg3) {
     f->unk102 = f->unk01F;
 }
 
-__asm__(".section .rodata
-.globl D_main_8003B730
-D_main_8003B730:
-.asciz \"fonts/%s\"
-.align 2
-.section .text");
+__asm__(".section .rodata\n.globl D_main_8003B730\nD_main_8003B730:\n.asciz \"fonts/%s\"\n.align 2\n.section .text");
 #include "textures.h"
 extern struct material_entry D_main_8003B6BC;
 extern char D_main_8003B6E0[];

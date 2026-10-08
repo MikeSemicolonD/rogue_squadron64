@@ -287,6 +287,4 @@ void tickTextureAnimSlots(f32 dt) {
     } while (i < 8);
 }
 
-__asm__(".section .rodata
-.word 0x025E1821, 0x8FAF05A4
-.section .text");
+__asm__(".section .rodata\n.word 0x025E1821, 0x8FAF05A4\n.section .text");

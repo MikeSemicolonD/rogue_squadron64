@@ -555,10 +555,7 @@ s32 byteAnimatedDebrisNpcHandler(BadNpc *arg0, u16 a1, BadArg *arg2) {
     }
     return 1;
 }
-__asm__(".section .rodata
-.word 0x2E020010
-.word 0x1440FFFA
-.section .text");
+__asm__(".section .rodata\n.word 0x2E020010\n.word 0x1440FFFA\n.section .text");
 
 
 #include "common_types.h"

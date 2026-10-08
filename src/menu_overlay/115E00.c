@@ -59,21 +59,7 @@ struct xy_offset bridgeShipBlueprintScreenPositions[8][8] = {
 // DO NOT DELTE ME I AM REQUIRED FOR MATCHING
 u32 data_pad_115E00 = 0x27C30020;
 
-__asm__(".section .rodata
-.align 2
-D_menu_overlay_800A5870: .asciz \"frontend/bridge\"
-.align 2
-D_menu_overlay_800A5880: .asciz \"+bridge\"
-.align 2
-D_menu_overlay_800A5888: .asciz \"-console\"
-.align 2
-D_menu_overlay_800A5894: .asciz \"-steps\"
-.align 2
-D_menu_overlay_800A589C: .asciz \"-lights\"
-.align 2
-D_menu_overlay_800A58A4: .asciz \"frontend/bridge/bridge\"
-.align 2
-.section .text");
+__asm__(".section .rodata\n.align 2\nD_menu_overlay_800A5870: .asciz \"frontend/bridge\"\n.align 2\nD_menu_overlay_800A5880: .asciz \"+bridge\"\n.align 2\nD_menu_overlay_800A5888: .asciz \"-console\"\n.align 2\nD_menu_overlay_800A5894: .asciz \"-steps\"\n.align 2\nD_menu_overlay_800A589C: .asciz \"-lights\"\n.align 2\nD_menu_overlay_800A58A4: .asciz \"frontend/bridge/bridge\"\n.align 2\n.section .text");
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A58BC);
 extern char D_menu_overlay_800A5870[];
 extern char D_menu_overlay_800A5880[];
