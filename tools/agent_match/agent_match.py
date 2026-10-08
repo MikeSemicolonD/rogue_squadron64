@@ -183,12 +183,14 @@ class Run:
             loop = asyncio.get_running_loop()
             cmd = (ENV + f"python3 tools/replace_asm.py {func} {shlex.quote(str(draft))} && sed -i '/\\/\\/ LANDING:/d' {src} && "
                    f"rm -f build/{src[:-2]}.o build/{src[:-2]}.s build/{src[:-2]}.i && make -j4 check 2>&1 | tail -3")
+            lock = HOME / "rs64-auto" / "land.lock"
+            cmd = f"exec 9>{lock}; flock 9; " + cmd
             rc, out = await loop.run_in_executor(None, lambda: sh(cmd, cwd=MAIN, timeout=3600))
             if "tyler.z64: OK" not in out:
                 await loop.run_in_executor(None, lambda: sh(f"git checkout -q -- {src}", cwd=MAIN))
                 self.log(f"LAND FAILED {func}: {out[-400:]}")
                 return "land-failed"
-            commit = (f"git add {src} && git -c user.name='Michael Frye' -c user.email=legoguy217@gmail.com "
+            commit = (f"exec 9>{lock}; flock 9; git add {src} && git -c user.name='Michael Frye' -c user.email=legoguy217@gmail.com "
                       f"commit -q -m 'Match {func}' && git log --oneline -1")
             rc, out = await loop.run_in_executor(None, lambda: sh(commit, cwd=MAIN))
             self.log(f"LANDED {func}: {out.strip()}")
