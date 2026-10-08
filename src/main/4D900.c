@@ -1120,7 +1120,142 @@ void initPlayerVehicleStateTables(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/4D900", updateMultiNodeAudioListeners);
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", resetEffectObjectVecQuads);
+extern u8 D_main_bss_80138930[][4][0xF8];
+extern u8 D_main_8009EC14[];
+extern u8 D_main_8009EBBC;
+extern u16 D_ebc4u __asm__("D_main_8009EBC4");
+extern u8 D_rA80[] __asm__("D_main_bss_80137A80");
+
+#define INIT_EFF(e, B, X1, X2) \
+    *(u16 *)(e + 2) = 0; \
+    *(u16 *)(e + 4) = 0; \
+    *(u16 *)(e + 0) = 0; \
+    clearVec4QuadStruct(e + 0x28); \
+    *(f32 *)(e + 0xC8) = 1.0f; \
+    *(s32 *)(e + 0x58) = 0; \
+    *(s32 *)(e + 0x5C) = 0; \
+    *(s32 *)(e + 0x60) = 0; \
+    *(s32 *)(e + 0x64) = 0; \
+    *(s32 *)(e + 0x68) = 0; \
+    *(s32 *)(e + 0x6C) = 0; \
+    *(s32 *)(e + 0x78) = 0; \
+    *(s32 *)(e + 0x7C) = 0; \
+    *(s32 *)(e + 0x80) = 0; \
+    *(s32 *)(e + 0x84) = 0; \
+    *(s32 *)(e + 0x88) = 0; \
+    *(s32 *)(e + 0x8C) = 0; \
+    *(s32 *)(e + 0x10) = 0; \
+    *(s32 *)(e + 0x14) = 0; \
+    *(s32 *)(e + 0x18) = 0; \
+    *(s32 *)(e + 0x1C) = 0; \
+    *(s32 *)(e + 0x20) = 0; \
+    *(s32 *)(e + 0x24) = 0; \
+    *(u8 **)(e + 0x70) = D_main_8009EC14; \
+    *(u8 **)(e + 0x74) = D_main_8009EC14; \
+    *(s32 *)(e + 0x90) = 0; \
+    *(s32 *)(e + 0x94) = 0; \
+    *(s32 *)(e + 0x98) = 0; \
+    *(s32 *)(e + 0x9C) = 0; \
+    *(s32 *)(e + 0xA0) = 0; \
+    *(u8 **)(e + 0xBC) = (u8 *)B; \
+    *(u8 **)(e + 0xC0) = (u8 *)B; \
+    *(s32 *)(e + 0xC4) = 0; \
+    *(s32 *)(e + 0xCC) = 0; \
+    *(s32 *)(e + 0xD0) = 0; \
+    *(s32 *)(e + 0xD8) = 0; \
+    *(s32 *)(e + 0xE0) = 0; \
+    *(s32 *)(e + 0xDC) = 0; \
+    X1 \
+    *(f32 *)(e + 0xB8) = 0.3515625f; \
+    *(f32 *)(e + 0xD4) = 80.0f; \
+    *(f32 *)(e + 0xE4) = -45.0f; \
+    *(f32 *)(e + 0xE8) = 45.0f; \
+    *(f32 *)(e + 0xA4) = 0.033333335f; \
+    *(s32 *)(e + 0xA8) = 0; \
+    *(f32 *)(e + 0xAC) = 0.075f; \
+    *(f32 *)(e + 0xB0) = 10.0f; \
+    *(s32 *)(e + 0xEC) = 0; \
+    X2 \
+    *(s32 *)(e + 0xF0) = 0; \
+    *(s32 *)(e + 0xB4) = 0;
+
+void resetEffectObjectVecQuads(s32 arg0)
+{
+    s32 i;
+    u8 *e;
+    register u16 ff asm("$18");
+
+    D_main_bss_80138D18[arg0].unk4 = D_main_bss_80138268[arg0][2];
+    for (i = 0; i < 6; i++) {
+        e = D_main_bss_80138268[arg0][i];
+        *(s32 *)(e + 8) = i;
+        *(s32 *)(e + 0xC) = arg0;
+        INIT_EFF(e, D_main_bss_80138268, *(u16 *)(e + 0xF4) = 0xFFFF;, ;)
+    }
+    for (i = 0; i < 4; ) {
+        e = D_main_bss_80138930[arg0][i];
+        *(s32 *)(e + 8) = i;
+        *(s32 *)(e + 0xC) = arg0;
+        *(u16 *)(e + 2) = 0;
+        *(u16 *)(e + 4) = 0;
+        *(u16 *)(e + 0) = 0;
+        clearVec4QuadStruct(e + 0x28);
+        i++;
+        ff = 0xFFFF;
+        *(f32 *)(e + 0xC8) = 1.0f;
+        *(s32 *)(e + 0x58) = 0;
+        *(s32 *)(e + 0x5C) = 0;
+        *(s32 *)(e + 0x60) = 0;
+        *(s32 *)(e + 0x64) = 0;
+        *(s32 *)(e + 0x68) = 0;
+        *(s32 *)(e + 0x6C) = 0;
+        *(s32 *)(e + 0x78) = 0;
+        *(s32 *)(e + 0x7C) = 0;
+        *(s32 *)(e + 0x80) = 0;
+        *(s32 *)(e + 0x84) = 0;
+        *(s32 *)(e + 0x88) = 0;
+        *(s32 *)(e + 0x8C) = 0;
+        *(s32 *)(e + 0x10) = 0;
+        *(s32 *)(e + 0x14) = 0;
+        *(s32 *)(e + 0x18) = 0;
+        *(s32 *)(e + 0x1C) = 0;
+        *(s32 *)(e + 0x20) = 0;
+        *(s32 *)(e + 0x24) = 0;
+        *(u8 **)(e + 0x70) = D_main_8009EC14;
+        *(u8 **)(e + 0x74) = D_main_8009EC14;
+        *(s32 *)(e + 0x90) = 0;
+        *(s32 *)(e + 0x94) = 0;
+        *(s32 *)(e + 0x98) = 0;
+        *(s32 *)(e + 0x9C) = 0;
+        *(s32 *)(e + 0xA0) = 0;
+        *(u8 **)(e + 0xBC) = (u8 *)D_main_bss_80138268;
+        *(u8 **)(e + 0xC0) = (u8 *)D_main_bss_80138268;
+        *(s32 *)(e + 0xC4) = 0;
+        *(s32 *)(e + 0xCC) = 0;
+        *(s32 *)(e + 0xD0) = 0;
+        *(s32 *)(e + 0xD8) = 0;
+        *(s32 *)(e + 0xE0) = 0;
+        *(s32 *)(e + 0xDC) = 0;
+        *(u16 *)e = 0x10;
+        *(f32 *)(e + 0xB8) = 0.3515625f;
+        *(f32 *)(e + 0xD4) = 80.0f;
+        *(f32 *)(e + 0xE4) = -45.0f;
+        *(f32 *)(e + 0xE8) = 45.0f;
+        *(f32 *)(e + 0xA4) = 0.033333335f;
+        *(s32 *)(e + 0xA8) = 0;
+        *(f32 *)(e + 0xAC) = 0.075f;
+        *(f32 *)(e + 0xB0) = 10.0f;
+        *(s32 *)(e + 0xEC) = 0;
+        *(u16 *)(e + 0xF4) = ff;
+        *(s32 *)(e + 0xF0) = 0;
+        *(s32 *)(e + 0xB4) = 0;
+    }
+    updateAudioListenerPosFromPlayer();
+    D_main_8009EBBC = 0;
+    ff = 0xFFFF;
+    D_ebc4u = ff;
+    clearVec4QuadStruct(D_rA80);
+}
 
 extern u8 D_main_bss_80138930[][4][0xF8];
 typedef struct {
