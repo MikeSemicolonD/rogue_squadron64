@@ -300,7 +300,44 @@ void playCutsceneObjectImpactSound(u8 *obj) {
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", tickCutsceneObject);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0AEFF0", findNearestSceneObjectToPoint);
+extern u8 gObjectiveBooleans[];
+extern s32 gObjectiveCounts[];
+extern f32 vec3Length(void *);
+typedef struct {
+    u32 count;
+    u8 **objs;
+} SceneObjList;
+extern SceneObjList *D_main_bss_801375D8;
+
+u8 *fnImpl(f32 *pos) __asm__("findNearestSceneObjectToPoint");
+u8 *fnImpl(f32 *pos) {
+    f32 d[3];
+    f32 best;
+    f32 dist;
+    u8 *found;
+    u8 *o;
+    u32 i;
+
+    found = NULL;
+    best = 10000000.0f;
+    for (i = 0; i < D_main_bss_801375D8->count; i++) {
+        o = D_main_bss_801375D8->objs[i];
+        if (*(u16 *)o == 2) {
+            if ((*(s32 *)(o + 0x60) == 0 || gObjectiveBooleans[*(s32 *)(o + 0x60) - 1] != 0) &&
+                (*(s32 *)(o + 0x64) == 0 || gObjectiveCounts[*(s32 *)(o + 0x64) - 1] >= *(s32 *)(o + 0x68))) {
+                d[0] = pos[0] - *(f32 *)(o + 0x10);
+                d[1] = pos[1] - *(f32 *)(o + 0x14);
+                d[2] = pos[2] - *(f32 *)(o + 0x18);
+                dist = vec3Length(d);
+                if (dist < best) {
+                    best = dist;
+                    found = o;
+                }
+            }
+        }
+    }
+    return found;
+}
 
 typedef struct { s32 a, b, c; } V3;
 typedef struct {
