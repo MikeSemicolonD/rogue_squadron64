@@ -3277,7 +3277,83 @@ s32 traverseSceneGraphRecursive(u8 *arg0, f32 *arg1, f32 *arg2, u8 *arg3) {
     return s1 & 0xFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", drawTextGlyphRect);
+extern u32 dtgW __asm__("D_main_bss_8011A838");
+extern u32 dtgH __asm__("D_main_bss_8011A83C");
+void drawTextGlyphRect(s32 tex, s16 x0, s16 y0, s16 x1, s16 y1, u16 dsdx, u16 dtdy) {
+    u32 s;
+    u32 t;
+
+    if ((y1 < 0) | (x1 < 0)) {
+        return;
+    }
+    if (y0 < (s16)(D_main_bss_8011A83C * 4) && x0 < (s16)(D_main_bss_8011A838 * 4)) {
+        if (y0 < 0) {
+            t = (u32)-y0 >> 1;
+            y0 = 0;
+        } else {
+            t = 0;
+        }
+        if (x0 < 0) {
+            s = (u32)-x0 >> 1;
+            x0 = 0;
+        } else {
+            s = 0;
+        }
+        if (y1 > dtgH * 4) {
+            y1 = dtgH * 4;
+        }
+        if (x1 > dtgW * 4) {
+            x1 = dtgW * 4;
+        }
+        if (D_main_bss_8011DC58 + 1 >= D_main_bss_801163D4) {
+            struct DisplayListBuffer *chunk;
+            struct DisplayListBuffer *tail;
+            struct DisplayListBuffer *buf;
+            D_main_bss_8011DC58->words.w0 = 0xB5000000;
+            D_main_bss_8011DC58->words.w1 = 0;
+            chunk = D_main_bss_801163B0;
+            if (chunk == NULL) {
+                chunk = findAndUnlinkSmallestEntry();
+                if (chunk != NULL) {
+                    tail = chunk;
+                    while (tail->next != NULL) {
+                        tail = tail->next;
+                    }
+                    tail->next = D_main_bss_801163B0;
+                    if (D_main_bss_801163B0 != NULL) {
+                        D_main_bss_801163B0->prev = tail;
+                    }
+                    D_main_bss_801163B0 = chunk;
+                    chunk->prev = NULL;
+                }
+                chunk = D_main_bss_801163B0;
+            }
+            D_main_bss_801163B0 = D_main_bss_801163B0->next;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = NULL;
+            }
+            buf = chunk;
+            if (*D_main_bss_801163FC == NULL) {
+                *D_main_bss_801163FC = buf;
+            } else {
+                (*D_main_bss_8011A7DC)->next = buf;
+                buf->prev = *D_main_bss_8011A7DC;
+            }
+            buf->next = NULL;
+            *D_main_bss_8011A7DC = buf;
+            D_main_bss_801163D4 = &buf->displayList[0x1F];
+            D_main_bss_8011DC58 = buf->displayList;
+        }
+        {
+            Gfx *g = D_main_bss_8011DC58;
+            g[0].words.w0 = 0xE4000000 | ((x1 & 0xFFF) << 12) | (y1 & 0xFFF);
+            g[0].words.w1 = ((x0 & 0xFFF) << 12) | (y0 & 0xFFF);
+            g[1].words.w0 = (s << 21) | ((t << 5) & 0xFFE0);
+            g[1].words.w1 = (dsdx << 16) | dtdy;
+            D_main_bss_8011DC58 = g + 2;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", drawSubtitleText);
 
