@@ -3,6 +3,7 @@
 
 decomp-permuter's import leaves its `_permuter_ignore_line` marker in such lines, and pycparser rejects asm labels.
 This strips the marker and wraps each top-level line that contains __asm__ in PERM_IGNORE(...).
+Non-static inline definitions become static inline; otherwise their bodies land in every candidate object and score as insertions.
 Usage: perm_fix_base.py <nonmatchings/func/base.c>
 """
 import re, sys
@@ -14,6 +15,8 @@ for l in lines:
     if depth == 0 and re.search(r"\b(__asm__|asm)\s*\(", l) and l.rstrip().endswith(";") and not l.startswith("PERM_IGNORE("):
         out.append("PERM_IGNORE(" + l.rstrip() + ")")
         n += 1
+    elif depth == 0 and re.match(r"inline\s", l):
+        out.append("static " + l)
     else:
         out.append(l)
     depth += l.count("{") - l.count("}")
