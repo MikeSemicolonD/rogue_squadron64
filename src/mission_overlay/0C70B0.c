@@ -69,7 +69,62 @@ INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0C70B0", D_mission_overlay_800A6904);
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C70B0", tickHangarDisplayItemAnimations);
+extern u8 D_mission_overlay_8010A414[];
+extern u8 D_mission_overlay_8010A418[];
+extern u8 D_mission_overlay_8010A41C[];
+extern u8 *D_main_bss_80130C08;
+void setRenderObjectTargetOrClear(void *, u16, u8 *);
+
+void tickHDIA_l(u8 *obj, u8 idx, f32 dt) __asm__("tickHangarDisplayItemAnimations");
+void tickHDIA_l(u8 *obj, u8 idx, f32 dt) {
+    u8 i;
+    f32 t;
+    u8 alpha;
+    u8 *color;
+
+    if (D_mission_overlay_8010A420[idx] != NULL) {
+        for (i = 0; i < obj[0x1E0]; i++) {
+            ((HangarDisplayState *)obj)->timers[i] -= dt;
+            if (((HangarDisplayState *)obj)->timers[i] <= 0.0f) {
+                *(obj + i + 0x1E1) = (*(obj + i + 0x1E1) + 1) & 3;
+                ((HangarDisplayState *)obj)->timers[i] = D_mission_overlay_8010A204[D_mission_overlay_8010A420[idx][i].type][*(obj + i + 0x1E1)];
+            }
+            t = ((HangarDisplayState *)obj)->timers[i] / D_mission_overlay_8010A204[D_mission_overlay_8010A420[idx][i].type][*(obj + i + 0x1E1)];
+            switch (*(obj + i + 0x1E1)) {
+            case 0:
+                alpha = 0;
+                break;
+            case 1:
+                alpha = (1.0f - t) * 255.0f;
+                break;
+            case 2:
+                alpha = 0xFF;
+                break;
+            case 3:
+                alpha = t * 255.0f;
+                break;
+            }
+            switch (((u8 *)D_mission_overlay_8010A420[idx][i].name)[5]) {
+            case 'r':
+                color = D_mission_overlay_8010A41C;
+                break;
+            case 'g':
+                color = D_mission_overlay_8010A418;
+                break;
+            case 'w':
+                color = D_mission_overlay_8010A414;
+                break;
+            }
+            color[3] = alpha;
+            if (*(obj + i + 0x1E1) == 0) {
+                setRenderObjectTargetOrClear(obj + (i * 0x48 + 0x18), 0xFFFF, color);
+            } else {
+                setRenderObjectTargetOrClear(obj + (i * 0x48 + 0x18), *(u16 *)(D_main_bss_80130C08 + 0x24), color);
+            }
+  
+        }
+    }
+}
 
 typedef struct {
     s32 m[12];
