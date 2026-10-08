@@ -4,7 +4,74 @@ INCLUDE_ASM("asm/nonmatchings/main/68990", wrapAngleToCyclicRange);
 
 INCLUDE_ASM("asm/nonmatchings/main/68990", sampleTerrainSurfaceAtWorldXz);
 
-INCLUDE_ASM("asm/nonmatchings/main/68990", sampleHmpTileHeightBicubic);
+#include "common_types.h"
+typedef struct { u8 pad[5]; s8 h[25]; } HbGrid;
+
+f32 sampleHmpTileHeightBicubic(f32 x0, f32 y0, f32 z0, f32 dx, f32 dy, f32 dz, HbGrid *g) {
+    s32 i;
+    s32 j;
+    f32 best;
+    f32 t;
+    f32 num;
+    f32 den;
+    f32 r;
+    s32 a;
+    s32 e1;
+    s32 e2;
+    s32 e3, e4, b;
+    s32 r0, r1, r5, r6;
+
+    if (x0 + dx < -0.001f) {
+        x0 += 4.0f;
+    }
+    if (z0 + dz < -0.001f) {
+        z0 += 4.0f;
+    }
+    best = 1.0f;
+    for (j = 0; j < 4; j++) {
+        t = ((f32)j + 1.0f) - z0;
+        r5 = j * 5 + 5;
+        r6 = j * 5 + 6;
+        r0 = j * 5;
+        r1 = j * 5 + 1;
+        for (i = 0; i < 4; i++) {
+            a = g->h[i + r6];
+            e1 = g->h[i + r1];
+            {
+                register HbGrid *p asm("$3") = (HbGrid *)((s32)g + (i + r5));
+                e2 = p->h[0];
+            }
+            e1 -= a;
+            e2 -= a;
+            den = e1;
+            num = (((f32)i + 1.0f) - x0) * e2 + ((f32)a - y0) + t * den;
+            den = e2 * dx + dy + den * dz;
+            if (0.0f <= num && num < den) {
+                r = num / den;
+                if (r < best) {
+                    if ((s32)(x0 + dx * r) == i && (s32)(z0 + dz * r) == j) {
+                        best = r;
+                    }
+                }
+            }
+            b = g->h[i + r0];
+            e3 = b - g->h[i + r1];
+            e4 = b - g->h[i + r5];
+            den = e4;
+            num = ((f32)i - x0) * e3 + ((f32)b - y0) + ((f32)j - z0) * den;
+            den = e3 * dx + dy + den * dz;
+            if (0.0f <= num && num < den) {
+                r = num / den;
+                if (r < best) {
+                    if ((s32)(x0 + dx * r) == i && (s32)(z0 + dz * r) == j) {
+                        best = r;
+                    }
+                }
+            }
+        }
+    }
+    return best;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/68990", sampleTerrainAtNpcPosition);
 
