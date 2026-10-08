@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Byte-based decompilation progress: .text bytes in C subsegments minus INCLUDE_ASM functions, per top-level group."""
+"""Byte-based decompilation progress: .text bytes in C subsegments minus INCLUDE_ASM functions, per top-level group.
+
+Handwritten asm (hasm) was never C, so it is left out of the totals.
+"""
 import argparse, pathlib, re, sys
 import yaml
 
@@ -52,12 +55,14 @@ def measure(root):
     mk = root / "Makefile"
     ultralib = mk.exists() and "USE_ULTRALIB ?= 1" in mk.read_text()
     for start, size, typ, name in text_ranges(root / "roguesquadron.yaml"):
+        if typ == "hasm":
+            continue
         group = name.split("/")[0]
         g = stats.setdefault(group, {"total": 0, "asm_bytes": 0, "asm_funcs": 0})
         g["total"] += size
-        if typ in ("asm", "hasm") and group == "libultra" and ultralib:
+        if typ == "asm" and group == "libultra" and ultralib:
             continue
-        if typ in ("asm", "hasm"):
+        if typ == "asm":
             g["asm_bytes"] += size
             s = root / "asm" / f"{name}.s"
             if s.exists():

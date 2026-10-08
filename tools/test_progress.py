@@ -71,5 +71,13 @@ class T(unittest.TestCase):
         r = self.run_progress()
         self.assertIn("main: 64/128 bytes (50.0%), 2 functions in asm", r.stdout)
 
+    def test_handwritten_asm_excluded(self):
+        y = (self.d / "roguesquadron.yaml").read_text().replace("[0x1060, asm, \"main/b\"]", "[0x1060, hasm, \"main/b\"]")
+        (self.d / "roguesquadron.yaml").write_text(y)
+        r = self.run_progress()
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn("main: 64/96 bytes (66.7%), 1 functions in asm", r.stdout)
+        self.assertIn("total: 128/160 bytes (80.0%), 1 functions in asm", r.stdout)
+
 if __name__ == "__main__":
     unittest.main()
