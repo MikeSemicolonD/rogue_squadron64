@@ -126,7 +126,167 @@ next:
     return idx != 0xFFFF;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/56F50", walkMeshdef0List);
+void clearStructPair2C30(void *);
+
+typedef struct WmNode {
+    struct WmNode *next;
+    struct WmNode *prev;
+    s32 val;
+    s32 flag;
+    u8 pad[0x5C - 0x10];
+} WmNode;
+
+typedef struct WmSeg {
+    struct WmSeg *link[4];
+    WmNode *nodes;
+    s32 a14;
+    s32 a18;
+    u8 m[0x30];
+} WmSeg;
+
+typedef struct WmEnt {
+    u32 bits;
+    u8 *src;
+} WmEnt;
+
+typedef struct WmDef {
+    u16 nSeg;
+    u16 nNode;
+    WmEnt e[1];
+} WmDef;
+
+typedef struct WmInst {
+    struct object_entry *obj;
+    s32 x4;
+    u16 x8;
+    u8 xa;
+    u8 xb;
+    WmSeg segs[1];
+} WmInst;
+
+u8 *walkMeshdef0List(u8 *name)
+{
+    u8 *p = name;
+    s32 i = 0;
+    s32 idx;
+    u8 *e;
+    u8 *entry;
+    WmDef *def;
+    s32 *s4;
+    WmInst *inst;
+    WmSeg *base;
+    WmSeg *seg;
+    WmEnt *ent;
+    WmNode *node;
+    WmNode *prev;
+    WmNode *nx;
+    u32 bits;
+    u8 *src;
+    u8 cnt;
+
+    while (*p != 0) {
+        i += *p++;
+    }
+    idx = hobObjectHashMap[i % 25];
+    while (idx != 0xFFFF) {
+        e = (u8 *)hobObjectListItems[idx].object_entry;
+        i = 0;
+        if (name[0] != 0) {
+            p = name;
+            do {
+                if (*p != e[i]) {
+                    goto next;
+                }
+                i++;
+                if (i >= 16) {
+                    break;
+                }
+                p++;
+            } while (*p != 0);
+        }
+        if (name[i] == e[i]) {
+            break;
+        }
+next:
+        idx = hobObjectListItems[idx].nextIndex;
+    }
+    if (idx != 0xFFFF) {
+        entry = (u8 *)hobObjectListItems[idx].object_entry;
+        def = *(WmDef **)(entry + 0x14);
+        s4 = *(s32 **)(entry + 0x18) + 1;
+        if ((*(u16 *)(entry + 0x38) & 1) && D_main_bss_80139550 != 0) {
+            cnt = --D_main_bss_80139550;
+            inst = (WmInst *)((u8 *)D_main_bss_801394E8 + D_main_801394F0[cnt] * 0xB4);
+            inst->x8 = 4;
+            D_main_bss_80139554++;
+        } else {
+            inst = rs_malloc(0xC + def->nSeg * 0x4C + def->nNode * 0x5C, 0);
+            inst->x8 = 0;
+        }
+        *(u16 *)((u8 *)hobObjectListItems[idx].object_entry + 0x3A) += 1;
+        inst->obj = hobObjectListItems[idx].object_entry;
+        inst->x4 = 0;
+        inst->xa = 0;
+        inst->xb = 0;
+        base = inst->segs;
+        node = (WmNode *)&base[def->nSeg];
+        for (idx = 0; idx < def->nNode; idx++) {
+            node[idx].flag = 4;
+            clearStructPair2C30(&node[idx]);
+        }
+        for (i = 0; i < def->nSeg; i++) {
+            seg = &base[i];
+            ent = (WmEnt *)((u8 *)def + i * 8);
+            bits = *(u32 *)((u8 *)ent + 4);
+            if (bits & 0x3F000000) {
+                seg->link[0] = &base[((bits >> 24) & 0x3F) - 1];
+            } else {
+                seg->link[0] = 0;
+            }
+            if (bits & 0xFC0000) {
+                seg->link[1] = &base[((bits >> 18) & 0x3F) - 1];
+            } else {
+                seg->link[1] = 0;
+            }
+            if (bits & 0x3F000) {
+                seg->link[2] = &base[((bits >> 12) & 0x3F) - 1];
+            } else {
+                seg->link[2] = 0;
+            }
+            if (bits & 0xFC0) {
+                seg->link[3] = &base[((bits >> 6) & 0x3F) - 1];
+            } else {
+                seg->link[3] = 0;
+            }
+            src = *(u8 **)((u8 *)ent + 8);
+            seg->a14 = *(s32 *)(src + 0x14);
+            seg->a18 = *(s32 *)(src + 0x18);
+            zmemcpy(seg->m, src + 0x1C, 0x30);
+            prev = 0;
+            if (*s4 != 0) {
+                seg->nodes = node;
+                do {
+                    nx = 0;
+                    if (s4[1] != 0) {
+                        nx = node + 1;
+                    }
+                    node->next = nx;
+                    node->prev = prev;
+                    node->val = *s4;
+                    node->flag = 4;
+                    prev = node;
+                    node++;
+                    s4++;
+                } while (*s4 != 0);
+            } else {
+                seg->nodes = 0;
+            }
+            s4++;
+        }
+        return (u8 *)inst;
+    }
+    return 0;
+}
 
 void clearStructPair2C30(void *);
 
