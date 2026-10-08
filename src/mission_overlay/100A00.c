@@ -202,7 +202,51 @@ void despawnCraftAnimationSlotNpcsAndMarkStopping(u8 slot) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/100A00", allocateCraftAnimationStateForSlot);
+void *rs_malloc(s32, s32);
+typedef struct {
+    u8 pad[0xF4];
+    f32 unkF4;
+    f32 unkF8;
+} CaCam;
+extern CaCam caCam __asm__("D_mission_overlay_8010CF38");
+
+static __inline__ void caReset(u8 index) {
+    u8 *obj;
+
+    despawnCraftAnimationSlotNpcs(index);
+    obj = D_mission_overlay_8010CF20[index].unk0;
+    D_mission_overlay_8010CF20[index].unk10 = 0;
+    D_mission_overlay_8010CF20[index].unk11 = 0;
+    D_mission_overlay_8010CF20[index].unk12 = 0;
+    D_mission_overlay_8010CF20[index].unk13 = 0;
+    caCam.unkF4 = *(f32 *)(obj + 0xE8);
+    caCam.unkF8 = 1.0f;
+}
+
+void allocateCraftAnimationStateForSlot(u8 *arg0, u8 slot, u8 *arg2)
+{
+  CraftAnimSlot *s;
+  u8 i;
+  u8 j;
+  D_mission_overlay_8010CF20[slot].unk4 = arg2;
+  D_mission_overlay_8010CF20[slot].unk0 = arg0;
+  if ((*arg2) != 0)
+  {
+    D_mission_overlay_8010CF20[slot].npcs[0] = rs_malloc((*arg2) * 2, 0);
+    D_mission_overlay_8010CF20[slot].npcs[1] = rs_malloc((*arg2) * 2, 0);
+    for (i = 0; i < 2; i++)
+    {
+      for (j = 0; j < (*D_mission_overlay_8010CF20[slot].unk4); j++)
+      {
+        D_mission_overlay_8010CF20[slot].npcs[i][j] = 0xFFFF;
+      }
+
+    }
+
+    caReset(slot);
+  }
+  resolveCraftAnimationNodeHandles(arg0);
+}
 
 typedef struct {
     s32 w0;
