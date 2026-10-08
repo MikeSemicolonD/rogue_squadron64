@@ -2047,7 +2047,270 @@ s32 reserveAlignedDLSpace(s32 gfx, u8 *out, u8 n, s32 *ptr, s32 arg4) {
 
 
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", heapFreeListDequeue);
+extern u8 hfdUsedArr[] __asm__("D_main_bss_8011A440");
+extern u8 D_main_bss_8011A898;
+extern u8 *D_hfd163B4 __asm__("D_main_bss_801163B4");
+extern u8 D_main_80037640[];
+s32 emitFaceDLCommands_l(Gfx *, void **, u8 *, s32, u16 *, s32) __asm__("emitFaceDLCommands");
+void hfdXform(s32 *, u16 *, u8 *, u8 *, u32, u8 *, s32, void *) __asm__("transformAndEmitFaceVertices");
+
+typedef struct {
+    u8 b[8];
+} HfdVtx8;
+
+typedef struct {
+    u8 pad0[0xC];
+    u32 c;
+    u8 pad10[0x14];
+    void *verts;
+    u8 pad28[4];
+    u32 f2c;
+} HfdMesh;
+
+#define HFD_WRAP(g)                                                  \
+    {                                                                \
+        struct DisplayListBuffer *chunk;                             \
+        struct DisplayListBuffer *tail;                              \
+        chunk = D_main_bss_801163B0;                                 \
+        (g)->words.w0 = 0xB5000000;                                  \
+        (g)->words.w1 = 0;                                           \
+        if (chunk == NULL) {                                         \
+            chunk = findAndUnlinkSmallestEntry();                    \
+            if (chunk != NULL) {                                     \
+                tail = chunk;                                        \
+                while (tail->next != NULL) {                         \
+                    tail = tail->next;                               \
+                }                                                    \
+                tail->next = D_main_bss_801163B0;                    \
+                if (D_main_bss_801163B0 != NULL) {                   \
+                    D_main_bss_801163B0->prev = tail;                \
+                }                                                    \
+                D_main_bss_801163B0 = chunk;                         \
+                chunk->prev = NULL;                                  \
+            }                                                        \
+            chunk = D_main_bss_801163B0;                             \
+        }                                                            \
+        D_main_bss_801163B0 = D_main_bss_801163B0->next;             \
+        if (D_main_bss_801163B0 != NULL) {                           \
+            D_main_bss_801163B0->prev = NULL;                        \
+        }                                                            \
+        if (*D_main_bss_801163FC == NULL) {                          \
+            *D_main_bss_801163FC = chunk;                            \
+        } else {                                                     \
+            (*D_main_bss_8011A7DC)->next = chunk;                    \
+            chunk->prev = *D_main_bss_8011A7DC;                      \
+        }                                                            \
+        chunk->next = NULL;                                          \
+        *D_main_bss_8011A7DC = chunk;                                \
+        D_main_bss_801163D4 = &chunk->displayList[0x1F];             \
+        g = chunk->displayList;                                      \
+    }
+
+static __inline__ s32 hfdReserve(s32 gfx, u8 *out, u8 n, s32 *ptr, s32 arg4) {
+    u8 *used = &D_main_bss_8011A440;
+    s32 base;
+    s32 *g;
+
+    if (*used + n > 0x40) {
+        g = D_main_bss_8011A438;
+        g[0] = ((((D_main_bss_8011A440 * 4) + 0xF) & 0xFFF0) - 1) & 0xFFFF | 0x02000000;
+        g[1] = D_main_bss_8011A43C;
+        gfx = reserveAndEmitDLEntry(gfx, arg4);
+    }
+    base = *used * 4;
+    out[1] = base;
+    if (n == 1) {
+        out[2] = out[3] = out[0] = base;
+    } else {
+        out[2] = base + 4;
+        out[3] = base + 8;
+        if (n == 3) {
+            out[0] = out[1];
+        } else {
+            out[0] = base + 0xC;
+        }
+    }
+    {
+        u8 b2 = D_main_bss_8011A440;
+        hfdUsedArr[0] = b2 + n;
+        *ptr = D_main_bss_8011A43C + b2 * 4;
+    }
+    return gfx;
+}
+
+s32 heapFreeListDequeue(u32 *face, HfdMesh *mesh, u32 prev, s32 arg3) {
+    void *vtx[4];
+    u8 cache[8];
+    u32 outw;
+    s32 ptr;
+    Gfx *gfx;
+    Gfx *p;
+    u32 flags;
+    u8 *colors;
+    u16 *idx;
+    s32 t; s32 sz;
+    s32 n;
+    s32 r;
+    s32 m;
+    s32 i;
+    u8 k;
+
+    if (mesh->f2c & 0x40000000) {
+        if (D_main_bss_801163BC >= 0x40) {
+            struct DisplayListBuffer *chunk;
+            struct DisplayListBuffer *tail;
+
+            chunk = D_main_bss_801163B0;
+            if (chunk == NULL) {
+                chunk = findAndUnlinkSmallestEntry();
+                if (chunk != NULL) {
+                    tail = chunk;
+                    while (tail->next != NULL) {
+                        tail = tail->next;
+                    }
+                    tail->next = D_main_bss_801163B0;
+                    if (D_main_bss_801163B0 != NULL) {
+                        D_main_bss_801163B0->prev = tail;
+                    }
+                    D_main_bss_801163B0 = chunk;
+                    chunk->prev = NULL;
+                }
+                chunk = D_main_bss_801163B0;
+            }
+            D_main_bss_801163B0 = D_main_bss_801163B0->next;
+            if (D_main_bss_801163B0 != NULL) {
+                D_main_bss_801163B0->prev = NULL;
+            }
+            if (*D_main_bss_8011A4B8 != NULL) {
+                (*D_main_bss_8011A4B8)->prev = chunk;
+            }
+            chunk->next = *D_main_bss_8011A4B8;
+            *D_main_bss_8011A4B8 = chunk;
+            D_main_bss_801163B8 = chunk->displayList;
+            D_main_bss_801163BC = 0;
+        }
+        ((s32 *)D_main_bss_801163B8)[D_main_bss_801163BC++] = (s32)face;
+    }
+    gfx = D_main_bss_8011DC58;
+    flags = face[0];
+    idx = (u16 *)((u8 *)face + ((face[1] >> 16) & 0xFC));
+    colors = (u8 *)face + ((face[1] >> 10) & 0xFC);
+    if ((prev ^ flags) & 0x80) {
+        if (gfx >= D_main_bss_801163D4) {
+            HFD_WRAP(gfx);
+        }
+        if (flags & 0x80) {
+            u32 *q = (u32 *)gfx;
+            gfx++;
+            q[0] = 0xB6000000;
+            q[1] = 0x2000;
+        } else {
+            u32 *q = (u32 *)gfx;
+            gfx++;
+            q[0] = 0xB7000000;
+            q[1] = 0x2000;
+        }
+    }
+    if ((flags & 2) && !(mesh->c & 0x10000) && D_main_bss_8011A898 != 0) {
+        if (gfx >= D_main_bss_801163D4) {
+            HFD_WRAP(gfx);
+        }
+        p = gfx++;
+        p->words.w0 = 0xFA008000;
+        p->words.w1 = colors[3];
+    }
+    r = emitFaceDLCommands_l(gfx, vtx, cache, (flags & 8) ? 4 : 3, idx, mesh->f2c);
+    gfx = (Gfx *)hfdReserve(r, (u8 *)&outw, !(flags & 0x30) ? 1 : (flags & 8) ? 4 : 3, &ptr, mesh->f2c);
+    if (mesh->c & 1) {
+        f32 *pos = (f32 *)mesh->verts;
+
+        m = 3;
+        if (flags & 8) {
+            m = 4;
+        }
+        for (i = 0; i < m; i++) {
+            f32 *v = pos + idx[i] * 3;
+            ((s16 *)vtx[i])[0] = v[0] * 256.0f;
+            ((s16 *)vtx[i])[1] = v[1] * 256.0f;
+            ((s16 *)vtx[i])[2] = v[2] * 256.0f;
+        }
+    } else {
+        HfdVtx8 *pos = (HfdVtx8 *)mesh->verts;
+
+        *(HfdVtx8 *)vtx[0] = pos[idx[0]];
+        *(HfdVtx8 *)vtx[1] = pos[idx[1]];
+        *(HfdVtx8 *)vtx[2] = pos[idx[2]];
+        if (flags & 8) {
+            *(HfdVtx8 *)vtx[3] = pos[idx[3]];
+        }
+    }
+    sz = 2;
+    if (flags & 4) {
+        sz = 4;
+    }
+    if (D_main_bss_801163D4 < gfx + sz) {
+        HFD_WRAP(gfx);
+    }
+    ((u32 *)gfx)[2] = outw;
+    gfx->words.w1 = (cache[0] * 5 << 16) | (cache[1] * 5 << 8) | (cache[2] * 5);
+    if (flags & 8) {
+        gfx->words.w0 = 0xB4000004;
+        k = cache[3];
+    } else {
+        gfx->words.w0 = 0xBF000000;
+        k = cache[0];
+    }
+    { register u32 w asm("$3") = gfx->words.w1; gfx->words.w1 = w | (k * 5 << 24); }
+    if (flags & 4) {
+        s16 *uv;
+        u32 *src;
+
+        gfx->words.w0 |= 2;
+        uv = (s16 *)((u8 *)gfx + 0x10);
+        src = (u32 *)((u8 *)face + (face[1] & 0x3F) * 4);
+        if (face[2] & 1) {
+            m = 3;
+            if (flags & 8) {
+                m = 4;
+            }
+            for (i = 0; i < m; i++) {
+                uv[0] = ((f32 *)src)[0] * 4096.0f;
+                uv[1] = ((f32 *)src)[1] * 4096.0f;
+                src += 2;
+                uv += 2;
+            }
+        } else {
+            ((u32 *)gfx)[4] = src[0];
+            ((u32 *)gfx)[5] = src[1];
+            ((u32 *)gfx)[6] = src[2];
+            if (flags & 8) {
+                ((u32 *)gfx)[7] = src[3];
+            }
+        }
+    }
+    gfx += sz;
+    if ((flags & 0x40) && !(mesh->c & 0x100000)) {
+        hfdXform((s32 *)ptr, idx, colors, (u8 *)face + ((face[1] & 0xFC0) >> 4), flags,
+                                     D_hfd163B4 != NULL ? D_hfd163B4 + *(u16 *)&face[2] * 16 : D_main_80037640, arg3, mesh);
+    } else {
+        ((u32 *)ptr)[0] = ((u32 *)colors)[0];
+        if (flags & 0x10) {
+            ((u32 *)ptr)[1] = ((u32 *)colors)[1];
+            ((u32 *)ptr)[2] = ((u32 *)colors)[2];
+            if (flags & 8) {
+                ((u32 *)ptr)[3] = ((u32 *)colors)[3];
+            }
+        } else if (flags & 0x20) {
+            ((u32 *)ptr)[1] = ((u32 *)colors)[0];
+            ((u32 *)ptr)[2] = ((u32 *)colors)[0];
+            if (flags & 8) {
+                ((u32 *)ptr)[3] = ((u32 *)colors)[0];
+            }
+        }
+    }
+    D_main_bss_8011DC58 = gfx;
+    return flags;
+}
 
 typedef struct { s16 x, y, z, w; } EtfVtx;
 typedef struct { u8 pad0[0xC]; u32 flags; u8 pad10[0x14]; void *p24; } EtfMesh;
