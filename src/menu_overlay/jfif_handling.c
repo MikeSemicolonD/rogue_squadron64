@@ -5,7 +5,142 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/jfif_handling", D_menu_overlay_800
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/jfif_handling", D_menu_overlay_800A7730);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", loadJfifAsset);
+typedef struct {
+    u8 pad0[0xE];
+    u16 hE;
+    u8 pad10[0x20];
+    u8 *buf;
+    u8 *cur;
+    u8 *sos;
+} LjSt;
+extern s32 D_main_bss_80137CFC;
+void *rs_malloc(u32, u16);
+void rs_memset(u8 *, u8, u32);
+s32 resetJfifDecodeState(u8 *, void *);
+s32 get_asset_size_extra(s32, s32);
+s32 findAssetAcrossSegments(s32, s32, s32, s32, s32);
+u8 setupAssetDma(s32, s32, s32, s32, s32, void *);
+void teardownAssetDma(s32, s32);
+s32 ljCell(LjSt *) __asm__("allocZeroedCellRecord");
+s32 ljSoi(LjSt *) __asm__("parseJfifSOIMarker");
+s32 ljSof(LjSt *) __asm__("parseJfifSOF0Marker");
+s32 ljDqt(LjSt *) __asm__("parseJfifDQTMarker");
+s32 ljDht(LjSt *) __asm__("parseJfifDHTMarker");
+s32 ljSos(LjSt *) __asm__("paserJfifSOSMarker");
+
+LjSt *loadJfifAsset(s32 assetId, void *arg1, u8 *err, s32 seg) {
+    LjSt *s;
+    s32 size;
+    s32 handle;
+    u8 r;
+    u8 done;
+    u32 len;
+    u32 i;
+    u8 m;
+
+    s = rs_malloc(0x7F0, 0);
+    if (s == NULL) goto e6;
+    rs_memset((u8 *)s, 0, 0x7F0);
+    r = resetJfifDecodeState((u8 *)s, arg1);
+    if (r != 0) goto er;
+    size = get_asset_size_extra(D_main_bss_80137CFC, assetId);
+    if (size == 0) goto e1;
+    if (size == -1) goto e1;
+    s->buf = rs_malloc(size, s->hE);
+    if (s->buf == NULL) goto e6;
+    handle = findAssetAcrossSegments(seg, 0, D_main_bss_80137CFC, assetId, 0);
+    if (setupAssetDma(seg, 0, handle, 0, size, s->buf) != 0) goto e2;
+    teardownAssetDma(seg, handle);
+    ljCell(s);
+    done = 0;
+    s->cur = s->buf;
+    do {
+        if ((m = *s->cur++) != 0xFF) goto e3;
+        while (*s->cur == 0xFF) {
+            s->cur++;
+        }
+        m = *s->cur++;
+        switch (m) {
+        case 0xD8:
+            r = ljSoi(s);
+            if (r != 0) goto er;
+            break;
+        case 0xC1:
+        case 0xC2:
+        case 0xC3:
+        case 0xC5:
+        case 0xC6:
+        case 0xC7:
+        case 0xC8:
+        case 0xC9:
+        case 0xCA:
+        case 0xCB:
+        case 0xCD:
+        case 0xCE:
+        case 0xCF:
+            *err = 5;
+            return NULL;
+        case 0xC0:
+            r = ljSof(s);
+            if (r != 0) goto er;
+            break;
+        case 0xDB:
+            r = ljDqt(s);
+            if (r != 0) goto er;
+            break;
+        case 0xC4:
+            r = ljDht(s);
+            if (r != 0) goto er;
+            break;
+        case 0xDA:
+            r = ljSos(s);
+            if (r != 0) goto er;
+            done = 1;
+            s->sos = s->cur;
+            break;
+        case 0xFE:
+            {
+                s32 hi = s->cur[0] << 8;
+                len = (s->cur[1] | hi) - 2;
+            }
+            s->cur += 2;
+            for (i = 0; i < len; i++) {
+                s->cur++;
+            }
+            break;
+        case 0xD9:
+            *err = 0xB;
+            goto fail;
+        case 0xDD:
+            *err = 0xB;
+            goto fail;
+        case 0xDC:
+            *err = 0xB;
+            goto fail;
+        default:
+            *err = 0xB;
+            goto fail;
+        }
+    } while (done == 0);
+    *err = 0;
+    return s;
+e6:
+    *err = 6;
+    return NULL;
+e1:
+    *err = 1;
+    return NULL;
+e2:
+    *err = 2;
+    return NULL;
+e3:
+    *err = 3;
+    return NULL;
+er:
+    *err = r;
+fail:
+    return NULL;
+}
 
 void zmemcpy(void *, void *, u32);
 void rs_free(void *);
