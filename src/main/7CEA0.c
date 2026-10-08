@@ -1766,7 +1766,47 @@ void clearObjectPoolStateFlag(void) {
     D_main_bss_8013A980 = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/7CEA0", npcSpawnInitTimedEffect);
+s32 nsSetHealth(void *, void *, void *) __asm__("setNpcHealth");
+void nsSetDetail(void *, s32) __asm__("setObjectDetailLevel");
+s16 rand(void);
+f32 cosf(f32);
+extern s32 D_main_bss_80137CE4;
+
+void npcSpawnInitTimedEffect(u8 *arg0) {
+    u8 *s0 = *(u8 **)(arg0 + 4);
+    u8 *def;
+    register u8 *t asm("$6");
+    s32 hp;
+    f32 *row;
+    f32 v;
+
+    *(s16 *)(s0 + 0x1B2) = 0;
+    t = *(u8 **)(s0 + 0x34);
+    def = t;
+    hp = nsSetHealth(*(void **)(s0 + 0x38), t + 0x6C, t);
+    *(s32 *)(s0 + 0xE8) = *(s32 *)(s0 + 0xEC) = *(s32 *)(s0 + 0xF0) = *(s32 *)(s0 + 0xF4) = hp;
+    *(u8 *)(s0 + 0xF9) = 0;
+    *(s16 *)(s0 + 0xFA) = 0;
+    *(u8 *)(s0 + 0xF8) = 1;
+    *(f32 *)(s0 + 0x54) = ((f32)(rand() & 0x7F) - 64.0f) / 64.064064f;
+    *(f32 *)(s0 + 0x58) = *(f32 *)(def + 0xA8);
+    *(s32 *)(s0 + 0x5C) = 0;
+    *(s32 *)(s0 + 0x60) = 0;
+    *(f32 *)(s0 + 0x64) = 1.0f / *(f32 *)(def + 0xB0);
+    v = *(f32 *)(def + 0xAC);
+    *(u8 *)(s0 + 0xD8) = 0;
+    *(u8 *)(s0 + 0xD9) = 0;
+    row = (f32 *)(D_main_bss_80137CE4 * 4 + (s32)def);
+    *(s32 *)(s0 + 0x6C) = 0;
+    *(s32 *)(s0 + 0x2B8) = 0;
+    *(f32 *)(s0 + 0x68) = v;
+    { f32 c = cosf(row[0xDC/4] * 0.017453292f);
+    s32 i = D_main_bss_80137CE4;
+    *(f32 *)(s0 + 0xDC) = c;
+    *(f32 *)(s0 + 0xE0) = *(f32 *)(i * 4 + (s32)def + 0xD8);
+    *(f32 *)(s0 + 0xE4) = *(f32 *)(i * 4 + (s32)def + 0xE0);
+    nsSetDetail(*(void **)(s0 + 0x38), *(s32 *)(*(u8 **)(s0 + 0x34) + 0xB4)); }
+}
 
 s32 setNpcHealth(void *, void *, s32);
 void setObjectDetailLevel(void *, s16);
