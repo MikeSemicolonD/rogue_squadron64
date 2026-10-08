@@ -644,7 +644,139 @@ void stepSongModulationLanes(void) {
     } while (off < 0x900);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/94F50", advanceSongRegion);
+typedef struct {
+    u32 time;
+    u8 prog;
+    u8 vol;
+    u8 pad6[2];
+    u16 kind;
+    u16 hA;
+} SrEv;
+typedef struct {
+    u8 pad[0x128];
+    SrEv *base;
+    SrEv *cur;
+    u32 frac;
+    u32 time;
+} SrReg;
+typedef struct {
+    u32 w0;
+    u32 w4;
+    u8 *p8;
+    u8 *pC;
+    u8 *p10;
+    u16 h14;
+    u16 h16;
+    u32 w18;
+    u32 w1C;
+    u8 ch;
+    u8 b21;
+    u8 b22;
+    u8 idx;
+} SrLane;
+#define SREG(d, o) ((SrReg *)((u8 *)(d) + (o)))
+#define SRLANE(d, o) ((SrLane *)((u8 *)(d) + (o) + 0x568))
+void updateSongTempoTickRate(u32);
+
+s32 asrImpl(void) __asm__("advanceSongRegion");
+s32 asrImpl(void) {
+    u8 first;
+    s32 ret;
+    s32 i;
+    s32 o;
+    s32 off;
+    s32 lo;
+    struct D_main_bss_80149A00_type *d;
+    SrReg *r;
+    SrEv *ev;
+    u8 *p;
+    u32 t;
+    s32 kk;
+    s32 q;
+
+    first = 1;
+    ret = 0;
+    i = 0;
+    do {
+        o = i * 16;
+        off = i * 0x24;
+        d = D_main_bss_801529C0;
+        if (SREG(d, o)->cur != NULL) {
+            ret = 1;
+            if (SREG(d, o)->time + d->unk110[4] >= SREG(d, o)->cur->time) {
+                lo = off;
+                do {
+                    r = SREG(d, i * 16);
+                    ev = r->cur;
+                    kk = ev->kind;
+                    switch (kk) {
+                    case 0xFFFF:
+                        r->cur = NULL;
+                        goto next;
+                    case 0xFFFE:
+                        if ((q = d->unkEC5) != 0) {
+                            r->cur = NULL;
+                            goto next;
+                        }
+                        t = ev->hA;
+                        r->cur = r->base + t;
+                        r->time = d->SNG_file->unk14;
+                        r->frac = 0;
+                        if (first) {
+                            first = 0;
+                            updateSongTempoTickRate(d->SNG_file->unk14);
+                            D_main_bss_801529C0->unkEC6++;
+                        }
+                        break;
+                    default:
+                        #undef p
+{ s32 *tbl = (s32 *)((u8 *)d->SNG_file->unk04 + (s32)d->SNG_file); t = tbl[kk] + (s32)d->SNG_file; }
+#define p ((u8 *)t)
+#define p ((u8 *)t)
+                        SRLANE(d, lo)->w4 = 0;
+                        SRLANE(d, lo)->w0 = 0;
+                        SRLANE(d, lo)->p8 = p + 0xC;
+                        if (*(s32 *)(p + 4) != 0) {
+                            SRLANE(d, lo)->pC = (u8 *)(*(s32 *)(p + 4) + (s32)d->SNG_file);
+                        } else {
+                            SRLANE(d, lo)->pC = NULL;
+                        }
+                        SRLANE(D_main_bss_801529C0, lo)->w18 = 0;
+                        SRLANE(D_main_bss_801529C0, lo)->h14 = 0x2000;
+                        if (*(s32 *)(p + 8) != 0) {
+                            SRLANE(D_main_bss_801529C0, lo)->p10 = (u8 *)(*(s32 *)(p + 8) + (s32)D_main_bss_801529C0->SNG_file);
+                        } else {
+                            SRLANE(D_main_bss_801529C0, lo)->p10 = NULL;
+                        }
+                        SRLANE(D_main_bss_801529C0, lo)->w1C = 0;
+                        SRLANE(D_main_bss_801529C0, lo)->h16 = 0;
+                        SRLANE(D_main_bss_801529C0, lo)->ch = ((u8 *)D_main_bss_801529C0->SNG_file->unk08 + (s32)D_main_bss_801529C0->SNG_file)[i];
+                        SRLANE(D_main_bss_801529C0, lo)->b21 = ((u8 *)ev)[0xB];
+                        SRLANE(D_main_bss_801529C0, lo)->b22 = ((u8 *)ev)[0xA];
+                        SRLANE(D_main_bss_801529C0, lo)->idx = i;
+                        if (ev->prog != 0xFF) {
+                            satSetProg((SsSlot *)D_main_bss_801529C0, ev->prog, SRLANE(D_main_bss_801529C0, lo)->ch);
+                        }
+                        if (ev->vol != 0xFF) {
+                            setChannelNoteCell(7, SRLANE(D_main_bss_801529C0, lo)->ch, D_main_bss_801529CB, ev->vol);
+                        }
+                        SREG(D_main_bss_801529C0, o)->cur++;
+#undef p
+                        break;
+                    }
+                    d = D_main_bss_801529C0;
+                } while (SREG(d, q = i * 16)->time + d->unk110[4] >= SREG(d, q)->cur->time);
+            }
+            t = SREG(D_main_bss_801529C0, o)->frac + D_main_bss_801529C0->unk110[2];
+            SREG(D_main_bss_801529C0, o)->frac = t & 0xFFFF;
+            t >>= 16;
+            SREG(D_main_bss_801529C0, o)->time += t + D_main_bss_801529C0->unk110[3];
+        }
+    next:
+        i++;
+    } while (i < 0x40);
+    return ret;
+}
 
 extern s32 D_main_bss_80142038;
 extern s32 D_main_bss_801440C0;
