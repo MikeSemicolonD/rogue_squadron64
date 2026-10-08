@@ -314,7 +314,38 @@ void activateAnimationKeyframe(s32 slot, s32 ch, u8 flag) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", samplePlayerAnimChannel);
+s16 resolvePlayerAnimChannelKeyValue(u16 font, u16 key);
+void samplePlayerAnimChannel(u16 slot, u16 idx, f32 t) {
+    struct someFontThing *font = D_main_8009FC10[slot];
+    struct ui_element *e = font->unk034[idx];
+    s16 mn = 0x2710;
+    s16 mx = -0x2710;
+    s16 i;
+    s16 x;
+    s16 r;
+    f32 inv;
+    f32 w;
+    register f32 h asm("$f0");
+
+    for (i = 0; i < e->texture_count; i++) {
+        r = resolvePlayerAnimChannelKeyValue(slot, e->texture_id_pointer[i]);
+        x = e->xy_offset_pointer[i].x;
+        r = x + r;
+        if (r > mx) {
+            mx = r;
+        }
+        if (x < mn) {
+            mn = x;
+        }
+    }
+    w = (mx - mn) * 0.5f;
+    inv = 1.0f - t;
+    h = inv * (e->xy_offset_pointer[e->texture_count - 1].y + (u16)font->unk006 - e->xy_offset_pointer[0].y);
+    e->width_scale = t;
+    e->height_scale = t;
+    e->xpos = (s16)font->unk098[idx][0] + inv * ((mx - mn) * 0.5f + mn);
+    e->ypos = (s16)font->unk098[idx][1] + h * 0.5f;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/61FC0", measurePlayerSlotTextLayout);
 
