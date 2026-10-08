@@ -164,7 +164,101 @@ void stopStreamedVoice(s32 arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/98960", compute3DSourceSpatialMix);
+__asm__(".section .rodata\n.align 3\n.globl D_main_8003DE70\nD_main_8003DE70:\n.word 0x41F00000\n.word 0x00000000\n.globl D_main_8003DE78\nD_main_8003DE78:\n.word 0x45800000\n.globl D_main_8003DE7C\nD_main_8003DE7C:\n.word 0x4F000000\n.section .text");
+typedef struct { f32 x, y, z; } CsV3;
+typedef struct CsLis {
+    struct CsLis *next;
+    u8 pad4[4];
+    u32 flags;
+    CsV3 pos;
+    CsV3 vel;
+    u8 pad24[0x24];
+    u8 mtx[0x30];
+    f32 f78;
+    f32 f7C;
+    f32 f80;
+    f32 f84;
+} CsLis;
+typedef struct {
+    u8 pad0[8];
+    u32 flags;
+    CsV3 pos;
+    CsV3 vel;
+    f32 f24;
+    f32 f28;
+    f32 f2C;
+    f32 f30;
+} CsSrc;
+
+extern CsLis *csHead __asm__("D_main_bss_80153418");
+f32 sqrtf_recomp(f32);
+void transformVec3ByAffineMatrix(void *, void *, void *);
+void normalizeVec3(void *);
+
+void csImpl(CsSrc *src, f32 *vol, f32 *dop, f32 *panx, f32 *pany, f32 *front) __asm__("compute3DSourceSpatialMix");
+void csImpl(CsSrc *src, f32 *vol, f32 *dop, f32 *panx, f32 *pany, f32 *front0) {
+    f32 *front = front0;
+    CsV3 d;
+    CsV3 dv;
+    CsV3 out;
+    CsLis *l;
+    f32 dist;
+    f32 rel;
+    f32 k;
+    f32 r;
+    f32 f;
+
+    *(s32 *)vol = 0;
+    *dop = 1.0f;
+    k = 0.016666668f;
+    for (l = csHead; l != NULL; l = l->next) {
+        d.x = src->pos.x - l->pos.x;
+        d.y = src->pos.y - l->pos.y;
+        d.z = src->pos.z - l->pos.z;
+        dist = sqrtf_recomp(d.x * d.x + d.y * d.y + d.z * d.z);
+        if (dist <= src->f24) {
+            r = dist / src->f24;
+            *vol += l->f84 * (src->f2C + (src->f28 - src->f2C) * (1.0f - ((1.0f - src->f30) * r + src->f30 * r * r)));
+            if (!(src->flags & 0x80000)) {
+                if ((src->flags & 8) || (l->flags & 1)) {
+                    dv.x = l->vel.x - src->vel.x;
+                    dv.y = l->vel.y - src->vel.y;
+                    dv.z = l->vel.z - src->vel.z;
+                    rel = sqrtf_recomp(dv.x * dv.x + dv.y * dv.y + dv.z * dv.z);
+                    if (0.0f < rel) {
+                        d.x = (src->pos.x + src->vel.x * k) - (l->pos.x + l->vel.x * k);
+                        d.y = (src->pos.y + src->vel.y * k) - (l->pos.y + l->vel.y * k);
+                        d.z = (src->pos.z + src->vel.z * k) - (l->pos.z + l->vel.z * k);
+                        if (sqrtf_recomp(d.x * d.x + d.y * d.y + d.z * d.z) < dist) {
+                            *dop = l->f80 / (l->f80 - rel);
+                        } else {
+                            *dop = l->f80 / (l->f80 + rel);
+                        }
+                    }
+                }
+                transformVec3ByAffineMatrix(l->mtx, &src->pos, &out);
+                if (0.0f <= out.z) {
+                    f = 1.0f;
+                    if (out.z < l->f78) {
+                        f = out.z / l->f78;
+                    }
+                } else {
+                    f = -1.0f;
+                    if (-l->f7C < out.z) {
+                        f = out.z / l->f7C;
+                    }
+                }
+                *front = f;
+                if (!(out.x == 0.0 && out.y == 0.0 && out.z == 0.0f)) {
+                    normalizeVec3(&out);
+                }
+                *panx = out.x;
+                *pany = out.y;
+            }
+        }
+    }
+}
+__asm__(".section .rodata\n.align 2\n.globl D_main_8003DE90\nD_main_8003DE90:\n.word 0x42FE0000\n.globl D_main_8003DE94\nD_main_8003DE94:\n.word 0x4F000000\n.globl D_main_8003DE98\nD_main_8003DE98:\n.word 0x42FE0000\n.globl D_main_8003DE9C\nD_main_8003DE9C:\n.word 0x4F000000\n.globl D_main_8003DEA0\nD_main_8003DEA0:\n.word 0x3F800000\n.globl D_main_8003DEA4\nD_main_8003DEA4:\n.word 0x42800000\n.globl D_main_8003DEA8\nD_main_8003DEA8:\n.word 0x4F000000\n.globl D_main_8003DEAC\nD_main_8003DEAC:\n.word 0x3F800000\n.globl D_main_8003DEB0\nD_main_8003DEB0:\n.word 0x42800000\n.globl D_main_8003DEB4\nD_main_8003DEB4:\n.word 0x4F000000\n.globl D_main_8003DEB8\nD_main_8003DEB8:\n.word 0x46000000\n.globl D_main_8003DEBC\nD_main_8003DEBC:\n.word 0x4F000000\n.globl D_main_8003DEC0\nD_main_8003DEC0:\n.word 0x42FE0000\n.globl D_main_8003DEC4\nD_main_8003DEC4:\n.word 0x42FE0000\n.globl D_main_8003DEC8\nD_main_8003DEC8:\n.word 0x42FE0000\n.globl D_main_8003DECC\nD_main_8003DECC:\n.word 0x42FE0000\n.globl D_main_8003DED0\nD_main_8003DED0:\n.word 0x42FE0000\n.globl D_main_8003DED4\nD_main_8003DED4:\n.word 0x3DA3D70A\n.globl D_main_8003DED8\nD_main_8003DED8:\n.word 0x3E19999A\n.globl D_main_8003DEDC\nD_main_8003DEDC:\n.word 0x3E99999A\n.globl D_main_8003DEE0\nD_main_8003DEE0:\n.word 0x3F800000\n.word 0x00000000\n.word 0x95AA0004\n.word 0x24010003\n.section .text");
 
 INCLUDE_ASM("asm/nonmatchings/main/98960", applyVoice3DMixParams);
 
