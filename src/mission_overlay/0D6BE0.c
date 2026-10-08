@@ -1,7 +1,33 @@
 #include "common.h"
 #include "common_types.h"
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D6BE0", npcInitSimpleModel);
+typedef struct { u8 pad0[0x30]; s32 f30; u8 *f34; s32 f38; u8 pad3C[0xB7]; u8 bF3; f32 fF4; f32 fF8; s32 fFC; } SmObj;
+typedef struct { u8 pad0[4]; SmObj *obj; } SmActor;
+extern s32 D_main_bss_80137CE4;
+void npcTickEffectChannelSharedMode0(s32, s32);
+void npcTickEffectChannelSharedMode1(s32, s32);
+void setNpcHealth(s32, u8 *, u8 *);
+void setObjectDetailLevel(s32, s32);
+void smMotion(s32, s32, s32, s32, f32) __asm__("initActorMotionParams");
+void smAnim(s32, s32, s32, s32, f32, void (*)(s32, s32), s32, f32, f32, s32) __asm__("initObjectAnimSubstruct");
+
+void npcInitSimpleModel(void *arg0) {
+    SmObj *o = ((SmActor *)arg0)->obj;
+    u8 *p;
+    u8 *t;
+
+    o->bF3 = 0;
+    o->fF8 = 1.0f;
+    p = o->f34;
+    o->fFC = 0;
+    o->fF4 = *(f32 *)(D_main_bss_80137CE4 * 4 + (s32)o->f34 + 0xB8);
+    setNpcHealth(o->f38, o->f34 + 0x6C, o->f34);
+    t = (u8 *)(D_main_bss_80137CE4 * 4 + (s32)o->f34);
+    smMotion(o->f38, *(s32 *)(t + 0xB0), *(s32 *)(t + 0xB4), *(s32 *)(t + 0xBC), *(f32 *)(t + 0xC0));
+    smAnim(o->f38, *(s32 *)(p + 0xC4), *(s32 *)(p + 0xC8), *(s32 *)(p + 0xCC), *(f32 *)(p + 0xD0), npcTickEffectChannelSharedMode0, 0, 10.0f, 15.0f, 0);
+    smAnim(o->f38, *(s32 *)(p + 0xC4), *(s32 *)(p + 0xC8), *(s32 *)(p + 0xCC), *(f32 *)(p + 0xD0), npcTickEffectChannelSharedMode1, 1, 10.0f, 15.0f, 0);
+    setObjectDetailLevel(o->f38, *(s32 *)(o->f34 + 0xA0));
+}
 
 typedef struct { f32 m[12]; } TickMtx;
 extern void lookupHmtTextureByName(s32, char *, s32, void *, s32, s32);
