@@ -436,7 +436,213 @@ next:;
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", tickCraftSplineOrientation);
+typedef struct { f32 x, y, z; } SplVec3;
+typedef struct {
+    u8 pad0[0x24];
+    SplVec3 v24[3];
+    u8 pad48[0x6C - 0x48];
+    f32 f6C[3];
+    f32 f78[3];
+    u8 pad84[0x90 - 0x84];
+} SplEnt;
+typedef struct {
+    u8 pad0[8];
+    f32 f8;
+    u8 padC[0xB0 - 0xC];
+    u8 bB0;
+} SplInfo;
+typedef struct {
+    u8 pad0[0x1A8];
+    SplInfo *info;
+} SplObj;
+typedef struct {
+    u8 pad0[0x24];
+    f32 pos[3];
+    u8 pad30[0x38 - 0x30];
+    SplObj *obj;
+    u8 pad3C[0x88 - 0x3C];
+    f32 f88;
+    f32 a8C[3];
+    f32 a98[3];
+    u8 padA4[0xB2 - 0xA4];
+    u8 bB2;
+} SplCraft;
+extern SplVec3 D_spl_axis __asm__("D_mission_overlay_8010AB08");
+extern SplEnt D_spl_tbl[] __asm__("D_mission_overlay_8010AC90");
+extern void s_mat34CrossRowsAndCopyPos(f32 *, void *, f32) __asm__("mat34CrossRowsAndCopyPos");
+extern void mat3x3InverseInto(f32 *, f32 *);
+extern u8 s_isPendingChildNpcActive(SplObj *) __asm__("isPendingChildNpcActive");
+extern u8 computeActorAnchorDeltaAfterLOS(SplObj *);
+extern f32 *getObjectMeshTransformOrLocal(SplObj *, f32 *);
+extern void s_transformVec3ByMat34(f32 *, f32 *, f32 *) __asm__("transformVec3ByMat34");
+extern void vec3NormalizeInto(f32 *, f32 *);
+extern void s_buildRotationMatrixSlot0(f32 *, f32) __asm__("buildRotationMatrixSlot0");
+extern void buildRotationMatrixSlot1(f32 *, f32);
+extern void s_composeRotationMatrixSlot1(f32 *, f32) __asm__("composeRotationMatrixSlot1");
+extern f32 vec3Dot(f32 *, f32 *);
+extern f32 vec3Length(f32 *);
+extern f32 constMinusSinfApprox(f32);
+extern void vec3Cross(f32 *, f32 *, f32 *);
+extern void normalize_vector(f32 *);
+extern void quatFromAxisAngle(f32 *, f32 *, f32);
+extern void rotateVec3ByQuat(f32 *, f32 *, f32 *);
+extern void s_factor5RemoveListNode(void *) __asm__("factor5RemoveListNode");
+extern void s_play3DSoundEventVariant(void *, void *, void *, f32, f32, s32, s32, s32, s32, s32) __asm__("play3DSoundEventVariant");
+
+#define ENT(o) ((SplEnt *)((arg0->bB2 * 0x90 + (o)) + (s32)D_spl_tbl))
+
+void tickCraftSplineOrientation(SplCraft *arg0, f32 arg1) {
+    f32 m28[12];
+    f32 m58[12];
+    SplVec3 v88;
+    SplVec3 v98;
+    f32 mA8[12];
+    SplVec3 vD8;
+    f32 qE8[4];
+    f32 mF8[12];
+    SplVec3 v128;
+    f32 q138[4];
+    SplVec3 v148;
+    SplVec3 v158;
+    SplVec3 v168;
+    SplInfo *info;
+    s32 i;
+    u8 a;
+    u8 b;
+    u8 c;
+    f32 ang;
+    f32 t;
+    f32 r;
+
+    info = arg0->obj->info;
+    for (i = 0; arg0->bB2 == 0 ? i < 2 : i < 3; i++) {
+        s_mat34CrossRowsAndCopyPos(m28, arg0, 1.0f);
+        mat3x3InverseInto(m58, m28);
+        if ((a = s_isPendingChildNpcActive(arg0->obj)) == 1 && (b = computeActorAnchorDeltaAfterLOS(arg0->obj)) == a) {
+            f32 *p98;
+            register f32 *p88 asm("$18");
+            f32 *mm = getObjectMeshTransformOrLocal(arg0->obj, mA8);
+                        p98 = &v98.x;
+            s_transformVec3ByMat34(m58, mm, p98);
+            v98.x = 0.0f;
+            v98.y += ENT(i * 12)->v24[0].y * arg0->f88;
+            v98.z += ENT(i * 12)->v24[0].z * arg0->f88;
+            p88 = &v88.x;
+            vec3NormalizeInto(p88, p98);
+            s_buildRotationMatrixSlot0(m28, arg0->a98[i]);
+            s_composeRotationMatrixSlot1(m28, arg0->a8C[i]);
+            s_transformVec3ByMat34(m28, &D_spl_axis.x, p98);
+            ang = constMinusSinfApprox(vec3Dot(p98, p88)) * 57.29578f;
+            if (ang > 0.001f) {
+                c = 0;
+                if (ang > 10.0f) {
+                    c = 1;
+                }
+                t = info->f8 * (arg1 * 30.0f);
+                if (t < ang) {
+                    ang = t;
+                }
+                vec3Cross(&vD8.x, p98, p88);
+                normalize_vector(&vD8.x);
+                quatFromAxisAngle(qE8, &vD8.x, ang);
+                rotateVec3ByQuat(qE8, p98, p88);
+                arg0->a8C[i] = 0.0f;
+                {
+                    f32 d = vec3Dot(&D_spl_axis.x, p88);
+                    f32 l = vec3Length(&D_spl_axis.x);
+                    r = constMinusSinfApprox(d / (l * vec3Length(p88))) * 57.29578f;
+                }
+                if (!(v88.y <= 0.0f)) {
+                    r = -r;
+                }
+                {
+                register SplCraft *pa asm("$4") = (SplCraft *)((u8 *)arg0 + i * 4);
+                pa->a98[0] = r;
+                if (ENT(i * 4)->f6C[0] < r) {
+                    pa->a98[0] = ENT(i * 4)->f6C[0];
+                    c = 0;
+                } else if (r < ENT(i * 4)->f78[0]) {
+                    arg0->a98[i] = ENT(i * 4)->f78[0];
+                    c = 0;
+                }
+                }
+                if (c != 0) {
+                    SplInfo *p = arg0->obj->info;
+                    if (p->bB0 == 0) {
+                        p->bB0 = 1;
+                        s_play3DSoundEventVariant(&p->pad0[0x28], arg0, arg0->pos, 8.0f, 0.1f, 7, 0x27, 1, 0x6E, 0x28);
+                    }
+                }
+            } else {
+                SplInfo *p = arg0->obj->info;
+                if (p->bB0 == 1) {
+                    p->bB0 = 0;
+                    s_factor5RemoveListNode(&p->pad0[0x28]);
+                }
+            }
+        } else {
+            s_buildRotationMatrixSlot0(mF8, arg0->a98[i]);
+            s_composeRotationMatrixSlot1(mF8, arg0->a8C[i]);
+            s_transformVec3ByMat34(mF8, &D_spl_axis.x, qE8);
+            ang = constMinusSinfApprox(vec3Dot(&D_spl_axis.x, qE8)) * 57.29578f;
+            if (ang > 0.001f) {
+                if (ang > 10.0f) {
+                    SplInfo *p = arg0->obj->info;
+                    if (p->bB0 == 0) {
+                        p->bB0 = 1;
+                        s_play3DSoundEventVariant(&p->pad0[0x28], arg0, arg0->pos, 8.0f, 0.1f, 7, 0x27, 1, 0x6E, 0x28);
+                    }
+                }
+                t = info->f8 * (arg1 * 30.0f);
+                if (t < ang) {
+                    ang = t;
+                }
+                {
+                register f32 *pv asm("$19") = &v128.x;
+                vec3Cross(pv, qE8, &D_spl_axis.x);
+                normalize_vector(pv);
+                quatFromAxisAngle(q138, pv, ang);
+                rotateVec3ByQuat(q138, qE8, &vD8.x);
+                v128.y = 0.0f;
+                v128.x = vD8.x;
+                v128.z = vD8.z;
+                {
+                    f32 d = vec3Dot(&D_spl_axis.x, pv);
+                    f32 l = vec3Length(&D_spl_axis.x);
+                    ang = constMinusSinfApprox(d / (l * vec3Length(pv))) * 57.29578f;
+                }
+                v158 = D_spl_axis;
+                v158.y = 0.0f;
+                v168 = v128;
+                v168.y = 0.0f;
+                vec3Cross(&v148.x, &v158.x, &v168.x);
+                if (!(v148.y >= 0.0f)) {
+                    ang = -ang;
+                }
+                buildRotationMatrixSlot1(mF8, -ang);
+                s_transformVec3ByMat34(mF8, &vD8.x, pv);
+                v128.x = 0.0f;
+                arg0->a8C[i] = ang;
+                {
+                    f32 d = vec3Dot(&D_spl_axis.x, pv);
+                    f32 l = vec3Length(&D_spl_axis.x);
+                    t = constMinusSinfApprox(d / (l * vec3Length(pv))) * 57.29578f;
+                }
+                if (!(v128.y <= 0.0f)) {
+                    t = -t;
+                }
+                }
+                arg0->a98[i] = t;
+            } else {
+                SplInfo *p = arg0->obj->info;
+                if (p->bB0 == 1) {
+                    p->bB0 = 0;
+                    s_factor5RemoveListNode(&p->pad0[0x28]);
+                }
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0E0790", tickCraftSplineOrientationDual);
 
