@@ -173,7 +173,53 @@ void initAudioListenerFromCamera(void) {
     register3DAudioListenerNode(&D_main_bss_80139A80, D_main_bss_80139B58, D_main_bss_80139B30, D_main_bss_80139B30, D_main_bss_80139B40, 2.0f, 2.0f, 50.0f, 0, 0x7F);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/66FB0", loadSongAssetByName);
+extern int sprintf(char *, const char *, ...);
+s32 get_asset_size_extra(s32, char *);
+s32 rs_malloc(s32, s32);
+void setupAssetDma(s32, s32, void *, s32, s32, s32);
+void teardownAssetDma(s32, void *);
+
+s32 loadSongAssetByName(s32 arg0, s32 arg1) {
+    char sp18[0x28];
+    AudioChannelEntry *slot;
+    AudioChannelEntry *e;
+    AudioChannelEntry *p;
+    s32 i;
+    s32 j;
+    s32 k;
+    struct D_main_8009FCD4_type *s;
+    s32 size;
+    void *seg;
+
+    i = 0;
+    p = D_main_bss_80139A00;
+    do {
+        if (p->id == arg1) {
+            return 1;
+        }
+        i++;
+        p++;
+    } while (i < 0x10);
+    i = 0;
+    do {
+        if (D_main_bss_80139A00[i].id == -1) {
+            for (j = 0; D_main_8009FCD4[j].songId != -1; j++) {
+                if (D_main_8009FCD4[j].songId == arg1) {
+                    sprintf(sp18, "sound/%s_SNG", D_main_8009FCD4[j].songName);
+                    size = get_asset_size_extra(D_main_bss_80137CFC, sp18);
+                    D_main_bss_80139A00[i].value = rs_malloc(size, 0);
+                    seg = findAssetAcrossSegments(arg0, 0, D_main_bss_80137CFC, sp18, 0);
+                    setupAssetDma(arg0, 0, seg, 0, size, D_main_bss_80139A00[i].value);
+                    teardownAssetDma(arg0, seg);
+                    D_main_bss_80139A00[i].id = arg1;
+                    return 1;
+                }
+            }
+        }
+        i++;
+    } while (i < 0x10);
+    return 0;
+}
 
 typedef struct AudioListenerVec3 {
     f32 v[3];
