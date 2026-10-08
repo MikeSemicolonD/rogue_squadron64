@@ -531,7 +531,157 @@ compute:
     st->sweepB = 0.0f;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", renderRadarSweep);
+typedef struct {
+    u8 r;
+    u8 g;
+    u8 b;
+    u8 a;
+} RadarRgba;
+
+typedef struct {
+    s16 x;
+    s16 y;
+    s16 z;
+    s16 w;
+} RadarPt;
+
+typedef struct {
+    u8 pad0[0xE];
+    s16 i0;
+    s16 i1;
+    u8 pad12[6];
+    s16 u0;
+    u8 pad1A[2];
+    s16 u1;
+    u8 pad1E[2];
+    RadarRgba col;
+} RadarEntry;
+
+f32 sinf(f32);
+f32 sinfApprox(f32);
+f32 floatModulo(f32, f32);
+
+void renderRadarSweep(void *arg0v, f32 *arg1, f32 arg2, f32 arg3)
+{
+  u8 *arg0 = arg0v;
+  RadarRgba col;
+  RadarEntry *e = (RadarEntry *) (arg0 + 0xAF4);
+  RadarPt *tbl = *((RadarPt **) (arg0 + 0x900));
+  s32 n = 0;
+  f32 f;
+  f32 lo;
+  f32 hi;
+  f32 acc;
+  f32 span;
+  f32 x;
+  register f32 y asm("$f0");
+  f32 half;
+  f32 frac;
+  s32 idx;
+  s32 i0;
+  s32 i1;
+  RadarPt *a;
+  RadarPt *b;
+  if ((*((f32 *) (arg0 + 0xDC4))) > 0.0f)
+  {
+    if ((*((f32 *) (arg0 + 0xDCC))) < 1.0f)
+    {
+      f = (sinf(((2.0f * ((*((f32 *) (arg0 + 0xDCC))) * 3.0f)) * 3.1415927f) - 1.5707964f) + 1.0f) * 0.5f;
+      col.r = (u32) ((f * 0.0f) + 255.0f);
+      col.g = (u32) ((f * 77.0f) + 143.0f);
+      col.b = (u32) ((f * 188.0f) + 32.0f);
+      f = (*((f32 *) (arg0 + 0xDCC))) / 0.33333334f;
+      if (f < 1.0f)
+      {
+        col.a = (u32) (f * 255.0f);
+      }
+      else
+      {
+        col.a = 0xFF;
+      }
+    }
+    else
+    {
+      col.r = 0xFF;
+      col.g = 0x8F;
+      col.b = 0x20;
+      col.a = 0xFF;
+    }
+    col.a = (u32) (((f32) col.a) * (*((f32 *) (arg0 + 0xDC4))));
+    if (arg3 > 0.0f)
+    {
+      f = sinfApprox(arg2);
+    }
+    else
+    {
+      f = 3.1415927f - sinfApprox(arg2);
+    }
+    lo = floatModulo(((((*((f32 *) (arg0 + 0xDBC))) - (*((f32 *) (arg0 + 0xDC0)))) * 0.017453292f) + 12.566371f) - f, 6.2831855f);
+    hi = floatModulo(((((*((f32 *) (arg0 + 0xDBC))) + (*((f32 *) (arg0 + 0xDC0)))) * 0.017453292f) + 12.566371f) - f, 6.2831855f);
+    if (hi < lo)
+    {
+      hi += 6.2831855f;
+    }
+    acc = 0.0f;
+    lo = lo / 0.7853982f;
+    hi = hi / 0.7853982f;
+    span = hi;
+    span = span - lo;
+    if (lo < hi)
+    {
+      half = 0.5f;
+      do
+      {
+        y = lo + half;
+        frac = y;
+        asm("" : "+f"(y));
+        idx = (s32) y;
+        frac = frac - ((f32) ((s32) frac));
+        i0 = idx % 8;
+        e->i0 = i0;
+        i1 = i0 + 1;
+        i1 %= 8;
+        e->i1 = i1;
+        if (n == 0)
+        {
+          tbl[8].x = tbl[i0].x + (tbl[i1].x - tbl[i0].x) * frac;
+          tbl[8].y = tbl[i0].y + (tbl[i1].y - tbl[i0].y) * frac;
+          tbl[8].z = tbl[i0].z + (tbl[i1].z - tbl[i0].z) * frac;
+          e->i0 = 8;
+        }
+        e->u0 = (u32) ((acc / span) * 4096.0f);
+        acc += 1.0f - frac;
+        if (span < acc)
+        {
+          acc = span;
+        }
+        e->u1 = (u32) ((acc / span) * 4096.0f);
+        lo += 1.0f - frac;
+        if (hi < lo)
+        {
+          frac = hi + half;
+          i1 = i0 + 1;
+          frac = frac - ((f32) ((s32) frac));
+          a = (RadarPt *)(i0 * 8 + (s32)tbl);
+          tbl[9].x = a->x + ((&tbl[i1 % 8])->x - a->x) * frac;
+          tbl[9].y = a->y + ((&tbl[i1 % 8])->y - a->y) * frac;
+          tbl[9].z = a->z + ((&tbl[i1 % 8])->z - a->z) * frac;
+          lo = hi;
+          e->i1 = 9;
+        }
+        asm("" :: "f"(half));
+        e->col = col;
+        e--;
+        n++;
+      }
+      while ((n < 8) && (lo < hi));
+    }
+  }
+  asm("" : "+r"(n));
+  asm("" : "+r"(n));
+  *((RadarEntry **) (arg0 + 0x940)) = e + 1;
+  *((s32 *) (arg0 + 0x944)) = n + 8;
+}
 
 typedef struct { u16 idx; u8 a, b, c, d; } RmBlip;
 typedef struct { s32 w[12]; } RmMat;
