@@ -1381,7 +1381,26 @@ out:
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1EE30", texPackTlutAtIndex);
+s32 texPackTlutAtIndex(u16 tl, u8 *src, u8 start, u8 count, u8 rgba, u8 *key)
+{
+  s32 fl;
+  u8 *p;
+  s32 b;
+  b = (key != 0) << 14;
+  fl = b;
+  if (rgba)
+  {
+    p = src + (start * 4);
+    fl = b | 0x8000;
+  }
+  else
+  {
+    p = src + (start * 3);
+  }
+  packTlutEntriesRgba5551(D_main_bss_80128EFC[tl] + start, fl, p, count, key);
+  b = 1;
+  return b;
+}
 
 s32 unpackTlutToRgbaBytes(u16 arg0, u8 *arg1, u8 arg2, u8 arg3, u8 arg4) {
     s32 var_a2;
