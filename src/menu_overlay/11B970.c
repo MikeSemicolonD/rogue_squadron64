@@ -3575,7 +3575,192 @@ void rmImpl(RmState *s, f32 fade, f32 dt) {
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", D_menu_overlay_800A70F4);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", tickMenuSelectionEnterState);
+typedef struct {
+    u8 *cur;
+    u8 *start;
+    f32 f8;
+    u8 padC[9];
+    u8 f15;
+    u8 pad16[0x4A];
+    u8 f60;
+} MseState;
+
+typedef struct {
+    f32 v[16];
+} MseScales;
+
+extern MseScales D_menu_overlay_800A70F4;
+f32 mseSample(s32, u16, f32) __asm__("samplePlayerAnimChannel");
+s16 getPlayerSlotEntryBaseShort(u16);
+
+s32 tickMenuSelectionEnterState(MseState *s) {
+    u8 buf[0x80];
+    MseScales scales;
+    s32 cur;
+    f32 saveY;
+    u8 done;
+    s32 line;
+    s32 n;
+    s16 align;
+    s16 valign;
+    f32 y;
+    f32 x;
+    f32 t;
+    struct ui_element *e;
+    u32 num;
+    s32 pd;
+    u32 i;
+    u32 mask;
+    f32 top;
+    f32 bot;
+    f32 v;
+
+    cur = 0;
+    scales = D_menu_overlay_800A70F4;
+    saveY = 0.0f;
+    done = 0;
+    align = n = line = -1;
+    valign = 0;
+    setMenuOverlayHeaderState(2, 0x280, 0);
+    y = saveY;
+    while (done == 0) {
+        u8 c;
+
+        c = *s->cur++;
+        if (c == 0) {
+            s->cur = s->start;
+            s->f8 = 5.0f;
+            break;
+        }
+        if (c == '#') {
+            c = *s->cur++;
+            switch (c) {
+            case 's':
+                n = cur;
+                *s->cur++;
+                cur = *s->cur++ - '0';
+            flush:
+                if (line != -1) {
+                    x = -320.0f;
+                    if (align == 2) {
+                        if (valign == 1) {
+                            x = -448.0f;
+                        }
+                        if (valign == 2) {
+                            x += 128.0f;
+                        }
+                    }
+                    if (align == 3) {
+                        if (valign == 1) {
+                            x -= 213.0f;
+                        }
+                        if (valign == 3) {
+                            x += 213.0f;
+                        }
+                    }
+                    setPlayerSlotAnimationFlag(9, buf, (u16)line, (s16)x, (s16)y);
+                    t = mseSample(9, line, scales.v[n]);
+                    e = getPlayerSlotFieldAt34(9, line);
+                    e->ypos -= t;
+                    y = e->ypos + (f32)(e->xy_offset_pointer[e->texture_count - 1].y + getPlayerSlotEntryBaseShort(9)) * e->height_scale;
+                    y += 5.0f;
+                }
+                line++;
+                n = 0;
+                break;
+            case 'p':
+                *s->cur++;
+                pd = *s->cur++ - '0';
+                y += (f32)(pd * getPlayerSlotEntryBaseShort(9)) * 0.5f;
+                break;
+            case 'g':
+                saveY = y;
+                *s->cur++;
+                align = *s->cur++ - '0';
+                break;
+            case 'e':
+                y = saveY;
+                *s->cur++;
+                valign = *s->cur++ - '0';
+                break;
+            case 'l':
+                setMenuOverlayHeaderState(1, 0x280, 0);
+                valign = 0;
+                break;
+            case 'r':
+                setMenuOverlayHeaderState(0x10, 0x280, 0);
+                valign = 0;
+                break;
+            case 'q':
+                s->f60 = 1;
+                break;
+            case 'c':
+                setMenuOverlayHeaderState(2, 0x280, 0);
+                valign = 0;
+                break;
+            case 'm':
+                *s->cur++;
+                c = *s->cur++ - '0';
+                s->f15 = c;
+                if (c == 1) {
+                    return 0;
+                }
+                break;
+            case '#':
+                s->cur++;
+                num = 0;
+                while (1) {
+                    c = *s->cur++;
+                    if ((u8)(c - '0') >= 10) {
+                        break;
+                    }
+                    num = num * 10 + (u8)(c - '0');
+                }
+                s->cur--;
+                s->f8 = num;
+                done = 1;
+                n = cur;
+                goto flush;
+            }
+        } else {
+            buf[n++] = c;
+            buf[n] = 0;
+        }
+    }
+    if (line != 0) {
+        if (line != -1) {
+            mask = (1 << line) - 1;
+        } else {
+            mask = 0;
+        }
+    } else {
+        mask = 0;
+    }
+    top = 2000.0f;
+    bot = 0.0f;
+    for (i = 0; i < 16; i++) {
+        if (mask & (1 << i)) {
+            e = getPlayerSlotFieldAt34(9, i);
+            v = e->ypos;
+            if (top < v) {
+                v = top;
+            }
+            top = v;
+            v = (f32)(e->xy_offset_pointer[e->texture_count - 1].y + getPlayerSlotEntryBaseShort(9)) * e->height_scale + e->ypos;
+            if (v < bot) {
+                v = bot;
+            }
+            bot = v;
+        }
+    }
+    for (i = 0; i < 16; i++) {
+        if (mask & (1 << i)) {
+            e = getPlayerSlotFieldAt34(9, i);
+            e->ypos -= (bot - top) * 0.5f;
+        }
+    }
+    return mask;
+}
 
 typedef struct {
     u8 *text;
