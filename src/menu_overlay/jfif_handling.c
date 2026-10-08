@@ -451,7 +451,87 @@ s32 parseJfifDQTMarker(JfifDQT *arg0) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/jfif_handling", parseJfifDHTMarker);
+extern u8 decodeDeltaCellCounts_l(void *s, u8 idx, u8 *counts) __asm__("decodeDeltaCellCounts");
+extern u8 allocDebrisCellTable_l(void *s, u8 idx) __asm__("allocDebrisCellTable");
+extern s32 buildCellSlotCall(void *s, u8 idx) __asm__("buildCellSlotTableAndFindFree");
+
+typedef struct {
+    u8 *bits;
+    u8 pad4[8];
+    s16 count;
+    u8 pad[2];
+    u8 *vals;
+    u8 padE[0xA8 - 0x14];
+} DhtTbl;
+
+typedef struct {
+    u8 pad0[0x34];
+    u8 *cur;
+    u8 pad1[0x10];
+    u8 mask;
+    u8 pad2[0xF];
+    DhtTbl tbl[4];
+} JfifDHT;
+
+s32 parseJfifDHTMarker(JfifDHT *s) {
+    u16 len;
+    u32 tc;
+    u32 th;
+    u8 idx;
+    u16 sum;
+    u16 i;
+    u8 *start;
+    u8 b;
+    u8 r;
+    u16 t2;
+
+    {
+        u8 *p = s->cur;
+        s32 hi = p[0] << 8;
+        len = (p[1] | hi) - 2;
+    }
+    s->cur += 2;
+    do {
+        b = *s->cur;
+        s->cur++;
+        th = b & 0xF;
+        t2 = th;
+        tc = b >> 4;
+        start = s->cur;
+        if (tc >= 2 || t2 >= 2) {
+            return 0xD;
+        }
+        idx = tc + (b & 0xF) * 2;
+        __asm__("" :: "r"(b));
+        sum = 0;
+        i = 0;
+        do {
+            sum += *s->cur++;
+            i++;
+        } while ((u8)i < 0x10);
+        s->tbl[idx].bits = start;
+        s->tbl[idx].vals = s->cur;
+        s->tbl[idx].count = sum;
+        i = 0;
+        while ((u8)i < sum) {
+            s->cur++;
+            i++;
+        }
+        r = decodeDeltaCellCounts_l(s, idx, start);
+        if (r != 0) {
+            return r;
+        }
+        r = allocDebrisCellTable_l(s, idx);
+        if (r != 0) {
+            return r;
+        }
+        buildCellSlotCall(s, idx);
+        len -= 0x11;
+        len -= sum;
+        s->mask |= 1 << idx;
+    } while (len != 0);
+    return 0;
+}
 
 typedef struct {
     u8 id;
