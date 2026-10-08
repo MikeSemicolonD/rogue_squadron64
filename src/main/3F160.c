@@ -96,7 +96,46 @@ u16 popNpcSlotFromTail(u16 arg0, struct D_80130BB8_type *arg1) {
     return tail;
 }
 #else
-INCLUDE_ASM("asm/nonmatchings/main/3F160", popNpcSlotFromTail);
+u16 popNpcSlotFromTail(u16 arg0, struct D_80130BB8_type *arg1) {
+    u16 tail;
+    u16 var_v1;
+    u8 var_t2;
+    struct D_80130BB8_type *p;
+
+    var_t2 = 0;
+    if (arg1 != NULL) {
+        if (arg1->unk1B >= 0x10) return 0xFFFF;
+    }
+    p = arg1;
+    var_t2 = 0;
+    if (p != NULL) {
+        var_t2 = p->unk19;
+    }
+    __asm__("" ::: "$6", "$7", "$8", "$9");
+    tail = gNpcSlotListTail;
+    if (tail == 0xFFFF) return 0xFFFF;
+    gNpcSlotListTail = gNpcSlotList[tail].next_idx;
+    if (gNpcSlotListTail != 0xFFFF) {
+        gNpcSlotList[gNpcSlotListTail].prev_idx = 0xFFFF;
+        __asm__("" ::: "$6");
+    }
+    for (var_v1 = arg0; var_v1 != 0xFFFF; var_v1 = gNpcSlotList[var_v1].next_idx) {
+        if (gNpcSlotList[var_v1].unk00 == NULL) continue;
+        if (var_t2 >= gNpcSlotList[var_v1].unk00->unk19) break;
+        arg0 = var_v1;
+    }
+    gNpcSlotList[tail].next_idx = gNpcSlotList[arg0].next_idx;
+    if (gNpcSlotList[tail].next_idx != 0xFFFF) {
+        gNpcSlotList[gNpcSlotList[tail].next_idx].prev_idx = tail;
+    }
+    gNpcSlotList[tail].prev_idx = arg0;
+    gNpcSlotList[arg0].next_idx = tail;
+    gNpcSlotList[tail].unk00 = arg1;
+    if (arg1 != NULL) {
+        arg1->unk1C[arg1->unk1B++] = tail;
+    }
+    return tail;
+}
 #endif
 
 void unregisterAndFreeNpcSlot(u16 arg0, struct D_80130BB8_type *arg1) {
