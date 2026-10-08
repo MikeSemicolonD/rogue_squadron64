@@ -141,7 +141,230 @@ s32 rasterizeEdgeXSpansDescending(f32 *a, f32 *b, s32 n)
   return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", scanConvertTriangleToSpanTable);
+extern s16 D_main_bss_80130D10[];
+extern s8 D_main_bss_80130DB0[];
+extern s8 D_main_bss_80131DB0[];
+extern void vec3Cross(f32 *, f32 *, f32 *);
+extern void scNormalize(f32 *) __asm__("normalize_vector");
+
+void scanConvertTriangleToSpanTable(f32 *arg0, f32 *arg1, f32 *arg2, f32 arg3)
+{
+  f32 d1[3];
+  f32 d2[3];
+  f32 n[3];
+  f32 *a;
+  f32 *b;
+  f32 *c;
+  f32 *tmp;
+  f32 plane;
+  f32 negp;
+  f32 n0v;
+  f32 n1v;
+  f32 t1;
+  f32 ax;
+  f32 az;
+  f32 bz;
+  f32 cz;
+  f32 val;
+  f32 r;
+  f32 n2v;
+  f32 p;
+  f32 q;
+  s32 y0;
+  s32 yEnd;
+  s32 cnt;
+  s32 x;
+  s32 xe;
+  s32 y;
+  s32 i;
+  s16 *lo;
+  s16 *hi;
+  s8 *dst;
+  a = arg0;
+  b = arg1;
+  c = arg2;
+  while ((a[2] > b[2]) || (a[2] > c[2]))
+  {
+    tmp = a;
+    a = b;
+    b = c;
+    c = tmp;
+  }
+
+  d1[0] = b[0] - a[0];
+  d1[1] = b[1] - a[1];
+  d1[2] = b[2] - a[2];
+  d2[0] = c[0] - a[0];
+  d2[1] = c[1] - a[1];
+  d2[2] = c[2] - a[2];
+  vec3Cross(n, d1, d2);
+  scNormalize(n);
+  if ((((f64) n[1]) < 0.2) && (((f64) n[1]) > (-0.2)))
+  {
+    plane = (d1[2] * d2[0]) - (d1[0] * d2[2]);
+    if (plane < 0.0f)
+    {
+      plane = -plane;
+    }
+    if ((plane < 10.0f) && (plane > (-10.0f)))
+    {
+      return;
+    }
+  }
+  ax = a[0];
+  az = a[2];
+  bz = b[2];
+  cz = c[2];
+  plane = (((-ax) * n[0]) + ((-a[1]) * n[1])) + ((-az) * n[2]);
+  if (cz < bz)
+  {
+    if ((((b[0] - ax) / (bz - az)) - ((c[0] - ax) / (cz - az))) < 0.0f)
+    {
+      cnt = rasterizeEdgeXSpansAscending(a, b, 0);
+      rasterizeEdgeXSpansDescending(c, b, rasterizeEdgeXSpansDescending(a, c, 0));
+    }
+    else
+    {
+      cnt = rasterizeEdgeXSpansAscending(c, b, rasterizeEdgeXSpansAscending(a, c, 0));
+      rasterizeEdgeXSpansDescending(a, b, 0);
+    }
+  }
+  else
+    if ((((c[0] - ax) / (cz - az)) - ((b[0] - ax) / (bz - az))) < 0.0f)
+  {
+    cnt = rasterizeEdgeXSpansAscending(a, c, 0);
+    rasterizeEdgeXSpansDescending(b, c, rasterizeEdgeXSpansDescending(a, b, 0));
+  }
+  else
+  {
+    cnt = rasterizeEdgeXSpansAscending(b, c, rasterizeEdgeXSpansAscending(a, b, 0));
+    rasterizeEdgeXSpansDescending(a, c, 0);
+  }
+  y0 = (s32) a[2];
+  yEnd = y0 + cnt;
+  if (n[1] > 0.0f)
+  {
+    y = y0;
+    if (yEnd >= y)
+    {
+      i = 0;
+      do
+      {
+        x = D_main_bss_80130C70[i];
+        xe = D_main_bss_80130D10[i];
+        if (xe >= x)
+        {
+          do
+          {
+            n1v = n[1];
+            n0v = n[0];
+            t1 = (-plane) / n1v;
+            if (n0v > 0.0f)
+            {
+              r = n0v * (f32) (x + 1);
+            }
+            else
+            {
+              r = n0v * (f32) x;
+            }
+            t1 = t1 - (r / n1v);
+            n0v = n[2];
+            if (n0v > 0.0f)
+            {
+              r = (f32) (y + 1);
+            }
+            else
+            {
+              r = (f32) y;
+            }
+            t1 = t1 - ((n0v * r) / n[1]);
+            r = t1 * arg3;
+            t1 = (f32) ((s32) r);
+            if (t1 > 127.0f)
+            {
+              r = 127.0f;
+            }
+            else
+            {
+              r = t1;
+              if (r < (-128.0f))
+              {
+                r = -128.0f;
+              }
+            }
+            D_main_bss_80131DB0[x + (y << 6)] = (s32) r;
+            x++;
+          }
+          while (xe >= x);
+        }
+        y++;
+        i++;
+      }
+      while (yEnd >= y);
+    }
+  }
+  else
+  {
+    y = y0;
+    if (yEnd >= y)
+    {
+      i = 0;
+      do
+      {
+        x = D_main_bss_80130C70[i];
+        xe = D_main_bss_80130D10[i];
+        if (xe >= x)
+        {
+          do
+          {
+            n1v = n[1];
+            n0v = n[0];
+            t1 = (-plane) / n1v;
+            if (n0v > 0.0f)
+            {
+              r = n0v * (f32) (x + 1);
+            }
+            else
+            {
+              r = n0v * (f32) x;
+            }
+            t1 = t1 - (r / n1v);
+            n0v = n[2];
+            if (n0v > 0.0f)
+            {
+              r = (f32) (y + 1);
+            }
+            else
+            {
+              r = (f32) y;
+            }
+            t1 = t1 - ((n0v * r) / n[1]);
+            r = t1 * arg3;
+            t1 = (f32) ((s32) r);
+            if (t1 > 127.0f)
+            {
+              r = 127.0f;
+            }
+            else
+            {
+              r = t1;
+              if (r < (-128.0f))
+              {
+                r = -128.0f;
+              }
+            }
+            D_main_bss_80130DB0[x + (y << 6)] = (s32) r;
+            x++;
+          }
+          while (xe >= x);
+        }
+        y++;
+        i++;
+      }
+      while (yEnd >= y);
+    }
+  }
+}
 
 extern f32 D_main_bss_80136DD0;
 extern s32 D_main_bss_80132DB0;
