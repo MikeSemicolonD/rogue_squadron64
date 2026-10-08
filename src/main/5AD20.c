@@ -69,7 +69,318 @@ void linkDirectionalTrailSegments(f32 *arg0, u8 *arg1) {
     *(u8 **)(*(u8 **)(arg1 + 0x18) + 0x1C) = arg1 + ((lo & 7) * 0x5C + 0x1C);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/5AD20", setupWalkerSpriteTileQuad);
+void addVec3At0x24_l(Mat4x3, f32, f32, f32) __asm__("addVec3At0x24");
+void buildRotationMatrixSlot1_l(Mat4x3, f32) __asm__("buildRotationMatrixSlot1");
+void normalize_vector_l(Vec3f) __asm__("normalize_vector");
+void transformVec3ByMat34_l(Mat4x3, Vec3f, Vec3f) __asm__("transformVec3ByMat34");
+
+typedef struct SWView {
+    u8 pad0[0x10];
+    s32 w;
+    s32 h;
+    u8 pad18[4];
+    s32 y0;
+    f32 fov;
+    u8 pad24[8];
+    u8 cam[0xC];
+    f32 f38;
+    f32 f3c;
+} SWView;
+
+typedef struct SWBuf {
+    s32 count;
+    u8 *data;
+} SWBuf;
+
+typedef struct SWSrc {
+    SWView *view;
+    u8 pad4[0x10];
+    SWBuf *buf;
+} SWSrc;
+
+typedef struct SWObj {
+    u8 pad0[4];
+    f32 f4;
+    u8 pad8[4];
+    f32 fC;
+    f32 f10;
+    f32 f14;
+    u8 *p18;
+} SWObj;
+
+#define SW_SQRT(out, in) __asm__ volatile("sqrt.s %0, %1" : "=f"(out) : "f"(in))
+#define SW_LO16(v, off) (*(u16 *)((u8 *)(v) + (off)))
+
+u32 getBootConfigField12(void);
+u32 getBootConfigField14(void);
+f32 sqrtf(f32);
+f32 cosf(f32);
+f32 sinf(f32);
+
+void setupWalkerSpriteTileQuad_d(SWSrc *arg0, SWObj *arg1, SWObj *arg2) __asm__("setupWalkerSpriteTileQuad");
+void setupWalkerSpriteTileQuad_d(SWSrc *arg0, SWObj *arg1, SWObj *arg2) {
+    struct {
+        f32 v10[3];
+        f32 pad1c;
+        f32 v20[3];
+        f32 pad2c;
+        f32 v30[3];
+        f32 pad3c;
+        Mat4x3 m40;
+    } l;
+    f32 q[3][3];
+    s32 s2 = (getBootConfigField14() & 0xFFFF) / 30 & 0xFFFF;
+    s32 s7 = (getBootConfigField12() & 0xFFFF) / 20 & 0xFFFF;
+    f32 fs1;
+    f32 fs0;
+    f32 len;
+    f32 sq;
+    f32 ang;
+    f32 cot;
+    f32 rot;
+    s32 i;
+    f32 *pp;
+    u8 *ent;
+    s32 t0;
+    s32 t3;
+    s32 a1;
+    s32 a3;
+    s32 e3;
+    s32 ea;
+    s32 ev;
+    s32 e1;
+    s32 hw;
+    s32 hh;
+    s32 y0;
+    s32 t1;
+    s32 a2;
+    s32 va;
+    s32 vv;
+    s32 vt;
+    f32 fx;
+    f32 gx;
+    f32 gy;
+    f32 ga;
+    f32 gb;
+    f32 fy;
+    f32 fa;
+    f32 fb;
+
+    sq = arg1->f14 * arg1->f14 + arg1->f10 * arg1->f10;
+    SW_SQRT(len, sq);
+    fs1 = len * arg1->f4;
+    fx = arg2->fC;
+    l.v10[0] = fx;
+    l.v10[1] = 0.0f;
+    fy = arg2->f14;
+    fa = fx * fx;
+    fb = fy * fy;
+    l.v10[2] = fy;
+    SW_SQRT(fs0, fa + fb);
+    if (!(fs0 < 0.5f)) {
+        l.v10[0] = fx / fs0;
+        l.v10[1] = arg1->f10 / arg1->f14 / fs0;
+        l.v10[2] = fy / fs0;
+        normalize_vector_l(l.v10);
+        l.v10[0] = l.v10[0] * fs1;
+        l.v10[1] = l.v10[1] * fs1;
+        l.v10[2] = l.v10[2] * fs1;
+        fs1 = arg0->view->fov * 0.008726646f;
+        fs0 = cosf(fs1) / sinf(fs1);
+        for (i = 0; i < 3; i++) {
+            buildRotationMatrixSlot1_l(l.m40, (i == 0) ? -25.0f : (i == 2) ? 25.0f : 0.0f);
+            addVec3At0x24_l(l.m40, ((f32 *)arg1->p18)[0x4C / 4], ((f32 *)arg1->p18)[0x50 / 4], ((f32 *)arg1->p18)[0x54 / 4]);
+            transformVec3ByMat34_l(l.m40, l.v10, l.v20);
+            transformVec3ByMat34_l((void *)arg0->view->cam, l.v20, l.v30);
+            q[i][0] = l.v30[0] * fs0 / l.v30[2] * 0.75f;
+            q[i][1] = l.v30[1] * fs0 / l.v30[2];
+            q[i][2] = l.v30[2];
+        }
+        hw = arg0->view->w / 2;
+        gx = (f32)hw;
+        hh = arg0->view->h / 2;
+        gy = (f32)hh;
+        ent = arg0->buf->data + arg0->buf->count * 8;
+        t0 = gx + gx * q[0][3];
+        t3 = gy + gy * q[0][4];
+        __asm__ volatile("abs.s %0, %1" : "=f"(gb) : "f"(arg0->view->f3c));
+        __asm__ volatile("abs.s %0, %1" : "=f"(ga) : "f"(arg0->view->f38));
+        if (ga < gb) {
+            if (t0 & 3) {
+                t0 = (t0 + 4) & 0xFFFC;
+            }
+            a3 = (f32)t3 - (f32)t0 * ((q[0][4] - q[0][1]) / (q[0][3] - q[0][0]));
+            a1 = (f32)t3 + (f32)(arg0->view->w - t0) * ((q[0][7] - q[0][4]) / (q[0][6] - q[0][3]));
+            y0 = arg0->view->y0;
+            a2 = y0 - hh;
+            t1 = y0 + hh;
+            if (q[0][0] < q[0][6]) {
+                t3 -= s2;
+                if (t3 < a2) {
+                    t3 = a2;
+                } else if (t3 >= t1) {
+                    t3 = t1 - 1;
+                }
+                a1 -= s2;
+                if (a1 < a2) {
+                    a1 = a2;
+                } else if (a1 >= t1) {
+                    a1 = t1 - 1;
+                }
+                a3 -= s2;
+                if (a3 < a2) {
+                    a3 = a2;
+                } else if (a3 >= t1) {
+                    a3 = t1 - 1;
+                }
+                s2 = t1 - arg0->view->h / 10;
+                if (s2 < a3) {
+                    a3 = s2;
+                }
+                if (s2 < a1) {
+                    a1 = s2;
+                }
+                *(s16 *)(ent + 0) = t0;
+                *(s16 *)(ent + 4) = SW_LO16(arg0->view, 0x12) - 1;
+                va = t3;
+                if (a1 < t3) {
+                    va = a1;
+                }
+                vv = t3;
+                *(s16 *)(ent + 2) = va;
+                vt = t1 - 1;
+                *(s16 *)(ent + 6) = vt;
+                *(s16 *)(ent + 0xC) = t0 - 1;
+                *(s16 *)(ent + 8) = 0;
+                if (a3 < vv) {
+                    vv = a3;
+                }
+                *(s16 *)(ent + 0xA) = vv;
+                *(s16 *)(ent + 0xE) = vt;
+            } else {
+                t3 += s2;
+                if (t3 < a2) {
+                    t3 = a2;
+                } else if (t3 >= t1) {
+                    t3 = t1 - 1;
+                }
+                a1 += s2;
+                if (a1 < a2) {
+                    a1 = a2;
+                } else if (a1 >= t1) {
+                    a1 = t1 - 1;
+                }
+                a3 += s2;
+                if (a3 < a2) {
+                    a3 = a2;
+                } else if (a3 >= t1) {
+                    a3 = t1 - 1;
+                }
+                s2 = a2 + arg0->view->h / 10;
+                if (a3 < s2) {
+                    a3 = s2;
+                }
+                if (a1 < s2) {
+                    a1 = s2;
+                }
+                *(s16 *)(ent + 0) = t0;
+                *(s16 *)(ent + 4) = SW_LO16(arg0->view, 0x12) - 1;
+                *(s16 *)(ent + 2) = a2;
+                va = t3;
+                if (t3 < a1) {
+                    va = a1;
+                }
+                vv = t3;
+                *(s16 *)(ent + 6) = va;
+                *(s16 *)(ent + 8) = 0;
+                *(s16 *)(ent + 0xC) = t0 - 1;
+                *(s16 *)(ent + 0xA) = a2;
+                if (vv < a3) {
+                    vv = a3;
+                }
+                *(s16 *)(ent + 0xE) = vv;
+            }
+        } else {
+            e3 = (f32)t0 - (f32)t3 * ((q[0][3] - q[0][0]) / (q[0][4] - q[0][1]));
+            e1 = (f32)t0 + (f32)(arg0->view->h - t3) * ((q[0][6] - q[0][3]) / (q[0][7] - q[0][4]));
+            if (q[0][1] < q[0][7]) {
+                t0 += s2;
+                if (t0 < 0) {
+                    t0 = 0;
+                } else if (t0 >= arg0->view->w) {
+                    t0 = arg0->view->w - 1;
+                }
+                e3 += s7;
+                if (e3 < 0) {
+                    e3 = 0;
+                } else if (e3 >= arg0->view->w) {
+                    e3 = arg0->view->w - 1;
+                }
+                e1 += s7;
+                if (e1 < 0) {
+                    e1 = 0;
+                } else if (e1 >= arg0->view->w) {
+                    e1 = arg0->view->w - 1;
+                }
+                if (t0 & 3) {
+                    t0 = (t0 + 4) & 0xFFFC;
+                }
+                if (e3 & 3) {
+                    e3 = (e3 + 4) & 0xFFFC;
+                }
+                if (e1 & 3) {
+                    e1 = (e1 + 4) & 0xFFFC;
+                }
+                *(s16 *)(ent + 0) = 0;
+                *(s16 *)(ent + 4) = ((t0 < e3) ? e3 : t0) - 1;
+                *(s16 *)(ent + 2) = 0;
+                *(s16 *)(ent + 6) = t3;
+                *(s16 *)(ent + 8) = 0;
+                *(s16 *)(ent + 0xC) = ((t0 < e1) ? e1 : t0) - 1;
+                *(s16 *)(ent + 0xA) = t3 + 1;
+            } else {
+                t0 -= s2;
+                if (t0 < 0) {
+                    t0 = 0;
+                } else if (t0 >= arg0->view->w) {
+                    t0 = arg0->view->w - 1;
+                }
+                e3 -= s7;
+                if (e3 < 0) {
+                    e3 = 0;
+                } else if (e3 >= arg0->view->w) {
+                    e3 = arg0->view->w - 1;
+                }
+                e1 -= s7;
+                if (e1 < 0) {
+                    e1 = 0;
+                } else if (e1 >= arg0->view->w) {
+                    e1 = arg0->view->w - 1;
+                }
+                t0 &= 0xFFFC;
+                e3 &= 0xFFFC;
+                e1 &= 0xFFFC;
+                ea = t0;
+                if (e3 < t0) {
+                    ea = e3;
+                }
+                *(s16 *)(ent + 0) = ea;
+                *(s16 *)(ent + 4) = SW_LO16(arg0->view, 0x12) - 1;
+                ev = t0;
+                *(s16 *)(ent + 2) = 0;
+                *(s16 *)(ent + 6) = t3;
+                if (e1 < ev) {
+                    ev = e1;
+                }
+                *(s16 *)(ent + 8) = ev;
+                *(s16 *)(ent + 0xC) = SW_LO16(arg0->view, 0x12) - 1;
+                *(s16 *)(ent + 0xA) = t3 + 1;
+            }
+            *(s16 *)(ent + 0xE) = SW_LO16(arg0->view, 0x16) - 1;
+        }
+        arg0->buf->count = arg0->buf->count + 2;
+    }
+}
 
 typedef struct {
     f32 x, y, z;
