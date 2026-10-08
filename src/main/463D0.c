@@ -268,7 +268,44 @@ void selectGridCellTileVariant(SelCell *arg0) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/463D0", buildGridCellLabel);
+typedef struct { u8 b[4]; } GcCol;
+typedef struct { GcCol c[46]; } GcColSet;
+extern GcColSet D_main_bss_801371C4[];
+typedef struct {
+    u8 pad0[0x14];
+    u16 flags;
+    u8 pad16[2];
+    s16 x;
+    s16 y;
+    u8 pad1C[0x38];
+    GcCol label[25];
+} LblCell;
+
+u8 *buildGridCellLabel(LblCell *arg0) {
+    GcCol *src = D_main_bss_801371C4[((arg0->y & 1) * 2) + (arg0->x & 1)].c;
+    u16 w;
+    u16 *p;
+    u16 cell;
+    s8 *h;
+    s32 i;
+
+    if (arg0->flags & 0x40) {
+        return (u8 *)src;
+    }
+    w = HDR->width;
+    p = HDR->cells;
+    cell = p[arg0->x + (arg0->y * w)];
+    p = (u16 *)&HDR->tiles[cell & 0x1FFF];
+    h = (s8 *)((GridTileEnt *)p)->bytes;
+    for (i = 0; i < 0x19; i++) {
+        if (h[i] >= D_main_bss_801375C0) {
+            arg0->label[i] = *src;
+        }
+        src++;
+    }
+    arg0->label[0].b[3] = 1;
+    return arg0->label[0].b;
+}
 
 typedef struct { u16 *cell; s16 off; u16 cnt; u16 id; f32 pos; f32 w; } CraftGridEnt;
 s32 isCraftAvailableByIdx(s32);
