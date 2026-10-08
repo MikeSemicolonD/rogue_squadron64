@@ -1158,7 +1158,85 @@ s32 npcWingmanState6(void *arg0) {
 
 static u32 D_mission_overlay_800A7B04[] __attribute__((section(".rodata"))) = { 0x10600001, 0x00000000, 0x8FC2001C };
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D8450", npcTieVariantTickEffects);
+struct TvObj { u8 pad0[0x24]; u8 pos[0xC]; s32 f30; u8 *f34; s32 f38; u8 pad3C[0x4E]; s16 f8A; };
+typedef struct { u8 pad0[4]; struct TvObj *obj; } TvActor;
+typedef struct { s16 a; s16 b; f32 x; f32 y; f32 z; f32 w; u8 flag; u8 pad[0xB]; } TvEvent;
+extern u8 D_mission_overlay_8010A938[];
+extern s32 triggerCueWithSlotEffect(s32, s32, void *, void *, s32, f32, f32);
+extern s32 slotDispatcherIter(u16, s32, void *);
+extern f32 D_main_bss_8013973C;
+extern s32 D_main_bss_80137CE4;
+s32 setObjectSubstructF10IfReady_l(s32, f32, s32) __asm__("setObjectSubstructF10IfReady");
+s32 tickProgressChannel_l(s32, u8 *, s32, f32 *) __asm__("tickProgressChannel");
+s16 getObjectNpcTypeId_l(s32) __asm__("getObjectNpcTypeId");
+
+s32 ntveImpl(TvActor *arg0, s32 arg1) __asm__("npcTieVariantTickEffects");
+s32 ntveImpl(TvActor *arg0, s32 arg1) {
+    u8 buf[0x30];
+    u8 buf2[0x30];
+    u8 buf3[0x30];
+    TvEvent ev;
+    struct TvObj *o = arg0->obj;
+
+    ev.a = 0;
+    ev.b = getObjectNpcTypeId_l(o->f38);
+    ev.z = D_main_bss_8013973C;
+    switch (o->f8A) {
+    case 0:
+    case 2:
+    case 3: {
+        s32 r;
+        if (arg1 == 0) {
+            setObjectSubstructF10IfReady_l(o->f38, 0.033333335f, 0);
+            lookupHmtTextureByName(o->f30, "a_b", 0, buf, 0, 0);
+        } else {
+            lookupHmtTextureByName(o->f30, "a_b", 1, buf, 0, 0);
+        }
+        ev.w = *(f32 *)(o->f34 + D_main_bss_80137CE4 * 4 + 0xE0);
+        r = tickProgressChannel_l(o->f38, buf, 0, 0) & 0xFF;
+        if (r == 1) {
+            slotDispatcherIter(triggerCueWithSlotEffect(o->f38, 4, buf, D_mission_overlay_8010A938, r, 10.0f, -1.0f) & 0xFFFF, 0xA, &ev);
+            play3DSoundEvent(0, o, o->pos, 10.0f, 0.4f, 0, 0xB, 0x6E, 0x3C);
+        }
+        break;
+    }
+    case 1: {
+        s32 r;
+        if (arg1 == 0) {
+            setObjectSubstructF10IfReady_l(o->f38, 0.16666667f, 0);
+            lookupHmtTextureByName(o->f30, "a_b", 0, buf, (s32)buf3, 0);
+            lookupHmtTextureByName(o->f30, "a_b", 1, buf2, (s32)buf3, 1);
+        } else {
+            lookupHmtTextureByName(o->f30, "c_d", 0, buf, (s32)buf3, 0);
+            lookupHmtTextureByName(o->f30, "c_d", 1, buf2, (s32)buf3, 1);
+        }
+        ev.w = *(f32 *)(o->f34 + D_main_bss_80137CE4 * 4 + 0xE0);
+        r = tickProgressChannel_l(o->f38, buf, 0, 0) & 0xFF;
+        if (r == 1) {
+            slotDispatcherIter(triggerCueWithSlotEffect(o->f38, 4, buf, D_mission_overlay_8010A938, r, 10.0f, -1.0f) & 0xFFFF, 0xA, &ev);
+            slotDispatcherIter(triggerCueWithSlotEffect(o->f38, 4, buf2, D_mission_overlay_8010A938, r, 10.0f, -1.0f) & 0xFFFF, 0xA, &ev);
+            play3DSoundEvent(0, o, o->pos, 10.0f, 0.4f, 0, 0xB, 0x6E, 0x3C);
+        }
+        break;
+    }
+    case 4: {
+        s32 r;
+        if (arg1 == 0) {
+            setObjectSubstructF10IfReady_l(o->f38, 0.06666667f, 0);
+            lookupHmtTextureByName(o->f30, "a_b", 0, buf, 0, 0);
+        } else {
+            lookupHmtTextureByName(o->f30, "a_b", 1, buf, 0, 0);
+        }
+        r = tickProgressChannel_l(o->f38, buf, 0, 0) & 0xFF;
+        if (r == 1) {
+            triggerCueWithSlotEffect(o->f38, 0, buf, D_mission_overlay_8010A938, r, 10.0f, -1.0f);
+            play3DSoundEvent(0, o, o->pos, 15.0f, 0.2f, 0, 0x31, 0x6E, 0x3C);
+        }
+        break;
+    }
+    }
+    return 0;
+}
 
 typedef struct {
     f32 x;
