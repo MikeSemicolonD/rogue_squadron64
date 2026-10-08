@@ -750,7 +750,80 @@ INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", bridgeOuterBlueLightPosit
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/115E00", D_menu_overlay_800A59C4);
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", spawnOrientedEffectWithEasedSpin);
+typedef struct BridgeHob {
+    struct BridgeHob *next;
+    struct BridgeHob *prev;
+    u8 pad08[0x14];
+    u8 mtx[0x3C];
+    u32 flags;
+    u8 pad5C[0xD7 - 0x5C];
+    u8 alpha;
+    u8 padD8[0xFC - 0xD8];
+} BridgeHob;
+typedef struct { f32 v[3]; } BrA3;
+typedef struct { f32 v[3][3]; } BrP3;
+extern BridgeHob brHobs[7] __asm__("bridgeBlueLightHobs");
+extern struct { BridgeHob *head; } brMain __asm__("D_menu_overlay_800CDC80");
+#define HEAD brMain.head
+extern BrA3 brAngles __asm__("D_menu_overlay_800A5994");
+extern BrP3 brPos __asm__("bridgeOuterBlueLightPositions");
+extern BrA3 brUp __asm__("D_menu_overlay_800A59C4");
+extern void initVec4TripletFromArgs(void *, f32, f32, f32);
+extern void brRot1(void *, f32) __asm__("composeRotationMatrixSlot1");
+extern void composeRotationMatrixSlot2(void *, f32);
+extern void brAdd(void *, f32, f32, f32) __asm__("addVec3At0x24");
+extern void vec3Cross(f32 *, f32 *, f32 *);
+extern void quatFromAxisAngleSafe(f32 *, f32 *, f32);
+extern void composeQuatToMat3x4(void *, f32 *);
+extern s32 brRand(void) __asm__("rand");
+
+#define BR_PUSH(x) do { (x)->next = HEAD; if ((x)->next != 0) { (x)->next->prev = (x); } (x)->prev = 0; HEAD = (x); } while (0)
+#define BR_LINK(x) { (x)->flags |= 0x20; BR_PUSH(x); }
+void spawnOrientedEffectWithEasedSpin(void) {
+    BrA3 angles;
+    BrP3 pos;
+    BrA3 up;
+    f32 neg[3];
+    f32 cross[4];
+    f32 quat[4];
+    u8 i;
+    s32 k;
+    f32 t;
+    f32 *p;
+    f32 (*pp)[3];
+
+    angles = brAngles;
+    pos = brPos;
+    up = brUp;
+    initVec4TripletFromArgs(brHobs[0].mtx, quadraticEaseInOut(D_menu_overlay_800CDAF0) * 11.0f + 1.0f, 4.0f, 8.0f);
+    brRot1(brHobs[0].mtx, bridgeRotationAngle);
+    brAdd(brHobs[0].mtx, 0.0f, 5.8f, 0.0f);
+    brHobs[0].alpha = (u32)(sinf(D_menu_overlay_800CDB18 * 0.125f) * 100.0f + 155.0f);
+    BR_LINK(&brHobs[0]);
+    for (i = 1; i < 4; i++) {
+        initVec4TripletFromArgs(brHobs[i].mtx, 0.2f, (1.0f - D_menu_overlay_800CDAF0) * 4.0f + 2.5f + (f32)(brRand() & 0x1F) * 0.015625f, 8.0f);
+        composeRotationMatrixSlot2(brHobs[i].mtx, ((D_menu_overlay_800CDAF0 * 0.9f + 0.1f) * (f32)((brRand() & 0x7F) - 0x40)) / 1.3f);
+        brRot1(brHobs[i].mtx, bridgeRotationAngle);
+        brAdd(brHobs[i].mtx, 0.0f, 5.8f, 0.0f);
+        BR_LINK(&brHobs[i]);
+    }
+    for (i = 4, pp = pos.v - 4; i < 7; i++) {
+        t = D_menu_overlay_800CDAF0 * 8.0f + 0.1f;
+        initVec4TripletFromArgs(brHobs[i].mtx, t, t, t);
+        k = i - 4;
+        brRot1(brHobs[i].mtx, angles.v[k]);
+        p = pp[i];
+        neg[0] = -p[0];
+        neg[1] = -p[1];
+        neg[2] = -p[2];
+        vec3Cross(cross, neg, up.v);
+        quatFromAxisAngleSafe(quat, cross, 40.0f);
+        composeQuatToMat3x4(brHobs[i].mtx, quat);
+        brAdd(brHobs[i].mtx, pos.v[k][0], pos.v[k][1], pos.v[k][2]);
+        brHobs[i].alpha = (u32)(sinf(D_menu_overlay_800CDB18 * 0.125f) * 40.0f + 95.0f);
+        BR_LINK(&brHobs[i]);
+    }
+}
 
 extern u8 D_menu_overlay_800CDABB;
 extern s8 D_menu_overlay_800CDABC;
