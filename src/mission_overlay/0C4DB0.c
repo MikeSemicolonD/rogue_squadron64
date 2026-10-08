@@ -401,7 +401,120 @@ void updateCraftSelectAnimState(u8 *arg0, f32 *arg1, f32 arg2, f32 arg3, f32 arg
   while (i < 8);
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0C4DB0", placeRadarDots);
+typedef struct {
+    u8 pad0[0xC38];
+    s16 cell;
+    u8 b0;
+    u8 b1;
+    u8 b2;
+    u8 b3;
+} RadarRec;
+
+extern u8 D_mission_overlay_80109FE4[];
+extern u16 D_mission_overlay_8010BFF0[];
+extern u16 D_main_bss_80139560[];
+extern f32 D_mission_overlay_80109FE0;
+extern s32 findActiveNpcInSlotChain(u16, void *);
+extern u8 *getNpcContextByIndex(u16);
+extern s32 revalidateNpcSlotIterator(void *);
+
+#define grid ((u8 *)gridv)
+void placeRadarDots(void *gridv, f32 *pos)
+{
+    u8 iter[8];
+    s32 b0, b1, b2, b3;
+    f32 fx, fz;
+    s32 fp;
+    s32 n;
+    s32 cnt;
+    s32 id;
+    s32 col;
+    register s32 c2 asm("$17");
+    s32 hi;
+    s32 both;
+    RadarRec *rec;
+    u8 *npc;
+    f32 *t;
+    s32 ax, az;
+    s32 cell;
+    u16 c;
+    u8 *a0;
+    u8 *a2;
+    u8 *p;
+    s32 k;
+    f32 dx, dz;
+
+    fp = 0;
+    b0 = 2.0f * (pos[0] * 0.5f) - 28.8f;
+    b1 = 2.0f * (pos[0] * 0.5f) + 28.8f;
+    b2 = 2.0f * (pos[2] * 0.5f) - 28.8f;
+    b3 = 2.0f * (pos[2] * 0.5f) + 28.8f;
+    n = 0;
+    while (D_mission_overlay_80109FE4[fp] != 0xFF) {
+        cnt = 0;
+        if (n >= 0x40) break;
+        col = D_mission_overlay_80109FE4[fp + 1];
+        id = findActiveNpcInSlotChain(D_main_bss_80139560[D_mission_overlay_80109FE4[fp]], iter);
+        if ((id & 0xFFFF) != 0xFFFF) {
+            c2 = col;
+            hi = c2 << 4;
+            both = c2 | hi;
+            do {
+                npc = getNpcContextByIndex(id & 0xFFFF);
+                if (npc != NULL && (t = *(f32 **)(npc + 8)) != NULL) {
+                    ax = 2.0f * (t[0] * 0.5f) - 1.0f;
+                    az = 2.0f * (t[2] * 0.5f) - 1.0f;
+                    if (b0 < ax && ax < b1 && b2 < az && az < b3) {
+                        cell = ((ax & 0x3F) >> 1) + ((az & 0x3F) << 5);
+                        c = cell;
+                        rec = (RadarRec *)(grid + n * 6);
+                        a0 = grid + c;
+                        rec->cell = cell;
+                        rec->b0 = *a0;
+                        rec->b1 = grid[(c + 1) & 0x7FF];
+                        a2 = grid + ((c + 0x20) & 0x7FF);
+                        rec->b2 = *a2;
+                        rec->b3 = grid[(c + 0x21) & 0x7FF];
+                        __asm__("" : "+r"(c2));
+                        if ((u8)c2 == 0xE) {
+                            if (ax & 1) {
+                                *a0 = c2 | (*a0 & 0xF0);
+                            } else {
+                                *a0 = (*a0 & 0xF) | hi;
+                            }
+                        } else if (ax & 1) {
+                            k = (cell + 1) & 0x7FF;
+                            *a0 = c2 | (*a0 & 0xF0);
+                            a0 = grid + k;
+                            k = (k + 0x1F) & 0x7FF;
+                            *a0 = (*a0 & 0xF) | hi;
+                            a0 = grid + k;
+                            k = (k + 1) & 0x7FF;
+                            p = grid + k;
+                            *a0 = c2 | (*a0 & 0xF0);
+                            *p = (*p & 0xF) | hi;
+                        } else {
+                            *a0 = both;
+                            *a2 = both;
+                        }
+                        n++;
+                        if (n >= 0x40) break;
+                        dx = t[0] - pos[0];
+                        dz = t[2] - pos[2];
+                        if (dx * dx + dz * dz < D_mission_overlay_80109FE0 * D_mission_overlay_80109FE0) {
+                            cnt++;
+                        }
+                    }
+                }
+                id = revalidateNpcSlotIterator(iter);
+            } while ((id & 0xFFFF) != 0xFFFF);
+        }
+        D_mission_overlay_8010BFF0[fp >> 1] = cnt;
+        fp += 2;
+    }
+    *(s16 *)(grid + 0xDB8) = n;
+}
+#undef grid
 
 extern s32 gObjectiveCounts[];
 extern u8 gObjectiveBooleans[];
