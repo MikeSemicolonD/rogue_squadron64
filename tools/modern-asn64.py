@@ -101,6 +101,7 @@ with open(input_filename, mode="r") as input_file:
     mfhilo_delay_count: int = 0
     mfhilo_delay_location: int = 0
     prev_mul: bool = False
+    mul_before_branch: bool = False
     comm_symbols: List[Tuple] = []
     lcomm_symbols: List[Tuple] = []
     # Holds the branch target string if the current instruction is a delay slot
@@ -363,7 +364,8 @@ with open(input_filename, mode="r") as input_file:
             elif identifier in ["mul.s", "mul.d"]:
                 # SN64 reorders delay slot mul.s/mul.d instructions in noreorder
                 if delay_slot and not is_reorder and mfhilo_delay_count <= 0:
-                    preprocessed.insert(len(preprocessed) - 1, line)
+                    # the moved multiply now follows the insn before the branch: keep the mul-mul nop
+                    preprocessed.insert(len(preprocessed) - 1, ("\tnop\n" if mul_before_branch else "") + line)
                     line = "\tnop\n"
                 if prev_mul:
                     line = "\tnop\n" + line
@@ -373,6 +375,7 @@ with open(input_filename, mode="r") as input_file:
             if mfhilo_delay_count > 0:
                 mfhilo_delay_count -= 1
             
+            mul_before_branch = prev_mul if is_branch else False
             prev_mul = new_prev_mul
             delay_slot = is_branch
             prev_instruction_index = line_index

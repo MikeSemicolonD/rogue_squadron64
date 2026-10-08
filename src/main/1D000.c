@@ -744,7 +744,125 @@ void composeQuatToMat3x4(Mat4x3 arg0, Vec4f arg1) {
     mat3x4Multiply((f32 (*)[3]) &sp10, arg0, arg0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1D000", transformVec3ToNpcLocalWithScale);
+extern f32 D_main_80037844;
+extern f32 D_main_80037848;
+extern f32 D_main_8003784C[3];
+extern u32 D_tv_8011A838 __asm__("D_main_bss_8011A838");
+extern f32 D_tv_8011A840 __asm__("D_main_bss_8011A840");
+extern u32 D_tv_8011A844 __asm__("D_main_bss_8011A844");
+
+typedef struct {
+    u8 pad0[0x10];
+    s32 w;
+    s32 h;
+    u8 pad18[8];
+    f32 fov;
+    f32 near;
+    f32 far;
+    f32 mtx[4][3];
+} TvCam;
+
+u8 transformVec3ToNpcLocalWithScale(TvCam *cam, f32 (*mat)[3], f32 *in, f32 scale, f32 *outZ) {
+    f32 v[3];
+    f32 r[3];
+    f32 len;
+    f32 k;
+    f32 x, y;
+    f32 ax;
+    f32 dxp, dxn, dyp, dyn;
+    f32 *c;
+
+    mat = (mat != NULL) ? mat : cam->mtx;
+    transformVec3ByMat34(mat, in, v);
+    if (outZ != NULL) {
+        *outZ = v[2];
+    }
+    if (scale != 0.0f) {
+        rotateVec3ByMat3x3(mat, D_main_8003784C, r);
+        SQRTF_ASM(len, r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
+        scale = scale * len;
+        if (v[0] - scale < -125.0f) return 0;
+        if (v[1] - scale < -125.0f) return 0;
+        if (v[2] - scale < -125.0f) return 0;
+        if (125.0f < v[0] + scale) return 0;
+        if (125.0f < v[1] + scale) return 0;
+        if (125.0f < v[2] + scale) return 0;
+        if (!(0.0f < v[2] + scale)) return 0;
+        if (v[2] < cam->near) {
+            v[2] = cam->near;
+        }
+        if (!(v[2] - scale < cam->far)) return 0;
+        c = &D_main_80037844;
+        if (cam->fov == *c) {
+            k = D_main_80037848 / v[2];
+        } else {
+            *c = cam->fov;
+            k = cam->fov * 0.008726646f;
+            k = cosf(k) / sinf(k);
+            D_main_80037848 = k;
+            k = k / v[2];
+        }
+        scale = scale * k;
+        x = v[0] * k;
+        y = v[1] * k;
+        ax = (f32)cam->w / (f32)cam->h * ((f32)D_tv_8011A844 / (f32)D_tv_8011A838) * D_tv_8011A840;
+        dyp = 1.0f;
+        dyn = -1.0f;
+        dyn -= y;
+        dyp -= y;
+        dxn = -ax;
+        ax -= x;
+        dxn -= x;
+        if (ax < 0.0f) {
+            if (dyp < 0.0f) {
+                return ax * ax + dyp * dyp < scale * scale;
+            } else if (0.0f < dyn) {
+                return ax * ax + dyn * dyn < scale * scale;
+            } else {
+                return __builtin_fabs(ax) < scale;
+            }
+        } else if (0.0f < dxn) {
+            if (dyp < 0.0f) {
+                return dxn * dxn + dyp * dyp < scale * scale;
+            } else if (0.0f < dyn) {
+                return dxn * dxn + dyn * dyn < scale * scale;
+            } else {
+                return dxn < scale;
+            }
+        } else {
+            if (dyp < 0.0f) {
+                return __builtin_fabs(dyp) < scale;
+            } else if (0.0f < dyn) {
+                return dyn < scale;
+            } else {
+                return 1;
+            }
+        }
+    } else {
+        if (v[0] < -125.0f) return 0;
+        if (v[1] < -125.0f) return 0;
+        if (v[2] < -125.0f) return 0;
+        if (125.0f < v[0]) return 0;
+        if (125.0f < v[1]) return 0;
+        if (125.0f < v[2]) return 0;
+        if (!(0.0f < v[2])) return 0;
+        if (!(v[2] < cam->far)) return 0;
+        c = &D_main_80037844;
+        if (cam->fov == *c) {
+            k = D_main_80037848 / v[2];
+        } else {
+            *c = cam->fov;
+            k = cam->fov * 0.008726646f;
+            k = cosf(k) / sinf(k);
+            D_main_80037848 = k;
+            k = k / v[2];
+        }
+        x = v[0] * k / ((f32)cam->w / (f32)cam->h * ((f32)D_tv_8011A844 / (f32)D_tv_8011A838) * D_tv_8011A840);
+        y = v[1] * k;
+        if (((-1.0f < x) & (x < 1.0f)) == 0) return 0;
+        return (-1.0f < y) & (y < 1.0f);
+    }
+}
 
 f32 floatModulo(f32 arg0, f32 arg1) {
     f32 temp_fv0;
@@ -753,4 +871,4 @@ f32 floatModulo(f32 arg0, f32 arg1) {
     return (temp_fv0 - (s32) temp_fv0) * arg1;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/1D000", D_main_80000984);
+__asm__(".section .rodata\n.word 0x3A20496C\n.word 0x6C656761\n.section .text");
