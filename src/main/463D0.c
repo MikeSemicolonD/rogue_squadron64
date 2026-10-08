@@ -191,7 +191,122 @@ void initGridLayerFromLevelData(IgLvl *arg0, s32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/463D0", updateGridLayerScroll);
+extern f32 D_main_bss_80136FD0[8];
+extern u8 D_main_bss_80137150;
+extern u8 D_main_bss_80137151;
+extern f32 D_main_bss_80137154;
+extern f32 D_main_bss_80137158;
+extern f32 D_main_bss_8013715C;
+extern f32 D_main_bss_80137160;
+extern f32 D_main_bss_80137164;
+extern s32 D_main_bss_80137168;
+extern u8 Dg_80137170[] __asm__("D_main_bss_80137170");
+extern u8 D_main_bss_80137450[];
+extern u8 Dg_801374D0[] __asm__("D_main_bss_801374D0");
+extern u8 D_main_bss_801374D5[];
+extern u8 D_main_bss_8013750C[];
+extern s32 D_main_bss_801375C0;
+f32 sinf(f32);
+void emitGridCellTileStrip(u8 *, u8 *);
+void emitGridCellTileStripAdjacent(u8 *, u8 *);
+void emitGridCellTileStripDiagonal(u8 *, u8 *);
+void mapCellGeometryToGridSpace(u8 *);
+
+void updateGridLayerScroll(f32 dt)
+{
+  f32 *tp;
+  f32 *tab;
+  f32 ph;
+  int new_var2;
+  f32 ph2;
+  f32 s;
+  s32 i;
+  s32 j;
+  s32 t;
+  u8 *a;
+  u8 *b;
+  u8 *c;
+  u8 *d;
+  u8 *new_var;
+  u8 *e;
+  u8 *cell;
+  u8 *b1;
+  u8 *b2;
+  if (D_main_bss_80137150 != 0)
+  {
+    D_main_bss_80137168 = 0;
+    D_main_bss_80137151 = D_main_bss_80137151 == 0;
+    D_main_bss_80137154 += (D_main_bss_8013715C * 3.1415927f) * dt;
+    D_main_bss_80137158 += (D_main_bss_80137160 * 3.1415927f) * dt;
+    ph = D_main_bss_80137154;
+    for (i = 0; i < 8; i++)
+    {
+      D_main_bss_80136FD0[i] = sinf(ph);
+      ph += 0.7853982f;
+    }
+
+    
+    a = (D_main_bss_80137151 * 0x78) + D_main_bss_801374D5;
+    b1 = (D_main_bss_80137151 * 0x78) + (D_main_bss_801374D5 + 0x19);
+    c = b1 + 5;
+    d = b1 + 8;
+    e = a + 4;
+    ph2 = D_main_bss_80137158;
+    for (j = 0; j < 5; j++, c += 5)
+    {
+      s = sinf(ph2) * D_main_bss_80137164;
+      a[0] = (d[(j * 5) + 1] = (s32) ((D_main_bss_80136FD0[0] * s) + ((f32) D_main_bss_801375C0)));
+      e[(j * 5) - 3] = (s32) ((D_main_bss_80136FD0[1] * s) + ((f32) D_main_bss_801375C0));
+      e[(j * 5) - 2] = (s32) ((D_main_bss_80136FD0[2] * s) + ((f32) D_main_bss_801375C0));
+      e[(j * 5) - 1] = (s32) ((D_main_bss_80136FD0[3] * s) + ((f32) D_main_bss_801375C0));
+      e[j * 5] = (c[0] = (s32) ((D_main_bss_80136FD0[4] * s) + ((f32) D_main_bss_801375C0)));
+      d[(j * 5) - 2] = (s32) ((D_main_bss_80136FD0[5] * s) + ((f32) D_main_bss_801375C0));
+      d[(j * 5) - 1] = (s32) ((D_main_bss_80136FD0[6] * s) + ((f32) D_main_bss_801375C0));
+      d[j * 5] = (s32) ((D_main_bss_80136FD0[7] * s) + ((f32) D_main_bss_801375C0));
+      ph2 += 0.7853982f;
+      a += 5;
+    }
+
+    ph2 -= 0.7853982f;
+    
+    cell = (D_main_bss_80137151 * 0x78) + D_main_bss_8013750C;
+    a = cell + 5;
+    b2 = (D_main_bss_80137151 * 0x78) + (D_main_bss_8013750C + 0x1E);
+    c = b2 + 5;
+    d = b2 + 8;
+    e = cell + 9;
+    for (j = 0; j < 5; j++, c += 5)
+    {
+      s = sinf(ph2) * D_main_bss_80137164;
+      a[0] = (d[(j * 5) + 1] = (s32) ((D_main_bss_80136FD0[0] * s) + ((f32) D_main_bss_801375C0)));
+      e[(j * 5) - 3] = (s32) ((D_main_bss_80136FD0[1] * s) + ((f32) D_main_bss_801375C0));
+      e[(j * 5) - 2] = (s32) ((D_main_bss_80136FD0[2] * s) + ((f32) D_main_bss_801375C0));
+      e[(j * 5) - 1] = (s32) ((D_main_bss_80136FD0[3] * s) + ((f32) D_main_bss_801375C0));
+      e[j * 5] = (c[0] = (s32) ((D_main_bss_80136FD0[4] * s) + ((f32) D_main_bss_801375C0)));
+      d[(j * 5) - 2] = (s32) ((D_main_bss_80136FD0[5] * s) + ((f32) D_main_bss_801375C0));
+      d[(j * 5) - 1] = (s32) ((D_main_bss_80136FD0[6] * s) + ((f32) D_main_bss_801375C0));
+      d[j * 5] = (s32) ((D_main_bss_80136FD0[7] * s) + ((f32) D_main_bss_801375C0));
+      ph2 += 0.7853982f;
+      a += 5;
+    }
+
+    b = Dg_801374D0;
+    new_var = b;
+    new_var2 = 4;
+    *((u8 **) (D_main_bss_80137450 + new_var2)) = ((u8 *) (D_main_bss_80137151 * 0x78)) + ((s32) new_var);
+    for (j = 0; j < 4; j++)
+    {
+      c = Dg_80137170 + (j * 0xB8);
+      *((u8 **) (c + 0x44)) = (((u8 *) (D_main_bss_80137151 * 0x78)) + ((s32) (new_var + (j * 0x1E)))) + 5;
+      emitGridCellTileStrip(c, D_main_bss_80137450);
+      emitGridCellTileStripAdjacent(c, D_main_bss_80137450);
+      emitGridCellTileStripDiagonal(c, D_main_bss_80137450);
+      mapCellGeometryToGridSpace(c);
+      c[0x57] = 1;
+    }
+
+  }
+}
 
 typedef struct { u8 pad[5]; u8 bytes[0x19]; } GridTileEnt;
 typedef struct { GridTileEnt e[4]; } GridTileSet;
