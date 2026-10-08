@@ -1316,7 +1316,146 @@ void activateSceneNodeAndAudioListener(s32 idx) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", updateEffectObjectTransformPieces);
+typedef struct { s32 w[12]; } EfM48;
+typedef struct { s32 a, b, c; } EfV3;
+typedef struct { u8 b[0x2A0]; } SaPlayer_l;
+extern f32 D_mission_overlay_8010A144_b[][3] __asm__("D_mission_overlay_8010A144");
+extern SaPlayer_l D_main_bss_8013800C_l[] __asm__("D_main_bss_8013800C");
+extern u8 D_main_8009EC14[];
+extern u8 D_main_8009EBBC;
+extern u16 D_main_8009EBC4_l __asm__("D_main_8009EBC4");
+extern u8 D_main_bss_80137A80_u8[] __asm__("D_main_bss_80137A80");
+extern f32 D_mission_overlay_8010A144_l[][3] __asm__("D_mission_overlay_8010A144");
+extern void transformVec3ByMat34(void *, f32 *, f32 *);
+extern void scaleVec3ByScalar(f32 *, f32, f32 *);
+extern void resetEffectObjectVecQuads(s32);
+extern void activateSceneNodeAndAudioListener(s32);
+extern void applyPlayerVehicleStateUpdate(u8 *);
+
+void updateEffectObjectTransformPieces(void *s3v, s32 arg1, s32 arg2, f32 arg3, s32 arg4) {
+    f32 sp10[3];
+    f32 sp20[3];
+    s32 sp30;
+    u8 *sp34;
+    f32 (*tb1)[3];
+    f32 (*tb2)[3];
+    register u8 *s4 asm("$20");
+    register u8 *s6 asm("$22");
+    register f32 *s2 asm("$18");
+    register f32 *s0 asm("$16");
+    u8 *s1;
+    register s32 s5 asm("$21");
+    register s32 s7 asm("$23");
+    s32 v1;
+#define s3 ((u8*)s3v)
+    u8 *t0;
+
+    resetEffectObjectVecQuads(arg1);
+    s7 = 0;
+    sp30 = arg1 * 3;
+    v1 = arg1 * 21;
+    v1 <<= 5;
+    t0 = (u8 *)D_main_bss_8013800C_l;
+    s4 = t0 + v1;
+    t0 -= 0x254;
+    s6 = t0 + v1;
+    t0 += 0x284;
+    sp34 = t0 + v1;
+    s5 = s7;
+    tb1 = D_mission_overlay_8010A144_l;
+    tb2 = D_mission_overlay_8010A144_b;
+    s2 = (f32 *)(s3 + 0xC);
+  loop:
+    {
+        s1 = &D_main_bss_80138268[0][0][0] + sp30 * 0x1F0 + s5;
+        *(u16 *)(s1 + 4) = *(u16 *)s3;
+        *(u16 *)(s1 + 2) = *(u16 *)((u8 *)s2 - 0xA);
+        *(u16 *)(s1 + 0) = *(u16 *)((u8 *)s2 - 8);
+        *(f32 *)(s1 + 0x9C) = s2[-1];
+        *(f32 *)(s1 + 0xA0) = s2[-1];
+        *(f32 *)(s1 + 0x98) = s2[-1];
+        scaleVec3ByScalar((f32 *)(s1 + 0x10), arg3, s2);
+        *(f32 *)(s1 + 0x4C) = *(f32 *)(s1 + 0x10);
+        *(f32 *)(s1 + 0x50) = *(f32 *)(s1 + 0x14);
+        *(f32 *)(s1 + 0x54) = *(f32 *)(s1 + 0x18);
+        scaleVec3ByScalar((f32 *)(s1 + 0x1C), arg3, (f32 *)(s3 + 0x18));
+        scaleVec3ByScalar((f32 *)(s1 + 0x58), arg3, (f32 *)(s3 + 0x24));
+        scaleVec3ByScalar((f32 *)(s1 + 0x64), arg3, (f32 *)(s3 + 0x24));
+        scaleVec3ByScalar((f32 *)(s1 + 0x78), arg3, (f32 *)(s3 + 0x30));
+        scaleVec3ByScalar((f32 *)(s1 + 0x84), arg3, (f32 *)(s3 + 0x30));
+        switch (*(u16 *)(s1 + 2)) {
+        case 1: {
+            u8 *src;
+            s32 *d;
+            *(u8 **)(s1 + 0x70) = s4;
+            if (*(u16 *)(s1 + 4) != 3) {
+                *(u8 **)(s1 + 0x74) = s4;
+            } else {
+                *(u8 **)(s1 + 0x74) = 0;
+                *(f32 *)(s1 + 0xD4) = tb1[*(u16 *)(s6 + 0xB8)][0];
+                *(f32 *)(s1 + 0xE4) = tb2[*(u16 *)(s6 + 0xB8)][1];
+                *(f32 *)(s1 + 0xE8) = 5.0f;
+            }
+            d = (s32 *)(s1 + 0x28);
+            src = *(u8 **)(s1 + 0x70);
+            *(u8 **)(s1 + 0x90) = sp34;
+            *(EfM48 *)d = *(EfM48 *)src;
+            *(EfV3 *)sp10 = *(EfV3 *)(s1 + 0x58);
+            transformVec3ByMat34(s1 + 0x28, sp10, sp20);
+            *(f32 *)(s1 + 0x4C) = sp20[0];
+            *(f32 *)(s1 + 0x50) = sp20[1];
+            *(f32 *)(s1 + 0x54) = sp20[2];
+            *(EfV3 *)(s1 + 0x10) = *(EfV3 *)sp20;
+            break;
+        }
+        case 2:
+        case 3: {
+            u8 *src;
+            s32 *d;
+            if (*(u16 *)(s1 + 4) == 2) {
+                *(u8 **)(s1 + 0x90) = sp34;
+            }
+            src = s4;
+            *(u8 **)(s1 + 0x70) = s4;
+            *(u8 **)(s1 + 0x74) = s4;
+            *(f32 *)(s1 + 0x98) = *(f32 *)(s1 + 0x9C);
+            *(EfM48 *)(s1 + 0x28) = *(EfM48 *)src;
+            scaleVec3ByScalar(sp10, 0.25f, s2);
+            transformVec3ByMat34(s1 + 0x28, sp10, sp20);
+            *(f32 *)(s1 + 0x4C) = sp20[0];
+            *(f32 *)(s1 + 0x50) = sp20[1];
+            *(f32 *)(s1 + 0x54) = sp20[2];
+            *(EfV3 *)(s1 + 0x10) = *(EfV3 *)sp20;
+            break;
+        }
+        default:
+            *(u8 **)(s1 + 0x74) = D_main_8009EC14;
+            break;
+        }
+        switch (*(u16 *)(s6 + 0xB8)) {
+        case 4:
+            *(f32 *)(s1 + 0xAC) = 0.065f;
+            break;
+        case 3:
+            *(f32 *)(s1 + 0xAC) = 0.05f;
+            break;
+        default:
+            *(f32 *)(s1 + 0xAC) = 0.075f;
+            break;
+        }
+        applyPlayerVehicleStateUpdate(s1);
+        s2 += 0xF;
+        s3v = (u8*)s3v + 0x3C;
+        s7 += 1;
+        s5 += 0xF8;
+    }
+    if (s7 < 6) goto loop;
+    activateSceneNodeAndAudioListener(arg1);
+    updateAudioListenerPosFromPlayer();
+    D_main_8009EBBC = 0;
+    D_main_8009EBC4_l = 0xFFFF;
+    clearVec4QuadStruct(D_main_bss_80137A80_u8);
+}
 
 typedef struct { u8 b[0x2A0]; } SaPlayer;
 extern SaPlayer D_main_bss_8013800C[];
