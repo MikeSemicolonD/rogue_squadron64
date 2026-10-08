@@ -653,7 +653,114 @@ void quicksortFloatKeysWithValues(f32 *keys, u16 *vals, s32 lo, s32 hi) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", gatherAndSortNearbyNpcViewPoints);
+typedef struct { f32 x, y, z; } GsV3;
+typedef struct {
+    GsV3 pos;
+    GsV3 n;
+    f32 d;
+    f32 e;
+    u8 pad20[8];
+} GsHit;
+typedef struct {
+    s16 cnt;
+    u16 ids[8];
+    u8 pad12[2];
+    f32 range;
+    s16 done;
+    u8 pad1A[2];
+    f32 dist;
+    f32 keys[8];
+    u8 it[8];
+    GsV3 dir;
+    GsV3 org;
+} GsState;
+extern u8 D_main_bss_80138058[];
+s32 gsSample(GsV3 *, GsV3 *, void *, GsHit *) __asm__("sampleTerrainAtNpcPosition");
+s32 gsFindActive(u16, void *) __asm__("findActiveNpcInSlotChain");
+u8 *gsCtx(u16) __asm__("getNpcContextByIndex");
+s32 gsHitTest(s32, void *, void *, void *) __asm__("findSegmentObjectSphereHit");
+s32 gsRevalidate(void *) __asm__("revalidateNpcSlotIterator");
+void gsSort(f32 *, u16 *, s32, s32) __asm__("quicksortFloatKeysWithValues");
+
+static __inline__ u16 gsNext(GsState *st, s32 idx) {
+    GsHit hit;
+    u16 cur;
+
+    while ((idx & 0xFFFF) != 0xFFFF) {
+        cur = idx;
+        if (gsHitTest(*(s32 *)(gsCtx(cur) + 0xC), &st->org, &st->dir, &hit) != 0) {
+            st->dist = hit.d;
+            return cur;
+        }
+        idx = gsRevalidate(st->it);
+    }
+    st->done = 1;
+    return 0xFFFF;
+}
+
+s16 gatherAndSortNearbyNpcViewPoints(f32 *src, u16 chain, GsState *st) {
+    u16 n;
+    f32 k;
+    u16 v;
+    s16 one;
+
+    st->done = 0;
+    st->org = *(GsV3 *)src;
+    st->dist = 0.0f;
+    st->cnt = 0;
+    st->dir.x = src[3] * st->range;
+    st->dir.y = src[4] * st->range;
+    st->dir.z = src[5] * st->range;
+    {
+        GsHit hit;
+        if (gsSample(&st->org, &st->dir, D_main_bss_80138058, &hit) != 0) {
+            st->dir.x = hit.pos.x - st->org.x;
+            st->dir.y = hit.pos.y - st->org.y;
+            st->dir.z = hit.pos.z - st->org.z;
+            st->range = hit.e;
+        }
+    }
+    n = gsNext(st, gsFindActive(chain, st->it));
+    while (st->cnt < 8) {
+        s32 ff = 0xFFFF;
+        one = 1;
+        if (n == ff) {
+            break;
+        }
+        st->keys[st->cnt] = st->dist;
+        st->ids[st->cnt] = n;
+        st->cnt++;
+        if (st->done == 0) {
+            s32 idx = gsRevalidate(st->it);
+            while ((idx & 0xFFFF) != 0xFFFF) {
+                s32 cur = idx & 0xFFFF;
+                GsHit hit;
+                if (gsHitTest(*(s32 *)(gsCtx(cur) + 0xC), &st->org, &st->dir, &hit) != 0) {
+                    st->dist = hit.d;
+                    n = cur;
+                    goto next;
+                }
+                idx = gsRevalidate(st->it);
+            }
+            st->done = one;
+        }
+        n = 0xFFFF;
+    next:;
+    }
+    if (st->cnt >= 3) {
+        gsSort(st->keys, st->ids, 0, st->cnt - 1);
+    } else if (st->cnt == 2) {
+        if (st->keys[0] > st->keys[1]) {
+            k = st->keys[0];
+            st->keys[0] = st->keys[1];
+            st->keys[1] = k;
+            v = st->ids[0];
+            st->ids[0] = st->ids[1];
+            st->ids[1] = v;
+        }
+    }
+    return st->cnt;
+}
 
 typedef struct {
     f32 pos[3];
