@@ -94,7 +94,12 @@ Rules:
 - Write candidate drafts into {rundir}. Keep {rundir}/best.c updated with your lowest-scoring draft at all times, and append one line per
   idea tried to {rundir}/notes.md (what you changed, the score, what it told you).
 - Diagnose before mutating: after ~10 variants that do not move a 1-10 line residual, read the dumps and form a hypothesis.
-- When you reach 0 diff lines, copy that draft to {rundir}/best.c, confirm with score.sh, and stop. The runner lands it.
+- When you reach 0 diff lines, copy that draft to {rundir}/best.c and confirm the whole ROM: `python3 tools/replace_asm.py FUNC {rundir}/best.c`,
+  delete the `// LANDING:` lines it adds, `rm -f build/<src minus .c>.o build/<src minus .c>.s`, `make -j4 check` must print
+  `build/tyler.z64: OK`, then `git checkout -- <src>` to restore the file. score.sh compares code only: float literals, jump tables and
+  strings go to .rodata in the order the compiler first creates them, so a code match can still fail the ROM check. If it fails,
+  `python3 tools/first_diff.py build/tyler.z64 rogue_squadron.z64 --map build/tyler.elf.map` names the differing symbol; fix the source
+  order (e.g. if/else vs switch changes literal creation order) and repeat. Stop only after the ROM check passes. The runner lands it.
 - If you are out of ideas, stop with best.c holding your best draft. End with a 3-6 line summary: final score, what blocks the match,
   and any lever worth adding to tricks.md.
 """
