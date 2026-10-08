@@ -382,7 +382,91 @@ void initCraftSelectScreen(u8 arg0, s32 arg1, s32 arg2) {
 
 
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/115E00", tickCraftSelectScreen);
+typedef struct TcNode { struct TcNode *next; struct TcNode *prev; } TcNode;
+typedef struct { u8 pad[0xC]; TcNode node; } TcMesh;
+typedef struct { char *name; TcMesh *mesh; u8 pad[0x18]; } TcModel;
+typedef struct { TcNode *head; void *f4; s32 f8; } TcMain;
+extern TcNode *tcHead __asm__("D_menu_overlay_800CDC80");
+extern TcMain tcMain __asm__("D_menu_overlay_800CDC80");
+extern TcModel tcModels[] __asm__("D_menu_overlay_800CDCF0");
+extern f32 bridgeRotationVelocityMultiplier;
+extern f32 tcB14 __asm__("D_menu_overlay_800CDB14");
+extern s32 tcAFC __asm__("D_menu_overlay_800CDAFC");
+extern s32 tcFA4 __asm__("D_menu_overlay_800CDFA4");
+extern s32 tcFA8 __asm__("D_menu_overlay_800CDFA8");
+extern f32 tcE6A4 __asm__("D_menu_overlay_800CE6A4");
+extern f32 tcE6A8 __asm__("D_menu_overlay_800CE6A8");
+extern s32 tcCDC __asm__("D_menu_overlay_800CDCDC");
+extern s32 tcACC __asm__("D_menu_overlay_800CDACC");
+f32 advanceWrappingPhaseAccumulator(void);
+void pollControllerInputs(void);
+void setNewAndPreviousButtonsPressed(void);
+void waitForPrevFrameDone(void);
+void startSlotLoopAnimWithVoiceSync(f32 arg0);
+void handleCraftSelectInput(void);
+void tickMenuTransitionState(void);
+void tickTimedScreenFadeFloat(f32 arg0);
+void advancePlayerAnimationPhase(s32, s32, f32);
+void applyPlayerSlotAnimChannelKeyframe(u8 s0, s32 s1, f32 alpha);
+void activateAnimationKeyframe(s32, s32, u8);
+void runScriptedCraftCinematicEvent(f32 dt);
+void spawnOrientedEffectWithEasedSpin(void);
+void frameStartReset(void);
+s32 tcRebuild(s32) __asm__("rebuildActiveDisplayObjectList");
+void setupCameraMatrices(void *);
+void drawFrameProfilerBars(void);
+void submitGfxFrame(void);
+void handleLevelSelectStartConfirm(void);
+u8 accumulateShipThrottleCharge(s32, void *, f32);
+
+#define TC_PUSH(k) do { tcModels[k].mesh->node.next = tcHead; if (tcHead != NULL) { tcModels[k].mesh->node.next->prev = &tcModels[k].mesh->node; } tcModels[k].mesh->node.prev = NULL; tcHead = &tcModels[k].mesh->node; } while (0);
+
+s32 tickCraftSelectScreen(void) {
+    TcNode *nx;
+    s32 r;
+
+    bridgeRotationVelocityMultiplier = advanceWrappingPhaseAccumulator();
+    pollControllerInputs();
+    setNewAndPreviousButtonsPressed();
+    tcB14 += bridgeRotationVelocityMultiplier * 30.0f;
+    waitForPrevFrameDone();
+    startSlotLoopAnimWithVoiceSync(bridgeRotationVelocityMultiplier);
+    handleCraftSelectInput();
+    tickMenuTransitionState();
+    tickTimedScreenFadeFloat(bridgeRotationVelocityMultiplier);
+    advancePlayerAnimationPhase(tcFA4, tcAFC, bridgeRotationVelocityMultiplier);
+    advancePlayerAnimationPhase(tcFA8, tcAFC, bridgeRotationVelocityMultiplier);
+    tcE6A4 += tcE6A8 * bridgeRotationVelocityMultiplier;
+    if (tcE6A4 > 1.0f) {
+        tcE6A4 = 1.0f;
+    }
+    if (tcE6A4 < 0.0f) {
+        tcE6A4 = 0.0f;
+    }
+    applyPlayerSlotAnimChannelKeyframe(bridgeMenuDesiredLevel, bridgeMenuPreviousLevel, tcE6A4);
+    activateAnimationKeyframe(2, 0, (u32)(*(f32 *)&tcAFC * 255.0f));
+    runScriptedCraftCinematicEvent(bridgeRotationVelocityMultiplier);
+    tcHead = NULL;
+    spawnOrientedEffectWithEasedSpin();
+    TC_PUSH(3)
+    TC_PUSH(1)
+    TC_PUSH(2)
+    TC_PUSH(0)
+    frameStartReset();
+    ((TcMain *)&tcHead)->f8 = tcRebuild(tcCDC);
+    setupCameraMatrices((TcMain *)&tcHead);
+    drawFrameProfilerBars();
+    submitGfxFrame();
+    handleLevelSelectStartConfirm();
+    if (accumulateShipThrottleCharge(tcCDC, (TcMain *)&tcHead, bridgeRotationVelocityMultiplier)) {
+        r = 0xFFFFFE;
+        if (tcACC != 0xFFFFFE) {
+            r = tcACC;
+        }
+        return r;
+    }
+    return 0xFFFFFF;
+}
 
 extern f32 bridgeRotationVelocityMultiplier;
 extern f32 bridgeRotationAngle;
