@@ -7,7 +7,58 @@
 
 #define SQRTF_ASM(out, in) __asm__("sqrt.s %0, %1" : "=f"(out) : "f"(in))
 
-INCLUDE_ASM("asm/nonmatchings/main/1D000", sinfApprox);
+f32 sinfApprox(f32 y) {
+    f32 t;
+    f32 s2;
+    f32 t3;
+    f32 t5;
+    f32 t7;
+    f32 r;
+    f32 p;
+    register f32 x asm("$f10");
+    s32 a;
+    s32 b;
+    s32 c;
+    s32 d;
+    u8 mid;
+
+    if (y > 0.999999f) {
+        return 1.5707964f;
+    }
+    if (y < -0.999999f) {
+        return -1.5707964f;
+    }
+    a = y < 0.70710677f;
+    b = y > -0.70710677f;
+    mid = a & b;
+    if (!mid) {
+        x = y;
+        if (x < 0.0f) {
+            __asm__("sqrt.s %0, %1" : "=f"(r) : "f"(1.0f - x * x));
+            y = -r;
+        } else {
+            t = 1.0f - x * x;
+            __asm__("sqrt.s %0, %1" : "=f"(y) : "f"(t));
+        }
+    }
+    c = y < 0.001f;
+    d = y > -0.001f;
+    if (!(c & d)) {
+        s2 = y * y;
+        t3 = y * s2;
+        t5 = t3 * s2;
+        t7 = t5 * s2;
+        p = t7 * s2;
+        y = y + t3 * 0.16666667f + t5 * 0.075f + t7 * 0.04464286f + p * 0.047446f;
+    }
+    if (!mid) {
+        if (x < 0.0f) {
+            return -1.5707964f - y;
+        }
+        return 1.5707964f - y;
+    }
+    return y;
+}
 
 f32 constMinusSinfApprox(f32 arg0) {
     return M_HALF_PI_F - sinfApprox(arg0);
