@@ -196,7 +196,103 @@ s32 npcTickEffectChannelWithSlotDispatch(TsActor *arg0) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0D38A0", npcShuttleHandleDestruction);
+#define FABS(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
+extern s32 rand();
+extern void spawnNpcType0xAFromTemplate(void *, f32);
+extern void zmemcpy(void *, void *, s32);
+extern void gameStateByteGatedNpcHelper(s32, void *, s32, f32, f32, f32);
+extern void spawnDestructionEffectBurst(void *, u16, f32, f32, f32, f32);
+extern void composeRandomRotationMatrix(f32 *, f32 *, f32, s32, s32, s32);
+extern void scaleVec3ByRandomRange(f32 *, f32, f32);
+extern void spawnDebris1Npc(f32 *, f32 *, f32, f32, f32);
+extern void spawnDestructionDebris(u16, void *, f32, f32, f32);
+extern void spawnDirectionalDebrisBurst(void *, u16, f32, f32, s32, f32);
+extern f32 vec3Length(void *);
+extern void normalize_vector(void *);
+
+void npcShuttleHandleDestruction(u8 *arg0, s32 arg1, s32 arg2, s32 arg3)
+{
+  f32 sp18[4];
+  f32 sp28[3];
+  f32 sp38[12];
+  f32 fs0;
+  f32 fs1;
+  f32 v;
+  s32 t;
+  s32 n;
+  s32 i;
+  s32 r;
+  r = (arg3 == 0xC) * 2; t = r;
+  switch (r)
+  {
+  case 0:
+      spawnNpcType0xAFromTemplate(arg0, (*((f32 *) (arg0 + 0x4C))) * 4.0f);
+      *((s16 *) (arg0 + 0x5E)) = 4;
+      zmemcpy(sp38, arg0, 0x30);
+      if (arg0[0xC5] == 0)
+      {
+        sp38[9] = *((f32 *) (arg0 + 0x4C));
+        sp38[10] = *((f32 *) (arg0 + 0x4C));
+        sp38[11] = *((f32 *) (arg0 + 0x4C));
+      }
+      else
+      {
+        sp38[9] = (*((f32 *) (arg0 + 0x4C))) * 0.6f;
+        sp38[10] = (*((f32 *) (arg0 + 0x4C))) * 0.6f;
+        sp38[11] = (*((f32 *) (arg0 + 0x4C))) * 0.6f;
+      }
+      v = *((f32 *) (arg0 + 0x4C));
+      gameStateByteGatedNpcHelper(2, sp38, 0, v * 0.8f, v * 1.2f, 0.5f);
+      spawnDestructionEffectBurst(arg0, 0xFFFF, 1.0f, 0.7f, 1.2f, 0.5f);
+      n = ((s16) (((s16) rand()) % 5)) + 5;
+      for (i = 0; i < n; i++)
+      {
+          composeRandomRotationMatrix(sp28, sp18, (*((f32 *) (arg0 + 0x4C))) * 0.5f, 0x87, 0, 0);
+          sp28[0] += *((f32 *) (arg0 + 0));
+          sp28[1] += *((f32 *) (arg0 + 4));
+          sp28[2] += *((f32 *) (arg0 + 8));
+          scaleVec3ByRandomRange(sp18, 3.0f, 4.0f);
+          fs1 = FABS(((((f32) (rand() & 0x7F)) - 64.0f) * 0.03125f) * 5.0f);
+          fs1 = fs1 + 40.0f;
+          fs0 = FABS((((f32) (rand() & 0x7F)) - 64.0f) * 0.0078125f) + 1.0f;
+          spawnDebris1Npc(sp28, sp18, fs1, fs0, FABS((((f32) (rand() & 0x7F)) - 64.0f) / 213.33333f) + 0.3f);
+      }
+    break;
+  case 1:
+    *((s16 *) (arg0 + 0x5E)) = 2;
+    r = 0;
+    switch ((s16) rand() % 3)
+    {
+      case 0:
+        spawnDestructionEffectBurst(arg0, *((u16 *) ((*((u8 **) (arg0 + 0x38))) + 0x198)), 2.0f, 0.7f, 1.2f, 1.5f);
+        break;
+
+      case 1:
+        spawnDestructionDebris(*((u16 *) ((*((u8 **) (arg0 + 0x38))) + 0x198)), arg0, 0.6f, 20.0f, 3.0f);
+        break;
+
+      case 2:
+        spawnDirectionalDebrisBurst(arg0, *((u16 *) ((*((u8 **) (arg0 + 0x38))) + 0x198)), 1.0f, 0.5f, 0, 5.0f);
+        break;
+
+    }
+    r = 0;
+
+        break;
+  case 2:
+  default:
+    *((s16 *) (arg0 + 0x5E)) = 2;
+  }
+  do
+  {
+    *((f32 *) (arg0 + 0x70)) = (((f32) (rand() & 0x7F)) - 64.0f) * 0.015625f;
+    *((f32 *) (arg0 + 0x74)) = (((f32) (rand() & 0x7F)) - 64.0f) * 0.015625f;
+    *((f32 *) (arg0 + 0x78)) = (((f32) (rand() & 0x7F)) - 64.0f) * 0.015625f;
+  }
+  while (vec3Length(arg0 + 0x70) == 0.0f);
+  normalize_vector(arg0 + 0x70);
+  *((f32 *) (arg0 + 0x7C)) = FABS((((f32) (rand() & 0x7F)) - 64.0f) * 0.0625f) + 4.0f;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D38A0", D_mission_overlay_800A747C);
 
