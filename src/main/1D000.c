@@ -186,7 +186,35 @@ void mat3x3InverseInto(Mat4x3 arg0, Mat4x3 arg1) {
 }
 #endif
 
-INCLUDE_ASM("asm/nonmatchings/main/1D000", floatMatrixToFixed);
+typedef struct {
+    s16 i[4][4];
+    u16 f[4][4];
+} FmMtx;
+
+void floatMatrixToFixed(FmMtx *m, f32 *mf) {
+    s32 i, j, e;
+    f32 *src;
+    FmMtx *p;
+    f32 *row;
+    src = mf;
+    for (i = 0; i < 3; i++) {
+        p = m;
+        row = src + (i << 1) + i;
+        for (j = 0; j < 3; j++) {
+            p->i[j][i] = (e = row[j] * 65536.0f) >> 16;
+            p->f[j][i] = e;
+        }
+        e = mf[9] * 16777216.0f;
+        p->i[3][i] = e >> 16;
+        p->f[3][i] = e;
+        mf++;
+    }
+    p->i[2][3] = p->f[2][3] = 0;
+    p->i[1][3] = p->f[1][3] = 0;
+    p->i[0][3] = p->f[0][3] = 0;
+    p->i[3][3] = 1;
+    p->f[3][3] = 0;
+}
 
 void clearVec4QuadStruct(Mat4x3 arg0) {
     arg0[2][0] = arg0[2][1] = arg0[3][2] = arg0[1][0] = arg0[1][2] = arg0[3][1] = arg0[0][1] = arg0[0][2] = arg0[3][0] = 0.0f;
