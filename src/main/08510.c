@@ -1428,7 +1428,96 @@ void computeFrameDeltaTime(void) {
     D_main_bss_8011A900 = D_main_bss_80128ED8;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", timeSnapshotFiller);
+typedef struct {
+    s32 w0;
+    s32 w4;
+    u8 b8[4];
+    f32 fC;
+    f32 f10;
+    f32 f14;
+    f32 f18;
+    f32 f1C;
+    f32 f20;
+    f32 f24;
+} TfSnap;
+
+extern struct { f32 a; f32 b; } tfAcc __asm__("D_main_bss_8011A8F8");
+extern struct { s32 v; } tfLast __asm__("D_main_bss_8011A8F0");
+extern struct { s32 v; } tfFrames __asm__("D_main_bss_8011A890");
+extern struct { u32 hi; u32 lo; } tfClkS __asm__("osClockRate");
+extern f32 D_main_bss_8011A8F4;
+typedef struct { f32 v; } TfF;
+#define tfCnt (*(TfF *)&D_main_bss_8011A8F4)
+typedef struct { f32 a; f32 b; } TfAcc;
+extern u8 D_main_bss_8011A8C9;
+extern u8 D_main_bss_8011A8C8;
+extern u8 D_main_bss_80128EAF;
+extern u8 D_main_bss_80128EAE;
+void tfAwait(void) __asm__("awaitFrameSyncMesgBlock");
+void tfSignal(void) __asm__("signalFrameSyncMesgNonblock");
+void readBufferSwapState(void *, u32 *, u32 *);
+f32 getViModePeriod(void);
+u64 osGetTime(void);
+
+s32 timeSnapshotFiller(TfSnap *s) {
+    u32 r0;
+    u32 r1;
+    u32 now;
+    f32 v;
+    f32 cnt;
+    f32 avg;
+    TfAcc *acc;
+    u32 *clk;
+
+    tfAwait();
+    now = osGetTime();
+    if (tfLast.v == -1) {
+        s->f24 = 0.0f;
+        s->w4 = 0;
+        s->w0 = 0;
+    } else {
+        s->w4 = tfFrames.v - 1;
+        s->w0 = tfFrames.v;
+        s->f24 = (f32)(u32)(now - tfLast.v) / (f32)tfClkS.lo;
+    }
+    readBufferSwapState(s->b8, &r0, &r1);
+    acc = (TfAcc *)&tfAcc;
+    __asm__("" : "=r"(acc) : "0"(acc));
+    {
+        f32 fr = (f32)r0;
+        clk = &tfClkS.lo;
+        __asm__("" : "=r"(clk) : "0"(clk));
+        s->fC = fr / (f32)*clk;
+    }
+    acc->a += s->fC;
+    { f32 *p10 = &s->f10; *p10 = (f32)r1 / (f32)*clk; }
+    cnt = D_main_bss_8011A8F4 + 1.0f;
+    avg = acc->a / cnt;
+    { f32 *pb = &acc->b; *pb += s->f10; }
+    D_main_bss_8011A8F4 = cnt;
+    s->f14 = avg;
+    s->f18 = acc->b / tfCnt.v;
+    { f32 *p1C = &s->f1C; *p1C = getViModePeriod() / 1000.0f; }
+    tfLast.v = now;
+    if (D_main_bss_8011A8C9 != 0 && D_main_bss_8011A8C8 != 0) {
+        if (D_main_bss_8011A900 == -1) {
+            v = 0.0f;
+        } else {
+            f32 t = (f32)(u32)(D_main_bss_80128ED8 - D_main_bss_8011A900) / (f32)tfClkS.lo;
+            if (D_main_bss_80128EAF - D_main_bss_80128EAE >= 2) {
+                t += getViModePeriod() * 0.001f * (D_main_bss_80128EAF - D_main_bss_80128EAE);
+            } else {
+                t += getViModePeriod() * 0.001f;
+            }
+            v = t;
+        }
+    } else {
+        v = (f32)(u32)D_main_bss_8011A904 / (f32)tfClkS.lo;
+    }
+    s->f20 = v;
+    tfSignal();
+    return 1;
+}
 
 s32 osRecvMesg(void *, void *, s32);
 void osYieldThread(void);
