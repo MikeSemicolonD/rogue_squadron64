@@ -20,7 +20,186 @@ f32 D_main_8009ECE0[] = {
 
 INCLUDE_ASM("asm/nonmatchings/main/5AD20", loadTopCloudsAsset);
 
-INCLUDE_ASM("asm/nonmatchings/main/5AD20", updateWalkerParticlePositions);
+typedef struct {
+    f32 offX;
+    f32 speed;
+    f32 scrollX;
+    f32 scrollZ;
+    f32 prevX;
+    f32 prevZ;
+    u8 grid[4][4];
+} WpCell;
+
+typedef struct WpNode {
+    struct WpNode *next;
+    struct WpNode *prev;
+} WpNode;
+
+extern f32 floatModulo(f32, f32);
+extern f32 sinf(f32);
+s16 rand(void);
+extern u8 transformVec3ToNpcLocalWithScale(s32, s32, f32 *, f32, void *);
+extern void addVec3At0x24(void *, f32, f32, f32);
+extern void initVec4TripletFromArgs_l(void *, f32, f32, f32) __asm__("initVec4TripletFromArgs");
+extern void mat3x4Multiply(void *, void *, void *);
+extern void normalize_vector(f32 *);
+extern void quatFromAxisAngle(void *, f32 *, f32);
+extern void quatToRotationMatrix(void *, void *);
+extern f32 sinfApprox(f32);
+
+void updWPP(WpNode **, s32, u8 *, f32 *, f32 *) __asm__("updateWalkerParticlePositions");
+void updWPP(WpNode **head, s32 arg1, u8 *arg2, f32 *arg3, f32 *arg4) {
+    f32 pos[3];
+    f32 m[12];
+    f32 m2[12];
+    f32 axis[4];
+    f32 dir[4];
+    f32 pad[4];
+    f32 q[4];
+    u8 *base;
+    u8 *entries;
+    s32 total;
+    s32 k;
+    s32 i;
+    s32 j;
+    f32 zero;
+    f32 thirty;
+    f32 angle;
+    f32 x;
+    f32 z;
+    f32 v;
+    WpCell *cell;
+    u8 *g;
+    u8 *e;
+    WpNode *n;
+    WpNode *h;
+    s32 idx;
+    s32 rb;
+    s32 rc;
+
+    zero = 0.0f;
+    total = 0;
+    k = 0;
+    base = *(u8 **)(arg2 + 0xF00);
+    thirty = 30.0f;
+    entries = base + 0x20D0;
+    do {
+        cell = (WpCell *)(base + (k * 0x38 + 0x2BB0));
+        pos[1] = arg4[1] + cell->offX;
+        v = cell->scrollX + (arg4[0] * cell->speed - cell->prevX);
+        cell->scrollX = v;
+        if (v < zero) {
+            cell->scrollX = thirty - floatModulo(-v, thirty);
+            for (i = 0; i < 4; i++) {
+                for (j = 3; j > 0; j--) {
+                    cell->grid[i][j] = cell->grid[i][j - 1];
+                }
+                cell->grid[i][0] = 0xFF;
+            }
+        } else if (thirty < v) {
+            cell->scrollX = floatModulo(v, thirty);
+            for (i = 0; i < 4; i++) {
+                for (j = 1; j < 4; j++) {
+                    cell->grid[i][j - 1] = cell->grid[i][j];
+                }
+                cell->grid[i][j - 1] = 0xFF;
+            }
+        }
+        cell->prevX = arg4[0] * cell->speed;
+        v = cell->scrollZ + (arg4[2] * cell->speed - cell->prevZ);
+        cell->scrollZ = v;
+        if (v < zero) {
+            cell->scrollZ = thirty - floatModulo(-v, thirty);
+            for (i = 3; i > 0; i--) {
+                for (j = 0; j < 4; j++) {
+                    cell->grid[i][j] = cell->grid[i - 1][j];
+                }
+            }
+            for (j = 0; j < 4; j++) {
+                cell->grid[0][j] = 0xFF;
+            }
+        } else if (thirty < v) {
+            cell->scrollZ = floatModulo(v, thirty);
+            for (i = 1; i < 4; i++) {
+                for (j = 0; j < 4; j++) {
+                    cell->grid[i - 1][j] = cell->grid[i][j];
+                }
+            }
+            for (j = 0; j < 4; j++) {
+                cell->grid[0][j + 12] = 0xFF;
+            }
+        }
+        cell->prevZ = arg4[2] * cell->speed;
+        __asm__ volatile("abs.s %0, %1" : "=f"(v) : "f"(arg3[4]));
+        if (v < 0.999f) {
+            f32 b;
+            f32 c;
+            c = 1.0f;
+            angle = c - sinfApprox(v) * 0.63661975f;
+            b = 0.5f;
+            angle = (c - sinf((b - angle) * 3.1415927f)) * b;
+            dir[0] = arg3[3];
+            dir[1] = 0.0f;
+            dir[2] = arg3[5];
+            normalize_vector(dir);
+            axis[0] = dir[2];
+            axis[1] = 0.0f;
+            axis[2] = -dir[0];
+            quatFromAxisAngle(q, axis, D_main_8009ECE0[k] * angle);
+            quatToRotationMatrix(q, m);
+            addVec3At0x24(m, arg3[0], arg3[1], arg3[2]);
+        } else {
+            angle = 0.0f;
+        }
+        z = -30.0f;
+        for (j = 0; j < 16;) {
+            if (total >= 50) {
+                break;
+            }
+            i = 0;
+            x = -30.0f;
+            do {
+                if (cell->grid[0][j] == 0xFF) {
+                    cell->grid[0][j] = rand() % 7;
+                }
+                pos[0] = arg4[0] - cell->scrollX + x;
+                pos[2] = arg4[2] - cell->scrollZ + z;
+                if (transformVec3ToNpcLocalWithScale(arg1, 0, pos, 30.0f, NULL)) {
+                    n = (WpNode *)(base + total * 0x4C);
+                    e = base + total * 0x5C;
+                    if (k >= 3) {
+                        g = entries + (cell->grid[0][j] + 7) * 0x5C;
+                    } else {
+                        g = entries + cell->grid[0][j] * 0x5C;
+                    }
+                    *(u8 **)(e + 0xEE0) = g;
+                    initVec4TripletFromArgs_l((u8 *)n + 0x1C, thirty, 1.0f, thirty);
+                    addVec3At0x24((u8 *)n + 0x1C, pos[0], pos[1], pos[2]);
+                    if (angle != zero) {
+                        addVec3At0x24((u8 *)n + 0x1C, -arg3[0], -arg3[1], -arg3[2]);
+                        mat3x4Multiply(m, (u8 *)n + 0x1C, (u8 *)n + 0x1C);
+                    }
+                    n->next = (h = *head);
+                    if (h != NULL) {
+                        h->prev = n;
+                    }
+                    total++;
+                    n->prev = NULL;
+                    *head = n;
+                    if (total >= 50) {
+                        break;
+                        do { } while (0);
+                    }
+                }
+                j++;
+                i++;
+                x += thirty;
+            } while (i < 4);
+            z += thirty;
+        }
+        k++;
+    } while (k < 4);
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/5AD20", D_main_8003AE10);
 
