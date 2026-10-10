@@ -20,7 +20,7 @@ for d in "$@"; do
   python3 tools/replace_asm.py "$FUNC" "$d" >/dev/null 2>&1 || { echo "$(basename $d) replace-failed"; continue; }
   touch $src
   if ! make -s $o >$T/log 2>&1; then echo "$(basename $d) compile-failed $(grep -m1 -E ':[0-9]+: [^w]' $T/log)"; continue; fi
-  mips-linux-gnu-objdump -dr --no-show-raw-insn $o | awk -v f="<$FUNC>:" '$2==f{p=1;next} p&&/^$/{exit} p' > $T/b.raw
+  mips-linux-gnu-objdump -dr --no-show-raw-insn $o | awk -v f="<$FUNC>:" '$2==f{p=1;next} p&&/^$/{next} p&&/^[0-9a-f]+ </{if ($2 ~ /^<BRANCH_LABEL/) next; exit} p' > $T/b.raw
   python3 $H/norm.py obj $T/b.raw > $T/b.txt
   cp $T/t.txt $T/t0.txt
   python3 $H/normpair.py $T/t.raw $T/b.raw $T/t.txt $T/b.txt || cp $T/t0.txt $T/t.txt
