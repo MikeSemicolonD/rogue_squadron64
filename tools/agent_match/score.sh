@@ -28,7 +28,7 @@ for d in "$@"; do
   R='s/(\$f[0-9]+|\b(zero|at|v[01]|a[0-3]|t[0-9]|s[0-8]|fp|ra)\b)/R/g'
   sn=$(diff <(sed -E "$R" $T/t.txt) <(sed -E "$R" $T/b.txt) | grep -c '^[<>]')
   echo "$(basename $d) $n $(wc -l < $T/b.txt)/$(wc -l < $T/t.txt) struct=$sn"
-  diff -U3 --label target --label ours $T/t.txt $T/b.txt > ${d%.c}.diff
+  diff -U${DIFFU:-3} --label target --label ours $T/t.txt $T/b.txt > ${d%.c}.diff
 done
 cp $T/src.c $src; touch $src
 rm -rf $T
