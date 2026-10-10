@@ -827,7 +827,47 @@ void initTextTextureTarget(void) {
     D_menu_overlay_800CC864 = allocTextRenderTarget(0x40, 0x10);
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/1197D0", updateTextOverlayLookupEntry);
+extern f32 D_menu_overlay_800CE6F4;
+extern u8 D_menu_overlay_800CC860;
+extern u8 gBootConfig[];
+s32 utInsert(void *, void *, s32) __asm__("insertLookupEntry");
+void utSet5(void *, void *, s32) __asm__("setLookupEntryField5ByKey");
+void beginSceneRenderFrame(s32);
+
+typedef struct {
+    u8 pad0[0x14];
+    s32 w14;
+    f32 f18;
+    f32 f1C;
+    f32 f20;
+    f32 f24;
+    f32 f28;
+} UtEnt;
+
+typedef struct { u8 pad0[0xC]; UtEnt *ent; } UtHolder;
+void updateTextOverlayLookupEntry(void *list, s32 *ctx, f32 dur) {
+    UtEnt *n;
+    UtHolder *h;
+
+    if (D_menu_overlay_800CC85C == 0) {
+        h = (UtHolder *)D_menu_overlay_800CC864;
+        n = h->ent;
+        n->f24 = (f32)ctx[4] * 0.015625f;
+        n->f28 = (f32)ctx[5] * 0.0625f;
+        D_menu_overlay_800CC860 = 0;
+        D_menu_overlay_800CC85C = (s32)h;
+        n->f18 = -((f32)ctx[4] * 0.5f);
+        n->f1C = -((f32)ctx[5] * 0.5f);
+        D_menu_overlay_800CE6F4 = dur * 30.0f;
+        n->f20 = -100.0f;
+        n->w14 |= 0x2400003;
+        utInsert(list, n, 0);
+        utSet5(list, n, 1);
+    }
+    if (!(*(s32 *)(gBootConfig + 0x44) & 0x80)) {
+        beginSceneRenderFrame(8);
+    }
+}
 
 extern f32 D_menu_overlay_800CE6F4;
 extern u8 D_menu_overlay_800CC860;
