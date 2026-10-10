@@ -336,7 +336,230 @@ s32 subscribeEventHandler(s32 *arg0) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/04080", processAssetLoadStep);
+typedef struct {
+    u32 source;
+    u32 offset;
+    u32 size;
+    u8 *destination;
+} PaBody;
+
+typedef struct {
+    u8 pad00[0x18];
+    PaBody b;
+} PaReq;
+
+typedef struct {
+    u8 unk00;
+    u8 unk01;
+    u16 unk02;
+    PaReq *req;
+    u16 fl;
+    u16 unk0A;
+    u32 dma;
+    z_stream stream;
+    u32 buf;
+    u32 pad4C;
+    u32 src;
+    u32 pos;
+    u32 left;
+    u32 chunk;
+    u32 done;
+    u32 outChunk;
+    u32 lastTotal;
+    u32 remain;
+    u8 odd;
+} PaSlot;
+
+extern const char zlib_version[];
+extern u32 rs_malloc(u32, u32);
+extern void rs_free(u32);
+extern void *memcpy(void *, const void *, u32);
+extern PaSlot D_pa_slots[] __asm__("D_main_bss_80110D60");
+
+s32 processAssetLoadStep(u8 *arg0) {
+    PaSlot *base = D_pa_slots;
+    PaSlot *tmp = (PaSlot *)(D_main_bss_80111240 * (sizeof(PaSlot)) + (s32)base);
+    PaSlot *slot;
+    PaReq *req = tmp->req;
+    PaBody *body = &req->b;
+    struct D_80110BC0_type *ent;
+    u32 a1;
+    s32 a2;
+    u32 off;
+    u32 r;
+    u32 r2;
+    u16 fl;
+    u16 nf;
+    u32 t;
+    u32 src = req->b.source;
+
+    slot = tmp;
+    *arg0 = 0;
+    ent = &D_main_80110BC0[src];
+    if (ent->unk14 != 0) {
+        return 0;
+    }
+    if (ent->manfiest->compressed_size == -1 || (ent->manfiest->flags & 4)) {
+        if (gManifestTable[ent->unk10].unk4C != 0) {
+            return 0;
+        }
+        if (slot->fl & 0x8000) {
+            if ((pollDmaSlotStep(slot->dma) & 0xFF) != 1) {
+                return 0;
+            }
+            if (slot->odd == 0) {
+                return 1;
+            }
+            if (slot->fl & 0x400) {
+                memcpy(body->destination, (void *)slot->buf, 1);
+                rs_free(slot->buf);
+                slot->buf = 0;
+                return 1;
+            }
+            nf = (slot->fl & 0x7FFF) | 0x800;
+            goto setfl;
+        }
+        if (slot->fl & 0x800) {
+            slot->buf = rs_malloc(0x10, 9);
+            slot->fl |= 0x8400;
+            body->offset += body->size - 1;
+            body->destination += body->size - 1;
+            slot->dma = submitDmaSlot(gManifestTable[ent->unk10].data + ent->manfiest->data_offset + body->offset, (u8 *)slot->buf, 8);
+        } else {
+            slot->odd = body->size & 1;
+            if (body->size == 1) {
+                slot->buf = rs_malloc(0x10, 9);
+                slot->fl |= 0x8400;
+                slot->dma = submitDmaSlot(gManifestTable[ent->unk10].data + ent->manfiest->data_offset + body->offset, (u8 *)slot->buf, 8);
+            } else {
+                slot->fl |= 0x8000;
+                slot->dma = submitDmaSlot(gManifestTable[ent->unk10].data + ent->manfiest->data_offset + body->offset, body->destination, body->size - slot->odd);
+            }
+        }
+        return 0;
+    }
+    if (gManifestTable[ent->unk10].unk4C != 0) {
+        return 0;
+    }
+    if (!(slot->fl & 0x4000)) {
+        slot->fl |= 0x4000;
+        slot->buf = rs_malloc(0x1000, 9);
+        slot->src = (u32)(gManifestTable[ent->unk10].data + ent->manfiest->data_offset);
+        slot->pos = 0;
+        slot->odd = ent->manfiest->compressed_size % 2;
+        slot->left = ((ent->manfiest->compressed_size + 1) >> 1) << 1;
+        slot->chunk = 0;
+        slot->done = 0;
+        slot->lastTotal = 0;
+        slot->remain = slot->req->b.size;
+        if (body->offset != 0) {
+            slot->fl |= 0x1000;
+        } else {
+            slot->fl |= 0x200;
+        }
+        slot->stream.zalloc = NULL;
+        slot->stream.zfree = NULL;
+        slot->stream.opaque = NULL;
+        inflateInit_(&slot->stream, zlib_version, 0x38);
+    }
+    fl = slot->fl;
+    if (fl & 0x2000) {
+        off = slot->req->b.offset;
+        a2 = slot->req->b.size;
+        if (slot->done < off) {
+            if (!(fl & 0x800)) {
+                if (a2 < off - slot->done) {
+                    t = a2;
+                } else {
+                    t = off - slot->done;
+                }
+                slot->outChunk = t;
+                if (t > 0x1000) {
+                    slot->outChunk = 0x1000;
+                }
+                slot->stream.next_out = slot->req->b.destination;
+                slot->stream.avail_out = slot->outChunk;
+            } else {
+                slot->fl = fl & 0xF7FF;
+            }
+            if (slot->fl & 0x400) {
+                slot->fl &= 0xFBFF;
+                slot->stream.next_out = slot->req->b.destination;
+                slot->stream.avail_out = slot->outChunk;
+            }
+            r = inflate(&slot->stream, 1);
+            slot->done += slot->stream.total_out - slot->lastTotal;
+            slot->lastTotal = slot->stream.total_out;
+            if (r < 2U) {
+                if (slot->stream.avail_in == 0) {
+                    if (slot->stream.avail_out != 0) {
+                        slot->fl |= 0x800;
+                    }
+                    slot->fl &= 0xDFFF;
+                }
+                if (slot->stream.avail_out == 0) {
+                    slot->stream.next_out = slot->req->b.destination;
+                    slot->stream.avail_out = slot->outChunk;
+                }
+                if (slot->done < off) {
+                    return 0;
+                }
+                nf = slot->fl | 0x200;
+                goto setfl;
+            }
+        } else {
+            if (fl & 0x200) {
+                slot->fl = fl & 0xFDFF;
+                slot->stream.next_out = slot->req->b.destination;
+            }
+            if (slot->stream.avail_out == 0) {
+                t = slot->remain;
+                if (t > 0x1000) {
+                    t = 0x1000;
+                }
+                slot->stream.avail_out = t;
+            }
+            r2 = inflate(&slot->stream, 1);
+            slot->remain -= slot->stream.total_out - slot->lastTotal;
+            slot->done += slot->stream.total_out - slot->lastTotal;
+            slot->lastTotal = slot->stream.total_out;
+            if (r2 < 2U) {
+                if (slot->stream.avail_in == 0) {
+                    slot->fl &= 0xDFFF;
+                }
+                if (r2 == 0) {
+                    return 0;
+                }
+                inflateEnd(&slot->stream);
+                return 1;
+            }
+        }
+    }
+    if (!(slot->fl & 0x8000)) {
+        slot->fl |= 0x8000;
+        if (slot->left >= 0x1000) {
+            slot->chunk = 0x1000;
+        } else {
+            slot->chunk = slot->left;
+        }
+        slot->dma = submitDmaSlot((u8 *)(slot->src + slot->pos), (u8 *)slot->buf, slot->chunk);
+        slot->left -= slot->chunk;
+        if (slot->left == 0 && slot->odd != 0) {
+            slot->chunk--;
+        }
+        slot->pos += slot->chunk;
+        slot->stream.next_in = (u8 *)slot->buf;
+        slot->stream.avail_in = slot->chunk;
+    } else {
+        if ((pollDmaSlotStep(slot->dma) & 0xFF) != 1) {
+            return 0;
+        }
+        nf = (slot->fl & 0x7FFF) | 0x2000;
+setfl:
+        slot->fl = nf;
+    }
+    return 0;
+}
 
 s32 processAssetLoadStep(u8 *);
 extern s32 sendServiceMessage(s32, s32, void *, s32);
