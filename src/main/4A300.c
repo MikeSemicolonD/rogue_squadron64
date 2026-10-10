@@ -52,7 +52,121 @@ INCLUDE_ASM("asm/nonmatchings/main/4A300", emitGridCellTileStripAdjacent);
 
 INCLUDE_ASM("asm/nonmatchings/main/4A300", emitGridCellTileStripDiagonal);
 
-INCLUDE_ASM("asm/nonmatchings/main/4A300", transformWorldPosToGridSpace);
+extern u8 D_main_bss_80136DC0[];
+static inline f32 m2cSqrt(f32 x)
+{
+    f32 r;
+    __asm__ volatile("sqrt.s %0, %1" : "=f"(r) : "f"(x));
+    return r;
+}
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} McgVtx_l;
+typedef struct {
+    McgVtx_l col;
+    u8 pad0C[2];
+    u8 flat;
+    u8 pad0F;
+    McgVtx_l pos;
+    f32 radius;
+} TwLight;
+typedef struct {
+    u8 pad[0x3C];
+    McgVtx_l org;
+    f32 *axis;
+} TwDesc;
+void transformWorldPosToGridSpace_impl(void *arg0, McgVtx_l *arg1, TwLight **list, f32 arg3, f32 arg4, f32 arg5) __asm__("transformWorldPosToGridSpace");
+void transformWorldPosToGridSpace_impl(void *arg0, McgVtx_l *arg1, TwLight **list, f32 arg3, f32 arg4, f32 arg5) {
+    f32 var_fa0;
+    f32 var_fa1;
+    f32 var_ft4;
+    f32 w;
+    TwDesc *g;
+    TwLight *l;
+    f32 dx;
+    f32 dy;
+    f32 dz;
+    f32 r;
+
+    g = (TwDesc *) D_main_bss_80136DC0;
+    w = (arg1->x * g->axis[4]) + (arg1->y * g->axis[5]) + (arg1->z * g->axis[6]);
+    if (w > 0.0f) {
+        var_fa0 = g->org.x + (g->axis[0] * w);
+        var_fa1 = g->org.y + (g->axis[1] * w);
+        var_ft4 = g->org.z + (g->axis[2] * w);
+    } else {
+        var_fa0 = g->org.x;
+        var_fa1 = g->org.y;
+        var_ft4 = g->org.z;
+    }
+    while ((l = *list++) != NULL) {
+        if (l->flat != 0) {
+            dx = arg3 - l->pos.x;
+            if (dx < 0.0f) {
+                dx = -dx;
+            }
+            w = arg5 - l->pos.z;
+            if (w < 0.0f) {
+                w = -w;
+            }
+            r = l->radius;
+            if (r <= dx || r <= w) {
+                continue;
+            }
+            w = m2cSqrt(1.0f - ((w < dx) ? dx / r : w / r));
+        } else {
+            dx = arg3 - l->pos.x;
+            w = arg1->x * dx;
+            dx = dx * dx;
+            dy = arg4 - l->pos.y;
+            w += arg1->y * dy;
+            dx += dy * dy;
+            dy = arg5 - l->pos.z;
+            w += arg1->z * dy;
+            dx += dy * dy;
+            if (!(w > 0.01f)) {
+                continue;
+            }
+            r = l->radius;
+            if (!(dx < r * r)) {
+                continue;
+            }
+            if (dx < 0.0001f) {
+                var_fa0 += l->col.x;
+                var_fa1 += l->col.y;
+                var_ft4 += l->col.z;
+                continue;
+            }
+            w *= (1.0f / m2cSqrt(dx)) - (1.0f / r);
+        }
+        var_fa0 += l->col.x * w;
+        var_fa1 += l->col.y * w;
+        var_ft4 += l->col.z * w;
+    }
+    if (var_fa0 >= 256.0f) {
+        ((u8 *) arg0)[0] = 0xFF;
+    } else if (var_fa0 < 0.0f) {
+        ((u8 *) arg0)[0] = 0;
+    } else {
+        ((u8 *) arg0)[0] = (u32) var_fa0;
+    }
+    if (var_fa1 >= 256.0f) {
+        ((u8 *) arg0)[1] = 0xFF;
+    } else if (var_fa1 < 0.0f) {
+        ((u8 *) arg0)[1] = 0;
+    } else {
+        ((u8 *) arg0)[1] = (u32) var_fa1;
+    }
+    if (var_ft4 >= 256.0f) {
+        ((u8 *) arg0)[2] = 0xFF;
+    } else if (var_ft4 < 0.0f) {
+        ((u8 *) arg0)[2] = 0;
+    } else {
+        ((u8 *) arg0)[2] = (u32) var_ft4;
+    }
+}
 
 #include "common_types.h"
 
