@@ -311,7 +311,81 @@ void mapCellGeometryToGridSpace(McgCell *a) {
 
 INCLUDE_ASM("asm/nonmatchings/main/4A300", scaleObjectPosToGridUnits);
 
-INCLUDE_ASM("asm/nonmatchings/main/4A300", unpackGridVertexBytes);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} UgV3;
+typedef struct {
+    UgV3 col;
+    u8 pad0C[4];
+    UgV3 pos;
+    f32 radius;
+} UgLight;
+void unpackGridVertexBytes_impl(u8 *arg0, UgV3 *arg1, UgLight **list, u8 *arg3, f32 arg4, f32 arg5, f32 arg6) __asm__("unpackGridVertexBytes");
+void unpackGridVertexBytes_impl(u8 *arg0, UgV3 *arg1, UgLight **list, u8 *arg3, f32 arg4, f32 arg5, f32 arg6) {
+    f32 var_fa0;
+    f32 var_fa1;
+    f32 var_ft4;
+    f32 w;
+    UgLight *l;
+    f32 dx;
+    f32 dy;
+    f32 r;
+
+    var_fa0 = arg3[0];
+    var_fa1 = arg3[1];
+    var_ft4 = arg3[2];
+    while ((l = *list++) != NULL) {
+        dx = arg4 - l->pos.x;
+        w = arg1->x * dx;
+        dx = dx * dx;
+        dy = arg5 - l->pos.y;
+        w += arg1->y * dy;
+        dx += dy * dy;
+        dy = arg6 - l->pos.z;
+        w += arg1->z * dy;
+        dx += dy * dy;
+        if (!(w > 0.01f)) {
+            continue;
+        }
+        r = l->radius;
+        if (!(dx < r * r)) {
+            continue;
+        }
+        if (dx < 0.0001f) {
+            var_fa0 += l->col.x;
+            var_fa1 += l->col.y;
+            var_ft4 += l->col.z;
+            continue;
+        }
+        w *= (1.0f / m2cSqrt(dx)) - (1.0f / r);
+        var_fa0 += l->col.x * w;
+        var_fa1 += l->col.y * w;
+        var_ft4 += l->col.z * w;
+    }
+    if (var_fa0 >= 256.0f) {
+        arg0[0] = 0xFF;
+    } else if (var_fa0 < 0.0f) {
+        arg0[0] = 0;
+    } else {
+        arg0[0] = (u32) var_fa0;
+    }
+    if (var_fa1 >= 256.0f) {
+        arg0[1] = 0xFF;
+    } else if (var_fa1 < 0.0f) {
+        arg0[1] = 0;
+    } else {
+        arg0[1] = (u32) var_fa1;
+    }
+    if (var_ft4 >= 256.0f) {
+        arg0[2] = 0xFF;
+    } else if (var_ft4 < 0.0f) {
+        arg0[2] = 0;
+    } else {
+        arg0[2] = (u32) var_ft4;
+    }
+}
 
 #include "common_types.h"
 typedef struct {
