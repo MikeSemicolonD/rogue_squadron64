@@ -3380,7 +3380,61 @@ void musyxKeyOnVoice(u8 *v) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxMixActiveVoices);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxBuildVoiceCommandList);
+extern u8 gVcB702 __asm__("D_main_bss_80149702");
+extern u8 *gVcB758[] __asm__("D_main_bss_80149758");
+extern u16 gVcB760 __asm__("D_main_bss_80149760");
+extern u8 *gVcB750 __asm__("D_main_bss_80149750");
+extern s32 gVcB764 __asm__("D_main_bss_80149764");
+extern u8 *gVcB768 __asm__("D_main_bss_80149768");
+extern s32 gVcB76C __asm__("D_main_bss_8014976C");
+extern u16 gVcB74E __asm__("D_main_bss_8014974E");
+void musyxKeyOnVoiceVcB(u8 *) __asm__("musyxKeyOnVoice");
+void musyxBuildVoiceCommandList(u8 *voices, u16 n) {
+    u16 i;
+    u8 *v;
+    u8 *rec;
+    u8 *rec2;
+    u16 cnt;
+    register u8 *blk asm("$5");
+    s32 last;
+    s32 len;
+    gVcB750 = gVcB758[gVcB702];
+    gVcB760 = 0;
+    *(u16 *)gVcB750 = 0;
+    for (i = 0; i < n; i++) {
+        v = (u8 *)(i * 0x88 + (s32)voices);
+        if (v[0x22] == 0) {
+            musyxKeyOnVoiceVcB(v);
+            continue;
+        }
+        rec = (u8 *)(gVcB760 * 0xA10 + (s32)gVcB750);
+        cnt = *(u16 *)rec;
+        if (cnt == 0) {
+            *(u16 *)(rec + 0x3C) = 0;
+            *(s32 *)(rec + 0x54) = *(s32 *)(v + 0x7C);
+        } else {
+            last = cnt - 1;
+            *(s32 *)(rec + (last * 5 << 4) + 0x54) = *(s32 *)(v + 0x7C);
+        }
+        rec2 = (u8 *)(gVcB760 * 0xA10 + (s32)gVcB750);
+        blk = gVcB768;
+        *(s32 *)(rec2 + 8) = gVcB764;
+        *(s32 *)(rec2 + 4) = *(s32 *)(voices + i * 0x88 + 0x84);
+        *(u8 **)(rec2 + 0xC) = blk;
+        if (blk != 0) {
+            *(s16 *)(rec2 + 2) = gVcB76C / 192;
+            len = *(s32 *)(blk + 4);
+            gVcB76C = gVcB76C + 0xC0;
+            if (gVcB76C == len) {
+                gVcB76C = 0;
+            }
+        }
+        gVcB760 = gVcB760 + 1;
+        if (gVcB760 < gVcB74E) {
+            *(u16 *)(gVcB760 * 0xA10 + (s32)gVcB750) = 0;
+        }
+    }
+}
 
 
 typedef struct SfNodeSF { struct SfNodeSF *next; u8 pad4[0xC]; u16 h10; } SfNodeSF;
