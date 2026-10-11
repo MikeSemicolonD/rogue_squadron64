@@ -745,7 +745,31 @@ u32 allocVoiceHandleNode(u8 *v) {
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", resolveVoiceSlotByHandle);
+typedef struct VhNodeRV { struct VhNodeRV *next; s32 pad4; u32 h; s32 slot; } VhNodeRV;
+extern VhNodeRV *gVhHeadRV __asm__("D_main_bss_8013AF00");
+static __inline__ VhNodeRV *vhFindRV(u32 h) {
+    VhNodeRV *n = gVhHeadRV;
+    while (n != NULL) {
+        if (n->h == h) {
+            return n;
+        }
+        if (h < n->h) {
+            return NULL;
+        }
+        n = n->next;
+    }
+    return NULL;
+}
+s32 resolveVoiceSlotByHandle(u32 h) {
+    VhNodeRV *n;
+    if (h != (u32)-1) {
+        n = vhFindRV(h);
+        if (n != NULL) {
+            return n->slot;
+        }
+    }
+    return -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", allocateSynthVoice);
 
@@ -874,7 +898,37 @@ s32 bsearchFactor5TableByU16Key(u16 key, u8 a, u8 b) {
     return ret;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", validateVoiceHandle);
+typedef struct VhNodeVV { struct VhNodeVV *next; s32 pad4; u32 h; s32 slot; } VhNodeVV;
+extern VhNodeVV *gVhHeadVV __asm__("D_main_bss_8013AF00");
+static __inline__ VhNodeVV *vhFindVV(u32 h) {
+    VhNodeVV *n = gVhHeadVV;
+    while (n != NULL) {
+        if (n->h == h) {
+            return n;
+        }
+        if (h < n->h) {
+            return NULL;
+        }
+        n = n->next;
+    }
+    return NULL;
+}
+static __inline__ s32 vhResolveVV(u32 h) {
+    VhNodeVV *n;
+    if (h != (u32)-1) {
+        n = vhFindVV(h);
+        if (n != NULL) {
+            return n->slot;
+        }
+    }
+    return -1;
+}
+u32 validateVoiceHandle(u32 h) {
+    if (vhResolveVV(h) != -1) {
+        return h;
+    }
+    return -1;
+}
 
 extern u8 gMusyXActiveFlag;
 extern u16 D_main_bss_8013AC90;
