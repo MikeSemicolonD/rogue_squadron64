@@ -144,15 +144,64 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", model_animation_offset_convert);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", releaseModelAnimSlot);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", markModelAnimChannelEntryActive);
+typedef struct { s32 a; s32 b; s32 c; u8 *ch; u8 state; u8 pad[3]; } MaSlotMA;
+extern MaSlotMA gSlotsMA[] __asm__("gActiveModelAnimSlots");
+static __inline__ u8 maSlotValidMA(u32 id) {
+    s32 r = 0;
+    if (id != 0 && id <= 32) {
+        r = gSlotsMA[id - 1].state == 1;
+    }
+    return r;
+}
+u32 markModelAnimChannelEntryActive(u32 id, u32 sub) {
+    u32 r = 0;
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", clearModelAnimChannelEntry);
+    if (maSlotValidMA(id)) {
+        *(u8 *)(sub * 16 + gSlotsMA[id - 1].ch + 8) |= 1;
+        r = (id << 16) + sub;
+    }
+    return r;
+}
+
+typedef struct { s32 a; s32 b; s32 c; u8 *ch; u8 state; u8 pad[3]; } MaSlotCE;
+extern MaSlotCE gSlotsCE[] __asm__("gActiveModelAnimSlots");
+static __inline__ u8 maSlotValidCE(u32 id) {
+    s32 r = 0;
+    if (id != 0 && id <= 32) {
+        r = gSlotsCE[id - 1].state == 1;
+    }
+    return r;
+}
+void clearModelAnimChannelEntry(u32 h) {
+    u32 id = h >> 16;
+    u32 sub = h & 0xFFFF;
+
+    if (maSlotValidCE(id)) {
+        *(u8 *)(sub * 16 + gSlotsCE[id - 1].ch + 8) = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", seekModelAnimChannelToTime);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", seekAllModelAnimChannelsInSlotToTime);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setModelAnimChannelEntryDuration);
+typedef struct { s32 a; s32 b; s32 c; u8 *ch; u8 state; u8 pad[3]; } MaSlotSD;
+extern MaSlotSD gSlotsSD[] __asm__("gActiveModelAnimSlots");
+static __inline__ u8 maSlotValidSD(u32 id) {
+    s32 r = 0;
+    if (id != 0 && id <= 32) {
+        r = gSlotsSD[id - 1].state == 1;
+    }
+    return r;
+}
+void setModelAnimChannelEntryDuration(u32 h, f32 v) {
+    u32 id = h >> 16;
+    u32 sub = h & 0xFFFF;
+
+    if (maSlotValidSD(id)) {
+        *(f32 *)(sub * 16 + gSlotsSD[id - 1].ch + 4) = v;
+    }
+}
 
 
 typedef struct { s32 a; s32 b; s32 c; u8 *ch; u8 state; u8 pad[3]; } MaSlotGD;
