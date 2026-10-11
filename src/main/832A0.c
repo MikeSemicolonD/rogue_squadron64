@@ -58,7 +58,20 @@ u16 unusedRand(void) {
     return D_main_800A0F54 >> 6;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", lookupSineFromAngleTable);
+extern s16 D_main_800A0F58[];
+s16 lookupSineFromAngleTable(s32 a) {
+    u32 q = a & 0xFFF;
+    if (q < 0x400) {
+        return D_main_800A0F58[q];
+    }
+    if (q < 0x800) {
+        return D_main_800A0F58[~a & 0x3FF];
+    }
+    if (q < 0xC00) {
+        return -D_main_800A0F58[a & 0x3FF];
+    }
+    return -D_main_800A0F58[~a & 0x3FF];
+}
 
 extern s32 D_main_bss_8013ACD0[];
 void setTrackVoiceTickBudget(u32 tempo, u8 t) {
@@ -541,7 +554,21 @@ s32 soundMacroOpStartPitchEnvelope(u8 *ch, u32 *cmd) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxSetVoiceAdsrFromTable);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStartVibrato);
+s32 divideByMixerBaseFrequency(u16);
+u8 computeChannelWaitDuration();
+s32 soundMacroOpStartVibrato(u8 *ch, u32 *cmd, s32 i) {
+    u8 *p = (u8 *)(i * 4 + (s32)ch);
+    u8 *q;
+    u8 b;
+    *(s32 *)(p + 0x44) = 0;
+    q = ch + i;
+    b = *cmd >> 8;
+    q[0x4C] = b;
+    q[0xAC] = b;
+    *(s32 *)(p + 0x84) = divideByMixerBaseFrequency(*cmd >> 16) << 16;
+    *cmd = 0;
+    return computeChannelWaitDuration(ch, cmd);
+}
 
 s32 soundMacroOpSetVolumeRamp(u8 *ch, u8 *cmd) {
     u16 t;
