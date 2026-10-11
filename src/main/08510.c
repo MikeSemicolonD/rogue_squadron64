@@ -3385,7 +3385,160 @@ void resetVertexCacheSlot(struct RvScene *scene, f32 *m, s8 *a2, s8 *a3, s8 *a4,
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", buildOrientedFaceGeometry);
+typedef struct {
+    s16 x;
+    s16 y;
+    s16 z;
+    s16 w;
+} BofVtx;
+typedef struct {
+    u8 pad0[8];
+    s16 p[3];
+    u8 padE[2];
+    u16 flags;
+    u8 pad12[2];
+    s16 d[3];
+    u8 pad1A[2];
+    f32 rot;
+    f32 w;
+    f32 h;
+    u16 u;
+    u16 v;
+    u8 rgba[4];
+} BofObj;
+extern f32 D_main_bss_8011A8CC;
+extern f32 D_main_bss_8011A7D4;
+extern f32 D_main_bss_801163C0;
+f32 sinf(f32);
+f32 vec3Dot(f32 *, f32 *);
+f32 vec2Cross2D(f32 *, f32 *);
+static inline f32 bofSqrt(f32 x)
+{
+    f32 r;
+    __asm__("sqrt.s %0, %1" : "=f"(r) : "f"(x));
+    return r;
+}
+
+static inline Gfx *bofFlush(Gfx *g) {
+    if (0x20 - D_main_bss_8011A450 < 1) {
+        D_main_bss_8011A448->words.w0 = 0x04000000 | (((D_main_bss_8011A450 << 10) | (((D_main_bss_8011A450 * 8 + 0xF) & 0xFFF0) - 1)) & 0xFFFF);
+        efStamp++;
+        D_main_bss_8011A448->words.w1 = (u32)efG.vtx;
+        if (efStamp == 0) {
+            efStamp = 1;
+        }
+        g = emitAllocatedDLCommand(g, 0);
+    }
+    return g;
+}
+
+#define BOF_PUSH(k) \
+    gfx = bofFlush(gfx); \
+    ((BofVtx *)D_main_bss_8011A44C)[D_main_bss_8011A450] = v; \
+    idx[k] = D_main_bss_8011A450++;
+
+Gfx *buildOrientedFaceGeometry(Gfx *gfx, BofObj *o, f32 *mtx) {
+    f32 pos[3];
+    f32 tmp[3];
+    f32 dir[3];
+    f32 din[3];
+    BofVtx v;
+    u16 idx[4];
+    u16 fl;
+    f32 a;
+    f32 c;
+    f32 s;
+    f32 w;
+    f32 h;
+    f32 hw;
+    f32 hh;
+    f32 z;
+    Gfx *p;
+    Gfx *q;
+    Gfx *r;
+
+    tmp[0] = o->p[0] * 0.00390625f;
+    tmp[1] = o->p[1] * 0.00390625f;
+    tmp[2] = o->p[2] * 0.00390625f;
+    transformVec3ByMat34(mtx, tmp, pos);
+    fl = o->flags;
+    if (fl & 2) {
+        din[0] = o->d[0] * 0.00390625f;
+        din[1] = o->d[1] * 0.00390625f;
+        din[2] = o->d[2] * 0.00390625f;
+        rotateVec3ByMat3x3(mtx, din, dir);
+        dir[2] = 0.0f;
+        if (dir[0] == 0.0f && dir[1] == 0.0f) {
+            return gfx;
+        }
+        normalize_vector(dir);
+        tmp[0] = 0.0f;
+        tmp[1] = -1.0f;
+        tmp[2] = 0.0f;
+        c = vec3Dot(tmp, dir);
+        s = bofSqrt(1.0f - c * c);
+        if (vec2Cross2D(tmp, dir) > 0.0f) {
+            s = -s;
+        }
+    } else {
+        a = 0.0f;
+        if (fl & 1) {
+            a += o->rot * 0.017453292f;
+        }
+        if (fl & 0x400) {
+            a += 1.5707964f;
+        }
+        s = sinf(a);
+        c = cosf(a);
+    }
+    v.z = pos[2] * 256.0f;
+    w = o->w;
+    hw = w * (o->u * 0.00390625f + 0.5f);
+    h = o->h;
+    hh = h * (o->v * 0.00390625f + 0.5f);
+    v.x = (pos[0] - hw * c - hh * s) * 256.0f;
+    v.y = (pos[1] + hw * s - hh * c) * 256.0f;
+    BOF_PUSH(0);
+    v.x = (pos[0] + (w - hw) * c - hh * s) * 256.0f;
+    v.y = (pos[1] - (w - hw) * s - hh * c) * 256.0f;
+    BOF_PUSH(1);
+    v.x = (pos[0] + (w - hw) * c + (h - hh) * s) * 256.0f;
+    v.y = (pos[1] - (w - hw) * s + (h - hh) * c) * 256.0f;
+    BOF_PUSH(2);
+    v.x = (pos[0] - hw * c + (h - hh) * s) * 256.0f;
+    v.y = (pos[1] + hw * s + (h - hh) * c) * 256.0f;
+    BOF_PUSH(3);
+
+    if ((u32)gfx >= (u32)D_main_bss_801163D4) HFD_WRAP(gfx);
+    if (o->flags & 0x200) {
+        p = gfx++;
+        p->words.w0 = 0xFA008000;
+        p->words.w1 = (o->rgba[0] << 24) | (o->rgba[1] << 16) | (o->rgba[2] << 8) | o->rgba[3];
+    } else {
+        q = gfx++;
+        q->words.w0 = 0xFA008000;
+        q->words.w1 = -1;
+    }
+    if ((u32)gfx >= (u32)D_main_bss_801163D4) HFD_WRAP(gfx);
+    r = gfx++;
+    r->words.w0 = 0xEE000000;
+    if (pos[2] <= D_main_bss_8011A8CC) {
+        z = D_main_bss_8011A8CC * 256.0f;
+    } else {
+        z = pos[2] * 256.0f;
+    }
+    r->words.w1 = (u32)((((D_main_bss_8011A7D4 * z + D_main_bss_801163C0) / z) * 511.0f + 511.0f) * 32.0f) << 16;
+    if ((u32)D_main_bss_801163D4 < (u32)(gfx + 4)) HFD_WRAP(gfx);
+    gfx[0].words.w0 = 0xB4000006;
+    gfx[0].words.w1 = ((idx[3] * 5) << 24) | (((idx[0] * 5) & 0xFF) << 16) | (((idx[1] * 5) & 0xFF) << 8) | ((idx[2] * 5) & 0xFF);
+    gfx[1].words.w0 = 0;
+    gfx[1].words.w1 = 0;
+    gfx[2].words.w0 = 0;
+    gfx[2].words.w1 = 0x10000000;
+    gfx[3].words.w0 = 0x10001000;
+    gfx[3].words.w1 = 0x1000;
+    return gfx + 4;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", renderLitMeshFaceGroup);
 
