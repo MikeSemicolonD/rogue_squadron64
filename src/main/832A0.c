@@ -3292,10 +3292,82 @@ s32 audioStubReturnZero(void) {
     return 0;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE48);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE50);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxInitVoiceFromSample);
+typedef struct {
+    u8 b0;
+    u8 b1;
+    u16 flags;
+    u16 vol;
+    u8 pad6[2];
+    f64 pos;
+    u32 len10;
+    u32 len14;
+    s16 a18[4];
+    s16 a20[4];
+    s16 h28;
+    s16 h2A;
+    f32 f2C;
+    s16 h30;
+    u8 pad32[2];
+    u32 addr;
+    u32 w38;
+    u32 w3C;
+    u32 w40;
+    s16 h44;
+    s16 h46;
+    s16 h48;
+    s16 h4A;
+    u8 pad4C[0x21];
+    u8 b6D;
+    u8 pad6E[0x1A];
+} VoiceIV;
+typedef struct { u32 w0; u32 addr; u32 len; u32 wC; u32 w10; u32 w14; u8 b18; } SampleIV;
+extern VoiceIV *gVoicesIV __asm__("D_main_bss_801496F8");
+void musyxInitVoiceFromSample(s32 idx, SampleIV *s, u8 init) {
+    VoiceIV *v;
+    VoiceIV *w;
+    VoiceIV *x;
+    s32 bw;
+    s32 bx;
+
+    v = &gVoicesIV[(u16)idx];
+    v->vol = 0x1000;
+    v->b0 = 0;
+    v->flags = 0;
+    v->b1 = 1;
+    v->a18[0] = 0;
+    v->a20[0] = 0;
+    v->a18[1] = 0;
+    v->a20[1] = 0;
+    v->a18[2] = 0;
+    v->a20[2] = 0;
+    v->a18[3] = 0;
+    v->a20[3] = 0;
+    v->h44 = 0;
+    v->h46 = 0;
+    v->h48 = 0;
+    v->h4A = 0;
+    if (init) {
+        bw = (s32)gVoicesIV;
+        w = (VoiceIV *)(idx * sizeof(VoiceIV) + bw);
+        w->h28 = 0;
+        w->h2A = 0;
+        w->f2C = 1.0f;
+        w->h30 = 20;
+    }
+    bx = (s32)gVoicesIV;
+    x = (VoiceIV *)(idx * sizeof(VoiceIV) + bx);
+    x->addr = s->addr;
+    x->pos = s->len;
+    x->len10 = x->len14 = s->len;
+    x->w38 = s->wC;
+    x->w3C = s->w10;
+    x->w40 = s->w14;
+    x->b6D = s->b18;
+    if ((s->addr & 0xF0000000) != 0x80000000) {
+        gVoicesIV[idx].flags |= 1;
+    }
+}
 
 extern u8 *D_main_bss_801496F8;
 void msvrImpl(s32 i, u8 flag) __asm__("musyxStartVoiceRelease");
