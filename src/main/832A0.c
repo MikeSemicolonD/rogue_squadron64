@@ -3434,7 +3434,83 @@ s32 anyAudioSlotActive(void) {
     return r == 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", resetMusyXEngineState);
+typedef struct {
+    s32 f0; u8 p4[0x20]; s32 f24; s32 f28; u8 p2C[2]; u8 b2E; u8 p2F; s32 f30; u8 p34[4]; s32 f38; u8 p3C[8];
+    s32 f44; s32 f48; u8 b4C; u8 b4D; u8 b4E; u8 p4F[0x15]; s32 f64; u8 p68[4]; s16 h6C; u8 p6E[0x26]; s32 f94;
+    u8 p98[8]; u8 bA0; u8 pA1[0x18]; u8 bB9; u8 bBA; u8 pBB[0xAD]; s32 f168; s16 h16C; u8 p16E[6]; s32 f174; s16 h178; u8 p17A[2];
+} ChanRM;
+typedef struct { s32 cur; s32 target; s32 step; s32 time; s32 handle; u8 type; u8 b15; u8 pad16[2]; s32 vol; u8 pad1C[0xC]; } FaderRM;
+typedef struct NodeRM { struct NodeRM *next; struct NodeRM *prev; s32 a; s32 b; } NodeRM;
+extern ChanRM gChanRM[] __asm__("D_main_8013D880");
+extern FaderRM gFaderRM[] __asm__("D_main_bss_80141B18");
+extern NodeRM gNodesRM[] __asm__("D_main_bss_8013AD00");
+extern s32 gRM1 __asm__("D_main_bss_8013B040");
+extern s32 gRM2 __asm__("D_main_bss_801440C0");
+extern s32 gRM3 __asm__("D_main_bss_8013ACF0");
+extern u8 gRM4 __asm__("D_main_bss_801483C8");
+extern u8 gRM5 __asm__("D_main_bss_80142004");
+extern s32 gRM6 __asm__("D_main_bss_80141E60");
+extern s32 gRM7 __asm__("D_main_bss_80141E88");
+extern s32 gRM8 __asm__("D_main_bss_8013ACF8");
+extern s32 gRM9 __asm__("D_main_bss_8013AF00");
+extern NodeRM *gRM10 __asm__("D_main_bss_8013AF04");
+void resetMusyXEngineState(s32 freq) {
+    s32 i;
+    NodeRM *prev;
+
+    gRM1 = 0x2800;
+    gRM2 = freq;
+    gRM3 = 0x300;
+    gRM4 = 0;
+    for (i = 0; i < 32; i++) {
+        gChanRM[i].f64 = -1;
+        gChanRM[i].f0 = 0;
+        gChanRM[i].f24 = 0;
+        gChanRM[i].f28 = 0;
+        gChanRM[i].b2E = 0;
+        gChanRM[i].h6C = 0;
+        gChanRM[i].b4E = 0xFF;
+        gChanRM[i].f30 = 0;
+        gChanRM[i].f38 = 0x3F0000;
+        gChanRM[i].f44 = 0;
+        gChanRM[i].f48 = 0;
+        gChanRM[i].b4C = 0;
+        gChanRM[i].b4D = 0;
+        gChanRM[i].bB9 = 0;
+        gChanRM[i].bBA = 0x17;
+        gChanRM[i].f168 = 0;
+        gChanRM[i].h16C = 0;
+        gChanRM[i].f174 = 0;
+        gChanRM[i].h178 = 0;
+        gChanRM[i].f94 = 500;
+        gChanRM[i].bA0 = 0;
+    }
+    for (i = 0; i < 32; i++) {
+        gFaderRM[i].cur = 0;
+        gFaderRM[i].target = 0;
+        gFaderRM[i].time = 0;
+        gFaderRM[i].type = 4;
+        gFaderRM[i].vol = 0x7F0000;
+    }
+    gRM5 = 1;
+    for (i = 7; i >= 0; i--) {
+        gFaderRM[i + 23].type = 0;
+    }
+    prev = NULL;
+    gRM6 = 0x7F0000;
+    gRM7 = 0x7F0000;
+    gRM8 = 0;
+    gRM9 = 0;
+    gRM10 = gNodesRM;
+    for (i = 0; i < 32; i++) {
+        gNodesRM[i].prev = prev;
+        if (prev != NULL) {
+            prev->next = &gNodesRM[i];
+        }
+        prev = &gNodesRM[i];
+    }
+    prev->next = NULL;
+}
 
 extern s32 D_main_bss_8013AF08;
 extern s32 D_main_bss_8013AF0C;
