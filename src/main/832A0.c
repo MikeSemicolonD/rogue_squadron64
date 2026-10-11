@@ -2852,7 +2852,100 @@ s32 soundMacroSetVoiceVolume(SVV_V *v, u8 *op) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroSetupVolumeRamp);
+extern s32 gBudgetVR[] __asm__("D_main_bss_8013ACD0");
+static __inline__ s32 budgetVR(u8 *ch) {
+    s32 *base = gBudgetVR;
+    s32 *p;
+    u8 idx = ch[0x4F];
+    if (idx != 0xFF) {
+        p = base + idx;
+    } else {
+        p = base + 8;
+    }
+    return *p;
+}
+static __inline__ void scaleByBudgetVR(u32 *p, u8 *ch) {
+    *p = ((*p * 32000) / budgetVR(ch)) << 3;
+}
+static __inline__ u8 *bsrchVR(u8 *key, u8 *base, s32 n, s32 size, s32 (*cmp)(u8 *, u8 *)) {
+    s32 lo, hi, mid, r;
+    u8 *p;
+    if (n != 0) {
+        lo = 1;
+        hi = n;
+        do {
+            mid = (lo + hi) >> 1;
+            p = base + size * (mid - 1);
+            r = cmp(key, p);
+            if (r == 0) {
+                return p;
+            }
+            if (r < 0) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        } while (hi >= lo);
+    }
+    return 0;
+}
+typedef struct { u8 pad[0x24]; u32 flags; u8 pad28[8]; u32 vol; u8 pad34[0x58]; s32 volStep; u32 volTarget; u8 pad94[0x1C]; u32 rampTime; } SVR_V;
+s32 soundMacroSetupVolumeRamp(SVR_V *v, u8 *op) {
+    u32 t;
+    s32 steps;
+    u32 vol;
+    u8 *tbl;
+    u8 *found;
+    u32 nv;
+    u32 w;
+    u8 k;
+    s32 pad[4];
+
+    t = *(u16 *)(op + 4);
+    v->rampTime = t;
+    if ((*(u32 *)(op + 4) >> 8) & 1) {
+        v->rampTime = t << 8;
+    } else {
+        scaleByBudgetVR(&v->rampTime, (u8 *)v);
+    }
+    steps = v->rampTime >> 8;
+    if (steps == 0) {
+        steps = 1;
+    }
+    nv = ((v->vol * op[2]) >> 7) + (op[1] << 16);
+    w = *(u32 *)op;
+    if (nv > 0x7F0000) {
+        nv = 0x7F0000;
+    }
+    vol = nv;
+    k = w >> 24;
+    if (k != 0) {
+        D_main_bss_8013AC5C = k;
+        found = bsrchVR(D_main_bss_8013AC58, D_main_bss_80148C68, D_main_bss_8013AF0C, 8, compareHalfwordAtOffset4_v2);
+        D_main_bss_8013AC60 = found;
+        tbl = 0;
+        if (found != 0) {
+            tbl = *(u8 **)found;
+        }
+        if (tbl != 0) {
+            u32 idx = vol >> 16;
+            u32 fr = vol & 0xFFFF;
+            if (idx < 0x7F) {
+                u8 *p = (u8 *)(idx + (u32)tbl);
+                u32 hi = p[1];
+                u32 lo = p[0];
+                vol = (lo << 16) + (hi - lo) * fr;
+            } else {
+                vol = tbl[idx] << 16;
+            }
+        }
+    }
+    t = vol;
+    v->volTarget = t;
+    v->volStep = (s32)(t - v->vol) / steps;
+    v->flags |= 0x10000;
+    return 0;
+}
 
 extern u32 D_main_800A0F54;
 s32 soundMacroOpStartNoteAbsoluteSweep(u8 *, u8 *);
