@@ -475,7 +475,87 @@ u8 getChannelByteParamAlt(u8 a, u8 b) {
     return D_main_bss_80142018[a];
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", resetChannelStateRecord);
+extern u8 gNoteTblRC[][0x86] __asm__("D_main_bss_80140A10");
+extern u8 gNoteTrkTblRC[][16][0x86] __asm__("D_main_bss_801440C8");
+extern u8 gPrgTrkRC[][16] __asm__("D_main_bss_80142040");
+extern u8 gPrgRC[] __asm__("D_main_bss_8013C460");
+extern u8 gFlgTrkRC[][16] __asm__("D_main_bss_801483D0");
+extern u8 gFlgRC[] __asm__("D_main_bss_80142018");
+static __inline__ void clearRowRC(u8 t, u8 idx) {
+    u8 *p;
+    u8 *e;
+    u8 *bs;
+    s32 ii;
+    u8 (*row)[0x86];
+    u8 (*row2)[0x86];
+    if (t != 0xFF) {
+        bs = (u8 *)gNoteTrkTblRC;
+        row = (u8 (*)[0x86])(bs + t * 0x860);
+        p = (u8 *)(idx * 0x86 + (s32)row);
+        e = p + 0x86;
+        do {
+            *p++ = 0;
+        } while (p < e);
+    } else {
+        ii = idx;
+        row2 = gNoteTblRC;
+        p = row2[ii];
+        e = p + 0x86;
+        do {
+            *p++ = 0;
+        } while (p < e);
+    }
+}
+static __inline__ void setCtrl7FRC(u8 t, u8 idx, u8 c) {
+    if (t != 0xFF) {
+        gNoteTrkTblRC[t][idx][c] = 0x7F;
+    } else {
+        gNoteTblRC[idx][c] = 0x7F;
+    }
+}
+static __inline__ void setCtrl40RC(u8 t, u8 idx, u8 c) {
+    if (t != 0xFF) {
+        gNoteTrkTblRC[t][idx][c] = 0x40;
+    } else {
+        gNoteTblRC[idx][c] = 0x40;
+    }
+}
+static __inline__ void setCtrl0RC(u8 t, u8 idx, u8 c) {
+    if (t != 0xFF) {
+        gNoteTrkTblRC[t][idx][c] = 0;
+    } else {
+        gNoteTblRC[idx][c] = 0;
+    }
+}
+static __inline__ void setPrgRC(u8 t, u8 idx, u8 v) {
+    if (t != 0xFF) {
+        gPrgTrkRC[t][idx] = v;
+    } else {
+        gPrgRC[idx] = v;
+    }
+}
+static __inline__ void setFlgRC(u8 t, u8 idx, u8 v) {
+    if (t != 0xFF) {
+        gFlgTrkRC[t][idx] = v;
+    } else {
+        gFlgRC[idx] = v;
+    }
+}
+void resetChannelStateRecord(u8 idx, u8 t) {
+    clearRowRC(t, idx);
+    setCtrl7FRC(t, idx, 7);
+    setCtrl40RC(t, idx, 0xA);
+    setCtrl40RC(t, idx, 0x80);
+    setCtrl0RC(t, idx, 0x81);
+    setCtrl0RC(t, idx, 0x40);
+    setCtrl0RC(t, idx, 0x41);
+    setCtrl0RC(t, idx, 0x5B);
+    setCtrl0RC(t, idx, 0x83);
+    setCtrl40RC(t, idx, 0x84);
+    setCtrl0RC(t, idx, 0x85);
+    setPrgRC(t, idx, 0xFF);
+    setFlgRC(t, idx, 0);
+}
 
 extern u8 gCcTblG[][0x86] __asm__("D_main_bss_80140A10");
 extern u8 gCcTrkTblG[][16][0x86] __asm__("D_main_bss_801440C8");
