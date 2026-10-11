@@ -4933,7 +4933,47 @@ void initN64RspMixer(u32 *rate, u16 nch, u16 ms, u8 mode) {
     strcpy(gMixInfoRM.name, "N64 RSP mixer V1.0");
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", initAudioSubsystem);
+extern OSMesgQueue gAiQueueIA __asm__("D_main_bss_80149670");
+extern OSMesgQueue gAiQueue2IA __asm__("D_main_bss_80149670");
+extern OSMesg gAiMsgsIA[] __asm__("D_main_bss_80149690");
+extern u8 gAiEvtIA __asm__("D_main_bss_801496A0");
+extern OSThread gAiThreadIA __asm__("D_main_bss_801494B0");
+extern OSThread gAiThread2IA __asm__("D_main_bss_801494B0");
+extern u8 *gAiStackIA __asm__("D_main_bss_80149660");
+extern s32 D_main_bss_801496F4;
+void initFactor5Mutex(void);
+void *rs_malloc(u32, u16);
+void runAiAudioStreamPlaybackLoop(void *arg);
+s32 initN64RspMixerIA(u32 *, s32, s32, s32) __asm__("initN64RspMixer");
+s32 initAudioSubsystem(u32 *arg0, u16 arg1, u16 arg2, s32 arg3) {
+    s32 t;
+    u8 *e;
+
+    initFactor5Mutex();
+    e = &gAiEvtIA;
+    *e = 1;
+    osCreateMesgQueue(&gAiQueueIA, gAiMsgsIA, 4);
+    osSetEventMesg(6, &gAiQueue2IA, (OSMesg)e);
+    t = osAiSetFrequency(*arg0);
+    D_main_bss_801496F4 = t;
+    *arg0 = t;
+    gAiStackIA = rs_malloc(0x400, 0x80);
+    osCreateThread(&gAiThreadIA, 0, runAiAudioStreamPlaybackLoop, NULL, gAiStackIA + 0x400, 0x7A);
+    osStartThread(&gAiThread2IA);
+    if (arg3 & 0x10000) {
+        t = 2;
+    } else if (arg3 & 0x20000) {
+        t = 3;
+    } else if (arg3 & 0x40000) {
+        t = 4;
+    } else if (arg3 & 0x80000) {
+        t = 0;
+    } else {
+        t = 1;
+    }
+    initN64RspMixerIA(arg0, arg1, arg2, t);
+    return 0;
+}
 
 extern s32 D_main_bss_801496F4;
 void initFactor5Mutex(void);
