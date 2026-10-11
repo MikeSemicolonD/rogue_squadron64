@@ -299,7 +299,35 @@ void bufferArbiterMarkSlotReady(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", bufferArbiterAllocSlot);
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", acquireFreeBufferSlot);
+typedef struct {
+    s32 buf[3];
+    s16 h[3];
+    u8 st[3];
+    u8 n;
+    u8 viCount;
+    u8 minVi;
+    u8 pad18[0x10];
+    s32 stamp[3];
+    s32 time[3];
+} BufArbX;
+extern BufArbX gBufArbX __asm__("D_main_bss_80128E98");
+extern volatile u8 D_main_80037808;
+extern OSMesgQueue D_main_bss_80128CF0;
+void osYieldThread(void);
+s32 acquireFreeBufferSlot(void) {
+    s32 i;
+    while (1) {
+        for (i = 0; i < gBufArbX.n; i++) {
+            if (gBufArbX.st[i] == 0) {
+                return gBufArbX.buf[i];
+            }
+        }
+        D_main_80037808 = 1;
+        osRecvMesg(&D_main_bss_80128CF0, NULL, OS_MESG_BLOCK);
+        D_main_80037808 = 0;
+        osYieldThread();
+    }
+}
 
 #include "PR/sptask.h"
 extern u8 D_main_bss_8011A8C8;
