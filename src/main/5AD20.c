@@ -18,7 +18,6 @@ f32 D_main_8009ECE0[] = {
     -21.0f,
 };
 
-// NOTE: 40 rows after two statement-order climbs (genclimb; 76 -> 44 -> 40).
 s32 clearStructPair2C30_k() __asm__("clearStructPair2C30");
 s32 loadAssetAndIterateSubchunks(s32 *, s32, s32, s32, s32);
 void *rs_malloc(s32, s32);
