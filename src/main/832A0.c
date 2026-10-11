@@ -1945,7 +1945,82 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStartNoteRelativeSweep);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStartNoteTransposedSweep);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpPlaySampleKeymap);
+typedef struct { u32 w0; u32 w4; u32 w8; u32 wC; u32 w10; u32 w14; u8 b18; } SInfoPK;
+extern SInfoPK gSInfoPK __asm__("D_main_bss_8013ACA0");
+extern u32 gSInfoW0PK __asm__("D_main_bss_8013ACA0");
+extern u32 gSInfoW4PK __asm__("D_main_bss_8013ACA4");
+s32 musyxComputeNotePlaybackRate(u8, u32);
+void musyxInitVoiceFromSamplePK(u8, u8 *, s32) __asm__("musyxInitVoiceFromSample");
+static __inline__ s32 lookupWprPK(s16 key, u8 *out) {
+    u8 *p;
+    u8 *t;
+    s32 w;
+    D_main_bss_8013AC48 = key;
+    p = bsrchLV5(D_main_bss_8013AC40, D_main_bss_8013B048, D_main_bss_8013C44C, 0xC, compareHalfwordAtOffset8);
+    D_main_bss_8013AC4C = p;
+    if (p != 0) {
+        t = *(u8 **)p;
+        *(s32 *)out = *(s32 *)t;
+        *(s32 *)(out + 4) = *(s32 *)(p + 4);
+        *(s32 *)(out + 8) = 0;
+        *(s32 *)(out + 0x10) = *(s32 *)(t + 8);
+        *(s32 *)(out + 0xC) = *(s32 *)(t + 4) & 0xFFFFFF;
+        w = *(s32 *)(t + 0xC);
+        D_main_bss_8013AC50 = t;
+        *(s32 *)(out + 0x14) = w;
+        *(u8 *)(out + 0x18) = *(u8 *)(t + 4);
+        return 0;
+    }
+    return -1;
+}
+static __inline__ s32 sweepStepPK(u8 *a, u16 v) {
+    s32 r;
+    if (*(s8 *)(a + 0xBC) != 0) {
+        if (*(s8 *)(a + 0xBC) > 0) {
+            r = (((scaleFixedPointByRatioA(v) & 0xFFFF) - *(s32 *)(a + 0x70)) * *(s8 *)(a + 0xBC)) / 100;
+        } else {
+            r = ((*(s32 *)(a + 0x70) - (scaleFixedPointByRatioB(v) & 0xFFFF)) * *(s8 *)(a + 0xBC)) / 100;
+        }
+    } else {
+        r = 0;
+    }
+    return r;
+}
+s32 soundMacroOpPlaySampleKeymap(u8 *ch, u32 *cmd) {
+    s32 flag;
+    u8 k;
+    u32 f;
+    u16 r;
+    if (lookupWprPK(cmd[0] >> 8, (u8 *)&gSInfoPK) == 0) {
+        if (*(u8 *)cmd == 0) {
+            gSInfoPK.w8 = cmd[1];
+        } else {
+            gSInfoPK.w8 = (u32)((0x7F - *(u16 *)(ch + 0x30)) * cmd[1]) / 127;
+        }
+        if (gSInfoPK.w8 >= gSInfoPK.wC) {
+            gSInfoPK.w8 = gSInfoPK.wC - 1;
+        }
+        k = ch[0x67];
+        if (!(*(u32 *)(ch + 0x24) & 0x200)) {
+            musyxInitVoiceFromSamplePK(k, (u8 *)&gSInfoPK, 1);
+        } else {
+            musyxInitVoiceFromSamplePK(k, (u8 *)&gSInfoPK, 0);
+        }
+        *(u32 *)(ch + 0x9C) = musyxComputeNotePlaybackRate(ch[0xBD], gSInfoW0PK) << 16;
+        *(u32 *)(ch + 0x60) = gSInfoW0PK;
+        f = *(u32 *)(ch + 0x24) | 0x20;
+        *(u32 *)(ch + 0x5C) = gSInfoW4PK;
+        *(u32 *)(ch + 0x24) = f;
+        if (!(f & 0x100)) {
+            r = musyxComputeNotePlaybackRate(ch[0x55], *(u32 *)(ch + 0x60)) & 0xFFFF;
+            *(s32 *)(ch + 0x70) = r;
+            *(s32 *)(ch + 0x70) = (*(s32 *)(ch + 0x70) + sweepStepPK(ch, r)) << 16;
+            cmd[0] = 4;
+            return computeChannelWaitDuration(ch, cmd);
+        }
+    }
+    return 0;
+}
 
 void musyxStartVoiceRelease(u8, u8);
 s32 soundMacroOpKeyOff(u8 *ch) {
