@@ -602,7 +602,27 @@ void setPostSwapPendingFlags(void) {
     D_main_bss_8011A8C9 = 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", waitForPostSwapAck);
+extern u8 D_main_bss_8011A8C8;
+extern u8 D_main_bss_8011A8C9;
+extern volatile u8 D_main_80037808;
+extern OSMesgQueue D_main_bss_80128CF0;
+void osYieldThread(void);
+void waitForPostSwapAck(void) {
+    u8 *p = &D_main_bss_8011A8C9;
+    if (*p != 0) {
+        if (D_main_bss_8011A8C8 != 0) {
+            u8 one = 1;
+            u8 *q = p - 1;
+            do {
+                D_main_80037808 = one;
+                osRecvMesg(&D_main_bss_80128CF0, NULL, OS_MESG_BLOCK);
+                D_main_80037808 = 0;
+                osYieldThread();
+            } while (*q != 0);
+        }
+        D_main_bss_8011A8C9 = 0;
+    }
+}
 
 extern u8 D_main_bss_8011A8C8;
 extern u8 D_main_bss_8011A8C9;
