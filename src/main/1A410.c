@@ -12,7 +12,103 @@ void signalFrameSyncMesgNonblock(void) {
     osSendMesg(&D_main_bss_80128D10, NULL, OS_MESG_NOBLOCK);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", viRetraceHandlerThread);
+typedef struct {
+    s32 buf[3];
+    u16 h[3];
+    u8 st[3];
+    u8 n;
+    u8 viCount;
+    u8 minVi;
+    s32 swapTime;
+    s32 delta;
+    s32 lastTime;
+    s32 lastStamp;
+    s32 stamp[3];
+    s32 time[3];
+} BufArbV;
+extern u32 D_main_bss_80128ED8;
+extern BufArbV gBufArbV __asm__("D_main_bss_80128E98");
+extern OSMesgQueue D_main_bss_80114388;
+extern OSMesg D_main_bss_8011A4CC;
+extern OSMesgQueue D_main_bss_80128CF0;
+extern OSMesg D_main_bss_80128D08;
+extern OSMesgQueue D_main_bss_80128D10;
+extern volatile u8 gCurFieldV __asm__("D_main_bss_80128D2C");
+extern volatile u8 D_main_80037808;
+extern void (*D_main_bss_8011A8A4[4])(void);
+void applyPendingViChanges(void);
+void postSwapRdpReset(void);
+void osYieldThread(void);
+void viRetraceHandlerThread(void *arg) {
+    s32 i;
+    s32 j;
+    s32 best;
+    u32 now;
+
+    osCreateMesgQueue(&D_main_bss_80114388, &D_main_bss_8011A4CC, 1);
+    osViSetEvent(&D_main_bss_80114388, NULL, 1);
+    osCreateMesgQueue(&D_main_bss_80128CF0, &D_main_bss_80128D08, 1);
+    while (1) {
+        osRecvMesg(&D_main_bss_80114388, NULL, OS_MESG_BLOCK);
+        gCurFieldV = osViGetCurrentField();
+        i = 0;
+        now = osGetTime();
+        applyPendingViChanges();
+        osRecvMesg(&D_main_bss_80128D10, NULL, OS_MESG_BLOCK);
+        D_main_bss_80128ED8 = now;
+        gBufArbV.viCount++;
+        for (; i < gBufArbV.n; i++) {
+            if (gBufArbV.st[i] == 4) {
+                for (j = 0; j < gBufArbV.n; j++) {
+                    if (gBufArbV.st[j] == 5) {
+                        gBufArbV.st[j] = 0;
+                        gBufArbV.delta = (u32)osGetTime() - gBufArbV.swapTime;
+                        gBufArbV.lastStamp = gBufArbV.stamp[i];
+                        gBufArbV.lastTime = gBufArbV.time[i];
+                        break;
+                    }
+                }
+                gBufArbV.st[i] = 5;
+                gBufArbV.viCount = 0;
+                gBufArbV.swapTime = osGetTime();
+            }
+        }
+        best = -1;
+        for (i = 0; i < gBufArbV.n; i++) {
+            if (gBufArbV.st[i] == 3) {
+                gBufArbV.h[i]++;
+                if (best == -1 || gBufArbV.h[best] < gBufArbV.h[i]) {
+                    best = i;
+                }
+            }
+        }
+        if (best != -1) {
+            for (j = 0; j < gBufArbV.n; j++) {
+                if (gBufArbV.st[j] == 5) {
+                    if (gBufArbV.viCount < gBufArbV.minVi - 1) {
+                        goto skip;
+                    }
+                    goto swap;
+                }
+            }
+        swap:
+            gBufArbV.st[best] = 4;
+            osViSwapBuffer((void *)gBufArbV.buf[best]);
+        skip:;
+        }
+        postSwapRdpReset();
+        osSendMesg(&D_main_bss_80128D10, NULL, OS_MESG_NOBLOCK);
+        if (D_main_80037808 != 0) {
+            osSendMesg(&D_main_bss_80128CF0, NULL, OS_MESG_BLOCK);
+        }
+        osYieldThread();
+        for (i = 0; i < 4; i++) {
+            if (D_main_bss_8011A8A4[i] != NULL) {
+                D_main_bss_8011A8A4[i]();
+            }
+        }
+    }
+}
 
 void osYieldThread(void);
 void yieldCurrentThread(void) {
