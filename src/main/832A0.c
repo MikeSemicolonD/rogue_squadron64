@@ -1859,7 +1859,35 @@ block7:
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpKeyOnNote);
+s32 startNoteOnVoiceK(s32, u16, s32, u8, s32, s32, s32, s32, s32, s32, s32) __asm__("startNoteOnVoice");
+extern u8 D_main_bss_8013D894[];
+s32 soundMacroOpKeyOnNote(u8 *ch, u8 *cmd) {
+    u32 w;
+    s32 n;
+    u32 key;
+    s32 vel;
+    s32 r;
+    s32 unused[2];
+    w = *(u32 *)cmd;
+    n = *(u16 *)(ch + 0x52) + ((s32)(w << 16) >> 24);
+    key = ((w >> 16) << 16) | (cmd[5] << 8) | cmd[6];
+    if (n >= 0) {
+        vel = 0x7F;
+        if (n < 0x80) {
+            vel = n;
+        }
+    } else {
+        vel = 0;
+    }
+    n = vel;
+    if (ch[0x50] != 0) {
+        n |= 0x80;
+    }
+    r = startNoteOnVoiceK(key, *(u16 *)(ch + 0xB6), n & 0xFF, ch[0x31], ch[0x39], ch[0x4E], ch[0x4F], *(u16 *)(cmd + 6), ch[0x2F], 0, ch[0xBA]);
+    *(s32 *)(ch + 0x10) = r;
+    *(s32 *)(D_main_bss_8013D894 + (r & 0xFF) * 0x17C) = *(s32 *)(ch + 0x64);
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpKeyOffByNote);
 
@@ -2358,7 +2386,38 @@ void releaseSynthVoice(u8 *ch) {
     *(u32 *)(ch + 0x24) &= ~3;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", stopVoicesByHandle);
+// NOTE: ~10 rows: h param gets copied (move a1,a0) and r lands a2 instead of a1; template as spreadVoiceParamPairLocked + release inline
+extern u8 D_main_8013D880[];
+void freeSynthVoiceFromActiveList();
+void beginVoiceFadeRelease(s32 i);
+s32 stopVoicesByHandle(s32 h) {
+    s32 r = -1;
+    s32 idx;
+    s32 off;
+    u8 *v;
+    if (gMusyXActiveFlag != 0) {
+        h = vhResolvePL(h);
+        while (h != -1) {
+            idx = h & 0xFF;
+            off = idx * 0x17C;
+            if (gChanRecPL[idx].id == h) {
+                if (*(s32 *)(D_main_8013D880 + off) != 0) {
+                    v = D_main_8013D880 + off;
+                    freeSynthVoiceFromActiveList(v);
+                    *(s32 *)(v + 0x64) = -1;
+                    *(s32 *)v = 0;
+                    v[0x2E] = 0;
+                    *(s32 *)(v + 0x28) = 0;
+                    *(u32 *)(v + 0x24) &= ~3;
+                }
+                beginVoiceFadeRelease(idx);
+                r = 0;
+            }
+            h = gChanRecPL[idx].next;
+        }
+    }
+    return r;
+}
 
 extern u8 D_main_8013D880[];
 extern u8 D_main_bss_8013D8D0[];
