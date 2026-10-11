@@ -590,7 +590,53 @@ s32 getChannelControllerValue(u8 ctrl, u8 slot, u8 trk) {
     return gCcTblG[slot][ctrl] << 7;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", initVoiceModulatorRecords);
+typedef struct { u8 ctrl; u8 op; u16 scale; u8 pad4[0xC]; u8 count; u8 pad11; } ModRecIV;
+void initVoiceModulatorRecords(u8 *a) {
+    ModRecIV *r = (ModRecIV *)(a + 0xC0);
+
+    u32 seven = 7;
+    u32 sc = 0x100;
+    u32 one = 1;
+    __asm__("" : "=r"(seven) : "0"(seven));
+    __asm__("" : "=r"(sc) : "0"(sc));
+    __asm__("" : "=r"(one) : "0"(one));
+    r[0].ctrl = seven;
+    r[1].ctrl = 0xA;
+    r[2].ctrl = 0x83;
+    r[3].ctrl = 0x80;
+    r[6].ctrl = 0x40;
+    r[7].ctrl = 0x41;
+    r[8].ctrl = 0x5B;
+    r[0].op = 0;
+    r[0].scale = sc;
+    r[0].count = one;
+    r[1].op = 0;
+    r[1].scale = sc;
+    r[1].count = one;
+    r[2].op = 0;
+    r[2].scale = sc;
+    r[2].count = one;
+    r[3].op = 0;
+    r[3].scale = sc;
+    r[3].count = one;
+    r[5].ctrl = one;
+    r[5].op = 0;
+    r[5].scale = sc;
+    r[5].count = one;
+    r[6].op = 0;
+    r[6].scale = sc;
+    r[6].count = one;
+    r[7].op = 0;
+    r[7].scale = sc;
+    r[7].count = one;
+    r[8].op = 0;
+    r[8].scale = sc;
+    r[8].count = one;
+    r[4].ctrl = 0x84;
+    r[4].op = 0;
+    r[4].scale = sc;
+    r[4].count = one;
+}
 
 typedef struct { u8 ctrl; u8 op; s16 scale; } ModEntE;
 typedef struct { ModEntE e[4]; u8 count; } ModRecE;
