@@ -479,7 +479,45 @@ s32 compareHalfwordAtOffset4_v3(u8 *a, u8 *b) {
     return *(u16 *)(a + 4) - *(u16 *)(b + 4);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableLookupTaggedValue);
+extern s32 D_main_bss_8013AF08;
+extern u8 D_main_bss_8013AC78[];
+extern s16 D_main_bss_8013AC7C;
+extern u8 *D_main_bss_8013AC80;
+extern u8 D_main_bss_80148450[];
+s32 compareHalfwordAtOffset4_v3(u8 *a, u8 *b);
+static __inline__ u8 *bsrchLV3(u8 *key, u8 *base, s32 n, s32 size, s32 (*cmp)(u8 *, u8 *)) {
+    s32 lo, hi, mid, r;
+    u8 *p;
+    if (n != 0) {
+        lo = 1;
+        hi = n;
+        do {
+            mid = (lo + hi) >> 1;
+            p = base + size * (mid - 1);
+            r = cmp(key, p);
+            if (r == 0) {
+                return p;
+            }
+            if (r < 0) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        } while (hi >= lo);
+    }
+    return 0;
+}
+s32 factor5SortedTableLookupTaggedValue(s16 key, u16 *out) {
+    u8 *p;
+    D_main_bss_8013AC7C = key;
+    p = bsrchLV3(D_main_bss_8013AC78, D_main_bss_80148450, D_main_bss_8013AF08, 8, compareHalfwordAtOffset4_v3);
+    D_main_bss_8013AC80 = p;
+    if (p != 0) {
+        *out = *(u16 *)(p + 6);
+        return *(s32 *)D_main_bss_8013AC80;
+    }
+    return 0;
+}
 
 s32 cmpU16ByValue(u8 *a, u8 *b) {
     return *(u16 *)(a + 0) - *(u16 *)(b + 0);
@@ -802,7 +840,44 @@ s32 clearChannelFieldsAt1Cand20(u8 *ch) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpLoopRandomCount);
+extern u32 D_main_800A0F54;
+s32 soundMacroOpLoopRandomCount(u8 *a0, u8 *cmd) {
+    u8 *ch = a0;
+    register u32 t asm("$3");
+    register u32 d asm("$3");
+    u32 w;
+    u32 r;
+    if (*(u16 *)(ch + 0x6C) == 0) {
+        if (*(u16 *)cmd & 1) {
+            d = D_main_800A0F54;
+            t = d * 0xA8351D63;
+            r = (u16)(t >> 6) % *(u16 *)(cmd + 4);
+            D_main_800A0F54 = t;
+            *(u16 *)(ch + 0x6C) = r;
+        } else {
+            *(u16 *)(ch + 0x6C) = *(u16 *)(cmd + 4);
+        }
+        if (*(u16 *)(ch + 0x6C) == 0xFFFF) {
+            goto block7;
+        }
+        *(u16 *)(ch + 0x6C) = *(u16 *)(ch + 0x6C) + 1;
+    }
+    *(u16 *)(ch + 0x6C) = *(u16 *)(ch + 0x6C) - 1;
+    if ((u16)*(u16 *)(ch + 0x6C) != 0) {
+block7:
+        if ((*(u32 *)cmd >> 8) & 1) {
+            w = *(u32 *)(ch + 0x24);
+            if (!(w & 0x4000000)) {
+                if (w & 8) {
+                    *(u16 *)(ch + 0x6C) = 0;
+                    return 0;
+                }
+            }
+        }
+        *(s32 *)(ch + 4) = *(s32 *)ch + *(u16 *)(cmd + 6) * 8;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpKeyOnNote);
 
@@ -1262,7 +1337,31 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", setupSongRenderBuffers);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", advanceVolumeFadeEnvelope);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", buildSongDecodeBufferRing);
+typedef struct SongBufNode { struct SongBufNode *next; struct SongBufNode *prev; u8 *buf; u8 pad[8]; } SongBufNode;
+void *rs_malloc(u32, u16);
+extern SongBufNode *D_main_bss_801499AC;
+extern s32 D_main_bss_801499B0;
+extern s32 D_main_bss_801499B8;
+extern u8 *D_main_bss_801499BC;
+extern SongBufNode *D_main_bss_801499C0;
+void buildSongDecodeBufferRing(s32 n) {
+    s32 i;
+    u32 sz = n << 8;
+    D_main_bss_801499C0 = rs_malloc(n * 0x14, 0);
+    D_main_bss_801499BC = rs_malloc(sz, 0);
+    osInvalDCache(D_main_bss_801499BC, sz);
+    D_main_bss_801499B0 = 0;
+    D_main_bss_801499AC = D_main_bss_801499C0;
+    D_main_bss_801499C0[0].buf = D_main_bss_801499BC;
+    D_main_bss_801499C0[0].prev = 0;
+    for (i = 1; i < n; i++) {
+        D_main_bss_801499C0[i].prev = &D_main_bss_801499C0[i - 1];
+        D_main_bss_801499C0[i].buf = D_main_bss_801499BC + i * 0x100;
+        D_main_bss_801499C0[i - 1].next = &D_main_bss_801499C0[i];
+    }
+    D_main_bss_801499B8 = 0;
+    D_main_bss_801499C0[i - 1].next = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", acquireSampleStreamBlock);
 
