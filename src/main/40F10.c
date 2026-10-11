@@ -247,7 +247,155 @@ s32 randomBurstNpcHandlerVariant(struct D_80130BB8_type *self, u16 arg1, void *a
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/40F10", spawnNpcFormationWithRandomOrientation);
+extern s32 gNpcNextOpenSlot;
+extern s16 D_main_bss_80130BD4_b __asm__("D_main_bss_80130BD4");
+extern s16 rand(void);
+extern void quatFromAxisAngleSafe(void *, void *, f32);
+extern void quatFromAxisAngle(void *, void *, f32);
+extern void quatFromCardinalAxis(void *, u8, f32);
+extern void quatMultiply(void *, void *, void *);
+extern void rotateVec3ByQuat(void *, void *, void *);
+typedef struct { u8 b0, b1, b2, b3; } SfW4;
+typedef struct { s32 a, b, c; } SfV3;
+
+u16 snImpl(u8 *d, void *arg1, void *arg2, f32 *arg3) __asm__("spawnNpcFormationWithRandomOrientation");
+u16 snImpl(u8 *d, void *arg1, void *arg2, f32 *arg3) {
+    u8 *s;
+    u16 id;
+    f32 sp10[3];
+    f32 sp20[4];
+    f32 sp30[4];
+    f32 sp40[4];
+    s32 sp50[4];
+    u16 tmp;
+    f32 ft;
+    f32 fs;
+    f32 fs2;
+    s16 ri;
+    u16 t28;
+
+    id = (u16)D_main_bss_80130BD4_b;
+    if (id == 0xFFFF) {
+        return 0xFFFF;
+    }
+    if ((*(u16 *)(d + 0x7C) & 0x40) && gNpcNextOpenSlot < 4) {
+        return 0xFFFF;
+    }
+    {
+        s = (u8 *)D_main_bss_80130BD0 + (u16)id * 0x6C;
+        tmp = *(u16 *)(s + 2);
+        D_main_bss_80130BD4 = tmp;
+        if (tmp != 0xFFFF) {
+            *(u16 *)((u8 *)D_main_bss_80130BD0 + (u16)D_main_bss_80130BD4 * 0x6C) = 0xFFFF;
+        }
+        if (arg2 != 0) {
+            *(u16 *)(s + 2) = *(u16 *)arg2;
+            if (*(u16 *)(s + 2) != 0xFFFF) {
+                *(u16 *)((u8 *)D_main_bss_80130BD0 + *(u16 *)(s + 2) * 0x6C) = id;
+            }
+            *(u16 *)(s + 0) = 0xFFFF;
+            *(u16 *)arg2 = id;
+        }
+        *(u16 *)(s + 0x20) = *(u16 *)(d + 0x7C);
+        if (*(f32 *)(d + 0x38) != 0.0f) {
+            vec3Cross(sp10, d + 0x20, d + 0x2C);
+            quatFromAxisAngleSafe(sp20, sp10, (f32)(s16)(rand() % 360));
+            rotateVec3ByQuat(sp20, d + 0x20, sp10);
+            ri = rand() % 100;
+            ft = *(f32 *)(d + 0x38);
+            ft *= (f32)ri;
+            ft /= 100.0f;
+            *(f32 *)(s + 4) = ft * sp10[0] + arg3[0];
+            *(f32 *)(s + 8) = ft * sp10[1] + arg3[1];
+            ft *= sp10[2];
+            ft += arg3[2];
+            *(f32 *)(s + 0xC) = ft;
+        } else {
+            *(SfV3 *)(s + 4) = *(SfV3 *)arg3;
+        }
+        if (*(s16 *)(d + 0x3C) != 0) {
+            quatFromAxisAngle(sp20, d + 0x20, (f32)((s16)((rand() & 0xFFFF) % (s16)*(u16 *)(d + 0x3C)) - (s16)*(u16 *)(d + 0x3C) / 2));
+        } else {
+            quatFromCardinalAxis(sp20, 0, 0);
+        }
+        if (*(s16 *)(d + 0x3E) != 0) {
+            quatFromAxisAngle(sp30, d + 0x2C, (f32)((s16)((rand() & 0xFFFF) % (s16)*(u16 *)(d + 0x3E)) - (s16)*(u16 *)(d + 0x3E) / 2));
+        } else {
+            quatFromCardinalAxis(sp30, 0, 0);
+        }
+        quatMultiply(sp20, sp30, sp40);
+        if (*(f32 *)(d + 0x1C) != 0.0f) {
+            fs = ((*(f32 *)(d + 0x1C) * (f32)(s16)(rand() % 100)) / 100.0f + 1.0f) - *(f32 *)(d + 0x1C) * 0.5f;
+            rotateVec3ByQuat(sp40, d + 0x10, sp10);
+            *(f32 *)(s + 0x10) = sp10[0] * fs;
+            *(f32 *)(s + 0x14) = sp10[1] * fs;
+            *(f32 *)(s + 0x18) = sp10[2] * fs;
+        } else {
+            rotateVec3ByQuat(sp40, d + 0x10, (f32 *)(s + 0x10));
+        }
+        if (arg1 != 0) {
+            *(f32 *)(s + 0x10) = *(f32 *)(s + 0x10) + ((f32 *)arg1)[0];
+        }
+        *(f32 *)(s + 0x14) = *(f32 *)(s + 0x14) + ((f32 *)arg1)[1];
+        *(f32 *)(s + 0x18) = *(f32 *)(s + 0x18) + ((f32 *)arg1)[2];
+        ft = *(f32 *)(d + 0x4C) + (*(f32 *)(d + 0x50) * (f32)(s16)(rand() % 100)) / 100.0f;
+        *(f32 *)(s + 0x1C) = ft;
+        if (*(u16 *)(d + 0x7C) & 0x40) {
+            *(f32 *)(s + 0x28) = ft;
+            sp50[0] = (s32)d;
+            sp50[1] = (s32)s;
+            sp50[2] = 0;
+            sp50[3] = 0;
+            *(u16 *)(s + 0x24) = spawnNpcOfType(*(npc_update *)(d + 0x60), sp50, (*(u16 *)(d + 0x7C) & 0x80) ? 2 : 1, 0xF);
+            *(u16 *)(s + 0x26) = findFreeNpcSlotByKey((struct D_80130BB8_type *)0xFFFF, *(u16 *)(s + 0x24));
+        } else {
+            *(u16 *)(s + 0x44) = 0;
+            if (*(u16 *)(d + 0x7C) & 8) {
+                *(u16 *)(s + 0x44) |= rand() & 0x1C00;
+            }
+            *(s32 *)(s + 0x64) = *(s32 *)(d + 0x64);
+            if (*(u8 *)(d + 0x6C) >= 2) {
+                *(u16 *)(s + 0x24) = *(u8 *)(d + 0x6C) << 8;
+                if (*(u16 *)(d + 0x7C) & 0x30) {
+                    t28 = (u32)(f32)*(u16 *)(d + 0x6E);
+                } else {
+                    t28 = (u32)((f32)*(u16 *)(s + 0x24) / *(f32 *)(s + 0x1C));
+                }
+                *(u16 *)(s + 0x28) = t28;
+            } else {
+                *(u16 *)(s + 0x24) = 0x100;
+                *(u16 *)(s + 0x28) = 0;
+            }
+            *(u16 *)(s + 0x26) = 0;
+            *(u16 *)(s + 0x46) = **(u16 **)(s + 0x64);
+            *(s32 *)(s + 0x68) = *(s32 *)(d + 0x68);
+            if (*(u8 *)(d + 0x6D) != 0) {
+                *(u16 *)(s + 0x2A) = *(u8 *)(d + 0x6D) << 8;
+                *(s16 *)(s + 0x2E) = (u32)((f32)*(u16 *)(s + 0x2A) / *(f32 *)(s + 0x1C));
+                *(u16 *)(s + 0x44) |= 0x200;
+                *(SfW4 *)(s + 0x60) = **(SfW4 **)(s + 0x68);
+                *(u16 *)(s + 0x2C) = 0;
+            } else {
+                *(u16 *)(s + 0x2A) = 0x100;
+                *(u16 *)(s + 0x2E) = 0;
+                *(u16 *)(s + 0x2C) = 0;
+            }
+            fs2 = (f32)*(u16 *)(d + 0x70) * 0.00390625f;
+            *(f32 *)(s + 0x58) = fs2;
+            *(f32 *)(s + 0x54) = fs2;
+            if (*(u16 *)(d + 0x72) != 0 && *(u16 *)(d + 0x72) != *(u16 *)(d + 0x70)) {
+                *(s16 *)(s + 0x30) = (s32)((f32)(*(u16 *)(d + 0x72) - *(u16 *)(d + 0x70)) / *(f32 *)(s + 0x1C));
+            } else {
+                *(s16 *)(s + 0x30) = 0;
+            }
+            if (*(u16 *)(d + 0x7C) & 1) {
+                *(u16 *)(s + 0x44) |= 0x100;
+            }
+        }
+        return id;
+    }
+    return 0xFFFF;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/40F10", computeNpcGroupCentroidAndCull);
 
