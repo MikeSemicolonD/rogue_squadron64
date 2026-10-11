@@ -1191,7 +1191,24 @@ u16 queryVoicePlayPositionByHandle(u32 h) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", findActiveVoiceByKeyPair);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", findVoiceForNote);
+s32 findActiveVoiceByKeyPairFV(u8, u8, u8) __asm__("findActiveVoiceByKeyPair");
+static __inline__ u8 getChByteAltFV(u8 a, u8 b) {
+    if (b != 0xFF) {
+        return D_main_bss_801483D0[b][a];
+    }
+    return D_main_bss_80142018[a];
+}
+s32 findVoiceForNote(u8 note, u8 a, u8 b) {
+    s32 r;
+
+    if (a != 0xFF && getChByteAltFV(a, b) != 0) {
+        r = findActiveVoiceByKeyPairFV(note & 0x7F, a, b);
+        if (r != -1) {
+            return r;
+        }
+    }
+    return -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", startNoteOnVoice);
 
@@ -2512,7 +2529,25 @@ s32 seqCmdHandler46(u8 *chArg, u8 *cmd) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", refreshVoicePlaybackRate);
+s32 musyxComputeNotePlaybackRate(u8, u32);
+static __inline__ void setChByteAltRV(u8 a, u8 b, u8 v) {
+    if (b != 0xFF) {
+        D_main_bss_801483D0[b][a] = v;
+        return;
+    }
+    D_main_bss_80142018[a] = v;
+}
+void refreshVoicePlaybackRate(u8 *v) {
+    if (v[0xA0] != 1) {
+        *(u32 *)(v + 0x94) = *(u32 *)(v + 0x98);
+    } else {
+        *(u32 *)(v + 0x94) = 0;
+    }
+    *(u32 *)(v + 0x9C) = musyxComputeNotePlaybackRate(v[0xBD], *(u32 *)(v + 0x60)) << 16;
+    if (v[0x4E] != 0xFF) {
+        setChByteAltRV(v[0x4E], v[0x4F], 1);
+    }
+}
 
 extern s32 D_main_bss_8013ACD0[];
 extern u8 D_main_bss_80142018[];
@@ -2870,7 +2905,28 @@ void setAudioFaderState(u8 i, u8 v) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", anyAudioSlotActive);
+extern u8 gMusyXActiveFlag;
+extern u8 gSlotBusyAA __asm__("D_main_bss_8013ACF4");
+extern u8 gNumSlotsAA __asm__("D_main_bss_80141AD0");
+s32 audioStubReturnZero();
+s32 isAudioSlotActive(s32);
+s32 anyAudioSlotActive(void) {
+    u8 r = 0;
+    s32 i;
+
+    if (gMusyXActiveFlag) {
+        gSlotBusyAA = 1;
+        if (!(u8)audioStubReturnZero()) {
+            for (i = 0; i < gNumSlotsAA; i++) {
+                r |= isAudioSlotActive(i);
+            }
+        } else {
+            r = 1;
+        }
+        gSlotBusyAA = 0;
+    }
+    return r == 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", resetMusyXEngineState);
 
