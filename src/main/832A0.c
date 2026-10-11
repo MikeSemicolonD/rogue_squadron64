@@ -512,7 +512,97 @@ s32 getChannelControllerValue(u8 ctrl, u8 slot, u8 trk) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", initVoiceModulatorRecords);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateVoiceModulatorRecord);
+typedef struct { u8 ctrl; u8 op; s16 scale; } ModEntE;
+typedef struct { ModEntE e[4]; u8 count; } ModRecE;
+typedef struct { u8 pad0[0x4E]; u8 slot; u8 trk; u8 pad50[0x11C]; s16 f16C; u8 pad16E[0xA]; s16 f178; } VoiceE;
+u16 getCcvE(u8, u8, u8) __asm__("getChannelControllerValue");
+static __inline__ s32 clampBiE(s32 x) {
+    s32 r;
+    if (x < -0x2000) {
+        r = -0x2000;
+    } else if (x < 0x2000) {
+        r = x;
+    } else {
+        r = 0x1FFF;
+    }
+    return r;
+}
+u16 evalModRecE(VoiceE *v, ModRecE *rec) __asm__("evaluateVoiceModulatorRecord");
+u16 evalModRecE(VoiceE *v, ModRecE *rec) {
+    u32 i;
+    s32 val;
+    s32 m;
+    ModEntE *e;
+    u8 c;
+    s32 unusedE[2];
+
+    i = 0;
+    val = 0;
+    if (rec->count != 0) {
+        do {
+            e = &rec->e[i];
+            c = e->ctrl;
+            if (c == 0x80 || c == 1 || c == 0xA || c == 0xA0 || c == 0xA1 || c == 0x83 || c == 0x84) {
+                val -= 0x2000;
+                switch (c) {
+                case 0xA0:
+                    m = v->f16C * 2;
+                    break;
+                case 0xA1:
+                    m = v->f178 * 2;
+                    break;
+                default:
+                    m = getCcvE(c, v->slot, v->trk) - 0x2000;
+                    break;
+                }
+                m = (m * e->scale) >> 8;
+                m = clampBiE(m);
+                switch (e->op) {
+                case 1:
+                    val += m;
+                    val = clampBiE(val);
+                    break;
+                case 2:
+                    val = (val * m) >> 13;
+                    if (val < -0x2000) goto lo2;
+                    m = clampBiE(val);
+                join2:
+                    val = m;
+                    break;
+                case 0:
+                    val = m;
+                    break;
+                }
+                val += 0x2000;
+                goto skip2;
+            lo2:
+                m = -0x2000;
+                goto join2;
+            skip2:;
+            } else {
+                m = (getCcvE(c, v->slot, v->trk) * e->scale) >> 8;
+                if (m >= 0x4000) {
+                    m = 0x3FFF;
+                }
+                switch (e->op) {
+                case 0:
+                    val = m;
+                    break;
+                case 1:
+                    val += m;
+                    val = ((u32)val < 0x4000) ? val : 0x3FFF;
+                    break;
+                case 2:
+                    val = (u32)(val * m) >> 14;
+                    val = ((u32)val < 0x4000) ? val : 0x3FFF;
+                    break;
+                }
+            }
+            i++;
+        } while (i < rec->count);
+    }
+    return val;
+}
 
 u16 evaluateVoiceModulatorRecord(u8 *, u8 *);
 u16 evaluateVoiceModulatorRecordZero(u8 *v) {
@@ -2195,7 +2285,15 @@ void shiftChannelStreamLeft8(u32 *p) {
     *p <<= 8;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", computeChannelTempoStepFromTable);
+extern u32 gTempoTblCT[] __asm__("D_main_bss_8013ACD0");
+void computeChannelTempoStepFromTable(u32 *out, u8 *ch) {
+    u32 *tbl = gTempoTblCT;
+    u32 *p;
+    u32 d;
+    if (ch[0x4F] != 0xFF) { p = &tbl[ch[0x4F]]; } else { p = &tbl[8]; }
+    d = *p;
+    *out = (*out * 32000 / d) << 3;
+}
 
 extern u32 D_main_800A0F54;
 extern s32 D_main_bss_8013ACD0[];
@@ -2467,7 +2565,46 @@ s32 soundMacroOpKeyOnNote(u8 *ch, u8 *cmd) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpKeyOffByNote);
+// NOTE: 2 rows: only the position of i=0 (target: after first lbu, mine first). levers: unused[4], hi temp, off = i*0x17C temp
+extern u8 D_main_bss_80141AD0;
+extern u8 gMusyXActiveFlag;
+extern u32 D_main_bss_8013D8A4[];
+extern s32 D_main_bss_8013D8E4[];
+s32 soundMacroOpKeyOffByNote(u8 *ch, u8 *cmd) {
+    u32 b = cmd[2];
+    u32 i = 0;
+    u32 hi = *(u16 *)cmd;
+    u32 key;
+    u8 cnt = D_main_bss_80141AD0;
+    s32 off;
+    s32 id;
+    s32 o2;
+    u8 act;
+    s32 unused[4];
+    b <<= 4;
+    b <<= 4;
+    key = (*(u16 *)(ch + 0x52) + b) | (hi << 16);
+
+    if (cnt != 0) {
+        act = gMusyXActiveFlag;
+        do {
+            off = i * 0x17C;
+            id = *(s32 *)((s32)D_main_bss_8013D8E4 + off);
+            if (id == (key | i)) {
+                if (act != 0) {
+                    if (id != -1) {
+                        o2 = (id & 0xFF) * 0x17C;
+                        if (*(s32 *)((s32)D_main_bss_8013D8E4 + o2) == id) {
+                            *(u32 *)((s32)D_main_bss_8013D8A4 + o2) |= 8;
+                        }
+                    }
+                }
+            }
+            i++;
+        } while (i < cnt);
+    }
+    return 0;
+}
 
 s32 soundMacroOpAddPitchBend(u8 *ch, s16 *cmd) {
     s32 v = *(u16 *)(ch + 0x28) + *cmd;
@@ -4798,7 +4935,45 @@ void initN64RspMixer(u32 *rate, u16 nch, u16 ms, u8 mode) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", initAudioSubsystem);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", reapplyAudioConfig);
+extern s32 D_main_bss_801496F4;
+void initFactor5Mutex(void);
+s32 initN64RspMixerRA(u32 *, s32, s32, s32) __asm__("initN64RspMixer");
+static __inline__ s32 mixModeRA(s32 f) {
+    s32 r;
+    if (f & 0x10000) {
+        r = 2;
+    } else if (f & 0x20000) {
+        r = 3;
+    } else if (f & 0x40000) {
+        r = 4;
+    } else if (f & 0x80000) {
+        r = 0;
+    } else {
+        r = 1;
+    }
+    return r;
+}
+s32 reapplyAudioConfig(u32 *arg0, u16 arg1, u16 arg2, s32 arg3) {
+    s32 t;
+
+    initFactor5Mutex();
+    t = osAiSetFrequency(*arg0);
+    D_main_bss_801496F4 = t;
+    *arg0 = t;
+    if (arg3 & 0x10000) {
+        t = 2;
+    } else if (arg3 & 0x20000) {
+        t = 3;
+    } else if (arg3 & 0x40000) {
+        t = 4;
+    } else if (arg3 & 0x80000) {
+        t = 0;
+    } else {
+        t = 1;
+    }
+    initN64RspMixerRA(arg0, arg1, arg2, t);
+    return 0;
+}
 
 extern u8 gMusyXActiveFlag;
 extern void *D_main_bss_801496FC;
