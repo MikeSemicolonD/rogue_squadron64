@@ -2972,13 +2972,44 @@ void buildSongTempoScheduleImpl(u8 *song) {
     }
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD50);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD58);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD5C);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD60);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD64);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", allocateSongChannelArray);
+typedef struct { u8 b0; u8 pad1[0x83]; u8 b84; u8 b85; u8 pad86[2]; } SongChSC;
+extern SongChSC *gChansA_SC __asm__("D_main_bss_801496F8");
+extern SongChSC *gChansB_SC __asm__("D_main_bss_801496FC");
+extern u16 gNumChSC __asm__("D_main_bss_80149700");
+extern u8 gB9702SC __asm__("D_main_bss_80149702");
+extern u16 gH9710SC __asm__("D_main_bss_80149710");
+extern u16 gH9712SC __asm__("D_main_bss_80149712");
+extern u16 gNumBufSC __asm__("D_main_bss_8014974E");
+extern void *gBufA_SC __asm__("D_main_bss_80149758");
+extern void *gBufB_SC __asm__("D_main_bss_8014975C");
+extern u16 gNumSlotSC __asm__("D_main_bss_80149704");
+extern void *gSlotA_SC __asm__("D_main_bss_80149708");
+extern void *gSlotB_SC __asm__("D_main_bss_8014970C");
+extern u8 *gMixBufSC __asm__("D_main_bss_80149764");
+void allocateSongChannelArray(u16 nch, u32 rate) {
+    u16 i;
+
+    gNumChSC = nch;
+    gChansA_SC = gChansB_SC = rs_malloc(nch * sizeof(SongChSC), 0);
+    gB9702SC = 0;
+    gH9710SC = 0;
+    gH9712SC = 0;
+    for (i = 0; i < gNumChSC; i++) {
+        gChansB_SC[i].b0 = 0;
+        gChansB_SC[i].b85 = 0;
+        gChansB_SC[i].b84 = 0xFF;
+    }
+    gNumBufSC = (u32)((f32)rate / 50.0f / 192.0f * 1.2f) + 1;
+    gBufA_SC = rs_malloc(gNumBufSC * 0xA10, 0);
+    gBufB_SC = rs_malloc(gNumBufSC * 0xA10, 0);
+    gNumSlotSC = gNumBufSC * (nch + 1);
+    gSlotA_SC = rs_malloc(gNumSlotSC * sizeof(SongChSC), 0);
+    gSlotB_SC = rs_malloc(gNumSlotSC * sizeof(SongChSC), 0);
+    gMixBufSC = rs_malloc(0x298, 0);
+    rs_memset(gMixBufSC, 0, 0x298);
+    osWritebackDCache(gMixBufSC, 0x298);
+}
 
 extern const f64 D_main_8003DD68;
 extern const f32 D_main_8003DD70;
