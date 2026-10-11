@@ -515,7 +515,68 @@ void bufferArbiterMarkSlotReady(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", bufferArbiterAllocSlot);
+typedef struct {
+    s32 buf[3];
+    s16 h[3];
+    u8 st[3];
+    u8 n;
+    u8 viCount;
+    u8 minVi;
+    u8 pad18[0x10];
+    s32 stamp[3];
+    s32 time[3];
+} BufArbA;
+extern BufArbA gBufArbA __asm__("D_main_bss_80128E98");
+extern s32 D_main_bss_8011A890;
+extern volatile u8 D_main_80037808;
+extern OSMesgQueue D_main_bss_80128CF0;
+void osYieldThread(void);
+void clearFrameReadyFlag();
+s32 bufferArbiterAllocSlot(s32 arg0) {
+    u8 mode = arg0;
+    s32 first = 1;
+    s32 i;
+    s32 r;
+    while (1) {
+        for (i = 0; i < gBufArbA.n; i++) {
+            if (gBufArbA.st[i] == 0) {
+                gBufArbA.st[i] = 1;
+                gBufArbA.stamp[i] = D_main_bss_8011A890;
+                clearFrameReadyFlag(i, &gBufArbA.stamp[i], first);
+                r = gBufArbA.buf[i];
+                goto done;
+            }
+        }
+        if (mode == 1) {
+            r = 0;
+            goto done;
+        }
+        if (mode == 0) {
+            goto c0;
+        }
+        if (mode == 2) {
+            goto c2;
+        }
+        goto tail;
+    c0:
+        D_main_80037808 = 1;
+        osRecvMesg(&D_main_bss_80128CF0, NULL, OS_MESG_BLOCK);
+        D_main_80037808 = 0;
+        osYieldThread();
+        goto tail;
+    c2:
+        if ((first & 0xFF) == 0) {
+            D_main_80037808 = 0;
+            osYieldThread();
+        }
+        D_main_80037808 = 1;
+        osRecvMesg(&D_main_bss_80128CF0, NULL, OS_MESG_BLOCK);
+    tail:
+        first = 0;
+    }
+done:
+    return r;
+}
 
 typedef struct {
     s32 buf[3];
