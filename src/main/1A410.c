@@ -229,7 +229,51 @@ void readBufferSwapState(s32 *arg0, s32 *arg1, s32 *arg2) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", bufferArbiterProducerMark);
+typedef struct {
+    s32 buf[3];
+    s16 h[3];
+    u8 st[3];
+    u8 n;
+    u8 viCount;
+    u8 minVi;
+    u8 pad18[0x1C];
+    s32 time[3];
+} BufArbFull;
+extern BufArbFull gBufArb __asm__("D_main_bss_80128E98");
+extern OSMesgQueue D_main_bss_80128D10;
+extern s32 D_main_bss_80128D34;
+void bufferArbiterProducerMark(void) {
+    s32 i;
+    s32 j;
+    osRecvMesg(&D_main_bss_80128D10, NULL, OS_MESG_BLOCK);
+    for (i = 0; i < gBufArb.n; i++) {
+        if (gBufArb.st[i] == 2) {
+            gBufArb.time[i] = (D_main_bss_80128D34 != -1) ? D_main_bss_80128D34 : 0;
+            for (j = 0; j < gBufArb.n; j++) {
+                if (gBufArb.st[j] == 4) {
+                    gBufArb.st[i] = 3;
+                    gBufArb.h[i] = 0;
+                    goto done;
+                }
+            }
+            for (j = 0; j < gBufArb.n; j++) {
+                if (gBufArb.st[j] == 5) {
+                    if (gBufArb.viCount < gBufArb.minVi - 1) {
+                        gBufArb.st[i] = 3;
+                        gBufArb.h[i] = 0;
+                        goto done;
+                    }
+                    break;
+                }
+            }
+            osViSwapBuffer((void *)gBufArb.buf[i]);
+            gBufArb.st[i] = 4;
+            goto done;
+        }
+    }
+done:
+    osSendMesg(&D_main_bss_80128D10, NULL, OS_MESG_NOBLOCK);
+}
 
 extern volatile u8 D_main_80037808;
 extern OSMesgQueue D_main_bss_80128CF0;
