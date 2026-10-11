@@ -2,7 +2,60 @@
 #include "common_types.h"
 #include "PR/os.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", findModelAnimKeyframeByPhase);
+typedef struct { s32 a; s32 b; s32 c; u8 *ch; u8 state; u8 pad[3]; } MaSlotF;
+extern MaSlotF gSlotsF[] __asm__("gActiveModelAnimSlots");
+extern const f32 D_main_8003DB14;
+typedef struct { f32 f0; s32 pad4; s32 pad8; s32 *p; } MaChF;
+#define CHP (((MaChF *)((u8 *)((group * 16) + (s32)gSlotsF[slotId - 1].ch)))->p)
+void findModelAnimKeyframeByPhase(s32 slotId, s32 group, f32 phase) {
+    s16 ts = (s32)(phase * D_main_8003DB14);
+    u8 *g = *(u8 **)(gSlotsF[slotId - 1].c + 4) + (group * 16);
+    u32 i;
+    for (i = 0; i < *(u16 *)(g + 0xE); i++) {
+        u8 *e;
+        u8 *ent = (u8 *)(i * 0x1C + (s32)*(u8 **)g);
+        s32 n = *(s32 *)ent;
+        s32 mid;
+        if (n != 0) {
+            s16 *tm;
+            s32 lo;
+            s32 hi;
+            s32 val;
+            e = ent;
+            tm = *(s16 **)(e + 8);
+            lo = 1;
+            hi = n;
+            do {
+                mid = (lo + hi) >> 1;
+                val = tm[mid - 1];
+                if (val == ts) {
+                    goto found;
+                }
+                if (ts < val) {
+                    hi = mid - 1;
+                } else {
+                    lo = mid + 1;
+                }
+            } while (lo < hi);
+            mid = lo - (ts < tm[lo - 1]);
+found:
+            mid = mid - 1;
+            CHP[i * 2] = mid;
+            if (mid != *(s32 *)e - 1) {
+                s16 *tm2 = *(s16 **)(e + 8);
+                s32 t0 = tm2[mid];
+                s32 t1 = tm2[mid + 1];
+                ((f32 *)CHP)[i * 2 + 1] = (f32)(ts - t0) / (f32)(t1 - t0);
+            } else {
+                CHP[i * 2 + 1] = 0;
+            }
+        } else {
+            CHP[i * 2] = 0;
+            CHP[i * 2 + 1] = 0;
+        }
+    }
+    ((MaChF *)((u8 *)((group * 16) + (s32)gSlotsF[slotId - 1].ch)))->f0 = phase;
+}
 
 typedef struct { s32 a; s32 b; s32 c; u8 *ch; u8 state; u8 pad[3]; } MaSlot;
 extern MaSlot gActiveModelAnimSlots[];
@@ -17,7 +70,43 @@ s32 resetModelAnimSlotTable(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", allocateModelAnimSlot);
+extern const f32 D_main_8003DB18;
+void *rs_malloc(u32, u16);
+s32 allocateModelAnimSlotImpl(void *a, void *b, s32 n) __asm__("allocateModelAnimSlot");
+typedef struct { s32 w0; f32 f4; u8 b8; u8 pad9[3]; s32 *p; } MaChAMA;
+s32 allocateModelAnimSlotImpl(void *a, void *b, s32 n) {
+    u32 i;
+    u32 found = 0;
+    u32 idx;
+    for (i = 0; i < 0x20; i++) {
+        if (gActiveModelAnimSlots[i].state == 0) {
+            found = i + 1;
+            break;
+        }
+    }
+    if (found != 0) {
+        idx = found - 1;
+        gActiveModelAnimSlots[idx].a = (s32)a;
+        gActiveModelAnimSlots[idx].b = n;
+        gActiveModelAnimSlots[idx].c = (s32)b;
+        gActiveModelAnimSlots[idx].ch = rs_malloc(*(u32 *)gActiveModelAnimSlots[idx].c << 4, 0);
+        gActiveModelAnimSlots[idx].state = 1;
+        gActiveModelAnimSlots[idx].pad[0] = 0;
+        for (i = 0; i < *(u32 *)gActiveModelAnimSlots[idx].c; i++) {
+            MaChAMA *ch;
+            ch = (MaChAMA *)gActiveModelAnimSlots[idx].ch;
+            ch[i].w0 = 0;
+            ch = (MaChAMA *)gActiveModelAnimSlots[idx].ch;
+            ch[i].f4 = D_main_8003DB18;
+            ch = (MaChAMA *)gActiveModelAnimSlots[idx].ch;
+            ch[i].b8 = 0;
+            ((MaChAMA *)gActiveModelAnimSlots[idx].ch)[i].p = rs_malloc(n << 3, 0);
+            ((MaChAMA *)gActiveModelAnimSlots[idx].ch)[i].p[0] = 0;
+            ((MaChAMA *)gActiveModelAnimSlots[idx].ch)[i].p[1] = 0;
+        }
+    }
+    return found;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", appendAnimHandleAndDescendantsToBuffer);
 
@@ -1603,7 +1692,60 @@ void shiftChannelStreamLeft8(u32 *p) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", computeChannelTempoStepFromTable);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", computeChannelWaitDuration);
+extern u32 D_main_800A0F54;
+extern s32 D_main_bss_8013ACD0[];
+s32 isAudioSlotActive(s32);
+static __inline__ s32 budgetCCW(u8 *ch) {
+    s32 *base = D_main_bss_8013ACD0;
+    s32 *p;
+    u8 idx = ch[0x4F];
+    if (idx != 0xFF) {
+        p = base + idx;
+    } else {
+        p = base + 8;
+    }
+    return *p;
+}
+static __inline__ void scaleByBudgetCCW(u32 *p, u8 *ch) {
+    *p = ((*p * 32000) / budgetCCW(ch)) << 3;
+}
+u8 computeChannelWaitDurationImpl(u8 *ch, u8 *op) __asm__("computeChannelWaitDuration");
+u8 computeChannelWaitDurationImpl(u8 *ch, u8 *op) {
+    u32 r;
+    if ((*(u32 *)op >> 8) & 1) {
+        if ((*(u32 *)(ch + 0x24) & 0x30) == 0) {
+            return 0;
+        }
+        *(u32 *)(ch + 0x24) |= 4;
+    } else {
+        *(u32 *)(ch + 0x24) &= ~4;
+    }
+    if (op[0] & 1) {
+        if (!(*(u32 *)(ch + 0x24) & 0x20) && !(isAudioSlotActive(ch[0x67]) & 0xFF)) {
+            return 0;
+        }
+        *(u32 *)(ch + 0x24) |= 0x80000;
+    } else {
+        *(u32 *)(ch + 0x24) &= ~0x80000;
+    }
+    if (*(u16 *)op & 1) {
+        u32 seed = D_main_800A0F54 * 0xA8351D63;
+        r = (seed >> 6) & 0xFFFF;
+        r = r % (u32)*(u16 *)(op + 4);
+        D_main_800A0F54 = seed;
+        *(u32 *)(ch + 0x40) = r;
+    } else {
+        *(u32 *)(ch + 0x40) = *(u16 *)(op + 4);
+    }
+    if (*(u32 *)(ch + 0x40) != 0xFFFF) {
+        if ((*(u32 *)(op + 4) >> 8) & 1) {
+            *(u32 *)(ch + 0x40) = *(u32 *)(ch + 0x40) << 8;
+        } else {
+            scaleByBudgetCCW((u32 *)(ch + 0x40), ch);
+        }
+    }
+    return *(u32 *)(ch + 0x40) != 0;
+}
 
 u8 computeChannelWaitDuration();
 s32 soundMacroOpWaitTicks(u8 *ch, u8 *cmd) {
