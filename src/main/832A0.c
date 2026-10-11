@@ -3328,7 +3328,29 @@ s32 soundMacroOpSetVolumeRamp(u8 *ch, u8 *cmd) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetPitchRelativeToNote);
+s32 soundMacroOpSetPitchRelativeToNote(u8 *ch, u8 *cmd) {
+    u32 c;
+    register s32 h asm("$2");
+    register s32 b asm("$3");
+    register s32 t asm("$3");
+    s32 m, p;
+    s32 x;
+    s32 unused[2];
+
+    h = *(u16 *)(ch + 0x54);
+    b = cmd[1];
+    c = *(u32 *)cmd;
+    t = (h - b) << 16;
+    m = (s8)(c >> 8);
+    p = t * m; if (p < 0) { p += 127; __asm__("" :: "r"(t)); } x = (p >> 7) + ((c >> 24) << 16);
+    if (x < 0) {
+        x = 0;
+    } else if (x > 0x7F0000) {
+        x = 0x7F0000;
+    }
+    *(s32 *)(ch + 0x38) = x;
+    return 0;
+}
 
 extern u16 gCurveKeyCT __asm__("D_main_bss_8013AC5C");
 extern u8 gCurveKeyBufCT[] __asm__("D_main_bss_8013AC58");
