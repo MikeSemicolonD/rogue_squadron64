@@ -1287,7 +1287,204 @@ s32 cutsceneActorNpcHandler(CaActor **self, u16 msg, CaCtx *ctx) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/42AF0", computeGridTileEdgeAdjacencyMasks);
+extern s32 hmpFile;
+s32 rs_free(s32);
+extern void rs_memset(void *, s32, s32);
+
+#define CG_MID(d, a, b) p[d] = p[a] + (p[b] - p[a]) / 2
+#define CG_QTR(a, b, d1, d2, d3) \
+    t = p[a]; \
+    q = p[b] - t; \
+    p[d1] = t + q / 4; \
+    p[d2] = t + q / 2; \
+    p[d3] = t + q * 3 / 4
+
+void computeGridTileEdgeAdjacencyMasks(s32 level)
+{
+  u8 *tmp;
+  u16 *code;
+  s32 x;
+  s32 y;
+  s32 i;
+  u16 c;
+  s32 m;
+  s8 *p;
+  s32 a;
+  s32 b;
+  s32 k;
+  s32 v;
+  s32 e;
+  s32 t1;
+  s32 a1;
+  s32 d;
+  tmp = (u8 *) rs_malloc(*((u16 *) (hmpFile + 0x18)), 0);
+  rs_memset(tmp, 0xFF, *((u16 *) (hmpFile + 0x18)));
+  code = D_main_bss_80136DC0.unk0;
+  y = 0;
+  if (D_main_bss_80136DC0.unk3A != 0)
+  {
+    do
+    {
+      x = 0;
+      if (D_main_bss_80136DC0.unk38 != 0)
+      {
+        do
+        {
+          m = tmp[(*code) & 0x1FFF];
+          if (x > 0)
+          {
+            c = D_main_bss_80136DC0.unk0[((y * D_main_bss_80136DC0.unk38) + x) - 1];
+            if (!(c & 0xC000))
+            {
+              m &= ~0x10;
+            }
+            if (!(c & 0x8000))
+            {
+              m &= ~1;
+            }
+          }
+          if (x < (D_main_bss_80136DC0.unk38 - 1))
+          {
+            c = D_main_bss_80136DC0.unk0[((y * D_main_bss_80136DC0.unk38) + x) + 1];
+            if (!(c & 0xC000))
+            {
+              m &= ~0x20;
+            }
+            if (!(c & 0x8000))
+            {
+              m &= ~2;
+            }
+          }
+          if (y > 0)
+          {
+            c = D_main_bss_80136DC0.unk0[x + ((y - 1) * D_main_bss_80136DC0.unk38)];
+            if (!(c & 0xC000))
+            {
+              m &= ~0x40;
+            }
+            if (!(c & 0x8000))
+            {
+              m &= ~4;
+            }
+          }
+          if (y < (D_main_bss_80136DC0.unk3A - 1))
+          {
+            c = D_main_bss_80136DC0.unk0[x + ((y + 1) * D_main_bss_80136DC0.unk38)];
+            if (!(c & 0xC000))
+            {
+              m &= ~0x80;
+            }
+            if (!(c & 0x8000))
+            {
+              m &= ~0x80;
+            }
+          }
+          x++;
+          tmp[(*code) & 0x1FFF] = m;
+          code++;
+        }
+        while (x < D_main_bss_80136DC0.unk38);
+      }
+      y++;
+    }
+    while (y < (&D_main_bss_80136DC0)->unk3A);
+  }
+  p = (s8 *) D_main_bss_80136DC0.unk4;
+  for (i = 0; i < (*((u16 *) (hmpFile + 0x18))); i++, p += 0x1E)
+  {
+    m = tmp[i];
+    if (!(p[2] & 0x18))
+    {
+      if (p[2] & 2)
+      {
+        if (m & 0x40)
+        {
+          p[6] = p[5] + ((p[7] - p[5]) / 2);
+          p[8] = p[7] + ((p[9] - p[7]) / 2);
+        }
+        if (m & 0x10)
+        {
+          p[10] = p[5] + ((p[15] - p[5]) / 2);
+          p[20] = p[15] + ((p[25] - p[15]) / 2);
+        }
+        if (m & 0x20)
+        {
+          p[14] = p[9] + ((p[19] - p[9]) / 2);
+          p[24] = p[19] + ((p[29] - p[19]) / 2);
+        }
+        if (m & 0x80)
+        {
+          p[26] = p[25] + ((p[27] - p[25]) / 2);
+          p[28] = p[27] + ((p[29] - p[27]) / 2);
+        }
+        p[11] = p[5] + ((p[17] - p[5]) / 2);
+        p[12] = p[7] + ((p[17] - p[7]) / 2);
+        p[13] = p[7] + ((p[19] - p[7]) / 2);
+        p[16] = p[15] + ((p[17] - p[15]) / 2);
+        p[18] = p[17] + ((p[19] - p[17]) / 2);
+        p[21] = p[15] + ((p[27] - p[15]) / 2);
+        p[22] = p[17] + ((p[27] - p[17]) / 2);
+        p[23] = p[17] + ((p[29] - p[17]) / 2);
+      }
+      else
+        if (p[2] & 1)
+      {
+        if (m & 4)
+        {
+          e = p[5];
+          b = p[9] - e;
+          p[6] = e + (b / 4);
+          p[7] = e + (b / 2);
+          p[8] = e + ((b * 3) / 4);
+        }
+        if (m & 2)
+        {
+          e = p[9];
+          b = p[29] - e;
+          p[14] = e + (b / 4);
+          p[19] = e + (b / 2);
+          p[24] = e + ((b * 3) / 4);
+        }
+        if (m & 1)
+        {
+          e = p[5];
+          b = p[25] - e;
+          p[10] = e + (b / 4);
+          p[15] = e + (b / 2);
+          p[20] = e + ((b * 3) / 4);
+        }
+        if (m & 8)
+        {
+          e = p[25];
+          b = p[29] - e;
+          p[26] = e + (b / 4);
+          p[27] = e + (b / 2);
+          p[28] = e + ((b * 3) / 4);
+        }
+        e = p[5];
+        b = p[29] - e;
+        p[11] = e + (b / 4);
+        p[17] = e + (b / 2);
+        p[23] = e + ((b * 3) / 4);
+        a = ((p[29] - p[9]) / 4) + p[9];
+        e = p[11];
+        b = a - e;
+        p[12] = e + (b / 3);
+        v = p[23];
+        p[13] = e + ((b * 2) / 3);
+        p[18] = p[17] + (((((p[29] - p[9]) / 2) + p[9]) - p[17]) / 2);
+        e = (((p[25] - p[5]) * 3) / 4) + p[5];
+        b = v - e;
+        p[21] = e + (b / 3);
+        p[22] = e + ((b * 2) / 3);
+        e = ((p[25] - p[5]) / 2) + p[5];
+        p[16] = e + ((p[17] - e) / 2);
+      }
+    }
+  }
+
+  rs_free((s32) tmp);
+}
 
 extern f32 D_main_8009DEAC;
 extern u8 D_main_bss_80130B39;
