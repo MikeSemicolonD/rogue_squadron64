@@ -2797,7 +2797,74 @@ u8 *allocT16EffectContext(void) {
     return s;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", computeNabooBankingOrientation);
+extern u8 *D_menu_overlay_800CCBF0;
+s16 findCharEntryByteByKey(s32, u8);
+void normalize_vector(f32 *);
+void vec3Cross(f32 *, f32 *, f32 *);
+
+void computeNabooBankingOrientation(u8 *arg0, u8 arg1, f32 arg2)
+{
+  f32 sp10[3];
+  f32 sp20[3];
+  f32 sp30[3];
+  f32 fs0;
+  f32 fs1;
+  f32 fs3;
+  f32 fs0b;
+  f32 fv;
+  s32 s0;
+  s32 a0;
+  s32 a1;
+  u8 *t;
+  fs0 = ((((f32) arg1) * 6.2831855f) / 29.0f) - 0.108330786f;
+  fs1 = findCharEntryByteByKey(5, D_menu_overlay_800CCBF0[arg1]);
+  fs3 = 2.0f * cosf(fs0);
+  fs0b = 2.0f * sinf(fs0);
+  sp20[0] = 0;
+  sp20[2] = 0;
+  sp10[1] = 0;
+  sp20[1] = 1.0f;
+  sp10[0] = fs3;
+  sp10[2] = fs0b;
+  normalize_vector(sp10);
+  vec3Cross(sp30, sp10, sp20);
+  fs1 = fs1 / 80.0f;
+  s0 = arg1 * 4;
+  sp30[0] *= fs1;
+  sp30[1] *= fs1;
+  sp30[2] *= fs1;
+  for (a1 = 0; a1 < 2; a1++)
+  {
+    for (a0 = 0; a0 < 2; a0++)
+    {
+      fv = sp30[0];
+      if (a0 == 0)
+      {
+        fv = -fv;
+      }
+      fv = fs3 + (fv * arg2);
+      *((f32 *) ((arg0 + (s0 * 0xC)) + 0xE20)) = fv;
+      fv = a1;
+      fv = ((fv + (-0.5f)) * 0.5f) * arg2;
+      *((f32 *) ((arg0 + (s0 * 0xC)) + 0xE24)) = fv;
+      fv = sp30[2];
+      if (a0 == 0)
+      {
+        fv = -fv;
+      }
+      fv = fs0b + (fv * arg2);
+ do { *((f32 *) ((arg0 + (s0 * 0xC)) + 0xE28)) = fv; s0++; } while (0);
+    }
+
+  }
+
+  t = arg0 + ((arg1) * 0xC);
+  *((f32 *) (t + 0x1390)) = -fs3;
+  *((f32 *) (t + 0x1394)) = 0;
+  *((f32 *) (t + 0x1398)) = -fs0b;
+  normalize_vector((f32 *) (&arg0[((arg1) * 0xC) + 0x1390]));
+  *((s32 *) (arg0 + 0xA4)) |= 0x40;
+}
 
 typedef struct { u8 pad[0x27]; u8 a27; u8 p1[3]; u8 a2B; u8 p2[3]; u8 a2F; u8 p3[3]; u8 a33; u8 p4[4]; } NbQ;
 u32 readControllerInputs(u8);
