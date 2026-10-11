@@ -281,7 +281,441 @@ s32 projectForwardTerrainImpactPoint(TerrainV3 *out, f32 *arg1, s32 arg2) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", tickHudInstanceTargetingAndSpawns);
+typedef struct HudInst {
+    /* 0x000 */ u8 weapon;
+    /* 0x001 */ u8 state;
+    /* 0x002 */ u8 count;
+    /* 0x003 */ u8 pad3[2];
+    /* 0x005 */ u8 crosshair;
+    /* 0x006 */ u8 mode;
+    /* 0x007 */ u8 latch;
+    /* 0x008 */ u8 fade;
+    /* 0x009 */ u8 pad9[0x17];
+    /* 0x020 */ f32 timer;
+    /* 0x024 */ f32 alpha;
+    /* 0x028 */ u8 pad28[0x1E0];
+    /* 0x208 */ u16 target;
+    /* 0x20A */ u16 pad20A;
+    /* 0x20C */ f32 lockTimer;
+    /* 0x210 */ u8 locked;
+    /* 0x211 */ u8 flag211;
+    /* 0x212 */ u16 slot;
+    /* 0x214 */ u8 pad214[4];
+    /* 0x218 */ f32 f218;
+    /* 0x21C */ FnV3 pos;
+    /* 0x228 */ u8 hit;
+    /* 0x229 */ u8 pad229[3];
+    /* 0x22C */ f32 f22C;
+    /* 0x230 */ u32 node[0x11];
+    /* 0x274 */ u8 active;
+    /* 0x275 */ u8 pad275[3];
+} HudInst;
+
+s32 bsearchFactor5TableByU16Key(s32, s32, s32);
+u16 findFreeNpcSlotByKey(u16, u16);
+u16 getNextSlotNpcTypeId(u16);
+s32 mostlyMusyxFlagGatedHelper(void *);
+s32 safeLookup3DSoundEntry(s32, u16);
+s32 updateActive3DAudioSource(void *, void *, void *, s32);
+extern void fnPlay3D(void *, void *, void *, f32, f32, s32, s32, s32, s32) __asm__("play3DSoundEvent");
+extern u8 *fnNpcCtx(u16) __asm__("getNpcContextByIndex");
+
+u8 tickHudInstanceTargetingAndSpawns(u8 idx, f32 dt, f32 *aim, s32 arg3, u8 fire, u16 *outTarget, u16 key) {
+    HudInst *h;
+    FnV3 sp28;
+    u8 sp38;
+    u8 ret;
+    u8 dis;
+    u16 n;
+    u8 *ctx;
+    u8 cnt;
+    f32 x;
+
+    ret = 0;
+    h = &((HudInst *)D_mission_overlay_8010CA30)[idx];
+    h->crosshair = (D_main_bss_80130B4C >> 7) & 1;
+    if (getPlayerVehicleId(0) == 0 && !isWeaponSlotReady(0)) {
+        dis = 1;
+        if (0.0f < h->alpha) {
+            x = h->alpha - dt * 4.0f;
+            h->alpha = x;
+            if (x < 0.0f) {
+                h->alpha = 0.0f;
+            }
+        }
+    } else {
+        if (h->alpha < 1.0f) {
+            x = h->alpha + dt * 4.0f;
+            h->alpha = x;
+            if (1.0f < x) {
+                h->alpha = 1.0f;
+            }
+        }
+        dis = 0;
+    }
+    switch (h->weapon) {
+    case 3:
+    case 8:
+        switch (h->state) {
+        case 0:
+            if (fire) {
+                if (h->count != 0 && !dis) {
+                    h->state = 1;
+                    h->fade = 0;
+                    h->latch = 0;
+                    h->f218 = 0.0f;
+                    h->timer = 0.5f;
+                } else {
+                    bsearchFactor5TableByU16Key(0x67, 0x5A, 0x40);
+                    h->state = 4;
+                }
+            }
+            break;
+        case 1:
+            if (!dis) {
+                h->f218 = h->f218 + dt;
+                h->timer = h->timer - dt;
+                if (0.0f < h->timer) {
+                    h->fade = 190 - (u32)(h->timer * 190.0f * 2.0f);
+                    if (h->mode == 0) {
+                        if (!fire) {
+                            h->latch = 1;
+                            break;
+                        }
+                        if (h->latch == 0) {
+                            break;
+                        }
+                        if (h->f218 < 0.42f) {
+                            h->latch = 0;
+                            ret = 1;
+                            h->flag211 = 1;
+                        } else {
+                            h->latch = 0;
+                        }
+                    } else {
+                        if (fire) {
+                            break;
+                        }
+                        h->latch = 1;
+                    }
+                } else {
+                    h->fade = 190;
+                    h->state = 2;
+                    h->target = 0xFFFF;
+                    h->locked = 0;
+                    h->slot = 0xFFFF;
+                    break;
+                }
+            }
+            h->timer = 0.5f - h->timer;
+            h->state = 3;
+            break;
+        case 2:
+            if (dis) {
+                if (h->locked) {
+                    destroyNpcSlotChain(h->slot);
+                }
+                h->target = 0xFFFF;
+                h->locked = 0;
+                h->timer = 0.5f;
+                h->state = 3;
+                break;
+            }
+            n = findNearestTargetableNpcInRange(aim, h->target, &sp28, (u8 *)h, &sp38, dt);
+            if (h->locked == 0) {
+                if (n != 0xFFFF && n == h->target) {
+                    h->lockTimer = h->lockTimer - dt;
+                    if (h->lockTimer < 0.0f) {
+                        h->locked = 1;
+                        h->pos = sp28;
+                        h->lockTimer = 2.5f;
+                        h->slot = findFreeNpcSlotByKey(key, h->target);
+                        if (sp38 >= 4) {
+                            bsearchFactor5TableByU16Key(0x69, 0x6E, 0xFF);
+                        } else {
+                            bsearchFactor5TableByU16Key(0x68, 0x6E, 0xFF);
+                        }
+                    }
+                } else {
+                    h->target = n;
+                    h->lockTimer = 0.8f;
+                }
+            } else if (n != h->target) {
+                h->lockTimer = h->lockTimer - dt;
+                if (0.0f <= h->lockTimer) {
+                    if (getNextSlotNpcTypeId(h->slot) != 0xFFFF) {
+                        ctx = fnNpcCtx(h->target);
+                        if (ctx) {
+                            if (*(void **)(ctx + 0xC) != NULL) {
+                                transformMeshPartIntoWorld(*(void **)(ctx + 0xC), &h->pos);
+                            } else {
+                                h->pos = **(FnV3 **)(ctx + 0x8);
+                            }
+                        }
+                    } else {
+                    shortDrop:
+                        h->lockTimer = 0.8f;
+                        goto drop;
+                    }
+                } else {
+                drop:
+                    h->locked = 0;
+                    h->target = 0xFFFF;
+                    destroyNpcSlotChain(h->slot);
+                }
+            } else {
+                h->pos = sp28;
+                h->lockTimer = 2.5f;
+                if (getNextSlotNpcTypeId(h->slot) == 0xFFFF) {
+                    goto shortDrop;
+                }
+            }
+            if (h->mode == 0) {
+                if (!fire) {
+                    h->latch = 1;
+                    break;
+                }
+                if (h->latch == 0) {
+                    break;
+                }
+                h->latch = 0;
+            } else if (fire) {
+                break;
+            }
+            if (h->locked) {
+                *outTarget = h->target;
+                destroyNpcSlotChain(h->slot);
+                ret = 1;
+            }
+            h->target = 0xFFFF;
+            h->locked = 0;
+            h->timer = 0.5f;
+            h->state = 3;
+            break;
+        case 3:
+            h->timer = h->timer - dt;
+            if (0.0f < h->timer) {
+                h->fade = (u32)(h->timer * 190.0f * 2.0f);
+                if (dis) {
+                    break;
+                }
+                if (h->mode == 0) {
+                    if (!fire) {
+                        h->latch = 1;
+                        break;
+                    }
+                    if (h->latch == 0) {
+                        break;
+                    }
+                    h->latch = 0;
+                } else if (!fire) {
+                    break;
+                }
+                if (h->count == 0) {
+                    break;
+                }
+                h->timer = 0.5f;
+                h->state = 1;
+            } else {
+                h->fade = 0;
+                h->state = 0;
+            }
+            break;
+        case 4:
+            if (!fire) {
+                h->state = 0;
+            }
+            break;
+        }
+        break;
+    case 4:
+        switch (h->state) {
+        case 0:
+            if (fire) {
+                if (h->count != 0 && !dis) {
+                    if (0.0f < aim[7]) {
+                        h->state = 1;
+                        h->fade = 0;
+                        h->latch = 0;
+                        h->timer = 0.5f;
+                    }
+                } else {
+                    bsearchFactor5TableByU16Key(0x67, 0x5A, 0x40);
+                    h->state = 4;
+                }
+            }
+            break;
+        case 1:
+            if (!dis) {
+                h->timer = h->timer - dt;
+                if (0.0f < h->timer) {
+                    h->fade = 200 - (u32)(h->timer * 200.0f * 2.0f);
+                } else {
+                    h->fade = 200;
+                    h->state = 2;
+                }
+                h->hit = projectForwardTerrainImpactPoint(&h->pos, aim, arg3);
+                if (h->mode == 0) {
+                    if (!fire) {
+                        h->latch = 1;
+                    } else if (h->latch != 0) {
+                        h->latch = 0;
+                        ret = 1;
+                        goto c4s1tail;
+                    }
+                } else if (!fire) {
+                    ret = 1;
+                    goto c4s1tail;
+                }
+                if (!(aim[7] <= 0.0f)) {
+                    break;
+                }
+            }
+        c4s1tail:
+            h->timer = 0.5f - h->timer;
+            h->state = 3;
+            break;
+        case 2:
+            h->hit = projectForwardTerrainImpactPoint(&h->pos, aim, arg3);
+            if (!dis) {
+                if (h->mode != 0) {
+                    if (!fire) {
+                        ret = 1;
+                        goto c4s2tail;
+                    }
+                } else if (!fire) {
+                    h->latch = 1;
+                } else if (h->latch != 0) {
+                    h->latch = 0;
+                    ret = 1;
+                    goto c4s2tail;
+                }
+                if (!(aim[7] <= 0.0f)) {
+                    break;
+                }
+            }
+        c4s2tail:
+            h->timer = 0.5f;
+            h->state = 3;
+            break;
+        case 3:
+            h->timer = h->timer - dt;
+            if (0.0f < h->timer) {
+                h->fade = (u32)(h->timer * 200.0f * 2.0f);
+            } else {
+                h->fade = 0;
+                if (fire) {
+                    h->state = 4;
+                } else {
+                    h->state = 0;
+                }
+            }
+            h->hit = projectForwardTerrainImpactPoint(&h->pos, aim, arg3);
+            if (dis) {
+                break;
+            }
+            if (h->count == 0) {
+                break;
+            }
+            if (!(0.0f < aim[7])) {
+                break;
+            }
+            if (h->mode == 0) {
+                if (!fire) {
+                    h->latch = 1;
+                    break;
+                }
+                if (h->latch == 0) {
+                    break;
+                }
+                h->latch = 0;
+            } else if (!fire) {
+                break;
+            }
+            h->timer = 0.5f;
+            h->state = 1;
+            break;
+        case 4:
+            if (!fire) {
+                h->state = 0;
+            }
+            break;
+        }
+        break;
+    case 2:
+    case 5:
+    case 7:
+    case 9:
+        switch (h->state) {
+        case 0:
+            if (fire) {
+                if (h->count != 0 && !dis) {
+                    ret = 1;
+                } else {
+                    bsearchFactor5TableByU16Key(0x67, 0x5A, 0x40);
+                }
+                h->state = 1;
+            }
+            break;
+        case 1:
+            if (!fire) {
+                h->state = 0;
+            }
+            break;
+        }
+        break;
+    case 1:
+        switch (h->state) {
+        case 0:
+            if (fire) {
+                if (h->count != 0 && !dis) {
+                    h->state = 1;
+                    h->f22C = 0.0f;
+                    fnPlay3D(h->node, aim, aim + 9, 18.0f, 0.2f, 7, 0x3A, 0x64, 0x3C);
+                    safeLookup3DSoundEntry(mostlyMusyxFlagGatedHelper(h->node), 0);
+                    h->active = 1;
+                } else {
+                    bsearchFactor5TableByU16Key(0x67, 0x5A, 0x40);
+                    h->state = 2;
+                }
+            }
+            break;
+        case 1:
+            h->f22C = h->f22C + dt;
+            dt = h->f22C / 3.0f + 0.1f;
+            if (1.0f < dt) {
+                dt = 1.0f;
+            }
+            if (!fire || dis) {
+                factor5RemoveListNode(h->node);
+                h->active = 0;
+                if (dis) {
+                    h->state = 2;
+                } else {
+                    h->state = 0;
+                    if (0.0f < h->f22C) {
+                        ret = 1;
+                    }
+                }
+            } else {
+                updateActive3DAudioSource(h->node, aim, aim + 9, 0x64);
+                safeLookup3DSoundEntry(mostlyMusyxFlagGatedHelper(h->node), (u32)(dt * 16383.0f));
+            }
+            break;
+        case 2:
+            if (!fire) {
+                h->state = 0;
+            }
+            break;
+        }
+        break;
+    }
+    cnt = h->count;
+    if (cnt != 0xFF && ret && cnt != 0) {
+        h->count = cnt - 1;
+    }
+    return ret;
+}
 
 INCLUDE_ASM("asm/nonmatchings/mission_overlay/0FCA20", updatePlayerHudFrame);
 
