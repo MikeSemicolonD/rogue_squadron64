@@ -159,7 +159,38 @@ u8 getChannelByteParamAlt(u8 a, u8 b) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", resetChannelStateRecord);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", getChannelControllerValue);
+extern u8 gCcTblG[][0x86] __asm__("D_main_bss_80140A10");
+extern u8 gCcTrkTblG[][16][0x86] __asm__("D_main_bss_801440C8");
+s32 getChannelControllerValue(u8 ctrl, u8 slot, u8 trk) {
+    if (trk != 0xFF) {
+        if (ctrl < 0x40) {
+            return (gCcTrkTblG[trk][slot][ctrl & 0x1F] << 7) | gCcTrkTblG[trk][slot][(ctrl & 0x1F) + 0x20];
+        }
+        if (ctrl == 0x80 || ctrl == 0x81) {
+            return gCcTrkTblG[trk][slot][(ctrl & 0xFE) + 1] | (gCcTrkTblG[trk][slot][ctrl & 0xFE] << 7);
+        }
+        if (ctrl < 0x46) {
+            return (gCcTrkTblG[trk][slot][ctrl] >= 0x40) ? 0x3FFF : 0;
+        }
+        if (ctrl >= 0x60 && ctrl < 0x66) {
+            return 0;
+        }
+        return gCcTrkTblG[trk][slot][ctrl] << 7;
+    }
+    if (ctrl < 0x40) {
+        return (gCcTblG[slot][ctrl & 0x1F] << 7) | gCcTblG[slot][(ctrl & 0x1F) + 0x20];
+    }
+    if (ctrl == 0x80 || ctrl == 0x81) {
+        return gCcTblG[slot][(ctrl & 0xFE) + 1] | (gCcTblG[slot][ctrl & 0xFE] << 7);
+    }
+    if (ctrl < 0x46) {
+        return (gCcTblG[slot][ctrl] >= 0x40) ? 0x3FFF : 0;
+    }
+    if (ctrl >= 0x60 && ctrl < 0x66) {
+        return 0;
+    }
+    return gCcTblG[slot][ctrl] << 7;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", initVoiceModulatorRecords);
 
