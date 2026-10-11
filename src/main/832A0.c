@@ -3947,7 +3947,15 @@ void applyMusicOrSfxVolume(u8 a, u16 b, u8 music, u8 sfx) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", isAudioFaderRampActive);
+typedef struct { s32 cur; s32 target; s32 step; s32 time; s32 handle; u8 type; u8 b15; u8 pad16[0x12]; } FaderFR;
+extern FaderFR gFaderFR[] __asm__("D_main_bss_80141B18");
+s32 isAudioFaderRampActive(u8 i) {
+    register s32 r asm("$2") = 0;
+    if (gFaderFR[i].type != 4 && gFaderFR[i].time != 0) {
+        r = (u32)gFaderFR[i].step >> 31;
+    }
+    return r;
+}
 
 typedef struct { u8 type; u8 pad1[3]; s32 cur; s32 target; s32 step; s32 time; u8 pad14[0x14]; } FaderH;
 extern FaderH gFaderH[] __asm__("D_main_bss_80141B2C");
