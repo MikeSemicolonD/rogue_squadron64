@@ -2119,11 +2119,85 @@ s32 computeChannelPitchSweepStep(u8 *a) {
     return r;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStartNoteAbsoluteSweep);
+s32 musyxComputeNotePlaybackRate(u8, u32);
+static __inline__ s32 sweepStepAB(u8 *a) {
+    s32 r;
+    if (*(s8 *)(a + 0xBC) != 0) {
+        if (*(s8 *)(a + 0xBC) > 0) {
+            r = (((scaleFixedPointByRatioA(*(u16 *)(a + 0x72)) & 0xFFFF) - *(s32 *)(a + 0x70)) * *(s8 *)(a + 0xBC)) / 100;
+        } else {
+            r = ((*(s32 *)(a + 0x70) - (scaleFixedPointByRatioB(*(u16 *)(a + 0x72)) & 0xFFFF)) * *(s8 *)(a + 0xBC)) / 100;
+        }
+    } else {
+        r = 0;
+    }
+    return r;
+}
+s32 soundMacroOpStartNoteAbsoluteSweep(u8 *ch, u8 *cmd) {
+    u8 note = cmd[2];
+    *(u16 *)(ch + 0x54) = note;
+    *(s32 *)(ch + 0x70) = musyxComputeNotePlaybackRate(note, *(u32 *)(ch + 0x60)) & 0xFFFF;
+    *(u8 *)(ch + 0xBC) = *(u16 *)cmd;
+    *(s32 *)(ch + 0x70) = (*(s32 *)(ch + 0x70) + sweepStepAB(ch)) << 16;
+    *(u32 *)cmd = 4;
+    return computeChannelWaitDuration(ch, cmd);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStartNoteRelativeSweep);
+s32 musyxComputeNotePlaybackRate(u8, u32);
+static __inline__ s32 sweepStepRE(u8 *a) {
+    s32 r;
+    if (*(s8 *)(a + 0xBC) != 0) {
+        if (*(s8 *)(a + 0xBC) > 0) {
+            r = (((scaleFixedPointByRatioA(*(u16 *)(a + 0x72)) & 0xFFFF) - *(s32 *)(a + 0x70)) * *(s8 *)(a + 0xBC)) / 100;
+        } else {
+            r = ((*(s32 *)(a + 0x70) - (scaleFixedPointByRatioB(*(u16 *)(a + 0x72)) & 0xFFFF)) * *(s8 *)(a + 0xBC)) / 100;
+        }
+    } else {
+        r = 0;
+    }
+    return r;
+}
+u8 soundMacroOpStartNoteRelativeSweep(u8 *ch, u8 *cmd) {
+    u32 c = *(volatile u32 *)cmd;
+    u16 b;
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStartNoteTransposedSweep);
+    if ((c >> 24) == 0) {
+        b = *(u16 *)(ch + 0x54);
+    } else {
+        b = *(u16 *)(ch + 0x52);
+    }
+    b += (u8)(c >> 8);
+    *(u16 *)(ch + 0x54) = b;
+    *(s32 *)(ch + 0x70) = musyxComputeNotePlaybackRate(ch[0x55], *(u32 *)(ch + 0x60)) & 0xFFFF;
+    *(u8 *)(ch + 0xBC) = *(u16 *)cmd;
+    *(s32 *)(ch + 0x70) = (*(s32 *)(ch + 0x70) + sweepStepRE(ch)) << 16;
+    *(u32 *)cmd = 4;
+    return computeChannelWaitDuration(ch, cmd);
+}
+
+s32 musyxComputeNotePlaybackRate(u8, u32);
+static __inline__ s32 sweepStepTR(u8 *a) {
+    s32 r;
+    if (*(s8 *)(a + 0xBC) != 0) {
+        if (*(s8 *)(a + 0xBC) > 0) {
+            r = (((scaleFixedPointByRatioA(*(u16 *)(a + 0x72)) & 0xFFFF) - *(s32 *)(a + 0x70)) * *(s8 *)(a + 0xBC)) / 100;
+        } else {
+            r = ((*(s32 *)(a + 0x70) - (scaleFixedPointByRatioB(*(u16 *)(a + 0x72)) & 0xFFFF)) * *(s8 *)(a + 0xBC)) / 100;
+        }
+    } else {
+        r = 0;
+    }
+    return r;
+}
+u8 soundMacroOpStartNoteTransposedSweep(u8 *ch, u8 *cmd) {
+    u16 note = ch[0xBD] + cmd[2];
+    *(u16 *)(ch + 0x54) = note;
+    *(s32 *)(ch + 0x70) = musyxComputeNotePlaybackRate(note, *(u32 *)(ch + 0x60)) & 0xFFFF;
+    *(u8 *)(ch + 0xBC) = *(u16 *)cmd;
+    *(s32 *)(ch + 0x70) = (*(s32 *)(ch + 0x70) + sweepStepTR(ch)) << 16;
+    *(u32 *)cmd = 4;
+    return computeChannelWaitDuration(ch, cmd);
+}
 
 typedef struct { u32 w0; u32 w4; u32 w8; u32 wC; u32 w10; u32 w14; u8 b18; } SInfoPK;
 extern SInfoPK gSInfoPK __asm__("D_main_bss_8013ACA0");
