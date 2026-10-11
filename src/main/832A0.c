@@ -958,7 +958,81 @@ s32 safeLookup3DSoundEntry(s32 h, u16 v) {
     return r;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", spreadVoiceParamPairLocked);
+typedef struct VhNodePL { struct VhNodePL *next; s32 pad4; u32 h; s32 slot; } VhNodePL;
+extern VhNodePL *gVhHeadPL __asm__("D_main_bss_8013AF00");
+typedef struct {
+    s32 next;
+    u8 pad4[0x10];
+    u32 flags;
+    u8 pad18[0x27];
+    u8 trkA;
+    u8 pad40[9];
+    u8 trkB;
+    u8 pad4A[0xA];
+    s32 id;
+    u8 pad58[0x124];
+} ChanRecPL;
+extern ChanRecPL gChanRecPL[] __asm__("D_main_bss_8013D890");
+extern u8 gNoteTblPL[][0x86] __asm__("D_main_bss_80140A10");
+extern u8 gNoteTrkTblPL[][16][0x86] __asm__("D_main_bss_801440C8");
+static __inline__ VhNodePL *vhFindPL(u32 h) {
+    VhNodePL *n = gVhHeadPL;
+    while (n != NULL) {
+        if (n->h == h) {
+            return n;
+        }
+        if (h < n->h) {
+            return NULL;
+        }
+        n = n->next;
+    }
+    return NULL;
+}
+static __inline__ s32 vhResolvePL(u32 h) {
+    VhNodePL *n;
+    if (h != (u32)-1) {
+        n = vhFindPL(h);
+        if (n != NULL) {
+            return n->slot;
+        }
+    }
+    return -1;
+}
+static __inline__ void setCtrlTPL(u8 t, u8 idx, u8 c, u8 v) {
+    if (t != 0xFF) {
+        gNoteTrkTblPL[t][idx][c] = v & 0x7F;
+    } else {
+        gNoteTblPL[idx][c] = v & 0x7F;
+    }
+}
+extern u8 gMusyXActiveFlag;
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 spreadVoiceParamPairLocked(s32 h, u8 v) {
+    s32 r = -1;
+    s32 idx;
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        h = vhResolvePL(h);
+        while ((s32)h != -1) {
+            idx = h & 0xFF;
+            if (gChanRecPL[idx].id != h) {
+                break;
+            }
+            if (gChanRecPL[idx].flags & 2) {
+                setCtrlTPL(gChanRecPL[idx].trkB, idx, 1, v);
+                setCtrlTPL(gChanRecPL[idx].trkB, idx, 0x21, 0);
+            } else {
+                setCtrlTPL(gChanRecPL[idx].trkA, idx, 1, v);
+                setCtrlTPL(gChanRecPL[idx].trkA, idx, 0x21, 0);
+            }
+            h = gChanRecPL[idx].next;
+            r = 0;
+        }
+        factor5MutexRelease();
+    }
+    return r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", spreadVoiceByteParamAcrossChain);
 
