@@ -2719,7 +2719,58 @@ s32 setChannelFlag24Bit80(u8 *ch) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetPanSweep);
+extern s32 gBudgetPS[] __asm__("D_main_bss_8013ACD0");
+static __inline__ s32 budgetPS(u8 *ch) {
+    s32 *base = gBudgetPS;
+    s32 *p;
+    u8 idx = ch[0x4F];
+    if (idx != 0xFF) {
+        p = base + idx;
+    } else {
+        p = base + 8;
+    }
+    return *p;
+}
+static __inline__ void scaleByBudgetPS(u32 *p, u8 *ch) {
+    *p = ((*p * 32000) / budgetPS(ch)) << 3;
+}
+s32 soundMacroOpSetPanSweep(u8 *ch, u8 *cmd) {
+    u32 t;
+    u32 c;
+    u32 f;
+    u32 w;
+    u8 v;
+
+    if (cmd[0] & 3) {
+        *(u32 *)(ch + 0x24) |= 0x4000;
+    } else {
+        *(u32 *)(ch + 0x24) &= ~0x4000;
+    }
+    f = (*(u32 *)(cmd + 4) >> 8) & 1;
+    t = *(u16 *)(cmd + 4);
+    if (f) {
+        t <<= 8;
+    } else {
+        scaleByBudgetPS(&t, ch);
+    }
+    if (t != 0) {
+        *(u32 *)(ch + 0x78) = t;
+        *(u32 *)(ch + 0x24) |= 0x2000;
+        c = *(u32 *)cmd;
+        ch[0x81] = c >> 16;
+        v = c >> 8;
+        if ((s8)v < 0) {
+            ch[0x80] = -v;
+            *(u32 *)(ch + 0x74) = *(u32 *)(ch + 0x78) >> 1;
+        } else {
+            ch[0x80] = v;
+            *(u32 *)(ch + 0x74) = 0;
+        }
+    } else {
+        *(u32 *)(ch + 0x24) &= ~0x2000;
+    }
+    return 0;
+}
 
 s32 soundMacroOpSetProgramTableValue(u8 *ch, u32 *cmd) {
     u32 c = *(volatile u32 *)cmd;
