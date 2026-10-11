@@ -2741,7 +2741,54 @@ s32 soundMacroOpStartPitchEnvelope(u8 *ch, u32 *cmd) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxSetVoiceAdsrFromTable);
+extern u16 gAdsrKeyAT __asm__("D_main_bss_8013AC5C");
+extern u8 gAdsrKeyBufAT[] __asm__("D_main_bss_8013AC58");
+extern u32 gAdsrCountAT __asm__("D_main_bss_8013AF0C");
+extern u8 gAdsrTblAT[] __asm__("D_main_bss_80148C68");
+extern u8 *gAdsrFoundAT __asm__("D_main_bss_8013AC60");
+s32 compareHalfwordAtOffset4_v2(u8 *, u8 *);
+void musyxStoreVoiceAdsrParamsAT(s32, u16 *) __asm__("musyxStoreVoiceAdsrParams");
+static __inline__ u8 *bsrchAT(u8 *key, u8 *base, s32 n, s32 size, s32 (*cmp)(u8 *, u8 *)) {
+    s32 lo, hi, mid, r;
+    u8 *p;
+    if (n != 0) {
+        lo = 1;
+        hi = n;
+        do {
+            mid = (lo + hi) >> 1;
+            p = base + size * (mid - 1);
+            r = cmp(key, p);
+            if (r == 0) {
+                return p;
+            }
+            if (r < 0) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        } while (hi >= lo);
+    }
+    return 0;
+}
+s32 musyxSetVoiceAdsrFromTable(u8 *ch, u32 *cmd) {
+    u8 *p;
+    u16 *d;
+    u16 a[4];
+
+    gAdsrKeyAT = *cmd >> 8;
+    p = bsrchAT(gAdsrKeyBufAT, gAdsrTblAT, gAdsrCountAT, 8, compareHalfwordAtOffset4_v2);
+    gAdsrFoundAT = p;
+    d = p != 0 ? *(u16 **)p : 0;
+    if (d != 0) {
+        a[0] = (d[0] >> 8) | (d[0] << 8);
+        a[1] = (d[1] >> 8) | (d[1] << 8);
+        a[2] = (d[2] >> 8) | (d[2] << 8);
+        a[3] = (d[3] >> 8) | (d[3] << 8);
+        musyxStoreVoiceAdsrParamsAT(ch[0x67], a);
+        *(u32 *)(ch + 0x24) |= 0x200;
+    }
+    return 0;
+}
 
 s32 divideByMixerBaseFrequency(u16);
 u8 computeChannelWaitDuration();
