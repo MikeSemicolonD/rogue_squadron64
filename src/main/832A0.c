@@ -113,7 +113,16 @@ s32 allocateModelAnimSlotImpl(void *a, void *b, s32 n) {
     return found;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", appendAnimHandleAndDescendantsToBuffer);
+extern s32 *gAnimBufAH __asm__("D_main_bss_8013AC10");
+void appendAnimHandleAndDescendantsToBuffer(s32 n) {
+    *gAnimBufAH++ = n + 0x1C;
+    if (*(s32 *)(n + 0xC) != 0) {
+        appendAnimHandleAndDescendantsToBuffer(*(s32 *)(n + 0xC));
+    }
+    if (*(s32 *)n != 0) {
+        appendAnimHandleAndDescendantsToBuffer(*(s32 *)n);
+    }
+}
 
 void *rs_malloc(u32, u16);
 s32 allocateModelAnimSlot(void *, void *, u16);
@@ -140,7 +149,39 @@ s32 flattenAnimTreeAndAllocateSlot(u8 *a, u8 *b) {
     return slot;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", model_animation_offset_convert);
+typedef struct { u32 p[7]; } MaSubOC;
+typedef struct { MaSubOC *sub; s32 pad4; s32 pad8; u16 padC; u16 n; } MaEntOC;
+typedef struct { u32 n; MaEntOC *ent; } MaHdrOC;
+void model_animation_offset_convert(MaHdrOC *h) {
+    u32 i;
+    u32 j;
+
+    if (h->ent != NULL) {
+        h->ent = (MaEntOC *)((s32)h->ent + (s32)h);
+        for (i = 0; i < h->n; i++) {
+            if (h->ent[i].sub != NULL) {
+                h->ent[i].sub = (MaSubOC *)((s32)h->ent[i].sub + (s32)h);
+                for (j = 0; j < h->ent[i].n; j++) {
+                    if (h->ent[i].sub[j].p[2] != 0) {
+                        h->ent[i].sub[j].p[2] += (s32)h;
+                    }
+                    if (h->ent[i].sub[j].p[3] != 0) {
+                        h->ent[i].sub[j].p[3] += (s32)h;
+                    }
+                    if (h->ent[i].sub[j].p[4] != 0) {
+                        h->ent[i].sub[j].p[4] += (s32)h;
+                    }
+                    if (h->ent[i].sub[j].p[5] != 0) {
+                        h->ent[i].sub[j].p[5] += (s32)h;
+                    }
+                    if (h->ent[i].sub[j].p[6] != 0) {
+                        h->ent[i].sub[j].p[6] += (s32)h;
+                    }
+                }
+            }
+        }
+    }
+}
 
 typedef struct { s32 a; s32 b; u32 *c; u8 *ch; u8 state; u8 owned; u8 pad[2]; } MaSlotRL;
 extern MaSlotRL gSlotsRL[] __asm__("gActiveModelAnimSlots");
