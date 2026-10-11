@@ -334,16 +334,45 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpKeyOnNote);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpKeyOffByNote);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpAddPitchBend);
+s32 soundMacroOpAddPitchBend(u8 *ch, s16 *cmd) {
+    s32 v = *(u16 *)(ch + 0x28) + *cmd;
+    if (v < 0) {
+        *(s32 *)(ch + 0x28) = 0;
+    } else if (v > 0xFFFF) {
+        *(s32 *)(ch + 0x28) = 0xFFFF0000;
+    } else {
+        *(s32 *)(ch + 0x28) = v << 16;
+    }
+    return 0;
+}
 
 s32 setChannelProgHalfwordAt28(u8 *ch, u16 *cmd) {
     *(u32 *)(ch + 0x28) = *cmd << 16;
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetPitchBendGlide);
+s32 soundMacroOpSetPitchBendGlide(u8 *ch, u8 *cmd) {
+    u32 d = *(u32 *)(cmd + 4);
+    if (d != 0) {
+        *(s16 *)(ch + 0x2C) = (*(u32 *)(ch + 0x28) >> 8) / d;
+    } else {
+        *(s16 *)(ch + 0x2C) = 0;
+    }
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpAddKeyByte);
+s32 soundMacroOpAddKeyByte(u8 *ch, u16 *cmd) {
+    u16 c = *cmd;
+    s16 k = ch[0x2E] + c;
+    if (k < 0) {
+        ch[0x2E] = 0;
+    } else if (k >= 0x100) {
+        ch[0x2E] = 0xFF;
+    } else {
+        ch[0x2E] = k;
+    }
+    return 0;
+}
 
 s32 setChannelProgByteAt2E(u8 *ch, u32 *cmd) {
     ch[0x2E] = *cmd >> 8;
@@ -358,7 +387,12 @@ s32 setChannelKeyOffsetAt6E(u8 *ch, u16 *cmd) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpPortamentoStartWait);
+u8 computeChannelWaitDuration();
+s32 soundMacroOpPortamentoStartWait(u8 *ch, s32 *out) {
+    *(s32 *)(ch + 0x70) <<= 16;
+    *out = 4;
+    return computeChannelWaitDuration();
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", computeChannelPitchSweepStep);
 
@@ -385,7 +419,12 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetPanSweep);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetProgramTableValue);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStartPitchEnvelope);
+s32 divideByMixerBaseFrequency(u16);
+s32 soundMacroOpStartPitchEnvelope(u8 *ch, u32 *cmd) {
+    *(u32 *)(ch + 0x24) |= 0x100;
+    *(s32 *)(ch + 0x70) = divideByMixerBaseFrequency(*cmd >> 8) << 16;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxSetVoiceAdsrFromTable);
 
@@ -645,11 +684,37 @@ s32 audioStubReturnZero(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxInitVoiceFromSample);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxStartVoiceRelease);
+extern u8 *D_main_bss_801496F8;
+void msvrImpl(s32 i, u8 flag) __asm__("musyxStartVoiceRelease");
+void msvrImpl(s32 i, u8 flag) {
+    s32 b = (s32)D_main_bss_801496F8;
+    u8 *v = (u8 *)(i * 0x88 + b);
+    *(u16 *)(v + 0x30) = 0x14;
+    if (flag) {
+        v[0x6C] = 3;
+        *(s32 *)(v + 0x64) = 0;
+        *(s32 *)(v + 0x60) = 0;
+        *(f32 *)(v + 0x68) = *(f32 *)(v + 0x5C);
+        *(u16 *)(v + 0x58) = *(u16 *)(v + 0x30);
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxStoreVoiceAdsrParams);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxTriggerVoiceAttack);
+extern u8 *D_main_bss_801496F8;
+extern f32 D_main_8003DE60;
+void musyxTriggerVoiceAttack(u16 i) {
+    u8 *v = D_main_bss_801496F8 + i * 0x88;
+    f32 f = D_main_8003DE60;
+    u16 h = *(u16 *)(v + 0x28);
+    v[0x6C] = 0;
+    *(s32 *)(v + 0x60) = 0;
+    *(s32 *)(v + 0x68) = 0;
+    *(s32 *)(v + 0x5C) = 0;
+    *(f32 *)(v + 0x64) = f;
+    v[0] = 1;
+    *(u16 *)(v + 0x58) = h;
+}
 
 extern u8 *D_main_bss_801496F8;
 void musyxStopVoice(s32 i) {
