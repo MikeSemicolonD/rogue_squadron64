@@ -8,7 +8,7 @@ typedef struct { s16 x; s16 y; u8 c; u8 pad; } DbgGlyph;
 extern DbgGlyph D_main_bss_80128F28[];
 extern u8 D_main_bss_80128F20;
 extern s16 D_main_bss_8012BF28;
-void queueDebugTextGlyph(s32 x, s32 y, s32 c) {
+__inline__ void queueDebugTextGlyph(s32 x, s32 y, s32 c) {
     s32 i = D_main_bss_8012BF28;
     if (i < 0x800 && D_main_bss_80128F20 != 0) {
         D_main_bss_80128F28[i].c = c;
@@ -25,7 +25,30 @@ void setDebugTextCursor(s32 col, s32 row) {
     D_main_bss_8012BF2C = ((row << 16) >> 13) + 0x10;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/24D30", drawDebugTextString);
+extern u16 gDbgCurX __asm__("D_main_bss_8012BF2A");
+extern u16 gDbgCurY __asm__("D_main_bss_8012BF2C");
+void queueDebugTextGlyph(s32 x, s32 y, s32 c);
+void drawDebugTextString(u8 *s) {
+    while (*s != 0) {
+        switch (*s) {
+        case '\n':
+            gDbgCurX = 0x28;
+            gDbgCurY += 8;
+            break;
+        case '\t':
+            gDbgCurX = (((gDbgCurX >> 3) & 0x1FF8) + 8) * 8;
+            break;
+        default:
+            queueDebugTextGlyph(gDbgCurX, gDbgCurY, *s);
+        case ' ':
+            gDbgCurX += 8;
+            break;
+        }
+        s++;
+    }
+    gDbgCurX = 0x28;
+    gDbgCurY += 8;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/24D30", loadDebugAssets);
 
