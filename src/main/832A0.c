@@ -1558,11 +1558,136 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetPitchRelativeToNote);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateSoundMacroCurveTable);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroSetVoiceVolume);
+extern s32 D_main_bss_8013AF0C;
+extern u8 D_main_bss_8013AC58[];
+extern s16 D_main_bss_8013AC5C;
+extern u8 *D_main_bss_8013AC60;
+extern u8 D_main_bss_80148C68[];
+s32 compareHalfwordAtOffset4_v2(u8 *a, u8 *b);
+static __inline__ u8 *bsrchSVV(u8 *key, u8 *base, s32 n, s32 size, s32 (*cmp)(u8 *, u8 *)) {
+    s32 lo, hi, mid, r;
+    u8 *p;
+    if (n != 0) {
+        lo = 1;
+        hi = n;
+        do {
+            mid = (lo + hi) >> 1;
+            p = base + size * (mid - 1);
+            r = cmp(key, p);
+            if (r == 0) {
+                return p;
+            }
+            if (r < 0) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        } while (hi >= lo);
+    }
+    return 0;
+}
+typedef struct { u8 pad[0x30]; u32 vol; u32 vol2; } SVV_V;
+s32 soundMacroSetVoiceVolume(SVV_V *v, u8 *op) {
+    u32 vol;
+    u8 *tbl;
+    u8 *found;
+    if (op[6] == 0) {
+        v->vol = (v->vol * op[2]) >> 7;
+    } else {
+        v->vol = (v->vol2 * op[2]) >> 7;
+    }
+    v->vol += op[1] << 16;
+    if (v->vol > 0x7F0000) {
+        v->vol = 0x7F0000;
+    }
+    vol = v->vol;
+    if (op[0] != 0) {
+        D_main_bss_8013AC5C = op[0];
+        found = bsrchSVV(D_main_bss_8013AC58, D_main_bss_80148C68, D_main_bss_8013AF0C, 8, compareHalfwordAtOffset4_v2);
+        D_main_bss_8013AC60 = found;
+        tbl = 0;
+        if (found != 0) {
+            tbl = *(u8 **)found;
+        }
+        if (tbl != 0) {
+            u32 idx = vol >> 16;
+            u32 fr = vol & 0xFFFF;
+            if (idx < 0x7F) {
+                u8 *p = (u8 *)(idx + (u32)tbl);
+                u32 hi = p[1];
+                u32 lo = p[0];
+                vol = (lo << 16) + (hi - lo) * fr;
+            } else {
+                vol = tbl[idx] << 16;
+            }
+        }
+        v->vol = vol;
+    } else {
+        v->vol = vol;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroSetupVolumeRamp);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroPlayRandomKeyNote);
+extern u32 D_main_800A0F54;
+s32 soundMacroOpStartNoteAbsoluteSweep(u8 *, u8 *);
+typedef struct { u32 w0; u32 w1; } PRKOp;
+s32 soundMacroPlayRandomKeyNote(u8 *v, u8 *op) {
+    u8 lo, hi, vel;
+    u16 r;
+    u32 w, fw, vs;
+    s32 unused[2];
+    s32 rem;
+    if (op[6] == 0) {
+        w = *(u32 *)op;
+        lo = w >> 8;
+        hi = w >> 24;
+        if (hi < lo) {
+            u8 t = lo;
+            lo = hi;
+            hi = t;
+        }
+    } else {
+        s32 base = *(u16 *)(v + 0x54);
+        s32 a = base + op[0];
+        s16 b = base - op[2];
+        if ((s16)b >= 0) {
+            if ((s16)b < 0x80) {
+                lo = b;
+            } else {
+                lo = 0x7F;
+            }
+        } else {
+            lo = 0;
+        }
+        if ((s16)a >= 0) {
+            if ((s16)a < 0x80) {
+                hi = a;
+            } else {
+                hi = 0x7F;
+            }
+        } else {
+            hi = 0;
+        }
+    }
+    if (op[7] != 0) {
+        D_main_800A0F54 *= 0xA8351D63;
+        r = D_main_800A0F54 >> 6;
+        vel = r % 201 - 100;
+    } else {
+        vel = op[1];
+    }
+    ((u32 *)op)[1] = 0;
+    D_main_800A0F54 *= 0xA8351D63;
+    r = D_main_800A0F54 >> 6;
+    rem = r % (hi - lo + 1);
+    vs = vel << 16;
+    fw = ((lo + rem) << 8) | 0x19;
+    *(u32 *)op = vs | fw;
+    soundMacroOpStartNoteAbsoluteSweep(v, op);
+    return 0;
+}
 
 s32 soundMacroSetFlagBitVibrato(u8 *ch) {
     *(u32 *)(ch + 0x24) |= 0x20000;
@@ -1592,7 +1717,70 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler46);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", refreshVoicePlaybackRate);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroSetPitchTarget);
+extern s32 D_main_bss_8013ACD0[];
+extern u8 D_main_bss_80142018[];
+extern u8 D_main_bss_801483D0[][16];
+s32 musyxComputeNotePlaybackRate(u8, u32);
+static __inline__ s32 budgetSPT(u8 *ch) {
+    s32 *base = D_main_bss_8013ACD0;
+    s32 *p;
+    u8 idx = ch[0x4F];
+    if (idx != 0xFF) {
+        p = base + idx;
+    } else {
+        p = base + 8;
+    }
+    return *p;
+}
+static __inline__ void scaleByBudgetSPT(u32 *p, u8 *ch) {
+    *p = ((*p * 32000) / budgetSPT(ch)) << 3;
+}
+static __inline__ void setByteAltSPT(u8 a, u8 b, u8 v) {
+    if (b != 0xFF) {
+        D_main_bss_801483D0[b][a] = v;
+        return;
+    }
+    D_main_bss_80142018[a] = v;
+}
+s32 soundMacroSetPitchTarget(u8 *ch, u8 *op) {
+    u32 v;
+    u32 bit;
+    u8 a;
+    ch[0xA0] = *(u16 *)op;
+    bit = (*(u32 *)(op + 4) >> 8) & 1;
+    v = *(u16 *)(op + 4);
+    if (bit) {
+        v = v << 8;
+    } else {
+        scaleByBudgetSPT(&v, ch);
+    }
+    *(u32 *)(ch + 0x98) = v;
+    switch (op[2]) {
+    case 0:
+        *(u32 *)(ch + 0x24) = (*(u32 *)(ch + 0x24) & ~0x800) | 0x1000;
+        a = ch[0x4E];
+        if (a != 0xFF) {
+            setByteAltSPT(a, ch[0x4F], 0);
+        }
+        break;
+    case 1:
+        if ((*(u32 *)(ch + 0x24) & 0x800) == 0) {
+            if (ch[0xA0] != 1) {
+                *(u32 *)(ch + 0x94) = v;
+            } else {
+                *(u32 *)(ch + 0x94) = 0;
+            }
+            *(u32 *)(ch + 0x9C) = musyxComputeNotePlaybackRate(ch[0xBD], *(u32 *)(ch + 0x60)) << 16;
+            a = ch[0x4E];
+            if (a != 0xFF) {
+                setByteAltSPT(a, ch[0x4F], 1);
+            }
+        }
+        *(u32 *)(ch + 0x24) = 0x1800;
+        break;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", tickAudioChannel);
 
