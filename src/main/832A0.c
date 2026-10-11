@@ -154,9 +154,28 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", seekAllModelAnimChannelsInSlotToTime)
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", setModelAnimChannelEntryDuration);
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB1C);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", getModelAnimChannelEntryDuration);
+typedef struct { s32 a; s32 b; s32 c; u8 *ch; u8 state; u8 pad[3]; } MaSlotGD;
+extern MaSlotGD gSlotsGD[] __asm__("gActiveModelAnimSlots");
+static __inline__ u8 maSlotValidGD(u32 id) {
+    s32 r = 0;
+    if (id != 0 && id <= 32) {
+        r = gSlotsGD[id - 1].state == 1;
+    }
+    return r;
+}
+f32 getModelAnimChannelEntryDuration(u32 h) {
+    u32 id = h >> 16;
+    u32 sub = h & 0xFFFF;
+    f32 r;
+
+    if (maSlotValidGD(id)) {
+        r = *(f32 *)(sub * 16 + gSlotsGD[id - 1].ch + 4);
+    } else {
+        r = 1.0f;
+    }
+    return r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", setModelAnimSlotCycleDuration);
 
