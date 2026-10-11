@@ -1866,9 +1866,52 @@ s32 soundMacroOpGosubLoopCounterThirty(u8 *ch, u8 *cmdArg) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosubModulatorLoop);
+s32 bucketLookupML(u32) __asm__("factor5BucketedTableLookupValue");
+u16 evalModRecML(u8 *, u8 *) __asm__("evaluateVoiceModulatorRecord");
+s32 soundMacroOpGosubModulatorLoop(u8 *ch, u8 *cmd) {
+    s32 v;
+    u32 c;
+    u8 x;
+    s32 unused[2];
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosubRandomLoop);
+    if (ch[0x4E] != 0xFF) {
+        x = (u8)(evalModRecML(ch, ch + 0x11A) >> 7);
+        c = *(u32 *)cmd;
+        if (x >= cmd[2]) {
+            v = bucketLookupML(c >> 16);
+            if (v != 0) {
+                *(s32 *)ch = v;
+                *(s32 *)(ch + 4) = v + *(u16 *)(cmd + 6) * 8;
+            }
+        }
+    }
+    return 0;
+}
+
+s32 bucketLookupRL(u32) __asm__("factor5BucketedTableLookupValue");
+extern u32 gRandRL __asm__("D_main_800A0F54");
+s32 soundMacroOpGosubRandomLoop(u8 *ch, u8 *cmdArg) {
+    register u8 *cmd asm("$17") = cmdArg;
+    s32 v;
+    u32 c;
+    u32 t;
+    s32 unused[2];
+
+    if (ch[0x4E] != 0xFF) {
+        __asm__("" : "=r"(cmd) : "0"(cmd));
+        t = gRandRL * 0xA8351D63;
+        c = *(u32 *)cmd;
+        gRandRL = t;
+        if ((u8)(t >> 6) >= cmd[2]) {
+            v = bucketLookupRL(c >> 16);
+            if (v != 0) {
+                *(s32 *)ch = v;
+                *(s32 *)(ch + 4) = v + *(u16 *)(cmd + 6) * 8;
+            }
+        }
+    }
+    return 0;
+}
 
 s32 factor5BucketedTableLookupValue(u16);
 void freeSynthVoiceFromActiveList();
