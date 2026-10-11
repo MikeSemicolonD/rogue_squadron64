@@ -811,7 +811,68 @@ s32 factor5SortedTableRemoveVoiceRecord(s32 v) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5BucketedTableInsertEntry);
+typedef struct { s32 v; u16 key; u16 pad; } BtRecBTI;
+extern s16 gBucketsBTI[][2] __asm__("D_main_bss_8013C480");
+extern BtRecBTI gTblBTI[] __asm__("D_main_bss_801420C0");
+extern BtRecBTI gTblBTI1[] __asm__("D_main_bss_801420C8");
+extern s32 gTotalBTI __asm__("D_main_bss_80148C50");
+extern u16 gTotalLoBTI __asm__("D_main_bss_80148C52");
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 factor5BucketedTableInsertEntry(u16 key, s32 val) {
+    s32 b;
+    s32 start;
+    s32 i;
+    s32 idx;
+    s32 off;
+    s32 v;
+    s16 (*q)[2];
+
+    factor5MutexAcquire();
+    b = key >> 6;
+    if ((u16)gBucketsBTI[b][0] == 0) {
+        idx = gTotalLoBTI;
+        gBucketsBTI[b][1] = gTotalLoBTI;
+        start = idx;
+    } else {
+        start = (u16)gBucketsBTI[b][1];
+        for (i = 0; i < (u16)gBucketsBTI[b][0]; i++) {
+            if (!(gTblBTI[start + i].key < key)) {
+                break;
+            }
+        }
+        if (i < (u16)gBucketsBTI[b][0]) {
+            idx = start + i;
+            if (gTblBTI[idx].key == key) {
+                goto fail;
+            }
+        } else {
+            idx = start + i;
+        }
+    }
+    if (gTotalBTI < 0x400) {
+        q = gBucketsBTI;
+        for (off = 0; off < 0x800; off += 4) {
+            v = *(u16 *)((s32)gBucketsBTI + off + 2);
+            if (start < v) {
+                q[0][1] = v + 1;
+            }
+            q++;
+        }
+        for (i = gTotalBTI - 1; i >= idx; i--) {
+            gTblBTI1[i] = gTblBTI1[i - 1];
+        }
+        gTblBTI[idx].key = key;
+        gTblBTI[idx].v = val;
+        gBucketsBTI[b][0] = (u16)gBucketsBTI[b][0] + 1;
+        gTotalBTI = gTotalBTI + 1;
+        factor5MutexRelease();
+        return 1;
+    }
+fail:
+    factor5MutexRelease();
+    return 0;
+}
 
 typedef struct { s32 a; s32 b; } BtE8BTR;
 extern s16 gBucketsBTR[][2] __asm__("D_main_bss_8013C480");
