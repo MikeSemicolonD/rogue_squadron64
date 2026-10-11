@@ -3307,7 +3307,63 @@ s32 soundMacroOpSetVolumeRamp(u8 *ch, u8 *cmd) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetPitchRelativeToNote);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateSoundMacroCurveTable);
+extern u16 gCurveKeyCT __asm__("D_main_bss_8013AC5C");
+extern u8 gCurveKeyBufCT[] __asm__("D_main_bss_8013AC58");
+extern u32 gCurveCountCT __asm__("D_main_bss_8013AF0C");
+extern u8 gCurveTblCT[] __asm__("D_main_bss_80148C68");
+extern u8 *gCurveFoundCT __asm__("D_main_bss_8013AC60");
+s32 compareHalfwordAtOffset4_v2(u8 *, u8 *);
+static __inline__ u8 *bsrchCT(u8 *key, u8 *base, s32 n, s32 size, s32 (*cmp)(u8 *, u8 *)) {
+    s32 lo, hi, mid, r;
+    u8 *p;
+    if (n != 0) {
+        lo = 1;
+        hi = n;
+        do {
+            mid = (lo + hi) >> 1;
+            p = base + size * (mid - 1);
+            r = cmp(key, p);
+            if (r == 0) {
+                return p;
+            }
+            if (r < 0) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        } while (hi >= lo);
+    }
+    return 0;
+}
+u32 evaluateSoundMacroCurveTable(u32 v, u8 id) {
+    u8 *p;
+    u8 *d;
+    u32 x;
+    u32 m;
+    u32 a;
+    u32 b;
+    u8 *e;
+
+    if (id != 0) {
+        gCurveKeyCT = id;
+        p = bsrchCT(gCurveKeyBufCT, gCurveTblCT, gCurveCountCT, 8, compareHalfwordAtOffset4_v2);
+        gCurveFoundCT = p;
+        d = p != 0 ? *(u8 **)p : 0;
+        if (d != 0) {
+            x = v >> 16;
+            m = v & 0xFFFF;
+            if (x < 0x7F) {
+                e = (u8 *)(x + (s32)d);
+                a = e[1];
+                b = e[0];
+                v = (b << 16) + (a - b) * m;
+            } else {
+                v = d[x] << 16;
+            }
+        }
+    }
+    return v;
+}
 
 extern s32 D_main_bss_8013AF0C;
 extern u8 D_main_bss_8013AC58[];
