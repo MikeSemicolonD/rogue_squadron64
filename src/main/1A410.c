@@ -36,7 +36,15 @@ void yieldFromGfxFrame(void) {
     osYieldThread();
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", postViThreadCommand);
+extern OSMesgQueue D_main_8011A420;
+extern u8 D_main_80128C80;
+extern s32 D_main_bss_80128C84;
+void postViThreadCommand(s32 arg0) {
+    u8 *m = &D_main_80128C80;
+    *m = 2;
+    D_main_bss_80128C84 = arg0;
+    osSendMesg(&D_main_8011A420, m, OS_MESG_BLOCK);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", initVideoSubsystem);
 
@@ -65,15 +73,54 @@ INCLUDE_ASM("asm/nonmatchings/main/1A410", swapBufferWithViMode);
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", selectAndApplyViMode);
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", computeFramebufferByteSize);
+extern s32 D_main_bss_8011A838;
+extern s32 D_main_bss_8011A83C;
+extern s16 D_main_bss_8011A848;
+s32 computeFramebufferByteSize(void) {
+    if (D_main_bss_8011A848 >= 0x18) {
+        return D_main_bss_8011A838 * D_main_bss_8011A83C * 4;
+    }
+    return D_main_bss_8011A838 * D_main_bss_8011A83C * 2;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", readBufferSwapState);
+extern s32 D_main_bss_80128EB4;
+extern s32 D_main_bss_80128EB8;
+extern s32 D_main_bss_80128EBC;
+void readBufferSwapState(s32 *arg0, s32 *arg1, s32 *arg2) {
+    if (D_main_bss_80128EB4 == -1) {
+        *arg0 = 0;
+        *arg1 = 0;
+        *arg2 = 0;
+    } else {
+        *arg1 = D_main_bss_80128EB4;
+        *arg2 = D_main_bss_80128EB8;
+        *arg0 = D_main_bss_80128EBC;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", bufferArbiterProducerMark);
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", waitOnVideoQueue);
+extern volatile u8 D_main_80037808;
+extern OSMesgQueue D_main_bss_80128CF0;
+void osYieldThread(void);
+void waitOnVideoQueue(void) {
+    D_main_80037808 = 1;
+    osRecvMesg(&D_main_bss_80128CF0, NULL, OS_MESG_BLOCK);
+    D_main_80037808 = 0;
+    osYieldThread();
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", bufferArbiterMarkSlotReady);
+typedef struct { u8 st[3]; u8 n; } BufArb;
+extern BufArb D_main_bss_80128EAA;
+void bufferArbiterMarkSlotReady(void) {
+    s32 i;
+    for (i = 0; i < D_main_bss_80128EAA.n; i++) {
+        if (D_main_bss_80128EAA.st[i] == 1) {
+            D_main_bss_80128EAA.st[i] = 2;
+            return;
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", bufferArbiterAllocSlot);
 
