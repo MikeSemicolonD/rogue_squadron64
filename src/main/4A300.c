@@ -46,7 +46,104 @@ s32 flushPendingGridCellTiles(void) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4A300", emitGridCellTileStrip);
+typedef struct {
+    f32 x;
+    f32 y;
+    f32 z;
+} EsV3;
+typedef struct {
+    u8 pad0[0xA];
+    u16 vert;
+    u8 pad0C[8];
+    u16 flags;
+    u8 pad16[2];
+    s16 gx;
+    s16 gz;
+} EsCell;
+typedef struct {
+    u16 *cells;
+    u8 *tiles;
+    u8 pad8[8];
+    f32 scale;
+    u8 pad14[0x24];
+    u16 w;
+    u16 h;
+} EsGrid;
+extern EsV3 *esVerts __asm__("D_main_bss_80137A54");
+#define ES_SQRT(r, x) __asm__ volatile("sqrt.s %0, %1" : "=f"(r) : "f"(x))
+
+void emitGridCellTileStrip_impl(EsCell *a, EsGrid *g) __asm__("emitGridCellTileStrip");
+void emitGridCellTileStrip_impl(EsCell *a, EsGrid *g) {
+    s32 idx;
+    u8 *c;
+    u8 *l;
+    u8 *r;
+    u8 *u;
+    u8 *d;
+    EsV3 *o;
+    f32 y;
+    f32 yy;
+    f32 dx;
+    f32 dz;
+    register f32 len asm("$f0");
+
+    idx = a->gx + a->gz * g->w;
+    c = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    y = 256.0f / g->scale;
+    if (a->vert == 0) {
+        if (fpCnt == 0 && flushPendingGridCellTiles() == 0) {
+            return;
+        }
+        a->vert = fpList[--fpCnt];
+    }
+    o = &esVerts[a->vert];
+    if (a->gx > 0) {
+        l = g->tiles + (g->cells[idx - 1] & 0x1FFF) * 0x1E + 5;
+    } else {
+        l = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    if (a->gx < g->w - 1) {
+        r = g->tiles + (g->cells[idx + 1] & 0x1FFF) * 0x1E + 5;
+    } else {
+        r = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    if (a->gz > 0) {
+        u = g->tiles + (g->cells[idx - g->w] & 0x1FFF) * 0x1E + 5;
+    } else {
+        u = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    if (a->gz < g->h - 1) {
+        d = g->tiles + (g->cells[idx + g->w] & 0x1FFF) * 0x1E + 5;
+    } else {
+        d = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    yy = y * y;
+    dx = (f32)(((s8 *)l)[3] - ((s8 *)c)[1]);
+    dz = (f32)(((s8 *)u)[0xF] - ((s8 *)c)[5]);
+    ES_SQRT(len, dx * dx + yy + dz * dz);
+    o[0].x = dx / len;
+    o[0].y = y / len;
+    o[0].z = dz / len;
+    dx = (f32)(((s8 *)c)[3] - ((s8 *)r)[1]);
+    dz = (f32)(((s8 *)u)[0x13] - ((s8 *)c)[9]);
+    ES_SQRT(len, dx * dx + yy + dz * dz);
+    o[1].x = dx / len;
+    o[1].y = y / len;
+    o[1].z = dz / len;
+    dx = (f32)(((s8 *)l)[0x17] - ((s8 *)c)[0x15]);
+    dz = (f32)(((s8 *)c)[0xF] - ((s8 *)d)[5]);
+    ES_SQRT(len, dx * dx + yy + dz * dz);
+    o[2].x = dx / len;
+    o[2].y = y / len;
+    o[2].z = dz / len;
+    dx = (f32)(((s8 *)c)[0x17] - ((s8 *)r)[0x15]);
+    dz = (f32)(((s8 *)c)[0x13] - ((s8 *)d)[9]);
+    ES_SQRT(len, dx * dx + yy + dz * dz);
+    o[3].x = dx / len;
+    o[3].y = y / len;
+    o[3].z = dz / len;
+    a->flags = (a->flags & 0xFFFC) | 2;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/4A300", emitGridCellTileStripAdjacent);
 
