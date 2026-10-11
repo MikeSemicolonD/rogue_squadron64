@@ -1832,9 +1832,39 @@ s32 soundMacroOpReturnFromGosub(u8 *ch, u8 *cmd) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosubLoopCounterFiftyFour);
+s32 bucketLookupFF(u32) __asm__("factor5BucketedTableLookupValue");
+s32 soundMacroOpGosubLoopCounterFiftyFour(u8 *ch, u8 *cmdArg) {
+    register u8 *cmd asm("$17") = cmdArg;
+    s32 v;
+    u32 c = *(u32 *)cmd;
+    s32 unused[2];
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosubLoopCounterThirty);
+    if (*(u16 *)(ch + 0x54) >= cmd[2]) {
+        v = bucketLookupFF(c >> 16);
+        if (v != 0) {
+            *(s32 *)ch = v;
+            *(s32 *)(ch + 4) = v + *(u16 *)(cmd + 6) * 8;
+        }
+    }
+    return 0;
+}
+
+s32 bucketLookupTH(u32) __asm__("factor5BucketedTableLookupValue");
+s32 soundMacroOpGosubLoopCounterThirty(u8 *ch, u8 *cmdArg) {
+    register u8 *cmd asm("$17") = cmdArg;
+    s32 v;
+    u32 c = *(u32 *)cmd;
+    s32 unused[2];
+
+    if (*(u16 *)(ch + 0x30) >= cmd[2]) {
+        v = bucketLookupTH(c >> 16);
+        if (v != 0) {
+            *(s32 *)ch = v;
+            *(s32 *)(ch + 4) = v + *(u16 *)(cmd + 6) * 8;
+        }
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosubModulatorLoop);
 
