@@ -212,15 +212,108 @@ u16 evaluateVoiceModulatorRecordEight(u8 *v) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableInsertValue);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableRemoveValue);
+typedef struct { s32 a; s32 b; } TblE8a;
+extern s32 D_main_bss_8013C450;
+extern u8 D_main_bss_8013BC4C[];
+extern TblE8a D_main_bss_8013BC40[];
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 factor5SortedTableRemoveValue(s32 v) {
+    s32 i;
+    s32 j;
+    s32 off;
+    factor5MutexAcquire();
+    for (i = 0; i < D_main_bss_8013C450; i++) {
+        off = i * 8;
+        if (*(u16 *)(D_main_bss_8013BC4C + off) == (v & 0xFFFF)) {
+            break;
+        }
+    }
+    if (i != D_main_bss_8013C450) {
+        j = i + 1;
+        if (j < D_main_bss_8013C450) {
+            do {
+                D_main_bss_8013BC40[j] = D_main_bss_8013BC40[j + 1];
+                j++;
+            } while (j < D_main_bss_8013C450);
+        }
+        D_main_bss_8013C450 = D_main_bss_8013C450 - 1;
+        factor5MutexRelease();
+        return 1;
+    }
+    factor5MutexRelease();
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableInsertTaggedValue);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableRemoveTaggedValue);
+typedef struct { s32 a; s32 b; } TblE8c;
+extern s32 D_main_bss_8013AF08;
+extern u8 D_main_bss_80148454[];
+extern TblE8c D_main_bss_80148448[];
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 factor5SortedTableRemoveTaggedValue(s32 v) {
+    s32 i;
+    s32 j;
+    s32 off;
+    factor5MutexAcquire();
+    for (i = 0; i < D_main_bss_8013AF08; i++) {
+        off = i * 8;
+        if (*(u16 *)(D_main_bss_80148454 + off) == (v & 0xFFFF)) {
+            break;
+        }
+    }
+    if (i != D_main_bss_8013AF08) {
+        j = i + 1;
+        if (j < D_main_bss_8013AF08) {
+            do {
+                D_main_bss_80148448[j] = D_main_bss_80148448[j + 1];
+                j++;
+            } while (j < D_main_bss_8013AF08);
+        }
+        D_main_bss_8013AF08 = D_main_bss_8013AF08 - 1;
+        factor5MutexRelease();
+        return 1;
+    }
+    factor5MutexRelease();
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SecondSortedTableInsertValue);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SecondSortedTableRemoveValue);
+typedef struct { s32 a; s32 b; } TblE8b;
+extern s32 D_main_bss_8013AF0C;
+extern u8 D_main_bss_80148C6C[];
+extern TblE8b D_main_bss_80148C60[];
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 factor5SecondSortedTableRemoveValue(s32 v) {
+    s32 i;
+    s32 j;
+    s32 off;
+    factor5MutexAcquire();
+    for (i = 0; i < D_main_bss_8013AF0C; i++) {
+        off = i * 8;
+        if (*(u16 *)(D_main_bss_80148C6C + off) == (v & 0xFFFF)) {
+            break;
+        }
+    }
+    if (i != D_main_bss_8013AF0C) {
+        j = i + 1;
+        if (j < D_main_bss_8013AF0C) {
+            do {
+                D_main_bss_80148C60[j] = D_main_bss_80148C60[j + 1];
+                j++;
+            } while (j < D_main_bss_8013AF0C);
+        }
+        D_main_bss_8013AF0C = D_main_bss_8013AF0C - 1;
+        factor5MutexRelease();
+        return 1;
+    }
+    factor5MutexRelease();
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableInsertWidePair);
 
@@ -273,9 +366,83 @@ s32 compareHalfwordAtOffset4_v2(u8 *a, u8 *b) {
     return *(u16 *)(a + 4) - *(u16 *)(b + 4);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SecondSortedTableLookupValue);
+extern s32 D_main_bss_8013AF0C;
+extern u8 D_main_bss_8013AC58[];
+extern s16 D_main_bss_8013AC5C;
+extern u8 *D_main_bss_8013AC60;
+extern u8 D_main_bss_80148C68[];
+s32 compareHalfwordAtOffset4_v2(u8 *a, u8 *b);
+static __inline__ u8 *bsrchLV2(u8 *key, u8 *base, s32 n, s32 size, s32 (*cmp)(u8 *, u8 *)) {
+    s32 lo, hi, mid, r;
+    u8 *p;
+    if (n != 0) {
+        lo = 1;
+        hi = n;
+        do {
+            mid = (lo + hi) >> 1;
+            p = base + size * (mid - 1);
+            r = cmp(key, p);
+            if (r == 0) {
+                return p;
+            }
+            if (r < 0) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        } while (hi >= lo);
+    }
+    return 0;
+}
+s32 factor5SecondSortedTableLookupValue(s16 key) {
+    u8 *p;
+    D_main_bss_8013AC5C = key;
+    p = bsrchLV2(D_main_bss_8013AC58, D_main_bss_80148C68, D_main_bss_8013AF0C, 8, compareHalfwordAtOffset4_v2);
+    D_main_bss_8013AC60 = p;
+    if (p != 0) {
+        return *(s32 *)p;
+    }
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableLookupValue);
+extern s32 D_main_bss_8013C450;
+extern u8 D_main_bss_8013AC68[];
+extern s16 D_main_bss_8013AC6C;
+extern u8 *D_main_bss_8013AC70;
+extern u8 D_main_bss_8013BC48[];
+s32 compareHalfwordAtOffset4_v2(u8 *a, u8 *b);
+static __inline__ u8 *bsrchLV1(u8 *key, u8 *base, s32 n, s32 size, s32 (*cmp)(u8 *, u8 *)) {
+    s32 lo, hi, mid, r;
+    u8 *p;
+    if (n != 0) {
+        lo = 1;
+        hi = n;
+        do {
+            mid = (lo + hi) >> 1;
+            p = base + size * (mid - 1);
+            r = cmp(key, p);
+            if (r == 0) {
+                return p;
+            }
+            if (r < 0) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        } while (hi >= lo);
+    }
+    return 0;
+}
+s32 factor5SortedTableLookupValue(s16 key) {
+    u8 *p;
+    D_main_bss_8013AC6C = key;
+    p = bsrchLV1(D_main_bss_8013AC68, D_main_bss_8013BC48, D_main_bss_8013C450, 8, compareHalfwordAtOffset4_v2);
+    D_main_bss_8013AC70 = p;
+    if (p != 0) {
+        return *(s32 *)p;
+    }
+    return 0;
+}
 
 s32 compareHalfwordAtOffset4_v3(u8 *a, u8 *b) {
     return *(u16 *)(a + 4) - *(u16 *)(b + 4);
@@ -365,7 +532,43 @@ void silenceVoiceSlot(s32 i) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", computeVoiceGlidePitch);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", queryVoicePlayPositionByHandle);
+extern u8 *D_main_bss_8013AF00;
+extern u32 D_main_bss_8013D8A4[];
+extern s32 D_main_bss_8013D8E4[];
+extern u16 D_main_bss_8013D93E[];
+static __inline__ u8 *findVoiceNodeInlQ(u32 h) {
+    u8 *n = D_main_bss_8013AF00;
+    if (n != 0) {
+        do {
+            if (*(u32 *)(n + 8) == h) {
+                return n;
+            }
+            if (h < *(u32 *)(n + 8)) {
+                return 0;
+            }
+            n = *(u8 **)n;
+        } while (n != 0);
+    }
+    return 0;
+}
+u16 queryVoicePlayPositionByHandle(u32 h) {
+    s32 id;
+    u8 *r;
+    s32 off;
+    if (h != -1 && (r = findVoiceNodeInlQ(h)) != 0) {
+        id = *(s32 *)(r + 0xC);
+    } else {
+        id = -1;
+    }
+    if (id != -1) {
+        off = (id & 0xFF) * 0x17C;
+        if (*(u32 *)((s32)D_main_bss_8013D8E4 + off) == id && !(*(u32 *)((s32)D_main_bss_8013D8A4 + off) & 2)) {
+            return *(u16 *)((s32)D_main_bss_8013D93E + off);
+        }
+        return 0;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", findActiveVoiceByKeyPair);
 
