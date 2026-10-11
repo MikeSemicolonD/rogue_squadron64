@@ -1052,7 +1052,53 @@ u8 *musyxSortedInsertByU16(s16 key) {
     return bsrch((u8 *)&D_main_bss_8013AC90, D_main_bss_8013CC80, D_main_bss_80140800, 0xC, cmpU16ByValue);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", freeSynthVoiceFromActiveList);
+typedef struct FsNode { struct FsNode *next; struct FsNode *prev; u32 h; s32 slot; } FsNode;
+extern FsNode *gFsHead __asm__("D_main_bss_8013AF00");
+extern FsNode *gFsFree __asm__("D_main_bss_8013AF04");
+extern s32 gFsNext[] __asm__("D_main_bss_8013D890");
+extern s32 gFsPrev[] __asm__("D_main_bss_8013D894");
+extern FsNode *gFsNodeArr[] __asm__("D_main_bss_8013D898");
+#define FSX(arr, i) (*(s32 *)((u8 *)(arr) + (u8)(i) * 0x17C))
+void fsImplFS(u8 *v) __asm__("freeSynthVoiceFromActiveList");
+void fsImplFS(u8 *v) {
+    s32 prev;
+    s32 next;
+    FsNode *n;
+
+    if (*(s32 *)(v + 0x64) == -1) {
+        return;
+    }
+    prev = *(s32 *)(v + 0x14);
+    if (prev != -1) {
+        FSX(gFsNext, prev) = *(s32 *)(v + 0x10);
+        next = *(s32 *)(v + 0x10);
+        if (next != -1) {
+            FSX(gFsPrev, next) = *(s32 *)(v + 0x14);
+        }
+    } else if (*(s32 *)(v + 0x10) != prev) {
+        (*(FsNode **)(v + 0x18))->slot = *(s32 *)(v + 0x10);
+        FSX(gFsPrev, v[0x13]) = prev;
+        *(FsNode **)((u8 *)gFsNodeArr + v[0x13] * 0x17C) = *(FsNode **)(v + 0x18);
+    } else {
+        n = *(FsNode **)(v + 0x18);
+        if (n->prev != NULL) {
+            n->prev->next = n->next;
+        } else {
+            gFsHead = n->next;
+        }
+        n = *(FsNode **)(v + 0x18);
+        if (n->next != NULL) {
+            n->next->prev = n->prev;
+            n = *(FsNode **)(v + 0x18);
+        }
+        n->next = gFsFree;
+        if (gFsFree != NULL) {
+            gFsFree->prev = *(FsNode **)(v + 0x18);
+        }
+        (*(FsNode **)(v + 0x18))->prev = NULL;
+        gFsFree = *(FsNode **)(v + 0x18);
+    }
+}
 
 extern u32 D_main_bss_8013ACF8;
 extern u8 *D_main_bss_8013AF00;
@@ -1247,7 +1293,29 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", applyNoteEventToGroup);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", dispatchSequencerNoteEvent);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxNoteEventLockedDispatch);
+s32 dispatchSequencerNoteEventK(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32) __asm__("dispatchSequencerNoteEvent");
+s32 musyxNoteEventLockedDispatch(u16 key, u8 a, u8 b) {
+    s32 r7;
+    u8 *p;
+    u8 s5;
+    u8 s6;
+
+    s5 = a;
+    s6 = b;
+    r7 = -1;
+    D_main_bss_8013AC90 = key;
+    p = bsrch((u8 *)&D_main_bss_8013AC90, D_main_bss_8013CC80, D_main_bss_80140800, 0xC, cmpU16ByValue);
+    if (p != 0) {
+        if (s5 == 0xFF) {
+            s5 = p[6];
+        }
+        if (s6 == 0xFF) {
+            s6 = p[7];
+        }
+        r7 = dispatchSequencerNoteEventK((*(u16 *)(p + 2) << 16) | (p[5] << 8) | p[4], p[8] | 0x80, s5, s6, 0xFF, 0xFF, 0, 0xFF, p[9], 0);
+    }
+    return r7;
+}
 
 s32 dispatchSequencerNoteEventK(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32) __asm__("dispatchSequencerNoteEvent");
 extern u8 gMusyXActiveFlag;
