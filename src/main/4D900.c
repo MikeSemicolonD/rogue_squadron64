@@ -933,7 +933,100 @@ void buildEffectObjectWorldTransform(BeObj *o, f32 dt) {
     o->f54 = sv[2];
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4D900", destroyEffectObjectTypeNpcSlots);
+#define UNK4(n) (*(u8 * volatile *)((u8 *)(n) + 4))
+void deImpl(f32 dt) __asm__("destroyEffectObjectTypeNpcSlots");
+extern u16 getNextSlotNpcTypeId(u16);
+
+void deImpl(f32 dt) {
+    s32 i;
+    s32 j;
+    SceneNode *n;
+    SceneNode *n2;
+    u8 *p;
+    u8 *q;
+    u32 id;
+
+    for (i = 0; i < 1; i++) {
+        n = &D_main_bss_80138D18[i];
+        if (n->unk0 != 0) {
+            if (D_8010CA20 == 5) {
+                p = UNK4(n);
+                if (*(u16 *)(p + 0xF4) != 0xFFFF && getNextSlotNpcTypeId(*(u16 *)(p + 0xF4)) == 0xFFFF) {
+                    *(s16 *)(p + 2) = 0;
+                    *(s16 *)(p + 4) = 0;
+                    if (*(u16 *)(p + 0xF4) != 0xFFFF) {
+                        destroyNpcSlotChain(*(u16 *)(p + 0xF4));
+                        *(u16 *)(p + 0xF4) = 0xFFFF;
+                    }
+                }
+                updatePlayerVehicleByControlMode(UNK4(n), dt);
+                updateEffectObjectOrientationQuat(n, UNK4(n), dt);
+            } else {
+                for (j = 0; j < 6; j++) {
+                    p = D_main_bss_80138268[i][j];
+                    if (*(u16 *)p & 1) {
+                        f32 f = *(f32 *)(p + 0xCC);
+                        if (f > 0.0f) {
+                            f -= dt;
+                            *(f32 *)(p + 0xCC) = f;
+                            if (f < 0.0f) {
+                                *(f32 *)(p + 0xC4) = -f;
+                                *(f32 *)(p + 0xCC) = 0.0f;
+                            }
+                        } else {
+                            *(f32 *)(p + 0xC4) = *(f32 *)(p + 0xC4) + dt;
+                        }
+                        if (*(u16 *)(p + 0xF4) != 0xFFFF && getNextSlotNpcTypeId(*(u16 *)(p + 0xF4)) == 0xFFFF) {
+                            *(s16 *)(p + 2) = 0;
+                            *(s16 *)(p + 4) = 0;
+                            if (*(u16 *)(p + 0xF4) != 0xFFFF) {
+                                destroyNpcSlotChain(*(u16 *)(p + 0xF4));
+                                *(u16 *)(p + 0xF4) = 0xFFFF;
+                            }
+                        }
+                        updatePlayerVehicleByControlMode(p, dt);
+                        updateEffectObjectOrientationQuat(n, p, dt);
+                    }
+                }
+                for (j = 0; j < 4; j++) {
+                    p = D_main_bss_80138930[i][j];
+                    if (*(u16 *)p & 1) {
+                        f32 f = *(f32 *)(p + 0xCC);
+                        if (f > 0.0f) {
+                            f -= dt;
+                            *(f32 *)(p + 0xCC) = f;
+                            if (f < 0.0f) {
+                                *(f32 *)(p + 0xC4) = -f;
+                                *(f32 *)(p + 0xCC) = 0.0f;
+                            }
+                        } else {
+                            *(f32 *)(p + 0xC4) = *(f32 *)(p + 0xC4) + dt;
+                        }
+                        if (*(u16 *)(p + 0xF4) != 0xFFFF) {
+                            id = getNextSlotNpcTypeId(*(u16 *)(p + 0xF4)) & 0xFFFF;
+                            if (id == 0xFFFF) {
+                                *(s16 *)(p + 2) = 0;
+                                *(s16 *)(p + 4) = 0;
+                                if (*(u16 *)(p + 0xF4) != 0xFFFF) {
+                                    destroyNpcSlotChain(*(u16 *)(p + 0xF4));
+                                    *(u16 *)(p + 0xF4) = 0xFFFF;
+                                }
+                            }
+                        }
+                        updatePlayerVehicleByControlMode(p, dt);
+                        updateEffectObjectOrientationQuat(n, p, dt);
+                    }
+                }
+            }
+        }
+        n2 = &D_main_bss_80138D18[i];
+        buildEffectObjectWorldTransform((BeObj *)UNK4(n2), dt);
+        q = UNK4(n2);
+        if (*(u16 *)q & 0x40) {
+            updateEffectObjectMotionOnTerrain((EoObj *)q, dt);
+        }
+    }
+}
 
 typedef struct {
     u16 h0;
