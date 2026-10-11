@@ -18,7 +18,147 @@ f32 D_main_8009ECE0[] = {
     -21.0f,
 };
 
-INCLUDE_ASM("asm/nonmatchings/main/5AD20", loadTopCloudsAsset);
+// NOTE: 40 rows after two statement-order climbs (genclimb; 76 -> 44 -> 40).
+s32 clearStructPair2C30_k() __asm__("clearStructPair2C30");
+s32 loadAssetAndIterateSubchunks(s32 *, s32, s32, s32, s32);
+void *rs_malloc(s32, s32);
+#define W32(e) (*(s32 *)(e))
+#define W16(e) (*(s16 *)(e))
+#define W8(e) (*(u8 *)(e))
+
+void loadTopCloudsAsset_impl(u8 *arg0) __asm__("loadTopCloudsAsset");
+void loadTopCloudsAsset_impl(u8 *arg0) {
+    u8 *b;
+    s32 i;
+    u32 j;
+    u8 *a;
+    u8 *e;
+    u32 *c;
+    u32 *cq;
+    s32 w;
+    f32 *f;
+    u8 *q;
+    u8 *r;
+    s32 u1;
+    f32 z;
+    u8 *cb;
+    u8 *eb;
+
+    b = rs_malloc(0x2C90, 0);
+    *(u8 **)(arg0 + 0xF00) = b;
+    W32(b + 0x2B44) = loadAssetAndIterateSubchunks("gnrc_stuff/tl_clouds", 0, 0, 0, 0);
+    for (i = 0; i < 0x32; i++) {
+        W32(b + i * 0x4C + 0xC) = 0;
+        W32(b + i * 0x4C + 8) = 0;
+        W32(b + i * 0x4C + 4) = 0;
+        W32(b + i * 0x4C + 0) = 0;
+        *(u8 **)(b + i * 0x4C + 0x10) = b + (0xED8 + i * 0x5C);
+        W32(b + i * 0x4C + 0x14) = 0;
+        W32(b + i * 0x5C + 0xEDC) = 0;
+        W32(b + i * 0x5C + 0xED8) = 0;
+        W32(b + i * 0x5C + 0xEE0) = 0;
+        W32(b + i * 0x5C + 0xEE4) = 4;
+        W32(b + i * 0x5C + 0xEF4) = 0;
+        W32(b + i * 0x5C + 0xEE8) = 0;
+        W32(b + i * 0x5C + 0xEEC) = 4;
+        W32(b + i * 0x5C + 0xEF0) = 0;
+        W32(b + i * 0x5C + 0xEF8) = 0;
+        *(u8 **)(b + i * 0x5C + 0xEFC) = (u8 *)D_main_8009ECC0;
+        W32(b + i * 0x5C + 0xF00) = 0;
+        clearStructPair2C30_k(b + (0xED8 + i * 0x5C));
+        *(u8 *)(b + i + 0x2B7A) = i;
+        *(u8 *)(b + i + 0x2B48) = 0xFF;
+    }
+    cb = b + 0x26B8;
+    eb = b + 0x26DF;
+    for (i = 0, c = (u32 *)cb; i < 0xE; i++, c += 10) {
+        u8 *cc = (u8 *)c;
+        W32(b + i * 0x5C + 0xEDC) = 0;
+        W32(b + i * 0x5C + 0x20D0) = 0;
+        W32(b + i * 0x5C + 0x20D8) = 0;
+        W32(b + i * 0x5C + 0x20EC) = 0;
+        W32(b + i * 0x5C + 0x20DC) = 0x02970008;
+        W32(b + i * 0x5C + 0x20E0) = 0;
+        W32(b + i * 0x5C + 0x20E8) = 0;
+        W32(b + i * 0x5C + 0x20E4) = 4;
+        *(u8 **)(b + i * 0x5C + 0x20F0) = b + (0x25D8 + i * 0x10);
+        *(u8 **)(b + i * 0x5C + 0x20F4) = (u8 *)D_main_8009ECC0;
+        W32(b + i * 0x5C + 0x20F8) = 0;
+        clearStructPair2C30_k(b + (0x20D0 + i * 0x5C));
+        W32(b + i * 0x10 + 0x25DC) = 0;
+        W32(b + i * 0x10 + 0x25D8) = 0;
+        *(u8 **)(b + i * 0x10 + 0x25E0) = b + (0x26B8 + i * 0x28);
+        W32(b + i * 0x10 + 0x25E4) = 1;
+        cq = (u32 *)(b + i * 0x28 + 0x26B8);
+        W32(b + i * 0x28 + 0x26B8) = 0xC;
+        cq[1] = 0x0A0C9005;
+        cq[2] = 0;
+        *c = *c | 0x82;
+        W32(cc + 0x8) = *(u16 *)((i % 7) * 2 + W32(b + 0x2B44)) << 16;
+        W16(cc + 0xC) = 0;
+        W16(cc + 0x10) = 2;
+        W16(cc + 0x12) = 1;
+        W16(cc + 0xE) = 3;
+        W16(cc + 0x14) = 0;
+        W16(cc + 0x16) = 0;
+        W16(cc + 0x20) = 0x1000;
+        W16(cc + 0x22) = 0;
+        W16(cc + 0x18) = 0;
+        W16(cc + 0x1C) = 0x1000;
+        W16(cc + 0x1E) = 0x1000;
+        W16(cc + 0x1A) = 0x1000;
+        if (i < 7) {
+            W8(cc + 0x24) = 0xC3;
+            W8(cc + 0x25) = 0xA3;
+            W8(cc + 0x26) = 0x77;
+        } else {
+            W8(cc + 0x24) = 0xB6;
+            W8(cc + 0x25) = 0x8C;
+            W8(cc + 0x26) = 0x57;
+        }
+        W8(cc + 0x27) = 0xFF;
+    }
+    j = 0;
+    do {
+        q = b + 0x2BB0 + j * 0x38;
+        switch (j) {
+        default:
+            if (j == 2) {
+                *(f32 *)(q + 0) = 15.0f;
+            } else {
+                *(f32 *)(q + 0) = -15.0f;
+            }
+            break;
+        case 1:
+            *(f32 *)(q + 0) = -5.0f;
+            break;
+        case 0:
+            *(f32 *)(q + 0) = 5.0f;
+            break;
+        }
+        if (j < 2U) {
+            *(f32 *)(q + 4) = 1.0f;
+        } else {
+            *(f32 *)(q + 4) = 0.5f;
+        }
+        z = 0.0f;
+        *(f32 *)(q + 0xC) = z;
+        *(f32 *)(q + 8) = z;
+        i = 0xF;
+        *(f32 *)(q + 0x14) = z;
+        *(f32 *)(q + 0x10) = z;
+        r = q + 0xF;
+    loop_22:
+        W8(r + 0x18) = 0xFF;
+        i -= 1;
+        r -= 1;
+        if (i >= 0) {
+            goto loop_22;
+        }
+        j += 1;
+    } while ((s32)j < 4);
+    W8(b + 0x2BAC) = 0x31;
+}
 
 typedef struct {
     f32 offX;
