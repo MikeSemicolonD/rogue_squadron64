@@ -2,7 +2,76 @@
 #include "common_types.h"
 #include "PR/os.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/24D30", flushDebugTextOverlay);
+typedef struct { s16 x; s16 y; u8 c; u8 pad; } DbgGlyphF;
+extern DbgGlyphF gDbgGlyphsF[] __asm__("D_main_bss_80128F28");
+extern s16 D_main_bss_8012BF28;
+extern s16 D_main_bss_8012BF2A;
+extern s16 D_main_bss_8012BF2C;
+extern s16 D_main_bss_80128F22;
+typedef struct { u32 w0; u32 w1; } DbgDL;
+#define DBG_DL_CHECK(dl) if ((u32)(dl) >= D_main_bss_801163D4) { (dl)->w0 = 0xB5000000; (dl)->w1 = 0; (dl) = (DbgDL *)allocateDisplayListBuffer(); }
+extern u32 D_main_bss_801163D4;
+extern u16 *D_main_bss_8011A444;
+extern char *D_main_80038CF0;
+DbgDL *allocateDisplayListBuffer();
+DbgDL *findOrCreateMaterial(DbgDL *, u16, s32);
+char *strchr(const char *, s32);
+DbgDL *flushDebugTextOverlay(DbgDL *dl) {
+    DbgDL *p;
+    s16 i;
+    u8 c;
+    register char *s asm("$3");
+    register u8 idx asm("$4");
+    s32 col; u8 row; s32 t;
+
+    if (D_main_bss_8012BF28 != 0) {
+        DBG_DL_CHECK(dl);
+        { DbgDL *_g = dl++; _g->w0 = 0xE7000000; _g->w1 = 0; }
+        dl = findOrCreateMaterial(dl, D_main_bss_8011A444[(u16)D_main_bss_80128F22 * 2 + 1], 2);
+        DBG_DL_CHECK(dl);
+        { DbgDL *_g = dl++; _g->w0 = 0xB900031D; _g->w1 = 0; }
+        DBG_DL_CHECK(dl);
+        { DbgDL *_g = dl++; _g->w0 = 0xBA001402; _g->w1 = 0x200000; }
+        DBG_DL_CHECK(dl);
+        { DbgDL *_g = dl++; _g->w0 = 0xBA000C02; _g->w1 = 0; }
+        DBG_DL_CHECK(dl);
+        { DbgDL *_g = dl++; _g->w0 = 0xBA001301; _g->w1 = 0; }
+        DBG_DL_CHECK(dl);
+        { DbgDL *_g = dl++; _g->w0 = 0xB9000002; _g->w1 = 1; }
+        DBG_DL_CHECK(dl);
+        { DbgDL *_g = dl++; _g->w0 = 0xF9000000; _g->w1 = 0; }
+        for (i = 0; i < D_main_bss_8012BF28; i++) {
+            c = gDbgGlyphsF[i].c;
+            if ((u32)(c - 'a') < 26) {
+                c -= 0x20;
+            }
+            s = strchr(D_main_80038CF0, c);
+            if (s != NULL) {
+                { register char *b asm("$2") = D_main_80038CF0; register s32 d asm("$5") = s - b; idx = (u8)d; __asm__("" : : "r"(d)); }
+                col = (u8)(idx % 21);
+                row = idx / 21;
+                t = row * 7;
+                if ((u32)(dl + 1) >= D_main_bss_801163D4) {
+                    dl->w0 = 0xB5000000;
+                    dl->w1 = 0;
+                    dl = (DbgDL *)allocateDisplayListBuffer();
+                }
+                {
+                    DbgDL *_g = dl;
+                    _g->w0 = 0xE4000000 | ((((gDbgGlyphsF[i].x + 7) * 4) & 0xFFF) << 12) | (((gDbgGlyphsF[i].y + 6) * 4) & 0xFFF);
+                    _g->w1 = (((gDbgGlyphsF[i].x * 4) & 0xFFF) << 12) | ((gDbgGlyphsF[i].y * 4) & 0xFFF);
+                    _g[1].w0 = ((((col << 3) << 5) & 0xFFFF) << 16) | ((t << 5) & 0xFFFF);
+                    _g[1].w1 = 0x10000400;
+                }
+                dl += 2;
+            }
+        }
+        D_main_bss_8012BF28 = 0;
+    }
+    D_main_bss_8012BF2A = 0x28;
+    D_main_bss_8012BF2C = 0x10;
+    return dl;
+}
 
 typedef struct { s16 x; s16 y; u8 c; u8 pad; } DbgGlyph;
 extern DbgGlyph D_main_bss_80128F28[];
