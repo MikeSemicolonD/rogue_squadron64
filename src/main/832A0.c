@@ -2602,9 +2602,69 @@ void setMusyXVoiceTickGate(u8 arg0) {
     D_main_bss_801483C8 = arg0;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DD38);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", dispatchAudioCommand);
+typedef struct { s32 cur; s32 target; s32 step; s32 time; s32 handle; u8 type; u8 b15; u8 pad16[0x12]; } FaderDA;
+extern FaderDA gFaderDA[] __asm__("D_main_bss_80141B18");
+void dispatchAudioCommand(u8 vol, u16 time, u8 which, s32 type, s32 handle) {
+    u32 i;
+    s32 t;
+    u8 ty;
+
+    if (time == 0) {
+        time++;
+    }
+    t = time << 8;
+    switch (which) {
+    case 0xFF:
+        for (i = 0; i < 32; i++) {
+            if (gFaderDA[i].type < 2) {
+                gFaderDA[i].target = vol << 16;
+                gFaderDA[i].time = *(s32 *)&t;
+                gFaderDA[i].step = (gFaderDA[i].target - gFaderDA[i].cur) / time;
+                gFaderDA[i].handle = -1;
+            }
+        }
+        break;
+    case 0xFC:
+        for (i = 0; i < 32; i++) {
+            if ((u8)(gFaderDA[i].type - 2) < 2) {
+                gFaderDA[i].target = vol << 16;
+                gFaderDA[i].time = *(s32 *)&t;
+                gFaderDA[i].step = (gFaderDA[i].target - gFaderDA[i].cur) / time;
+                gFaderDA[i].handle = -1;
+            }
+        }
+        break;
+    case 0xFA:
+        ty = 2;
+        goto loop;
+    case 0xFB:
+        ty = 3;
+        goto loop;
+    case 0xFD:
+        ty = 0;
+        goto loop;
+    case 0xFE:
+        ty = 1;
+    loop:
+        for (i = 0; i < 32; i++) {
+            if (gFaderDA[i].type == ty) {
+                gFaderDA[i].target = vol << 16;
+                gFaderDA[i].time = *(s32 *)&t;
+                gFaderDA[i].step = (gFaderDA[i].target - gFaderDA[i].cur) / time;
+                gFaderDA[i].handle = -1;
+            }
+        }
+        break;
+    default:
+        gFaderDA[which].target = vol << 16;
+        gFaderDA[which].time = t;
+        gFaderDA[which].b15 = type;
+        gFaderDA[which].handle = handle;
+        gFaderDA[which].step = (gFaderDA[which].target - gFaderDA[which].cur) / time;
+        break;
+    }
+}
 
 extern u8 gMusyXActiveFlag;
 void factor5MutexAcquire(void);
