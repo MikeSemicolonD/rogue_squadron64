@@ -1272,7 +1272,438 @@ void playerVwingMainUpdate(void *arg0, f32 arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", setupMenuData);
+typedef struct {
+    char *title;
+    u8 kind;
+    u8 f5;
+    u8 pad6[2];
+    char *p8[8];
+    u8 type[8];
+    struct { s16 x, y; } pos[9];
+    f32 sc[8];
+    s32 w74[8];
+    u8 sel;
+    u8 count;
+    u16 baseY;
+    u16 mask;
+    u8 pad9A[2];
+    f32 f9C;
+    f32 fA0;
+    u8 padA4[0xC];
+    f32 fB0[8];
+    f32 fD0[8];
+    f32 fF0;
+    f32 fF4;
+} MenuD;
+typedef struct { u8 b[9]; } Str9;
+typedef struct {
+    u16 text;
+    u8 pad2[0xE];
+    u16 f10;
+    u8 pad12[0x12];
+} CraftStat;
+extern MenuD D_menu_overlay_800CE730;
+extern char D_menu_overlay_800A5FD4[];
+extern Str9 D_menu_overlay_800A6658;
+extern char D_menu_overlay_800CF050[];
+extern s8 D_menu_overlay_800CF150;
+extern s8 D_menu_overlay_800CF151;
+extern CraftStat gCraftStatX[] __asm__("D_menu_overlay_800CC89C");
+extern u16 languageTextIds[];
+typedef struct {
+    char *name;
+    s32 id;
+} ConcertEntX;
+extern ConcertEntX gConcertTblX[] __asm__("D_menu_overlay_800CCE1C");
+extern u8 gConcertHallDisplayIndex;
+extern u8 D_main_bss_80130B2F;
+extern u8 D_main_bss_80130B46;
+extern s32 D_main_bss_80130B58;
+extern struct rgba mainMenuBrightYellowColor;
+u8 handleGameSettingsMenu(u8, s32, u8, u8, u8);
+s32 hasKasanMoorDefected(u8);
+s32 strlen();
+
+MenuD *setupMenuData(u8 kind, u8 port, u8 flags) {
+    u8 n;
+    u8 i;
+    f32 *v;
+
+    n = 0;
+    D_menu_overlay_800CE730.f5 = kind;
+    D_menu_overlay_800CE730.kind = kind;
+    D_menu_overlay_800CE730.baseY = 0x28;
+    *(s32 *)((u8 *)&D_menu_overlay_800CE730 + 0xA4) = 0;
+    *(s32 *)((u8 *)&D_menu_overlay_800CE730 + 0xAC) = 0;
+    do {
+        D_menu_overlay_800CE730.pos[n].x = 0;
+        D_menu_overlay_800CE730.pos[n].y = 0;
+        D_menu_overlay_800CE730.sc[n] = 1.0f;
+        n++;
+    } while (n < 8);
+    D_menu_overlay_800CE730.pos[8].y = 0;
+    D_menu_overlay_800CE730.pos[8].x = 0;
+    D_menu_overlay_800CE730.sel = 0;
+    n = 0;
+    switch (kind) {
+    case 0:
+        D_menu_overlay_800CE730.title = D_menu_overlay_800A5FD4;
+        D_menu_overlay_800CE730.baseY = 0xA5;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA2);
+        D_menu_overlay_800CE730.type[n] = 1;
+        D_menu_overlay_800CE730.w74[n] = 1;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA3);
+        D_menu_overlay_800CE730.type[n] = 1;
+        D_menu_overlay_800CE730.w74[n] = 2;
+        n++;
+        D_menu_overlay_800CE730.pos[0].x = -0x9C;
+        D_menu_overlay_800CE730.pos[1].x = -0x8F;
+        break;
+    case 1:
+        D_menu_overlay_800CE730.title = getGameOrFrontText(0xA8);
+        *(s16 *)&D_menu_overlay_800CE730.baseY = -0x23;
+        D_menu_overlay_800CE730.p8[n] = D_menu_overlay_800A5FD4;
+        D_menu_overlay_800CE730.type[n] = 3;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = D_menu_overlay_800A5FD4;
+        D_menu_overlay_800CE730.type[n] = 0;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = D_menu_overlay_800A5FD4;
+        D_menu_overlay_800CE730.type[n] = 0;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = D_menu_overlay_800A5FD4;
+        D_menu_overlay_800CE730.type[n] = 0;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA9);
+        D_menu_overlay_800CE730.type[n] = 9;
+        n++;
+        cycleAccountLabelText(&D_menu_overlay_800CE730);
+        D_menu_overlay_800CE730.pos[2].x = -0x46;
+        D_menu_overlay_800CE730.pos[3].x = 0x46;
+        D_menu_overlay_800CE730.pos[0].y = 0x8C;
+        D_menu_overlay_800CE730.pos[1].y = 0x87;
+        D_menu_overlay_800CE730.pos[2].y = 0xBB;
+        D_menu_overlay_800CE730.pos[3].y = 0x97;
+        D_menu_overlay_800CE730.pos[4].y = 0x9F;
+        D_menu_overlay_800CE730.sc[0] = 0.9f;
+        D_menu_overlay_800CE730.sc[1] = 0.6f;
+        D_menu_overlay_800CE730.sc[2] = 0.6f;
+        D_menu_overlay_800CE730.sc[3] = 0.6f;
+        break;
+    case 2:
+        D_menu_overlay_800CE730.f5 = 0;
+        D_menu_overlay_800CE730.title = getGameOrFrontText(0xA3);
+        if (D_main_bss_80130B58 & 0x180000) {
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xAB);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 8;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xAC);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 4;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xDB);
+            D_menu_overlay_800CE730.type[n] = 0x1A;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xAD);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 7;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xAE);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 3;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xAF);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 6;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xB0);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 5;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA4);
+            D_menu_overlay_800CE730.type[n] = 0x19;
+            n++;
+            D_menu_overlay_800CE730.baseY = 0x14;
+            D_menu_overlay_800CE730.pos[8].y = 0xA;
+            D_menu_overlay_800CE730.pos[7].y = 0x14;
+            D_menu_overlay_800CE730.pos[6].y = 0x14;
+            D_menu_overlay_800CE730.pos[5].y = 0x14;
+            D_menu_overlay_800CE730.pos[4].y = 0x14;
+        } else {
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xAB);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 8;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xAC);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 4;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xAD);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 7;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = D_menu_overlay_800A5FD4;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xAE);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 3;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xAF);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 6;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xB0);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 5;
+            n++;
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA4);
+            D_menu_overlay_800CE730.type[n] = 0x19;
+            n++;
+            D_menu_overlay_800CE730.baseY = 0x1E;
+            D_menu_overlay_800CE730.pos[8].y = 0xA;
+            D_menu_overlay_800CE730.pos[7].y = -0xA;
+            D_menu_overlay_800CE730.pos[6].y = -0xA;
+            D_menu_overlay_800CE730.pos[5].y = -0xA;
+            D_menu_overlay_800CE730.pos[4].y = -0xA;
+        }
+        break;
+    case 3:
+        D_menu_overlay_800CE730.f5 = 2;
+        D_menu_overlay_800CE730.title = getGameOrFrontText(0xAE);
+        n = handleGameSettingsMenu(port, (s32)&D_menu_overlay_800CE730, 3, n, 0);
+        sprintf(D_menu_overlay_800CF050, "%s: %s", getGameOrFrontText(0xB2), getGameOrFrontText(languageTextIds[D_main_bss_80130B46]));
+        if (isViModeTypePal() & 0xFF) {
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xB2);
+            D_menu_overlay_800CE730.type[n] = 1;
+            D_menu_overlay_800CE730.w74[n] = 9;
+            n++;
+        } else {
+            D_menu_overlay_800CE730.p8[n] = D_menu_overlay_800A5FD4;
+            n++;
+        }
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xB3);
+        D_menu_overlay_800CE730.type[n] = 0xE;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA4);
+        D_menu_overlay_800CE730.type[n] = 0x19;
+        n++;
+        break;
+    case 4:
+        D_menu_overlay_800CE730.f5 = 2;
+        D_menu_overlay_800CE730.title = getGameOrFrontText(0xAC);
+        *(s16 *)&D_menu_overlay_800CE730.baseY = -0x5A;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA4);
+        D_menu_overlay_800CE730.type[n] = 0x19;
+        n++;
+        D_menu_overlay_800CE730.pos[0].y = 0xFA;
+        break;
+    case 8:
+        D_menu_overlay_800CE730.f5 = 2;
+        D_menu_overlay_800CE730.title = getGameOrFrontText(gCraftStatX[D_menu_overlay_800CF150].text);
+        *(s16 *)&D_menu_overlay_800CE730.baseY = -0x28;
+        if (D_menu_overlay_800CF150 > 0) {
+            D_menu_overlay_800CE730.p8[n] = "<<<";
+            D_menu_overlay_800CE730.type[n] = 7;
+            n++;
+        } else {
+            D_menu_overlay_800CE730.p8[n] = D_menu_overlay_800A5FD4;
+            D_menu_overlay_800CE730.type[n] = 0;
+            n++;
+        }
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA4);
+        D_menu_overlay_800CE730.type[n] = 6;
+        n++;
+        if (D_menu_overlay_800CF150 < (hasKasanMoorDefected(D_main_bss_80130B2F) & 0xFF)) {
+            D_menu_overlay_800CE730.p8[n] = ">>>";
+            D_menu_overlay_800CE730.type[n] = 8;
+            n++;
+        } else {
+            D_menu_overlay_800CE730.p8[n] = D_menu_overlay_800A5FD4;
+            D_menu_overlay_800CE730.type[n] = 0;
+            n++;
+        }
+        D_menu_overlay_800CE730.pos[0].x = -0x80;
+        D_menu_overlay_800CE730.pos[2].x = 0x80;
+        D_menu_overlay_800CE730.pos[0].y = 0x10B;
+        D_menu_overlay_800CE730.pos[1].y = 0xE7;
+        D_menu_overlay_800CE730.pos[2].y = 0xC3;
+        D_menu_overlay_800CE730.pos[8].x = gCraftStatX[D_menu_overlay_800CF150].f10 + 0x80;
+        D_menu_overlay_800CE730.pos[8].y = -0xA;
+        {
+            MenuD *m = &D_menu_overlay_800CE730;
+            u8 sel;
+            if (D_menu_overlay_800CF151 != -1 && strlen(m->p8[D_menu_overlay_800CF151]) != 0) {
+                sel = D_menu_overlay_800CF151;
+            } else {
+                sel = 1;
+            }
+            m->sel = sel;
+        }
+        break;
+    case 5:
+        D_menu_overlay_800CE730.f5 = 2;
+        getControllerSettingsTitle(D_menu_overlay_800CF050);
+        D_menu_overlay_800CE730.title = D_menu_overlay_800CF050;
+        *(s16 *)&D_menu_overlay_800CE730.baseY = -0x5A;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA4);
+        D_menu_overlay_800CE730.type[n] = 0x19;
+        n++;
+        D_menu_overlay_800CE730.pos[0].y = 0x109;
+        break;
+    case 6:
+        D_menu_overlay_800CE730.f5 = 2;
+        D_menu_overlay_800CE730.title = getGameOrFrontText(0xAF);
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xB4);
+        D_menu_overlay_800CE730.type[n] = 0x15;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xB5);
+        D_menu_overlay_800CE730.type[n] = 0x16;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xB6);
+        D_menu_overlay_800CE730.type[n] = 0x17;
+        n++;
+        n = handleGameSettingsMenu(port, (s32)&D_menu_overlay_800CE730, 6, n, 0);
+        D_menu_overlay_800CE730.p8[n] = D_menu_overlay_800A5FD4;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xB3);
+        D_menu_overlay_800CE730.type[n] = 0xF;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA4);
+        D_menu_overlay_800CE730.type[n] = 0x19;
+        n++;
+        break;
+    case 7:
+        D_menu_overlay_800CE730.f5 = 2;
+        D_menu_overlay_800CE730.title = getGameOrFrontText(0xAD);
+        *(s16 *)&D_menu_overlay_800CE730.baseY = -0x19;
+        D_menu_overlay_800CE730.p8[n] = "12345678";
+        D_menu_overlay_800CE730.type[n] = 0x14;
+        n++;
+        *(Str9 *)D_menu_overlay_800CE730.p8[0] = D_menu_overlay_800A6658;
+        D_menu_overlay_800CE730.p8[n] = D_menu_overlay_800A5FD4;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xB9);
+        D_menu_overlay_800CE730.type[n] = 0x12;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA4);
+        D_menu_overlay_800CE730.type[n] = 0x13;
+        n++;
+        D_menu_overlay_800CE730.pos[2].y = 0x8E;
+        D_menu_overlay_800CE730.pos[3].x = -4;
+        D_menu_overlay_800CE730.pos[3].y = 0xA5;
+        D_menu_overlay_800CE730.sc[0] = 1.4f;
+        break;
+    case 9:
+        D_menu_overlay_800CE730.f5 = 3;
+        D_menu_overlay_800CE730.title = getGameOrFrontText(0xB2);
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0x7A);
+        D_menu_overlay_800CE730.type[n] = 0x18;
+        D_menu_overlay_800CE730.w74[n] = 0;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0x7B);
+        D_menu_overlay_800CE730.type[n] = 0x18;
+        D_menu_overlay_800CE730.w74[n] = 1;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0x7C);
+        D_menu_overlay_800CE730.type[n] = 0x18;
+        D_menu_overlay_800CE730.w74[n] = 2;
+        n++;
+        if (!(flags & 8)) {
+            D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA4);
+            D_menu_overlay_800CE730.type[n] = 0x19;
+            n++;
+        }
+        break;
+    case 10:
+        D_menu_overlay_800CE730.title = getGameOrFrontText(0xDB);
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xDC);
+        D_menu_overlay_800CE730.type[n] = 1;
+        D_menu_overlay_800CE730.w74[n] = 0xB;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xDD);
+        D_menu_overlay_800CE730.type[n] = 1;
+        D_menu_overlay_800CE730.w74[n] = 0xC;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA4);
+        D_menu_overlay_800CE730.type[n] = 0x19;
+        n++;
+        D_menu_overlay_800CE730.sc[0] = 0.9f;
+        D_menu_overlay_800CE730.sc[1] = 0.9f;
+        D_menu_overlay_800CE730.sc[2] = 0.9f;
+        break;
+    case 11:
+        D_menu_overlay_800CE730.title = D_menu_overlay_800A5FD4;
+        D_menu_overlay_800CE730.f5 = 0xA;
+        D_menu_overlay_800CE730.p8[n] = "<<<";
+        D_menu_overlay_800CE730.type[n] = 0x1B;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = "MAY THE FORCE BE WITH YOU!!!!";
+        D_menu_overlay_800CE730.type[n] = 0x1D;
+        n++;
+        D_menu_overlay_800CE730.p8[n] = ">>>";
+        D_menu_overlay_800CE730.type[n] = 0x1C;
+        n++;
+        rs_strcpy(D_menu_overlay_800CE730.p8[1], gConcertTblX[gConcertHallDisplayIndex].name);
+        D_menu_overlay_800CE730.pos[0].x = -0xC8;
+        D_menu_overlay_800CE730.pos[0].y = 0x7D;
+        D_menu_overlay_800CE730.pos[1].y = 0x59;
+        D_menu_overlay_800CE730.pos[2].x = 0xC8;
+        D_menu_overlay_800CE730.pos[2].y = 0x35;
+        D_menu_overlay_800CE730.sel = 2;
+        D_menu_overlay_800CE730.sc[0] = 0.9f;
+        D_menu_overlay_800CE730.sc[1] = 0.9f;
+        D_menu_overlay_800CE730.sc[2] = 0.9f;
+        break;
+    case 12:
+        D_menu_overlay_800CE730.title = D_menu_overlay_800A5FD4;
+        D_menu_overlay_800CE730.p8[n] = getGameOrFrontText(0xA4);
+        D_menu_overlay_800CE730.type[n] = 1;
+        D_menu_overlay_800CE730.w74[n] = 0xA;
+        n++;
+        break;
+    }
+    D_menu_overlay_800CE730.count = n;
+    D_menu_overlay_800CE730.mask = 0;
+    n = 0;
+    if (D_menu_overlay_800CE730.count != 0) {
+        do {
+            if (strlen(D_menu_overlay_800CE730.p8[n]) != 0) {
+                D_menu_overlay_800CE730.mask |= 1 << n;
+            }
+            n++;
+        } while (n < D_menu_overlay_800CE730.count);
+    }
+    while (!((D_menu_overlay_800CE730.mask >> D_menu_overlay_800CE730.sel) & 1) || D_menu_overlay_800CE730.type[D_menu_overlay_800CE730.sel] == 0) {
+        D_menu_overlay_800CE730.sel++;
+    }
+    n = 0;
+    if (D_menu_overlay_800CE730.count != 0) {
+        do {
+            if ((D_menu_overlay_800CE730.mask >> n) & 1) {
+                s32 y = D_menu_overlay_800CE730.pos[n].y;
+                if (D_menu_overlay_800CE730.type[n] == 0x19) {
+                    y += 0x12;
+                }
+                D_menu_overlay_800CE730.pos[n].y = y;
+            }
+            n++;
+        } while (n < D_menu_overlay_800CE730.count);
+    }
+    animateCraftSelectFlags((u8 *)&D_menu_overlay_800CE730, (1 << D_menu_overlay_800CE730.count) - 1, 1);
+    setPlayerSlotAnimationFlag(5, D_menu_overlay_800CE730.title, 9, (s16)(D_menu_overlay_800CE730.pos[8].x - 0x100), (s16)(D_menu_overlay_800CE730.pos[8].y + (D_menu_overlay_800CE730.baseY - 0x48 - D_menu_overlay_800CE730.count * 0x12)));
+    setPlayerSlotEntryRGB(5, 9, &mainMenuBrightYellowColor);
+    v = getPlayerSlotFieldAt34(5, 9);
+    D_menu_overlay_800CE730.fF0 = v[6];
+    D_menu_overlay_800CE730.fF4 = v[7];
+    D_menu_overlay_800CE730.f9C = 0.0f;
+    setPlayerSlotAnimationFlag(5, D_menu_overlay_800CE730.p8[0], 8, (s16)(s32)((f32)D_menu_overlay_800CE730.pos[0].x + -256.0f), (s16)(s32)((f32)((s16)D_menu_overlay_800CE730.baseY - D_menu_overlay_800CE730.count * 0x12) + D_menu_overlay_800CE730.f9C + (f32)D_menu_overlay_800CE730.pos[0].y));
+    activateAnimationKeyframe(5, 8, 0);
+    setPlayerSlotAnimationFlag(5, D_menu_overlay_800CE730.title, 0xA, (s16)(D_menu_overlay_800CE730.pos[8].x - 0x100), (s16)(D_menu_overlay_800CE730.pos[8].y + (D_menu_overlay_800CE730.baseY - 0x48 - D_menu_overlay_800CE730.count * 0x12)));
+    activateAnimationKeyframe(5, 0xA, 0);
+    return &D_menu_overlay_800CE730;
+}
 
 typedef struct {
     u16 textA;
