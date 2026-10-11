@@ -1793,7 +1793,30 @@ void silenceVoiceSlot(s32 i) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", computeVoiceGlidePitch);
+extern s32 gGlideStepGP __asm__("D_main_bss_8013ACC8");
+u32 computeVoiceGlidePitch(u8 *v) {
+    u32 cur;
+    register u32 end asm("$3");
+    u32 d;
+    u32 t;
+    u32 r;
+    register u32 g asm("$2");
+
+    if (*(u32 *)(v + 0x24) & 0x800) {
+        cur = *(u32 *)(v + 0x94);
+        end = *(u32 *)(v + 0x98);
+        if (cur < end) {
+            d = (cur << 8);
+            __asm__("srl %0,%1,8" : "=r"(t) : "r"(end));
+            t = d / t;
+            r = t * *(u16 *)(v + 0x70) + (0x10000 - t) * *(u16 *)(v + 0x9C);
+            g = gGlideStepGP;
+            *(u32 *)(v + 0x94) = cur + g;
+            return r;
+        }
+    }
+    return *(u32 *)(v + 0x70);
+}
 
 extern u8 *D_main_bss_8013AF00;
 extern u32 D_main_bss_8013D8A4[];
