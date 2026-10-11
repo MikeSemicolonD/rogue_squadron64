@@ -772,7 +772,84 @@ s32 applyVoiceCmdByHandleLocked(s32 h, u8 v) {
     return r;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", spreadVoiceKeyTransposeAcrossChain);
+typedef struct VhNodeK { struct VhNodeK *next; s32 pad4; u32 h; s32 slot; } VhNodeK;
+extern VhNodeK *gVhHeadK __asm__("D_main_bss_8013AF00");
+typedef struct {
+    s32 next;
+    u8 pad4[0x10];
+    u32 flags;
+    u8 pad18[0x27];
+    u8 trkA;
+    u8 pad40[9];
+    u8 trkB;
+    u8 pad4A[0xA];
+    s32 id;
+    u8 pad58[0x124];
+} ChanRecK;
+extern ChanRecK gChanRecK[] __asm__("D_main_bss_8013D890");
+extern u8 gNoteTblK[][0x86] __asm__("D_main_bss_80140A10");
+extern u8 gNoteTrkTblK[][16][0x86] __asm__("D_main_bss_801440C8");
+static __inline__ VhNodeK *vhFindK(u32 h) {
+    VhNodeK *n = gVhHeadK;
+    while (n != NULL) {
+        if (n->h == h) {
+            return n;
+        }
+        if (h < n->h) {
+            return NULL;
+        }
+        n = n->next;
+    }
+    return NULL;
+}
+static __inline__ s32 vhResolveK(u32 h) {
+    VhNodeK *n;
+    if (h != (u32)-1) {
+        n = vhFindK(h);
+        if (n != NULL) {
+            return n->slot;
+        }
+    }
+    return -1;
+}
+static __inline__ void setCtrlHiK(u8 t, u8 idx, u8 c, u16 v) {
+    if (t != 0xFF) {
+        gNoteTrkTblK[t][idx][c] = (v >> 7) & 0x7F;
+    } else {
+        gNoteTblK[idx][c] = (v >> 7) & 0x7F;
+    }
+}
+static __inline__ void setCtrlTK(u8 t, u8 idx, u8 c, u8 v) {
+    if (t != 0xFF) {
+        gNoteTrkTblK[t][idx][c] = v;
+    } else {
+        gNoteTblK[idx][c] = v;
+    }
+}
+#define GETTRK(idx) ((gChanRecK[idx].flags & 2) ? gChanRecK[idx].trkB : gChanRecK[idx].trkA)
+#define setCtrlK(idx, c, v) setCtrlTK(GETTRK(idx), idx, c, v)
+s32 spreadVoiceKeyTransposeAcrossChain(s32 h, u16 val) {
+    s32 r = -1;
+    s32 s;
+    s32 idx;
+    s = vhResolveK(h);
+    while (s != -1) {
+            idx = s & 0xFF;
+            if (gChanRecK[idx].id != s) {
+                break;
+            }
+            if (gChanRecK[idx].flags & 2) {
+                setCtrlHiK(gChanRecK[idx].trkB, idx, 0x84, val);
+                setCtrlTK(gChanRecK[idx].trkB, idx, 0x85, val & 0x7F);
+            } else {
+                setCtrlHiK(gChanRecK[idx].trkA, idx, 0x84, val);
+                setCtrlTK(gChanRecK[idx].trkA, idx, 0x85, val & 0x7F);
+            }
+            s = gChanRecK[idx].next;
+            r = 0;
+    }
+    return r;
+}
 
 extern u8 gMusyXActiveFlag;
 void factor5MutexAcquire(void);
