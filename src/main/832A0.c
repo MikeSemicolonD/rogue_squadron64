@@ -49,9 +49,26 @@ u16 unusedRand(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", lookupSineFromAngleTable);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setTrackVoiceTickBudget);
+extern s32 D_main_bss_8013ACD0[];
+void setTrackVoiceTickBudget(u32 tempo, u8 t) {
+    if (t == 0xFF) {
+        t = 8;
+    }
+    D_main_bss_8013ACD0[t] = (tempo * 0x600) / 240;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", getTrackVoiceTickBudget);
+extern s32 D_main_bss_8013ACD0[];
+s32 getTrackVoiceTickBudget(u8 *t) {
+    s32 *base = D_main_bss_8013ACD0;
+    s32 *p;
+    u8 idx = t[0x4F];
+    if (idx != 0xFF) {
+        p = base + idx;
+    } else {
+        p = base + 8;
+    }
+    return *p;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", setChannelNoteCell);
 
@@ -65,7 +82,14 @@ void setChannelByteParam(u8 a, u8 b, u8 v) {
     D_main_bss_8013C460[a] = v;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", getChannelByteParam);
+extern u8 D_main_bss_8013C460[];
+extern u8 D_main_bss_80142040[][16];
+u8 getChannelByteParam(u8 a, u8 b) {
+    if (b != 0xFF) {
+        return D_main_bss_80142040[b][a];
+    }
+    return D_main_bss_8013C460[a];
+}
 
 extern u8 D_main_bss_80142018[];
 extern u8 D_main_bss_801483D0[][16];
@@ -77,7 +101,14 @@ void setChannelByteParamAlt(u8 a, u8 b, u8 v) {
     D_main_bss_80142018[a] = v;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", getChannelByteParamAlt);
+extern u8 D_main_bss_80142018[];
+extern u8 D_main_bss_801483D0[][16];
+u8 getChannelByteParamAlt(u8 a, u8 b) {
+    if (b != 0xFF) {
+        return D_main_bss_801483D0[b][a];
+    }
+    return D_main_bss_80142018[a];
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", resetChannelStateRecord);
 
