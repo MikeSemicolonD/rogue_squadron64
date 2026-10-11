@@ -2402,7 +2402,81 @@ s32 spreadVoiceByteParamLocked(s32 h, u8 v) {
     return r;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", spreadVoiceParamLockedVariant);
+typedef struct VhNodeLV { struct VhNodeLV *next; s32 pad4; u32 h; s32 slot; } VhNodeLV;
+extern VhNodeLV *gVhHeadLV __asm__("D_main_bss_8013AF00");
+typedef struct {
+    s32 next;
+    u8 pad4[0x10];
+    u32 flags;
+    u8 pad18[0x27];
+    u8 trkA;
+    u8 pad40[9];
+    u8 trkB;
+    u8 pad4A[0xA];
+    s32 id;
+    u8 pad58[0x124];
+} ChanRecLV;
+extern ChanRecLV gChanRecLV[] __asm__("D_main_bss_8013D890");
+extern u8 gNoteTblLV[][0x86] __asm__("D_main_bss_80140A10");
+extern u8 gNoteTrkTblLV[][16][0x86] __asm__("D_main_bss_801440C8");
+static __inline__ VhNodeLV *vhFindLV(u32 h) {
+    VhNodeLV *n = gVhHeadLV;
+    while (n != NULL) {
+        if (n->h == h) {
+            return n;
+        }
+        if (h < n->h) {
+            return NULL;
+        }
+        n = n->next;
+    }
+    return NULL;
+}
+static __inline__ s32 vhResolveLV(u32 h) {
+    VhNodeLV *n;
+    if (h != (u32)-1) {
+        n = vhFindLV(h);
+        if (n != NULL) {
+            return n->slot;
+        }
+    }
+    return -1;
+}
+static __inline__ void setCtrlTLV(u8 t, u8 idx, u8 c, u8 v) {
+    if (t != 0xFF) {
+        gNoteTrkTblLV[t][idx][c] = v & 0x7F;
+    } else {
+        gNoteTblLV[idx][c] = v & 0x7F;
+    }
+}
+extern u8 gMusyXActiveFlag;
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+#define LV_PAD8 __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0))
+s32 spreadVoiceParamLockedVariant(s32 h, u8 v) {
+    s32 r = -1;
+    s32 idx;
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        h = vhResolveLV(h);
+        while ((s32)h != -1) {
+            idx = h & 0xFF;
+            if (gChanRecLV[idx].id != h) {
+                break;
+            }
+            if (gChanRecLV[idx].flags & 2) {
+                setCtrlTLV(gChanRecLV[idx].trkB, idx, 0x5B, v);
+            } else {
+                setCtrlTLV(gChanRecLV[idx].trkA, idx, 0x5B, v);
+            }
+            LV_PAD8; LV_PAD8; LV_PAD8; 
+            h = gChanRecLV[idx].next;
+            r = 0;
+        }
+        factor5MutexRelease();
+    }
+    return r;
+}
 
 s32 flagVoiceChainForStop(s32 h) {
     s32 r = -1;
