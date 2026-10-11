@@ -120,7 +120,129 @@ s32 getInactiveBufferIndex(void) {
     return D_main_bss_80128D2C ^ 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", spTaskSchedulerThread);
+#include "PR/sptask.h"
+typedef struct { u8 type; u8 pad[3]; OSTask *task; } SchedMsg;
+typedef struct { u8 gfx; u8 dp; u8 dp2; u8 yield; u8 audio; } SchedFlags;
+extern volatile SchedFlags gSchedF __asm__("D_main_bss_8011A89C");
+extern OSMesgQueue D_main_8011A420;
+extern OSMesg D_main_8011A8D0;
+extern OSMesgQueue D_main_bss_8011A818;
+extern OSMesg D_main_bss_80114384;
+extern OSMesgQueue D_main_bss_8011A800;
+extern OSMesg D_main_bss_80128C68;
+extern u8 D_main_bss_80128C70;
+extern u8 D_main_bss_8011A8A0;
+extern volatile u8 D_main_bss_8011A89F;
+extern volatile u8 D_main_bss_8011A89C;
+extern s32 D_main_bss_80128C78;
+extern s32 D_main_bss_80128D30;
+extern s32 D_main_bss_80128D34;
+extern OSTask *D_main_bss_80128D38;
+extern OSTask *D_main_bss_80128D3C;
+extern OSTask *D_main_bss_80128D40;
+extern u8 D_main_bss_80128D44;
+extern s32 D_main_bss_80128EE0;
+extern OSTask gspTask;
+s32 getTimeLow32();
+void spTaskSchedulerThread(void *arg) {
+    SchedMsg *msg;
+    u32 y;
+    s32 t;
+    u8 *ev = &D_main_bss_80128C70;
+    *ev = 0x81;
+    osCreateMesgQueue(&D_main_8011A420, &D_main_8011A8D0, 8);
+    osSetEventMesg(OS_EVENT_SP, &D_main_8011A420, (OSMesg)ev);
+    osCreateMesgQueue(&D_main_bss_8011A818, &D_main_bss_80114384, 1);
+    osCreateMesgQueue(&D_main_bss_8011A800, &D_main_bss_80128C68, 1);
+    D_main_bss_80128D3C = NULL;
+    D_main_bss_80128D44 = 0;
+    D_main_bss_80128D40 = NULL;
+    D_main_bss_8011A8A0 = 0;
+    D_main_bss_80128D34 = -1;
+    while (1) {
+        osRecvMesg(&D_main_8011A420, (OSMesg *)&msg, OS_MESG_BLOCK);
+        switch (msg->type) {
+        case 1:
+            if (gSchedF.gfx == 0 && gSchedF.audio == 0) {
+                D_main_bss_80128D44 = 1;
+                D_main_bss_80128D38 = msg->task;
+                gSchedF.gfx = 1;
+                D_main_bss_80128C78 = getTimeLow32();
+                osSpTaskLoad(D_main_bss_80128D38);
+                osSpTaskStartGo(D_main_bss_80128D38);
+                D_main_bss_80128D30 = osGetTime();
+            } else {
+                D_main_bss_80128D3C = msg->task;
+            }
+            break;
+        case 2:
+            if (gSchedF.audio == 0) {
+                gSchedF.audio = 1;
+                if (gSchedF.gfx != 0) {
+                    osSpTaskYield();
+                    D_main_bss_80128D40 = msg->task;
+                } else {
+                    D_main_bss_8011A89F = 2;
+                    gSchedF.gfx = 1;
+                    osSpTaskLoad(msg->task);
+                    osSpTaskStartGo(msg->task);
+                }
+            }
+            break;
+        case 0x81:
+            if (D_main_bss_80128D40 != NULL) {
+                do {
+                    y = osSpTaskYielded(&gspTask);
+                } while (y >= 2);
+                osSpTaskLoad(D_main_bss_80128D40);
+                osSpTaskStartGo(D_main_bss_80128D40);
+                D_main_bss_80128D40 = NULL;
+                if (y == 0) {
+                    gSchedF.yield = 0;
+                } else {
+                    gSchedF.yield = 1;
+                }
+                break;
+            }
+            if (gSchedF.yield == 1) {
+                gSchedF.audio = 0;
+                osSendMesg(&D_main_bss_8011A800, NULL, OS_MESG_BLOCK);
+                osSpTaskLoad(D_main_bss_80128D38);
+                osSpTaskStartGo(D_main_bss_80128D38);
+                gSchedF.yield = 0;
+                break;
+            }
+            if (gSchedF.yield == 0) {
+                if (D_main_bss_80128D44 != 0) {
+                    t = getTimeLow32();
+                    D_main_bss_80128D44 = 0;
+                    D_main_bss_80128EE0 = t - D_main_bss_80128C78;
+                    osSendMesg(&D_main_bss_8011A818, NULL, OS_MESG_NOBLOCK);
+                }
+                if (gSchedF.audio != 0) {
+                    gSchedF.audio = 0;
+                    osSendMesg(&D_main_bss_8011A800, NULL, OS_MESG_NOBLOCK);
+                }
+            } else {
+                gSchedF.audio = 0;
+                osSendMesg(&D_main_bss_8011A800, NULL, OS_MESG_NOBLOCK);
+                gSchedF.yield = 0;
+            }
+            if (D_main_bss_80128D3C != NULL) {
+                D_main_bss_80128D38 = D_main_bss_80128D3C;
+                D_main_bss_80128D3C = NULL;
+                D_main_bss_80128C78 = getTimeLow32();
+                osSpTaskLoad(D_main_bss_80128D38);
+                osSpTaskStartGo(D_main_bss_80128D38);
+                D_main_bss_80128D44 = 1;
+                D_main_bss_80128D30 = osGetTime();
+            } else {
+                D_main_bss_8011A89C = 0;
+            }
+            break;
+        }
+    }
+}
 
 void osYieldThread(void);
 void yieldFromSpThread(void) {
