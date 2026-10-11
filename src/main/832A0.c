@@ -1167,7 +1167,49 @@ void applyMusicOrSfxVolume(u8 a, u16 b, u8 music, u8 sfx) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", isAudioFaderRampActive);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setupAudioFaderRamp);
+typedef struct { u8 type; u8 pad1[3]; s32 cur; s32 target; s32 step; s32 time; u8 pad14[0x14]; } FaderH;
+extern FaderH gFaderH[] __asm__("D_main_bss_80141B2C");
+void setupAudioFaderRamp(u8 vol, u16 time, u8 which) {
+    u32 i;
+    s32 t;
+
+    if (time == 0) {
+        time++;
+    }
+    t = time << 8;
+    switch (which) {
+    case 0xFF:
+        for (i = 0; i < 32; i++) {
+            gFaderH[i].target = vol << 16;
+            gFaderH[i].time = t;
+            gFaderH[i].step = (gFaderH[i].target - gFaderH[i].cur) / time;
+        }
+        break;
+    case 0xFD:
+        for (i = 0; i < 32; i++) {
+            if (gFaderH[i].type == 0) {
+                gFaderH[i].target = vol << 16;
+                gFaderH[i].time = t;
+                gFaderH[i].step = (gFaderH[i].target - gFaderH[i].cur) / time;
+            }
+        }
+        break;
+    case 0xFE:
+        for (i = 0; i < 32; i++) {
+            if (gFaderH[i].type == 1) {
+                gFaderH[i].target = vol << 16;
+                gFaderH[i].time = t;
+                gFaderH[i].step = (gFaderH[i].target - gFaderH[i].cur) / time;
+            }
+        }
+        break;
+    default:
+        gFaderH[which].target = vol << 16;
+        gFaderH[which].time = *(volatile s32 *)&t;
+        gFaderH[which].step = (gFaderH[which].target - gFaderH[which].cur) / time;
+        break;
+    }
+}
 
 extern u8 gMusyXActiveFlag;
 void factor5MutexAcquire(void);
