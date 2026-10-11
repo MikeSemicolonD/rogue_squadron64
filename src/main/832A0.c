@@ -1915,7 +1915,81 @@ void musyxSetSequenceParamLocked(u16 key, s8 val) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxQuerySequenceLocked);
+typedef struct VhNodeMQ { struct VhNodeMQ *next; s32 pad4; u32 h; s32 slot; } VhNodeMQ;
+extern VhNodeMQ *gVhHeadMQ __asm__("D_main_bss_8013AF00");
+typedef struct {
+    s32 next;
+    u8 pad4[0x10];
+    u32 flags;
+    u8 pad18[0x27];
+    u8 trkA;
+    u8 pad40[9];
+    u8 trkB;
+    u8 pad4A[0xA];
+    s32 id;
+    u8 pad58[0x124];
+} ChanRecMQ;
+extern ChanRecMQ gChanRecMQ[] __asm__("D_main_bss_8013D890");
+extern u8 gNoteTblMQ[][0x86] __asm__("D_main_bss_80140A10");
+extern u8 gNoteTrkTblMQ[][16][0x86] __asm__("D_main_bss_801440C8");
+static __inline__ VhNodeMQ *vhFindMQ(u32 h) {
+    VhNodeMQ *n = gVhHeadMQ;
+    while (n != NULL) {
+        if (n->h == h) {
+            return n;
+        }
+        if (h < n->h) {
+            return NULL;
+        }
+        n = n->next;
+    }
+    return NULL;
+}
+static __inline__ s32 vhResolveMQ(u32 h) {
+    VhNodeMQ *n;
+    if (h != (u32)-1) {
+        n = vhFindMQ(h);
+        if (n != NULL) {
+            return n->slot;
+        }
+    }
+    return -1;
+}
+static __inline__ void setCtrlTMQ(u8 t, u8 idx, u8 c, u8 v) {
+    if (t != 0xFF) {
+        gNoteTrkTblMQ[t][idx][c] = v & 0x7F;
+    } else {
+        gNoteTblMQ[idx][c] = v & 0x7F;
+    }
+}
+extern u8 gMusyXActiveFlag;
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+#define MQ_PAD8 __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0))
+s32 musyxQuerySequenceLocked(s32 h, u8 v) {
+    s32 r = -1;
+    s32 idx;
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        h = vhResolveMQ(h);
+        while ((s32)h != -1) {
+            idx = h & 0xFF;
+            if (gChanRecMQ[idx].id != h) {
+                break;
+            }
+            if (gChanRecMQ[idx].flags & 2) {
+                setCtrlTMQ(gChanRecMQ[idx].trkB, idx, 0x40, v);
+            } else {
+                setCtrlTMQ(gChanRecMQ[idx].trkA, idx, 0x40, v);
+            }
+            MQ_PAD8; MQ_PAD8; MQ_PAD8;
+            h = gChanRecMQ[idx].next;
+            r = 0;
+        }
+        factor5MutexRelease();
+    }
+    return r;
+}
 
 typedef struct VhNodeEV { struct VhNodeEV *next; s32 pad4; u32 h; s32 slot; } VhNodeEV;
 extern VhNodeEV *gVhHeadEV __asm__("D_main_bss_8013AF00");
