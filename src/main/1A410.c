@@ -2,31 +2,62 @@
 #include "common_types.h"
 #include "PR/os.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", awaitFrameSyncMesgBlock);
+extern OSMesgQueue D_main_bss_80128D10;
+void awaitFrameSyncMesgBlock(void) {
+    osRecvMesg(&D_main_bss_80128D10, NULL, OS_MESG_BLOCK);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", signalFrameSyncMesgNonblock);
+extern OSMesgQueue D_main_bss_80128D10;
+void signalFrameSyncMesgNonblock(void) {
+    osSendMesg(&D_main_bss_80128D10, NULL, OS_MESG_NOBLOCK);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", viRetraceHandlerThread);
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", yieldCurrentThread);
+void osYieldThread(void);
+void yieldCurrentThread(void) {
+    osYieldThread();
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", getInactiveBufferIndex);
+extern u8 D_main_bss_80128D2C;
+s32 getInactiveBufferIndex(void) {
+    return D_main_bss_80128D2C ^ 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", spTaskSchedulerThread);
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", yieldFromSpThread);
+void osYieldThread(void);
+void yieldFromSpThread(void) {
+    osYieldThread();
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", yieldFromGfxFrame);
+void osYieldThread(void);
+void yieldFromGfxFrame(void) {
+    osYieldThread();
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", postViThreadCommand);
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", initVideoSubsystem);
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", requestViFeatureChange);
+extern s32 D_main_bss_80128E90;
+s32 requestViFeatureChange(s32 arg0) {
+    D_main_bss_80128E90 = arg0;
+    return 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", beginSceneRenderFrame);
+extern s32 D_main_bss_80128E94;
+s32 beginSceneRenderFrame(s32 arg0) {
+    D_main_bss_80128E94 = arg0;
+    return 1;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", clearPendingViChanges);
+extern s32 D_main_bss_80128E90;
+extern s32 D_main_bss_80128E94;
+void clearPendingViChanges(void) {
+    D_main_bss_80128E90 = 0;
+    D_main_bss_80128E94 = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", applyPendingViChanges);
 
@@ -50,13 +81,28 @@ INCLUDE_ASM("asm/nonmatchings/main/1A410", acquireFreeBufferSlot);
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", postSwapRdpReset);
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", setPostSwapPendingFlags);
+extern u8 D_main_bss_8011A8C8;
+extern u8 D_main_bss_8011A8C9;
+void setPostSwapPendingFlags(void) {
+    D_main_bss_8011A8C8 = 1;
+    D_main_bss_8011A8C9 = 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", waitForPostSwapAck);
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", clearPostSwapPendingFlags);
+extern u8 D_main_bss_8011A8C8;
+extern u8 D_main_bss_8011A8C9;
+void clearPostSwapPendingFlags(void) {
+    D_main_bss_8011A8C8 = 0;
+    D_main_bss_8011A8C9 = 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", setGfxTaskYieldParams);
+extern u32 D_main_800377C0;
+extern u32 D_main_800377C4;
+void setGfxTaskYieldParams(u32 arg0, u32 arg1) {
+    D_main_800377C0 = arg0;
+    D_main_800377C4 = arg1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", dpInterruptHandlerThread);
 
