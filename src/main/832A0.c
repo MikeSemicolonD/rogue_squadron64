@@ -2065,7 +2065,13 @@ s32 setChannelProgByteAt2E(u8 *ch, u32 *cmd) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStoreGlobalRegister);
+extern u8 gGlobRegsSG[] __asm__("D_main_bss_80148C58");
+s32 soundMacroOpStoreGlobalRegister(u8 *ch, u8 *cmd) {
+    s32 unused[2];
+
+    gGlobRegsSG[cmd[2]] = *(u16 *)cmd;
+    return 0;
+}
 
 s32 setChannelKeyOffsetAt6E(u8 *ch, u16 *cmd) {
     ch[0x6E] = *cmd;
