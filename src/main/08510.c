@@ -3261,7 +3261,186 @@ INCLUDE_ASM("asm/nonmatchings/main/08510", submitSceneNodeRender);
 
 INCLUDE_ASM("asm/nonmatchings/main/08510", renderFlatMeshFaceGroup);
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", renderUnlitMeshFaces);
+struct RUMFRec {
+    /* 0x00 */ struct RUMFRec *next;
+    /* 0x04 */ u8 pad4[4];
+    /* 0x08 */ u16 h8;
+    /* 0x0A */ u16 hA;
+    /* 0x0C */ u16 hC;
+    /* 0x0E */ u8 padE[2];
+    /* 0x10 */ u8 b10;
+    /* 0x11 */ u8 b11;
+    /* 0x12 */ u8 b12;
+    /* 0x13 */ u8 b13;
+    /* 0x14 */ u8 b14;
+    /* 0x15 */ u8 b15;
+    /* 0x16 */ u16 h16;
+    /* 0x18 */ u16 h18;
+    /* 0x1A */ u16 h1A;
+    /* 0x1C */ u16 h1C;
+    /* 0x1E */ u16 h1E;
+    /* 0x20 */ u16 h20;
+    /* 0x22 */ s16 h22;
+    /* 0x24 */ u8 *p24;
+    /* 0x28 */ u8 *p28;
+    /* 0x2C */ u16 h2C;
+    /* 0x2E */ u16 h2E;
+};
+
+struct RUMFNode {
+    /* 0x00 */ struct RUMFNode *prev;
+    /* 0x04 */ struct RUMFNode *next;
+    /* 0x08 */ u32 *slots[64];
+};
+
+struct RUMFOwner {
+    /* 0x00 */ u8 pad0[0xC];
+    /* 0x0C */ u32 flags;
+    /* 0x10 */ u8 pad10[0x10];
+    /* 0x20 */ struct RUMFRec *recs;
+    /* 0x24 */ u8 pad24[0xC];
+    /* 0x30 */ s32 v30;
+    /* 0x34 */ u8 pad34[0x20];
+    /* 0x54 */ struct RUMFNode *nodes;
+};
+
+extern s32 D_main_bss_8011A894;
+
+s32 renderUnlitMeshFaces(f32 *pa0, f32 *pa1, u8 *powner)
+{
+  s32 a0 = (s32) pa0;
+  s32 a1 = (s32) pa1;
+  struct RUMFOwner *owner = (struct RUMFOwner *) powner;
+  struct RUMFNode *node;
+  struct RUMFRec *r;
+  int new_var3;
+  u32 **slot;
+  struct RUMFRec *new_var2;
+  u32 **end;
+  u16 lastTex;
+  u16 lut;
+  int new_var;
+  u32 w;
+  node = owner->nodes;
+  owner->v30 = D_main_bss_8011A894;
+  if (node != 0)
+  {
+    while (node->prev != 0)
+    {
+      node = node->prev;
+    }
+
+    do
+    {
+      r = owner->recs;
+    }
+    while (0);
+    lastTex = 0xFFFF;
+    if (node != 0)
+    {
+      do
+      {
+        end = node->slots;
+        slot = end;
+        loop:
+        {
+          if ((*slot) != 0)
+          {
+            if (r->h2E & 2)
+            {
+              r->h2E &= 0xFFFD;
+              if (lastTex != r->h2C)
+              {
+                if (D_main_bss_8011A444[r->h2C].material_type & 1)
+                {
+                  lut = getTextureLUTFieldAt8(D_main_bss_8011A444[r->h2C].D_80128F08_index);
+                }
+                else
+                {
+                  lut = 0;
+                }
+                lastTex = r->h2C;
+              }
+              if ((((((r->b10 == 2) && (r->h16 == 0)) && (((*((u32 *) (&r->b10))) & 0xFFFFFF) == 0x20202)) && (r->b14 == r->b10)) && ((*((u32 *) (&r->h18))) == 0)) && ((*((u32 *) (&r->h1C))) == 0))
+              {
+                u32 *out;
+                u32 v;
+                u8 *a = r->p24;
+                u8 *c;
+                new_var3 = (*(((u8 *) r) + 0x21));
+                c = r->p28;
+                do
+                {
+                  out = *slot;
+                  w = (new_var3 << 16) | 0x05000000;
+                  if (r->h2E & 1)
+                  {
+                    w |= 0x300;
+                  }
+                  else
+                  {
+                    w |= 0x200;
+                  }
+                  out[0] = w;
+                  out[1] = (((s8 *) a)[0] << 20) | ((((s8 *) a)[4] << 4) & 0xFFFF);
+                  out[2] = (((s8 *) a)[0x14] << 20) | ((((s8 *) a)[0x18] << 4) & 0xFFFF);
+                  out[3] = (((c[0] << 24) | (c[1] << 16)) | (c[2] << 8)) | c[3];
+                  out[4] = (((c[0x10] << 24) | (c[0x11] << 16)) | (c[0x12] << 8)) | c[0x13];
+                  out[5] = (((c[0x50] << 24) | (c[0x51] << 16)) | (c[0x52] << 8)) | c[0x53];
+                  new_var = (((c[0x60] << 24) | (c[0x61] << 16)) | (c[0x62] << 8)) | c[0x63];
+                  out[7] = ((lut - 1) << 5) & 0xFFFF;
+                  out[6] = new_var;
+                  out[8] = (r->h8 << 16) | r->hA;
+                }
+                while (0);
+                v = (r->hC << 16) | ((r->h22 << 2) & 0xFFFF);
+                out[9] = v;
+              }
+              else
+              {
+                u32 *out;
+                u32 v;
+                u16 sz = r->h20;
+                s32 hi = (sz & 0xFF) << 16;
+                u8 sh = r->b15;
+                out = *slot;
+                out[0] = ((hi | (((sh & 0xF) << 12) | ((long long) 0x05000000))) | ((r->h2E & 1) << 8)) | r->b10;
+                out[1] = (((r->b11 << 24) | (r->b12 << 16)) | (r->b13 << 8)) | r->b14;
+                out[2] = (u32) r->p24;
+                out[3] = (u32) r->p28;
+                {
+                  s32 n = ((sz - 1) >> sh) + 1;
+                  out[4] = ((r->h20 * r->h20) << 16) | (((n * n) * 4) & 0xFFFF);
+                }
+                out[5] = ((new_var2 = r)->h16 << 16) | r->h18;
+                out[6] = (r->h1A << 16) | r->h1C;
+                out[7] = (r->h1E << 16) | ((((lut - 1) << (r->b10 + 5)) / ((s32) (r->h20 - 1))) & 0xFFFF);
+                out[8] = (r->h8 << 16) | r->hA;
+                v = (r->hC << 16) | ((r->h22 << r->b10) & 0xFFFF);
+                out[9] = v;
+              }
+            }
+            r = r->next;
+            __asm__("" :: "r"(end));
+            __asm__("" :: "r"(end));
+            slot++;
+            if (slot < (end + 0x40))
+            {
+              goto loop;
+            }
+          }
+        }
+
+        __asm__("" :: "r"(end), "r"(slot));
+        node = node->next;
+      }
+      while (node != 0);
+      __asm__("" :: "r"(end));
+    }
+  }
+  owner->flags &= ~0x200;
+  return 1;
+}
 
 struct RvItem {
     /* 0x00 */ struct RvItem *next;
