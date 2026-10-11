@@ -160,9 +160,33 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", getModelAnimChannelEntryDuration);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", setModelAnimSlotCycleDuration);
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB20);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", sampleModelAnimKeyframeVec3);
+typedef struct { s32 a; s32 b; s32 c; u8 *ch; u8 state; u8 pad[3]; } MaSlotKV;
+extern MaSlotKV gSlotsKV[] __asm__("gActiveModelAnimSlots");
+#define KVENT(id, sub) (*(u8 **)(gSlotsKV[(id) - 1].c + 4) + (sub) * 16)
+#define KVSCL(id, sub) (*(f32 *)((sub) * 16 + gSlotsKV[(id) - 1].ch))
+static __inline__ u8 maSlotValidKV(u32 id) {
+    s32 r = 0;
+    if (id != 0 && id <= 32) {
+        r = gSlotsKV[id - 1].state == 1;
+    }
+    return r;
+}
+s32 sampleModelAnimKeyframeVec3(u32 h, f32 *out) {
+    u32 id = h >> 16;
+    u32 sub = h & 0xFFFF;
+
+    if (maSlotValidKV(id)) {
+        if (*(u32 *)(KVENT(id, sub) + 4) & 1) {
+            out[0] = (f32)*(s16 *)(KVENT(id, sub) + 8) * KVSCL(id, sub) * 0.00390625f;
+            out[1] = (f32)*(s16 *)(KVENT(id, sub) + 0xA) * KVSCL(id, sub) * 0.00390625f;
+            out[2] = (f32)*(s16 *)(KVENT(id, sub) + 0xC) * KVSCL(id, sub) * 0.00390625f;
+            return 1;
+        }
+        return 0;
+    }
+    return 0;
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB24);
 INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB28);
