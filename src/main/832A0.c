@@ -788,7 +788,84 @@ s32 spreadVoiceKeyTransposeLocked(s32 h, u16 v) {
     return r;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", spreadVoicePanVolumeAcrossChain);
+typedef struct VhNodeP { struct VhNodeP *next; s32 pad4; u32 h; s32 slot; } VhNodeP;
+extern VhNodeP *gVhHeadP __asm__("D_main_bss_8013AF00");
+typedef struct {
+    s32 next;
+    u8 pad4[0x10];
+    u32 flags;
+    u8 pad18[0x27];
+    u8 trkA;
+    u8 pad40[9];
+    u8 trkB;
+    u8 pad4A[0xA];
+    s32 id;
+    u8 pad58[0x124];
+} ChanRecP;
+extern ChanRecP gChanRecP[] __asm__("D_main_bss_8013D890");
+extern u8 gNoteTblP[][0x86] __asm__("D_main_bss_80140A10");
+extern u8 gNoteTrkTblP[][16][0x86] __asm__("D_main_bss_801440C8");
+static __inline__ VhNodeP *vhFindP(u32 h) {
+    VhNodeP *n = gVhHeadP;
+    while (n != NULL) {
+        if (n->h == h) {
+            return n;
+        }
+        if (h < n->h) {
+            return NULL;
+        }
+        n = n->next;
+    }
+    return NULL;
+}
+static __inline__ s32 vhResolveP(u32 h) {
+    VhNodeP *n;
+    if (h != (u32)-1) {
+        n = vhFindP(h);
+        if (n != NULL) {
+            return n->slot;
+        }
+    }
+    return -1;
+}
+static __inline__ void setCtrlHiP(u8 t, u8 idx, u8 c, u16 v) {
+    if (t != 0xFF) {
+        gNoteTrkTblP[t][idx][c] = (v >> 7) & 0x7F;
+    } else {
+        gNoteTblP[idx][c] = (v >> 7) & 0x7F;
+    }
+}
+static __inline__ void setCtrlTP(u8 t, u8 idx, u8 c, u8 v) {
+    if (t != 0xFF) {
+        gNoteTrkTblP[t][idx][c] = v;
+    } else {
+        gNoteTblP[idx][c] = v;
+    }
+}
+#define GETTRK(idx) ((gChanRecP[idx].flags & 2) ? gChanRecP[idx].trkB : gChanRecP[idx].trkA)
+#define setCtrlP(idx, c, v) setCtrlTP(GETTRK(idx), idx, c, v)
+s32 spreadVoicePanVolumeAcrossChain(s32 h, u16 val) {
+    s32 r = -1;
+    s32 s;
+    s32 idx;
+    s = vhResolveP(h);
+    while (s != -1) {
+            idx = s & 0xFF;
+            if (gChanRecP[idx].id != s) {
+                break;
+            }
+            if (gChanRecP[idx].flags & 2) {
+                setCtrlHiP(gChanRecP[idx].trkB, idx, 0x80, val);
+                setCtrlTP(gChanRecP[idx].trkB, idx, 0x81, val & 0x7F);
+            } else {
+                setCtrlHiP(gChanRecP[idx].trkA, idx, 0x80, val);
+                setCtrlTP(gChanRecP[idx].trkA, idx, 0x81, val & 0x7F);
+            }
+            s = gChanRecP[idx].next;
+            r = 0;
+    }
+    return r;
+}
 
 extern u8 gMusyXActiveFlag;
 void factor5MutexAcquire(void);
