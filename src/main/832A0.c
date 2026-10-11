@@ -4273,7 +4273,36 @@ void musyxKeyOnVoice(u8 *v) {
     KH(frame, 0)++;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxMixActiveVoices);
+typedef struct { u8 b0; u8 p1[0x83]; u8 b84; u8 b85; u8 p86[2]; } VoiceMX;
+typedef struct { u8 p0[0x22]; u8 b22; u8 p23[0x59]; s32 f7C; u16 h80; u8 p82[2]; u32 f84; } CmdMX;
+extern VoiceMX *gVoicesMX __asm__("D_main_bss_801496F8");
+extern u16 gNumVoicesMX __asm__("D_main_bss_80149700");
+extern u8 gBufIdxMX __asm__("D_main_bss_80149702");
+extern CmdMX *gCmdBufsMX[] __asm__("D_main_bss_80149708");
+extern u16 gCmdCntMX[] __asm__("D_main_bss_80149710");
+void musyxRenderVoiceSamplesMX(VoiceMX *, u16, u16, CmdMX *, u8) __asm__("musyxRenderVoiceSamples");
+void musyxMixActiveVoices(s32 out, u16 off, u16 len) {
+    u16 *cnt = &gCmdCntMX[gBufIdxMX];
+    u16 i;
+    u8 n = 0;
+    u32 mask = 0;
+
+    for (i = 0; i < gNumVoicesMX; i++) {
+        if (gVoicesMX[i].b85 != 0) {
+            gVoicesMX[i].b85 = 0;
+            mask |= 1 << gVoicesMX[i].b84;
+        }
+        if (gVoicesMX[i].b0 != 0) {
+            musyxRenderVoiceSamplesMX(&gVoicesMX[i], off, len, &gCmdBufsMX[gBufIdxMX][*cnt], n);
+            n++;
+            gCmdBufsMX[gBufIdxMX][(*cnt)++].b22 = 0;
+        }
+    }
+    gCmdBufsMX[gBufIdxMX][*cnt].b22 = 1;
+    gCmdBufsMX[gBufIdxMX][*cnt].f7C = out;
+    gCmdBufsMX[gBufIdxMX][*cnt].h80 = len;
+    gCmdBufsMX[gBufIdxMX][(*cnt)++].f84 = mask;
+}
 
 extern u8 gVcB702 __asm__("D_main_bss_80149702");
 extern u8 *gVcB758[] __asm__("D_main_bss_80149758");
