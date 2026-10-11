@@ -69,9 +69,68 @@ void clearPendingViChanges(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", applyPendingViChanges);
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", swapBufferWithViMode);
+extern u8 D_main_bss_8011A862;
+extern u8 D_main_bss_8011A864;
+extern u8 D_main_bss_8011A865;
+extern OSViMode D_main_bss_80128D50[4];
+extern OSViMode D_main_bss_80128C90;
+extern u16 D_main_bss_80128CC0;
+extern u16 D_main_bss_80128CC2;
+extern u16 D_main_bss_80128CD4;
+extern u16 D_main_bss_80128CD6;
+void waitOnVideoQueue(void);
+void swapBufferWithViMode(void) {
+    OSViMode *m = D_main_bss_80128D50;
+    if (D_main_bss_8011A865 == 0 || D_main_bss_8011A864 != 0) {
+        if (D_main_bss_8011A862 == 0) {
+            m += 1;
+        }
+    } else {
+        if (D_main_bss_8011A862 != 0) {
+            m += 2;
+        } else {
+            m += 3;
+        }
+    }
+    D_main_bss_80128C90 = *m;
+    {
+        u16 *p = &D_main_bss_80128CC0;
+        D_main_bss_80128CC2 = *p;
+        p += 10;
+        D_main_bss_80128CD6 = *p;
+        osViSetMode((OSViMode *)(p - 0x22));
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", selectAndApplyViMode);
+extern u8 D_main_bss_8011A862;
+extern u8 D_main_bss_8011A864;
+extern u8 D_main_bss_8011A865;
+extern OSViMode D_main_bss_80128D50[4];
+extern OSViMode D_main_bss_80128C90;
+extern u16 D_main_bss_80128CC0;
+extern u16 D_main_bss_80128CC2;
+extern u16 D_main_bss_80128CD4;
+extern u16 D_main_bss_80128CD6;
+void waitOnVideoQueue(void);
+void selectAndApplyViMode(void) {
+    OSViMode *m = D_main_bss_80128D50;
+    if (D_main_bss_8011A865 == 0 || D_main_bss_8011A864 != 0) {
+        if (D_main_bss_8011A862 == 0) {
+            m += 1;
+        }
+    } else {
+        if (D_main_bss_8011A862 != 0) {
+            m += 2;
+        } else {
+            m += 3;
+        }
+    }
+    D_main_bss_80128C90 = *m;
+    D_main_bss_80128CC2 = D_main_bss_80128CC0;
+    D_main_bss_80128CD6 = D_main_bss_80128CD4;
+    osViSetMode(&D_main_bss_80128C90);
+    waitOnVideoQueue();
+}
 
 extern s32 D_main_bss_8011A838;
 extern s32 D_main_bss_8011A83C;
@@ -126,7 +185,53 @@ INCLUDE_ASM("asm/nonmatchings/main/1A410", bufferArbiterAllocSlot);
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", acquireFreeBufferSlot);
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", postSwapRdpReset);
+#include "PR/sptask.h"
+extern u8 D_main_bss_8011A8C8;
+extern volatile u8 gBufIdxV __asm__("D_main_bss_80128D2C");
+s32 bufferArbiterAllocSlot(s32);
+void emitCombinerStateAndPatch(void *, u8);
+void computeFrameDeltaTime(void);
+extern u8 rspbootTextStart[];
+extern u8 findModelAnimKeyframeByPhase[];
+extern OSTask gspTask;
+extern s32 D_main_bss_8011A4C0;
+extern u32 D_main_800377C0;
+extern u32 D_main_800377C4;
+extern volatile u8 D_main_bss_8011A89E;
+extern volatile u8 D_main_bss_8011A89D;
+extern u8 D_main_80128CE0;
+extern OSTask *D_main_bss_80128CE4;
+extern OSMesgQueue D_main_8011A420;
+void postSwapRdpReset(void) {
+    s32 slot;
+    u8 *m;
+    volatile u8 *p = &D_main_bss_8011A8C8;
+    if (*p != 0) {
+        slot = bufferArbiterAllocSlot(1);
+        if (slot != 0) {
+            *p = 0;
+            emitCombinerStateAndPatch((void *)slot, gBufIdxV ^ 1);
+            computeFrameDeltaTime();
+            osWritebackDCacheAll();
+            gspTask.t.data_ptr = (u64 *)(D_main_bss_8011A4C0 - 8);
+            {
+                u8 *bt = rspbootTextStart;
+                gspTask.t.ucode_boot_size = findModelAnimKeyframeByPhase - bt;
+                gspTask.t.ucode_boot = (u64 *)bt;
+            }
+            gspTask.t.data_size = 0;
+            gspTask.t.ucode = (u64 *)D_main_800377C0;
+            gspTask.t.ucode_data = (u64 *)D_main_800377C4;
+            osDpSetStatus(0x1C0);
+            m = &D_main_80128CE0;
+            D_main_bss_8011A89E = 1;
+            D_main_bss_8011A89D = 1;
+            *m = 1;
+            D_main_bss_80128CE4 = &gspTask;
+            osSendMesg(&D_main_8011A420, m, OS_MESG_NOBLOCK);
+        }
+    }
+}
 
 extern u8 D_main_bss_8011A8C8;
 extern u8 D_main_bss_8011A8C9;
@@ -151,6 +256,30 @@ void setGfxTaskYieldParams(u32 arg0, u32 arg1) {
     D_main_800377C4 = arg1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", dpInterruptHandlerThread);
+extern OSMesgQueue D_main_bss_8011A408;
+extern OSMesg D_main_bss_8011A830;
+extern OSMesgQueue D_main_8011A7E8;
+extern OSMesg D_main_bss_8011DC64;
+extern s32 D_main_bss_80128D30;
+extern s32 D_main_bss_80128D34;
+extern s32 D_main_bss_80128EDC;
+extern volatile u8 D_main_bss_8011A89D;
+u32 getTimeSinceLastFrame(void);
+void dpInterruptHandlerThread(void *arg) {
+    volatile u8 *p;
+    osCreateMesgQueue(&D_main_bss_8011A408, &D_main_bss_8011A830, 1);
+    osSetEventMesg(OS_EVENT_DP, &D_main_bss_8011A408, NULL);
+    osCreateMesgQueue(&D_main_8011A7E8, &D_main_bss_8011DC64, 1);
+    p = &D_main_bss_8011A89D;
+    while (1) {
+        osRecvMesg(&D_main_bss_8011A408, NULL, OS_MESG_BLOCK);
+        D_main_bss_80128D34 = (u32)osGetTime() - D_main_bss_80128D30;
+        D_main_bss_80128EDC = getTimeSinceLastFrame();
+        if (*p != 0) {
+            osSendMesg(&D_main_8011A7E8, NULL, OS_MESG_NOBLOCK);
+        }
+        p[-2] = 0;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", fake_func_8001C3FC);
