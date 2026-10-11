@@ -3334,7 +3334,8 @@ subtitleColor         = 0x8003AD60; // type:u32 function_owner:initVoiceSubtitle
 D_main_8003ADB0       = 0x8003ADB0; // function_owner:computeBillboardFacingVector
 D_main_8003ADB4       = 0x8003ADB4; // function_owner:computeBillboardFacingVector
 D_main_8003ADB8       = 0x8003ADB8; // function_owner:orthonormalizeFrameAndSnapToZero
-D_main_8003B2F4       = 0x8003B2F4; // type:f32 size:0x4
+D_main_8003B2F4       = 0x8003B2F4; // type:f32 size:0x4 function_owner:guidedEffectNpcHandler
+D_main_8003B2F8       = 0x8003B2F8; // size:0x8 force_not_migration:True
 // material_entry    
 D_main_8003B6BC       = 0x8003B6BC; // type:u32 size:0x24
 // texture_entry    

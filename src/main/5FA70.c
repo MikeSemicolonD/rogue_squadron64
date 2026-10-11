@@ -174,4 +174,4 @@ void initWeaponSlotIndexTable(void) {
     D_main_bss_80139860 = 4;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/5FA70", D_main_8003B2F4);
+INCLUDE_RODATA("asm/nonmatchings/main/5FA70", D_main_8003B2F8);
