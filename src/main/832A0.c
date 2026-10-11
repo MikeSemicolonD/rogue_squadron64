@@ -108,25 +108,35 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5BucketedTableRemoveEntry);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", binarySearchWithComparator);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", func_main_80085CD8);
+s32 func_main_80085CD8(u8 *a, u8 *b) {
+    return *(u16 *)(a + 4) - *(u16 *)(b + 4);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5BucketedTableLookupValue);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", compareHalfwordAtOffset8);
+s32 compareHalfwordAtOffset8(u8 *a, u8 *b) {
+    return *(u16 *)(a + 8) - *(u16 *)(b + 8);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableLookupWidePairRecord);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", compareHalfwordAtOffset4_v2);
+s32 compareHalfwordAtOffset4_v2(u8 *a, u8 *b) {
+    return *(u16 *)(a + 4) - *(u16 *)(b + 4);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SecondSortedTableLookupValue);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableLookupValue);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", compareHalfwordAtOffset4_v3);
+s32 compareHalfwordAtOffset4_v3(u8 *a, u8 *b) {
+    return *(u16 *)(a + 4) - *(u16 *)(b + 4);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableLookupTaggedValue);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", cmpU16ByValue);
+s32 cmpU16ByValue(u8 *a, u8 *b) {
+    return *(u16 *)(a + 0) - *(u16 *)(b + 0);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxSortedInsertByU16);
 
@@ -194,7 +204,9 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", flagVoiceChainForStop);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", stopVoiceByHandleLocked);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", shiftChannelStreamLeft8);
+void shiftChannelStreamLeft8(u32 *p) {
+    *p <<= 8;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", computeChannelTempoStepFromTable);
 
@@ -218,7 +230,11 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosub);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosubAltReturnFrame);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", clearChannelFieldsAt1Cand20);
+s32 clearChannelFieldsAt1Cand20(u8 *ch) {
+    *(s32 *)(ch + 0x20) = 0;
+    *(s32 *)(ch + 0x1C) = 0;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpLoopRandomCount);
 
@@ -228,13 +244,19 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpKeyOffByNote);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpAddPitchBend);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setChannelProgHalfwordAt28);
+s32 setChannelProgHalfwordAt28(u8 *ch, u16 *cmd) {
+    *(u32 *)(ch + 0x28) = *cmd << 16;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetPitchBendGlide);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpAddKeyByte);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setChannelProgByteAt2E);
+s32 setChannelProgByteAt2E(u8 *ch, u32 *cmd) {
+    ch[0x2E] = *cmd >> 8;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStoreGlobalRegister);
 
@@ -254,7 +276,10 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpPlaySampleKeymap);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpKeyOff);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setChannelFlag24Bit80);
+s32 setChannelFlag24Bit80(u8 *ch) {
+    *(u32 *)(ch + 0x24) |= 0x80;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetPanSweep);
 
@@ -278,9 +303,15 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroSetupVolumeRamp);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroPlayRandomKeyNote);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroSetFlagBitVibrato);
+s32 soundMacroSetFlagBitVibrato(u8 *ch) {
+    *(u32 *)(ch + 0x24) |= 0x20000;
+    return 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroSetFlagBitTremolo);
+s32 soundMacroSetFlagBitTremolo(u8 *ch) {
+    *(u32 *)(ch + 0x24) |= 0x40000;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroPushEffectEvent);
 
@@ -316,11 +347,20 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", stopVoicesByHandle);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", stopAllSynthVoices);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", getMusyXChannelSlotByte);
+extern u8 D_main_bss_80148C58[];
+u8 getMusyXChannelSlotByte(s32 i) {
+    return D_main_bss_80148C58[i & 0xF];
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setMusyXChannelSlotByte);
+extern u8 D_main_bss_80148C58[];
+void setMusyXChannelSlotByte(s32 i, u8 v) {
+    D_main_bss_80148C58[i & 0xF] = v;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setMusyXVoiceTickGate);
+extern u8 D_main_bss_801483C8;
+void setMusyXVoiceTickGate(u8 arg0) {
+    D_main_bss_801483C8 = arg0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", dispatchAudioCommand);
 
@@ -358,7 +398,10 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", shutdownMusyXEngine);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxNoopStub);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", isMusyXActive);
+extern u8 gMusyXActiveFlag;
+u8 isMusyXActive(void) {
+    return gMusyXActiveFlag;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", serviceAudioOutputBuffers);
 
@@ -416,7 +459,9 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5QueueSignal);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", isAudioSlotActive);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", audioStubReturnZero);
+s32 audioStubReturnZero(void) {
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxInitVoiceFromSample);
 
