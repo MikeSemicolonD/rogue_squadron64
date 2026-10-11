@@ -3141,14 +3141,65 @@ INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE18);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxSynthFrame);
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE1C);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE30);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE38);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE3C);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE40);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE44);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", initN64RspMixer);
+void postViThreadCommand();
+void submitDmaRequestBatch();
+void registerSiCallback();
+void findAndZeroTableSlotMatching();
+void getAssetRamAddress();
+void musyxSynthFrame(void);
+void allocateSongChannelArray(u16, u32);
+char *strcpy(char *, const char *);
+extern void (*D_main_bss_801499D0)();
+extern void (*D_main_bss_801499DC)();
+extern void (*D_main_bss_801499D4)();
+extern void (*D_main_bss_801499D8)(void (*)(void));
+extern void (*D_main_bss_801499E0)();
+extern u8 D_main_bss_8014974D;
+extern s32 D_main_bss_80149768;
+extern u32 D_main_bss_80149774;
+extern void *D_main_bss_80149770;
+extern u16 D_main_bss_80149988;
+extern u32 D_main_bss_80149714;
+extern u32 D_main_bss_80149718;
+extern s32 D_main_bss_80142038;
+typedef struct { u32 rate; u8 c; u8 d; u8 pad6[0x100]; char name[19]; } MixInfoRM;
+extern MixInfoRM gMixInfoRM __asm__("D_main_bss_80140808");
+void initN64RspMixer(u32 *rate, u16 nch, u16 ms, u8 mode) {
+    u32 n;
+
+    if (nch > 32) {
+        nch = 32;
+    }
+    D_main_bss_801499D0 = postViThreadCommand;
+    D_main_bss_801499DC = submitDmaRequestBatch;
+    D_main_bss_801499D4 = registerSiCallback;
+    D_main_bss_801499D8 = (void (*)(void (*)(void)))findAndZeroTableSlotMatching;
+    D_main_bss_801499E0 = getAssetRamAddress;
+    D_main_bss_8014974D = 0;
+    allocateSongChannelArray(nch, *rate);
+    setupSongRenderBuffers(nch, *rate, mode);
+    n = *rate;
+    if (ms != 0) {
+        n = n * ms / 1000;
+        D_main_bss_80149768 = 0;
+        n = (n / 192) * 192 + 192;
+        D_main_bss_80149774 = n;
+        D_main_bss_80149770 = rs_malloc(n * 2, 0);
+    } else {
+        D_main_bss_80149770 = NULL;
+    }
+    D_main_bss_80149988 = 0xFFFF;
+    D_main_bss_801499D4(musyxSynthFrame);
+    n = (f32)*rate / 60.0f / 192.0f + 0.5f;
+    D_main_bss_80149718 = n;
+    D_main_bss_80149714 = n;
+    D_main_bss_80142038 = n * 192;
+    gMixInfoRM.rate = *rate;
+    gMixInfoRM.d = 0x10;
+    gMixInfoRM.c = 1;
+    strcpy(gMixInfoRM.name, "N64 RSP mixer V1.0");
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", initAudioSubsystem);
 
