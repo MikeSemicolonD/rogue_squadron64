@@ -813,7 +813,50 @@ s32 factor5SortedTableRemoveVoiceRecord(s32 v) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5BucketedTableInsertEntry);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5BucketedTableRemoveEntry);
+typedef struct { s32 a; s32 b; } BtE8BTR;
+extern s16 gBucketsBTR[][2] __asm__("D_main_bss_8013C480");
+typedef struct { s32 v; u16 key; u16 pad; } BtRecBTR;
+extern BtRecBTR gTblBTR[] __asm__("D_main_bss_801420C0");
+extern BtE8BTR gShiftBTR[] __asm__("D_main_bss_801420B8");
+extern s32 gTotalBTR __asm__("D_main_bss_80148C50");
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 factor5BucketedTableRemoveEntry(u16 key) {
+    s32 b;
+    s32 start;
+    s32 i;
+    s32 off;
+    s32 v;
+    s16 (*q)[2];
+
+    factor5MutexAcquire();
+    b = key >> 6;
+    if ((u16)gBucketsBTR[b][0] != 0) {
+        start = (u16)gBucketsBTR[b][1];
+        for (i = 0; i < (u16)gBucketsBTR[b][0]; i++) {
+            if (gTblBTR[start + i].key == key) {
+                break;
+            }
+        }
+        if (i < (u16)gBucketsBTR[b][0]) {
+            for (i = start + i + 1; i < gTotalBTR; i++) {
+                gShiftBTR[i] = gShiftBTR[i + 1];
+            }
+            q = gBucketsBTR;
+            for (off = 0; off < 0x800; off += 4) {
+                v = *(u16 *)((s32)gBucketsBTR + off + 2);
+                if (start < v) {
+                    q[0][1] = v - 1;
+                }
+                q++;
+            }
+            gBucketsBTR[b][0] = (u16)gBucketsBTR[b][0] - 1;
+            gTotalBTR = gTotalBTR - 1;
+        }
+    }
+    factor5MutexRelease();
+    return 0;
+}
 
 s32 binarySearchWithComparator(s32 arg0, u8 *base, s32 n, s32 size, s32 (*cmp)(s32, u8 *)) {
     s32 lo, hi, mid, r;
