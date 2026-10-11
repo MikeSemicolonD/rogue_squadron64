@@ -3923,7 +3923,58 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", initAudioSubsystem);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", reapplyAudioConfig);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", shutdownAudioEngine);
+extern u8 gMusyXActiveFlag;
+extern void *D_main_bss_801496FC;
+extern u8 *D_main_bss_80149728;
+extern volatile u8 D_main_bss_8014974C;
+extern void *D_main_bss_80149758;
+extern void *D_main_bss_8014975C;
+extern void *D_main_bss_80149764;
+extern s32 D_main_bss_80149768;
+extern void *D_main_bss_80149770;
+extern volatile s16 D_main_bss_8014998A;
+extern u8 *D_main_bss_801499BC;
+extern void *gSongBufSD __asm__("D_main_bss_801499C0");
+extern void *gStreamNodesSD __asm__("D_main_bss_801499C8");
+extern void *gStreamBufSD __asm__("D_main_bss_801499C4");
+extern void (*D_main_bss_801499D8)(void (*)(void));
+extern OSMesgQueue gAiQueueSD __asm__("D_main_bss_80149670");
+extern void *gMixBufsSD[] __asm__("D_main_bss_801496B0");
+extern void *gAiStackSD __asm__("D_main_bss_80149660");
+void musyxSynthFrame(void);
+void rs_free(void *);
+void shutdownAudioEngine(void) {
+    u8 m;
+
+    if (gMusyXActiveFlag != 0) {
+        D_main_bss_8014998A = 0x10;
+        while (D_main_bss_8014998A > 0) {
+        }
+        D_main_bss_801499D8(musyxSynthFrame);
+        if (D_main_bss_80149768 != 0) {
+            D_main_bss_80149768 = 0;
+            rs_free(0);
+        }
+        if (D_main_bss_80149770 != 0) {
+            rs_free(D_main_bss_80149770);
+        }
+        while (D_main_bss_8014974C != 0) {
+        }
+        rs_free(D_main_bss_80149728);
+        rs_free(D_main_bss_801499BC);
+        rs_free(gSongBufSD);
+        rs_free(gStreamNodesSD);
+        rs_free(gStreamBufSD);
+        rs_free(D_main_bss_80149758);
+        rs_free(D_main_bss_8014975C);
+        rs_free(D_main_bss_801496FC);
+        rs_free(D_main_bss_80149764);
+        m = 0xFF;
+        osSendMesg(&gAiQueueSD, (OSMesg)&m, OS_MESG_BLOCK);
+        rs_free(gMixBufsSD[0]);
+        rs_free(gAiStackSD);
+    }
+}
 
 extern u8 gMusyXActiveFlag;
 extern void *D_main_bss_801496FC;
