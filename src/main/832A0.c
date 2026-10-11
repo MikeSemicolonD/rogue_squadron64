@@ -36,9 +36,16 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", parseModelAnimType2Entry);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", audioSeqMallocZero);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", audioSeqFree);
+void rs_free(void *);
+void audioSeqFree(void *p) {
+    rs_free(p);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", unusedRand);
+extern u32 D_main_800A0F54;
+u16 unusedRand(void) {
+    D_main_800A0F54 *= 0xA8351D63;
+    return D_main_800A0F54 >> 6;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", lookupSineFromAngleTable);
 
@@ -48,11 +55,27 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", getTrackVoiceTickBudget);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", setChannelNoteCell);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setChannelByteParam);
+extern u8 D_main_bss_8013C460[];
+extern u8 D_main_bss_80142040[][16];
+void setChannelByteParam(u8 a, u8 b, u8 v) {
+    if (b != 0xFF) {
+        D_main_bss_80142040[b][a] = v;
+        return;
+    }
+    D_main_bss_8013C460[a] = v;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", getChannelByteParam);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setChannelByteParamAlt);
+extern u8 D_main_bss_80142018[];
+extern u8 D_main_bss_801483D0[][16];
+void setChannelByteParamAlt(u8 a, u8 b, u8 v) {
+    if (b != 0xFF) {
+        D_main_bss_801483D0[b][a] = v;
+        return;
+    }
+    D_main_bss_80142018[a] = v;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", getChannelByteParamAlt);
 
@@ -64,23 +87,50 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", initVoiceModulatorRecords);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateVoiceModulatorRecord);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateVoiceModulatorRecordZero);
+u16 evaluateVoiceModulatorRecord(u8 *, u8 *);
+u16 evaluateVoiceModulatorRecordZero(u8 *v) {
+    return evaluateVoiceModulatorRecord(v, v + 0xC0);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateVoiceModulatorRecordOne);
+u16 evaluateVoiceModulatorRecord(u8 *, u8 *);
+u16 evaluateVoiceModulatorRecordOne(u8 *v) {
+    return evaluateVoiceModulatorRecord(v, v + 0xD2);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateVoiceModulatorRecordTwo);
+u16 evaluateVoiceModulatorRecord(u8 *, u8 *);
+u16 evaluateVoiceModulatorRecordTwo(u8 *v) {
+    return evaluateVoiceModulatorRecord(v, v + 0xE4);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateVoiceModulatorRecordThree);
+u16 evaluateVoiceModulatorRecord(u8 *, u8 *);
+u16 evaluateVoiceModulatorRecordThree(u8 *v) {
+    return evaluateVoiceModulatorRecord(v, v + 0xF6);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateVoiceModulatorRecordFour);
+u16 evaluateVoiceModulatorRecord(u8 *, u8 *);
+u16 evaluateVoiceModulatorRecordFour(u8 *v) {
+    return evaluateVoiceModulatorRecord(v, v + 0x108);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateVoiceModulatorRecordFive);
+u16 evaluateVoiceModulatorRecord(u8 *, u8 *);
+u16 evaluateVoiceModulatorRecordFive(u8 *v) {
+    return evaluateVoiceModulatorRecord(v, v + 0x11A);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateVoiceModulatorRecordSix);
+u16 evaluateVoiceModulatorRecord(u8 *, u8 *);
+u16 evaluateVoiceModulatorRecordSix(u8 *v) {
+    return evaluateVoiceModulatorRecord(v, v + 0x12C);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateVoiceModulatorRecordSeven);
+u16 evaluateVoiceModulatorRecord(u8 *, u8 *);
+u16 evaluateVoiceModulatorRecordSeven(u8 *v) {
+    return evaluateVoiceModulatorRecord(v, v + 0x13E);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", evaluateVoiceModulatorRecordEight);
+u16 evaluateVoiceModulatorRecord(u8 *, u8 *);
+u16 evaluateVoiceModulatorRecordEight(u8 *v) {
+    return evaluateVoiceModulatorRecord(v, v + 0x150);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableInsertValue);
 
@@ -212,9 +262,20 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", computeChannelTempoStepFromTable);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", computeChannelWaitDuration);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpWaitTicks);
+u8 computeChannelWaitDuration();
+s32 soundMacroOpWaitTicks(u8 *ch, u8 *cmd) {
+    cmd[5] = 1;
+    return computeChannelWaitDuration();
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStopVoice);
+void freeSynthVoiceFromActiveList();
+s32 soundMacroOpStopVoice(u8 *ch) {
+    *(s32 *)ch = 0;
+    ch[0x2E] = 0;
+    freeSynthVoiceFromActiveList();
+    *(s32 *)(ch + 0x64) = -1;
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpReturnFromGosub);
 
@@ -260,7 +321,11 @@ s32 setChannelProgByteAt2E(u8 *ch, u32 *cmd) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStoreGlobalRegister);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setChannelKeyOffsetAt6E);
+s32 setChannelKeyOffsetAt6E(u8 *ch, u16 *cmd) {
+    ch[0x6E] = *cmd;
+    ch[0x6F] = *(u32 *)cmd >> 8;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpPortamentoStartWait);
 
@@ -274,7 +339,11 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStartNoteTransposedSweep)
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpPlaySampleKeymap);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpKeyOff);
+void musyxStartVoiceRelease(u8, u8);
+s32 soundMacroOpKeyOff(u8 *ch) {
+    musyxStartVoiceRelease(ch[0x67], 1);
+    return 0;
+}
 
 s32 setChannelFlag24Bit80(u8 *ch) {
     *(u32 *)(ch + 0x24) |= 0x80;
@@ -339,9 +408,31 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", tickAllAudioChannels);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", tickAudioSequencerFrame);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", tickMusyXIfActive);
+extern u8 gMusyXActiveFlag;
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+void tickActiveSongs(void);
+void tickAndReap3DAudioVoices(void);
+void stopAllSynthVoices(s32);
+void tickMusyXIfActive(void) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        tickActiveSongs();
+        tickAndReap3DAudioVoices();
+        stopAllSynthVoices(0);
+        factor5MutexRelease();
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", releaseSynthVoice);
+void freeSynthVoiceFromActiveList();
+void releaseSynthVoice(u8 *ch) {
+    freeSynthVoiceFromActiveList();
+    *(s32 *)(ch + 0x64) = -1;
+    *(s32 *)ch = 0;
+    ch[0x2E] = 0;
+    *(s32 *)(ch + 0x28) = 0;
+    *(u32 *)(ch + 0x24) &= ~3;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", stopVoicesByHandle);
 
@@ -374,7 +465,13 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", setupAudioFaderRamp);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", setAudioFaderRampLocked);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setAudioFaderState);
+extern u8 gMusyXActiveFlag;
+extern u8 D_main_bss_80141B2C[][0x28];
+void setAudioFaderState(u8 i, u8 v) {
+    if (gMusyXActiveFlag != 0) {
+        D_main_bss_80141B2C[i][0] = v;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", anyAudioSlotActive);
 
@@ -382,11 +479,34 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", resetMusyXEngineState);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", clearMusyXSequencerState);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", getMusyXStateTableIfActive);
+extern u8 gMusyXActiveFlag;
+extern u8 D_main_bss_80140808[];
+u8 *getMusyXStateTableIfActive(void) {
+    if (gMusyXActiveFlag != 0) {
+        return D_main_bss_80140808;
+    }
+    return NULL;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", syncMusyXIfActive);
+extern u8 gMusyXActiveFlag;
+void tickAudioBufferUpdate(void);
+void syncMusyXIfActive(void) {
+    if (gMusyXActiveFlag != 0) {
+        tickAudioBufferUpdate();
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", runMusyXTaskLocked);
+extern u8 gMusyXActiveFlag;
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+void freeAudioScratchBuffer(void);
+void runMusyXTaskLocked(void) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        freeAudioScratchBuffer();
+        factor5MutexRelease();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", initMusyXEngine);
 
@@ -447,17 +567,46 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", shutdownAudioEngine);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", waitForMusyXAudioTaskDone);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", initFactor5Mutex);
+extern OSMesgQueue D_main_bss_80149990;
+extern OSMesg D_main_bss_801499A8;
+void initFactor5Mutex(void) {
+    osCreateMesgQueue(&D_main_bss_80149990, &D_main_bss_801499A8, 1);
+    osSendMesg(&D_main_bss_80149990, NULL, OS_MESG_NOBLOCK);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5MutexAcquire);
+extern s32 D_main_800A1780;
+extern OSMesgQueue D_main_bss_80149990;
+void factor5MutexAcquire(void) {
+    if (D_main_800A1780 == 0) {
+        osRecvMesg(&D_main_bss_80149990, NULL, OS_MESG_BLOCK);
+    }
+    D_main_800A1780++;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5MutexRelease);
+extern s32 D_main_800A1780;
+extern OSMesgQueue D_main_bss_80149990;
+void factor5MutexRelease(void) {
+    if (D_main_800A1780 > 0) {
+        if (--D_main_800A1780 == 0) {
+            osSendMesg(&D_main_bss_80149990, NULL, OS_MESG_NOBLOCK);
+        }
+    }
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5QueueBlock);
+extern OSMesgQueue D_main_bss_80149990;
+void factor5QueueBlock(void) {
+    osRecvMesg(&D_main_bss_80149990, NULL, OS_MESG_BLOCK);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5QueueSignal);
+extern OSMesgQueue D_main_bss_80149990;
+void factor5QueueSignal(void) {
+    osSendMesg(&D_main_bss_80149990, NULL, OS_MESG_NOBLOCK);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", isAudioSlotActive);
+extern u8 *D_main_bss_801496F8;
+s32 isAudioSlotActive(s32 i) {
+    return D_main_bss_801496F8[i * 0x88] != 0;
+}
 
 s32 audioStubReturnZero(void) {
     return 0;
@@ -471,7 +620,10 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxStoreVoiceAdsrParams);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxTriggerVoiceAttack);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxStopVoice);
+extern u8 *D_main_bss_801496F8;
+void musyxStopVoice(s32 i) {
+    D_main_bss_801496F8[i * 0x88 + 1] = 0;
+}
 
 void noopHandler_80092388(void) {
 }
@@ -480,10 +632,22 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxSetVoicePitchBend);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", setVoiceModulationParams);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", stopVoiceMarkRetrigger);
+extern u8 *D_main_bss_801496F8;
+void stopVoiceMarkRetrigger(s32 i) {
+    if (D_main_bss_801496F8[i * 0x88] != 0) {
+        D_main_bss_801496F8[i * 0x88] = 0;
+        D_main_bss_801496F8[i * 0x88 + 0x85] = 1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", beginVoiceFadeRelease);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", deactivateVoice);
+extern u8 *D_main_bss_801496F8;
+void deactivateVoice(s32 i) {
+    D_main_bss_801496F8[i * 0x88] = 0;
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", tickAudioBufferUpdate);
+void buildSongTempoSchedule(void);
+void tickAudioBufferUpdate(void) {
+    buildSongTempoSchedule();
+}
