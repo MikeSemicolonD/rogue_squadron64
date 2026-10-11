@@ -4,7 +4,18 @@
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", findModelAnimKeyframeByPhase);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", resetModelAnimSlotTable);
+typedef struct { s32 a; s32 b; s32 c; u8 *ch; u8 state; u8 pad[3]; } MaSlot;
+extern MaSlot gActiveModelAnimSlots[];
+s32 resetModelAnimSlotTable(void) {
+    u16 i;
+    for (i = 0; i < 0x20; i++) {
+        gActiveModelAnimSlots[i].a = 0;
+        gActiveModelAnimSlots[i].b = 0;
+        gActiveModelAnimSlots[i].c = 0;
+        gActiveModelAnimSlots[i].state = 0;
+    }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", allocateModelAnimSlot);
 
@@ -390,7 +401,19 @@ s32 soundMacroOpStopVoice(u8 *ch) {
     return 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpReturnFromGosub);
+void freeSynthVoiceFromActiveList();
+s32 soundMacroOpReturnFromGosub(u8 *ch, u8 *cmd) {
+    if (cmd[2] == 0 || *(s32 *)(ch + 8) == 0) {
+        *(s32 *)ch = 0;
+        ch[0x2E] = 0;
+        freeSynthVoiceFromActiveList(ch);
+        *(s32 *)(ch + 0x64) = -1;
+        return 1;
+    }
+    *(s32 *)ch = *(s32 *)(ch + 8);
+    *(s32 *)(ch + 4) = *(s32 *)(ch + 0xC);
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosubLoopCounterFiftyFour);
 
@@ -402,7 +425,15 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosubRandomLoop);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosub);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosubAltReturnFrame);
+s32 factor5BucketedTableLookupValue(u16);
+s32 soundMacroOpGosubAltReturnFrame(u8 *ch, u16 *cmd) {
+    s32 v = factor5BucketedTableLookupValue(cmd[0]);
+    if (v != 0) {
+        *(s32 *)(ch + 0x1C) = v;
+        *(s32 *)(ch + 0x20) = v + cmd[3] * 8;
+    }
+    return 0;
+}
 
 s32 clearChannelFieldsAt1Cand20(u8 *ch) {
     *(s32 *)(ch + 0x20) = 0;
@@ -512,7 +543,24 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxSetVoiceAdsrFromTable);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStartVibrato);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetVolumeRamp);
+s32 soundMacroOpSetVolumeRamp(u8 *ch, u8 *cmd) {
+    u16 t;
+    s32 a;
+    s32 b;
+    *(u32 *)(ch + 0x24) |= 0x8000;
+    t = *(u16 *)cmd;
+    *(s32 *)(ch + 0xA4) = t << 8;
+    a = cmd[2] << 16;
+    b = (s8)cmd[7] << 16;
+    *(s32 *)(ch + 0x38) = a;
+    *(s32 *)(ch + 0xA8) = b + a;
+    if (*(s32 *)(ch + 0xA4) != 0) {
+        *(u32 *)(ch + 0x3C) = (u32)b / t;
+    } else {
+        *(u32 *)(ch + 0x3C) = b;
+    }
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetPitchRelativeToNote);
 
@@ -719,7 +767,21 @@ void shutdownMusyXEngine(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxNoopStub);
+extern u8 gMusyXActiveFlag;
+extern void * volatile D_main_bss_8013AF14;
+void waitForMusyXAudioTaskDone(void);
+void noopHandler_80099C44(void);
+void rs_free(void *);
+void musyxNoopStub(void) {
+    if (gMusyXActiveFlag != 0) {
+        waitForMusyXAudioTaskDone();
+        if (D_main_bss_8013AF14 != NULL) {
+            rs_free(D_main_bss_8013AF14);
+        }
+        noopHandler_80099C44();
+        gMusyXActiveFlag = 0;
+    }
+}
 
 extern u8 gMusyXActiveFlag;
 u8 isMusyXActive(void) {
