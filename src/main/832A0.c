@@ -959,7 +959,72 @@ void musyxSetSequenceParamLocked(u16 key, s8 val) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxQuerySequenceLocked);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setVoiceParamByHandle);
+typedef struct VhNodeEV { struct VhNodeEV *next; s32 pad4; u32 h; s32 slot; } VhNodeEV;
+extern VhNodeEV *gVhHeadEV __asm__("D_main_bss_8013AF00");
+typedef struct {
+    s32 next;
+    u8 pad4[0x10];
+    u32 flags;
+    u8 pad18[0x27];
+    u8 trkA;
+    u8 pad40[9];
+    u8 trkB;
+    u8 pad4A[0xA];
+    s32 id;
+    u8 pad58[0x124];
+} ChanRecEV;
+extern ChanRecEV gChanRecEV[] __asm__("D_main_bss_8013D890");
+extern u8 gNoteTblEV[][0x86] __asm__("D_main_bss_80140A10");
+extern u8 gNoteTrkTblEV[][16][0x86] __asm__("D_main_bss_801440C8");
+static __inline__ VhNodeEV *vhFindEV(u32 h) {
+    VhNodeEV *n = gVhHeadEV;
+    while (n != NULL) {
+        if (n->h == h) {
+            return n;
+        }
+        if (h < n->h) {
+            return NULL;
+        }
+        n = n->next;
+    }
+    return NULL;
+}
+static __inline__ s32 vhResolveEV(u32 h) {
+    VhNodeEV *n;
+    if (h != (u32)-1) {
+        n = vhFindEV(h);
+        if (n != NULL) {
+            return n->slot;
+        }
+    }
+    return -1;
+}
+static __inline__ void setCtrlTEV(u8 t, u8 idx, u8 c, u8 v) {
+    if (t != 0xFF) {
+        gNoteTrkTblEV[t][idx][c] = v & 0x7F;
+    } else {
+        gNoteTblEV[idx][c] = v & 0x7F;
+    }
+}
+s32 setVoiceParamByHandle(s32 h, u8 v) {
+    s32 r = -1;
+    s32 idx;
+    h = vhResolveEV(h);
+    while ((s32)h != -1) {
+        idx = h & 0xFF;
+        if (gChanRecEV[idx].id != h) {
+            break;
+        }
+        if (gChanRecEV[idx].flags & 2) {
+            setCtrlTEV(gChanRecEV[idx].trkB, idx, 0xA, v);
+        } else {
+            setCtrlTEV(gChanRecEV[idx].trkA, idx, 0xA, v);
+        }
+        h = gChanRecEV[idx].next;
+        r = 0;
+    }
+    return r;
+}
 
 extern u8 gMusyXActiveFlag;
 void factor5MutexAcquire(void);
@@ -975,7 +1040,25 @@ s32 setVoiceParamByHandleLocked(s32 h, u8 v) {
     return r;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", applyVoiceCmdByHandle);
+s32 applyVoiceCmdByHandle(s32 h, u8 v) {
+    s32 r = -1;
+    s32 idx;
+    h = vhResolveEV(h);
+    while ((s32)h != -1) {
+        idx = h & 0xFF;
+        if (gChanRecEV[idx].id != h) {
+            break;
+        }
+        if (gChanRecEV[idx].flags & 2) {
+            setCtrlTEV(gChanRecEV[idx].trkB, idx, 0x83, v);
+        } else {
+            setCtrlTEV(gChanRecEV[idx].trkA, idx, 0x83, v);
+        }
+        h = gChanRecEV[idx].next;
+        r = 0;
+    }
+    return r;
+}
 
 extern u8 gMusyXActiveFlag;
 void factor5MutexAcquire(void);
@@ -1253,7 +1336,25 @@ s32 spreadVoiceParamPairLocked(s32 h, u8 v) {
     return r;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", spreadVoiceByteParamAcrossChain);
+s32 spreadVoiceByteParamAcrossChain(s32 h, u8 v) {
+    s32 r = -1;
+    s32 idx;
+    h = vhResolvePL(h);
+    while ((s32)h != -1) {
+        idx = h & 0xFF;
+        if (gChanRecPL[idx].id != h) {
+            break;
+        }
+        if (gChanRecPL[idx].flags & 2) {
+            setCtrlTPL(gChanRecPL[idx].trkB, idx, 7, v);
+        } else {
+            setCtrlTPL(gChanRecPL[idx].trkA, idx, 7, v);
+        }
+        h = gChanRecPL[idx].next;
+        r = 0;
+    }
+    return r;
+}
 
 extern u8 gMusyXActiveFlag;
 void factor5MutexAcquire(void);
@@ -1271,7 +1372,22 @@ s32 spreadVoiceByteParamLocked(s32 h, u8 v) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", spreadVoiceParamLockedVariant);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", flagVoiceChainForStop);
+s32 flagVoiceChainForStop(s32 h) {
+    s32 r = -1;
+    s32 idx;
+    if (gMusyXActiveFlag != 0) {
+        h = vhResolvePL(h);
+        while ((s32)h != -1) {
+            idx = h & 0xFF;
+            if (gChanRecPL[idx].id == h) {
+                r = 0;
+                gChanRecPL[idx].flags |= 8;
+            }
+            h = gChanRecPL[idx].next;
+        }
+    }
+    return r;
+}
 
 extern u8 gMusyXActiveFlag;
 void factor5MutexAcquire(void);
