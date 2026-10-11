@@ -2267,37 +2267,117 @@ s32 soundMacroSetFlagBitTremolo(u8 *ch) {
     return 0;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DB30);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroPushEffectEvent);
+typedef struct { u8 ctrl; u8 op; s16 scale; } SqModEnt;
+typedef struct { SqModEnt e[4]; u8 count; } SqModRec;
+__inline__ void soundMacroPushEffectEvent(SqModRec *rec, u8 *cmd) {
+    u8 n = rec->count;
+    u32 c;
+    if (n < 4) {
+        rec->count = n + 1;
+        c = *(u32 *)cmd >> 8;
+        switch ((u8)c) {
+        case 0x80:
+            c = 0x80;
+            break;
+        case 0x81:
+            c = 0x82;
+            break;
+        case 0x82:
+            c = 0xA0;
+            break;
+        case 0x83:
+            c = 0xA1;
+            break;
+        case 0x84:
+            c = 0x83;
+            break;
+        case 0x85:
+            c = 0x84;
+            break;
+        }
+        rec->e[n].ctrl = c;
+        rec->e[n].op = *(u32 *)(cmd + 4);
+        rec->e[n].scale = (*(s16 *)cmd << 8) / 100;
+    }
+}
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DB48);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler40);
+s32 seqCmdHandler40(u8 *chArg, u8 *cmd) {
+    register u8 *ch asm("$6") = chArg;
+    if ((((*(u32 *)(ch + 0x24) >> 20) & 1) == 0) | (cmd[7] == 0)) {
+        *(u32 *)(ch + 0x24) |= 0x100000;
+        ch[0xD0] = 0;
+    }
+    soundMacroPushEffectEvent((SqModRec *)(ch + 0xC0), cmd);
+    return 0;
+}
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DB60);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler41);
+s32 seqCmdHandler41(u8 *chArg, u8 *cmd) {
+    register u8 *ch asm("$6") = chArg;
+    if ((((*(u32 *)(ch + 0x24) >> 21) & 1) == 0) | (cmd[7] == 0)) {
+        *(u32 *)(ch + 0x24) |= 0x200000;
+        ch[0xE2] = 0;
+    }
+    soundMacroPushEffectEvent((SqModRec *)(ch + 0xD2), cmd);
+    return 0;
+}
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DB78);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler42);
+s32 seqCmdHandler42(u8 *chArg, u8 *cmd) {
+    register u8 *ch asm("$6") = chArg;
+    if ((((*(u32 *)(ch + 0x24) >> 22) & 1) == 0) | (cmd[7] == 0)) {
+        *(u32 *)(ch + 0x24) |= 0x400000;
+        ch[0x106] = 0;
+    }
+    soundMacroPushEffectEvent((SqModRec *)(ch + 0xF6), cmd);
+    return 0;
+}
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DB90);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler43);
+s32 seqCmdHandler43(u8 *chArg, u8 *cmd) {
+    register u8 *ch asm("$6") = chArg;
+    if ((((*(u32 *)(ch + 0x24) >> 23) & 1) == 0) | (cmd[7] == 0)) {
+        *(u32 *)(ch + 0x24) |= 0x800000;
+        ch[0x12A] = 0;
+    }
+    soundMacroPushEffectEvent((SqModRec *)(ch + 0x11A), cmd);
+    return 0;
+}
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DBA8);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler44);
+s32 seqCmdHandler44(u8 *chArg, u8 *cmd) {
+    register u8 *ch asm("$6") = chArg;
+    if ((((*(u32 *)(ch + 0x24) >> 25) & 1) == 0) | (cmd[7] == 0)) {
+        *(u32 *)(ch + 0x24) |= 0x2000000;
+        ch[0x13C] = 0;
+    }
+    soundMacroPushEffectEvent((SqModRec *)(ch + 0x12C), cmd);
+    return 0;
+}
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DBC0);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler45);
+s32 seqCmdHandler45(u8 *chArg, u8 *cmd) {
+    register u8 *ch asm("$6") = chArg;
+    if ((((*(u32 *)(ch + 0x24) >> 25) & 1) == 0) | (cmd[7] == 0)) {
+        *(u32 *)(ch + 0x24) |= 0x2000000;
+        ch[0x14E] = 0;
+    }
+    soundMacroPushEffectEvent((SqModRec *)(ch + 0x13E), cmd);
+    return 0;
+}
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DBD8);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler46);
+s32 seqCmdHandler46(u8 *chArg, u8 *cmd) {
+    register u8 *ch asm("$6") = chArg;
+    if ((((*(u32 *)(ch + 0x24) >> 24) & 1) == 0) | (cmd[7] == 0)) {
+        *(u32 *)(ch + 0x24) |= 0x1000000;
+        ch[0x160] = 0;
+    }
+    soundMacroPushEffectEvent((SqModRec *)(ch + 0x150), cmd);
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", refreshVoicePlaybackRate);
 
