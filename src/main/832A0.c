@@ -722,7 +722,38 @@ s32 factor5SortedTableRemoveWidePair(s32 v) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableInsertVoiceRecord);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableRemoveVoiceRecord);
+typedef struct { u16 h[6]; } TblE12VR;
+extern s32 gCountVR __asm__("D_main_bss_80140800");
+extern u8 gKeysVR[] __asm__("D_main_bss_8013CC80");
+extern TblE12VR gRecsVR[] __asm__("D_main_bss_8013CC74");
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 factor5SortedTableRemoveVoiceRecord(s32 v) {
+    s32 i;
+    s32 j;
+    s32 off;
+    factor5MutexAcquire();
+    for (i = 0; i < gCountVR; i++) {
+        off = i * 0xC;
+        if (*(u16 *)(gKeysVR + off) == (v & 0xFFFF)) {
+            break;
+        }
+    }
+    if (i != gCountVR) {
+        j = i + 1;
+        if (j < gCountVR) {
+            do {
+                gRecsVR[j] = gRecsVR[j + 1];
+                j++;
+            } while (j < gCountVR);
+        }
+        gCountVR = gCountVR - 1;
+        factor5MutexRelease();
+        return 1;
+    }
+    factor5MutexRelease();
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5BucketedTableInsertEntry);
 
@@ -3138,7 +3169,38 @@ u8 isMusyXActive(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", serviceAudioOutputBuffers);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", runAiAudioStreamPlaybackLoop);
+extern u8 *gAiBufsRL[16] __asm__("D_main_bss_801496B0");
+extern volatile u8 gAiBufIdxRL __asm__("D_main_bss_801496F0");
+extern OSMesgQueue gAiQueueRL __asm__("D_main_bss_80149670");
+void *rs_malloc(u32, u16);
+void rs_memset(u8 *, s32, s32);
+void runAiAudioStreamPlaybackLoop(void *arg) {
+    s32 i;
+    u8 done;
+    OSMesg msg;
+
+    gAiBufsRL[0] = rs_malloc(0x3000, 0x80);
+    for (i = 1; i < 16; i++) {
+        gAiBufsRL[i] = gAiBufsRL[i - 1] + 0x300;
+    }
+    rs_memset(gAiBufsRL[0], 0, 0x3000);
+    done = 0;
+    osWritebackDCache(gAiBufsRL[0], 0x3000);
+    gAiBufIdxRL = 0;
+    osAiSetNextBuffer(gAiBufsRL[0], 0x300);
+    do {
+        osRecvMesg(&gAiQueueRL, &msg, OS_MESG_BLOCK);
+        switch (*(u8 *)msg) {
+        case 1:
+            gAiBufIdxRL = (gAiBufIdxRL + 1) % 16;
+            osAiSetNextBuffer(gAiBufsRL[gAiBufIdxRL], 0x300);
+            break;
+        case 0xFF:
+            done = 1;
+            break;
+        }
+    } while (!done);
+}
 
 extern void *D_main_bss_80149770;
 extern s32 D_main_bss_801496F4;
