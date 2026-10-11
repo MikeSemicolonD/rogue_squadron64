@@ -234,7 +234,114 @@ void emitGridCellTileStripAdjacent_impl(EaCell *a, EsGrid *g) {
     a->flags = (a->flags & 0xFFFC) | 1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4A300", emitGridCellTileStripDiagonal);
+typedef struct {
+    u8 pad0[0xA];
+    u16 vA;
+    u8 pad0C[2];
+    u16 vE;
+    u16 v10;
+    u16 v12;
+    u16 flags;
+    u8 pad16[2];
+    s16 gx;
+    s16 gz;
+} EdCell;
+
+#define ES_VEC(o, dxe, dze)     dx = (f32)(dxe);     dz = (f32)(dze);     ES_SQRT(len, dx * dx + y * y + dz * dz);     (o)->x = dx / len;     (o)->y = y / len;     (o)->z = dz / len;
+#define B(p, i) (((s8 *)(p))[i])
+
+void emitGridCellTileStripDiagonal_impl(EdCell *a, EsGrid *g) __asm__("emitGridCellTileStripDiagonal");
+void emitGridCellTileStripDiagonal_impl(EdCell *a, EsGrid *g) {
+    s32 idx;
+    s32 k;
+    u8 *c;
+    u8 *l;
+    u8 *r;
+    u8 *u;
+    u8 *d;
+    u8 *p;
+    EsV3 *o;
+    f32 y;
+    f32 dx;
+    f32 dz;
+    f32 len;
+
+    idx = a->gx + a->gz * g->w;
+    c = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    y = 256.0f / g->scale;
+    if (a->vE == 0) {
+        if (fpCnt < 3 && flushPendingGridCellTiles() == 0) {
+            return;
+        }
+        a->vE = fpList[--fpCnt];
+        a->v10 = fpList[--fpCnt];
+        a->v12 = fpList[--fpCnt];
+    }
+    __asm__("" :: "r"(idx));
+    if (a->gx > 0) {
+        l = g->tiles + (g->cells[idx - 1] & 0x1FFF) * 0x1E + 5;
+    } else {
+        l = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    if (a->gx < g->w - 1) {
+        r = g->tiles + (g->cells[idx + 1] & 0x1FFF) * 0x1E + 5;
+    } else {
+        r = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    if (a->gz > 0) {
+        u = g->tiles + (g->cells[idx - g->w] & 0x1FFF) * 0x1E + 5;
+    } else {
+        u = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    if (a->gz < g->h - 1) {
+        d = g->tiles + (g->cells[idx + g->w] & 0x1FFF) * 0x1E + 5;
+    } else {
+        d = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    if (a->gx > 0) {
+        l = g->tiles + (g->cells[idx - 1] & 0x1FFF) * 0x1E + 5;
+    } else {
+        l = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    if (a->gx < g->w - 1) {
+        r = g->tiles + (g->cells[idx + 1] & 0x1FFF) * 0x1E + 5;
+    } else {
+        r = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    if (a->gz > 0) {
+        u = g->tiles + (g->cells[idx - g->w] & 0x1FFF) * 0x1E + 5;
+    } else {
+        u = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    if (a->gz < g->h - 1) {
+        d = g->tiles + (g->cells[idx + g->w] & 0x1FFF) * 0x1E + 5;
+    } else {
+        d = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
+    }
+    o = &esVerts[a->vE];
+    ES_VEC(o, B(l, 8) - B(c, 6), B(c, 0) - B(c, 0xA))
+    for (k = 1; k < 4; k++) {
+        p = (u8 *)(k + (s32)c);
+        ES_VEC(&o[k], B(p, 4) - B(p, 6), B(p, 0) - B(p, 0xA))
+    }
+    ES_VEC(&o[4], B(c, 8) - B(r, 6), B(c, 4) - B(c, 0xE))
+    o = &esVerts[a->v10];
+    ES_VEC(o, B(l, 0x12) - B(c, 0x10), B(c, 0xA) - B(c, 0x14))
+    for (k = 1; k < 4; k++) {
+        p = (u8 *)(k + (s32)c);
+        ES_VEC(&o[k], B(p, 0xE) - B(p, 0x10), B(p, 0xA) - B(p, 0x14))
+    }
+    ES_VEC(&o[4], B(c, 0x12) - B(r, 0x10), B(c, 0xE) - B(c, 0x18))
+    o = &esVerts[a->v12];
+    ES_VEC(&o[0], B(c, 0) - B(c, 2), B(u, 0x10) - B(c, 6))
+    ES_VEC(&o[1], B(c, 2) - B(c, 4), B(u, 0x12) - B(c, 8))
+    ES_VEC(&o[2], B(c, 0xA) - B(c, 0xC), B(c, 6) - B(c, 0x10))
+    ES_VEC(&o[3], B(c, 0xC) - B(c, 0xE), B(c, 8) - B(c, 0x12))
+    ES_VEC(&o[4], B(c, 0x14) - B(c, 0x16), B(c, 0x10) - B(d, 6))
+    o = &esVerts[a->vA];
+    ES_VEC(&o[4], B(c, 0x16) - B(c, 0x18), B(c, 0x12) - B(d, 8))
+    a->flags = a->flags & 0xFFFC;
+}
 
 extern u8 D_main_bss_80136DC0[];
 static inline f32 m2cSqrt(f32 x)
