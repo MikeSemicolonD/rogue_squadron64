@@ -241,7 +241,55 @@ u16 evaluateVoiceModulatorRecordEight(u8 *v) {
     return evaluateVoiceModulatorRecord(v, v + 0x150);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableInsertValue);
+// NOTE: ~13 rows: only the post-loop join differs (n reload block / v in v1 vs v0); same template as SecondInsertValue/InsertTaggedValue/InsertWidePair
+typedef struct { s32 a; s32 b; } TblIns1;
+extern s32 D_main_bss_8013C450;
+extern u8 D_main_bss_8013BC4C[];
+extern u8 D_main_bss_8013BC48[];
+extern TblIns1 D_main_bss_8013BC50[];
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 factor5SortedTableInsertValue(u16 key, s32 val) {
+    s32 i;
+    s32 j;
+    s32 off;
+    s32 v;
+    factor5MutexAcquire();
+    for (i = 0; i < D_main_bss_8013C450; i++) {
+        off = i * 8;
+        if (!(*(u16 *)(D_main_bss_8013BC4C + off) < (u32)key)) {
+            break;
+        }
+    }
+    if (i < D_main_bss_8013C450) {
+        if (*(u16 *)(D_main_bss_8013BC4C + i * 8) != key) {
+            j = D_main_bss_8013C450 - 1;
+            if (D_main_bss_8013C450 < 0x100) {
+                if (j >= i) {
+                    do {
+                        D_main_bss_8013BC50[j] = D_main_bss_8013BC50[j - 1];
+                        j--;
+                    } while (j >= i);
+                }
+                v = D_main_bss_8013C450 + 1;
+                goto store;
+            }
+        }
+        goto fail;
+    }
+    if (D_main_bss_8013C450 >= 0x100) {
+fail:
+        factor5MutexRelease();
+        return 0;
+    }
+    v = D_main_bss_8013C450 + 1;
+store:
+    D_main_bss_8013C450 = v;
+    *(u16 *)(D_main_bss_8013BC4C + i * 8) = key;
+    *(s32 *)(D_main_bss_8013BC48 + i * 8) = val;
+    factor5MutexRelease();
+    return 1;
+}
 
 typedef struct { s32 a; s32 b; } TblE8a;
 extern s32 D_main_bss_8013C450;
@@ -276,7 +324,56 @@ s32 factor5SortedTableRemoveValue(s32 v) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableInsertTaggedValue);
+typedef struct { s32 a; s32 b; } TblIns3;
+extern s32 D_main_bss_8013AF08;
+extern u8 D_main_bss_80148454[];
+extern u8 D_main_bss_80148450[];
+extern u8 D_main_bss_80148456[];
+extern TblIns3 D_main_bss_80148458[];
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 factor5SortedTableInsertTaggedValue(u16 key, s32 val, u16 tag) {
+    s32 i;
+    s32 j;
+    s32 off;
+    s32 v;
+    factor5MutexAcquire();
+    for (i = 0; i < D_main_bss_8013AF08; i++) {
+        off = i * 8;
+        if (!(*(u16 *)(D_main_bss_80148454 + off) < (u32)key)) {
+            break;
+        }
+    }
+    if (i < D_main_bss_8013AF08) {
+        if (*(u16 *)(D_main_bss_80148454 + i * 8) != key) {
+            j = D_main_bss_8013AF08 - 1;
+            if (D_main_bss_8013AF08 < 0x100) {
+                if (j >= i) {
+                    do {
+                        D_main_bss_80148458[j] = D_main_bss_80148458[j - 1];
+                        j--;
+                    } while (j >= i);
+                }
+                v = D_main_bss_8013AF08 + 1;
+                goto store;
+            }
+        }
+        goto fail;
+    }
+    if (D_main_bss_8013AF08 >= 0x100) {
+fail:
+        factor5MutexRelease();
+        return 0;
+    }
+    v = D_main_bss_8013AF08 + 1;
+store:
+    D_main_bss_8013AF08 = v;
+    *(u16 *)(D_main_bss_80148454 + i * 8) = key;
+    *(s32 *)(D_main_bss_80148450 + i * 8) = val;
+    *(u16 *)(D_main_bss_80148456 + i * 8) = tag;
+    factor5MutexRelease();
+    return 1;
+}
 
 typedef struct { s32 a; s32 b; } TblE8c;
 extern s32 D_main_bss_8013AF08;
@@ -311,7 +408,55 @@ s32 factor5SortedTableRemoveTaggedValue(s32 v) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SecondSortedTableInsertValue);
+// NOTE: ~13 rows: only the post-loop join differs (n reload block / v in v1 vs v0); same template as SecondInsertValue/InsertTaggedValue/InsertWidePair
+typedef struct { s32 a; s32 b; } TblIns2;
+extern s32 D_main_bss_8013AF0C;
+extern u8 D_main_bss_80148C6C[];
+extern u8 D_main_bss_80148C68[];
+extern TblIns2 D_main_bss_80148C70[];
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 factor5SecondSortedTableInsertValue(u16 key, s32 val) {
+    s32 i;
+    s32 j;
+    s32 off;
+    s32 v;
+    factor5MutexAcquire();
+    for (i = 0; i < D_main_bss_8013AF0C; i++) {
+        off = i * 8;
+        if (!(*(u16 *)(D_main_bss_80148C6C + off) < (u32)key)) {
+            break;
+        }
+    }
+    if (i < D_main_bss_8013AF0C) {
+        if (*(u16 *)(D_main_bss_80148C6C + i * 8) != key) {
+            j = D_main_bss_8013AF0C - 1;
+            if (D_main_bss_8013AF0C < 0x100) {
+                if (j >= i) {
+                    do {
+                        D_main_bss_80148C70[j] = D_main_bss_80148C70[j - 1];
+                        j--;
+                    } while (j >= i);
+                }
+                v = D_main_bss_8013AF0C + 1;
+                goto store;
+            }
+        }
+        goto fail;
+    }
+    if (D_main_bss_8013AF0C >= 0x100) {
+fail:
+        factor5MutexRelease();
+        return 0;
+    }
+    v = D_main_bss_8013AF0C + 1;
+store:
+    D_main_bss_8013AF0C = v;
+    *(u16 *)(D_main_bss_80148C6C + i * 8) = key;
+    *(s32 *)(D_main_bss_80148C68 + i * 8) = val;
+    factor5MutexRelease();
+    return 1;
+}
 
 typedef struct { s32 a; s32 b; } TblE8b;
 extern s32 D_main_bss_8013AF0C;
@@ -346,7 +491,56 @@ s32 factor5SecondSortedTableRemoveValue(s32 v) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableInsertWidePair);
+typedef struct { s32 a; s32 b; s32 c; } TblIns4;
+extern s32 D_main_bss_8013C44C;
+extern u8 D_main_bss_8013B050[];
+extern u8 D_main_bss_8013B048[];
+extern u8 D_main_bss_8013B04C[];
+extern TblIns4 D_main_bss_8013B054[];
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 factor5SortedTableInsertWidePair(u16 key, s32 v1, s32 v2) {
+    s32 i;
+    s32 j;
+    s32 off;
+    s32 v;
+    factor5MutexAcquire();
+    for (i = 0; i < D_main_bss_8013C44C; i++) {
+        off = i * 12;
+        if (!(*(u16 *)(D_main_bss_8013B050 + off) < (u32)key)) {
+            break;
+        }
+    }
+    if (i < D_main_bss_8013C44C) {
+        if (*(u16 *)(D_main_bss_8013B050 + i * 12) != key) {
+            j = D_main_bss_8013C44C - 1;
+            if (D_main_bss_8013C44C < 0x100) {
+                if (j >= i) {
+                    do {
+                        D_main_bss_8013B054[j] = D_main_bss_8013B054[j - 1];
+                        j--;
+                    } while (j >= i);
+                }
+                v = D_main_bss_8013C44C + 1;
+                goto store;
+            }
+        }
+        goto fail;
+    }
+    if (D_main_bss_8013C44C >= 0x100) {
+fail:
+        factor5MutexRelease();
+        return 0;
+    }
+    v = D_main_bss_8013C44C + 1;
+store:
+    D_main_bss_8013C44C = v;
+    *(u16 *)(D_main_bss_8013B050 + i * 12) = key;
+    *(s32 *)(D_main_bss_8013B048 + i * 12) = v1;
+    *(s32 *)(D_main_bss_8013B04C + i * 12) = v2;
+    factor5MutexRelease();
+    return 1;
+}
 
 typedef struct { s32 a; s32 b; s32 c; } TblE12a;
 extern s32 D_main_bss_8013C44C;
