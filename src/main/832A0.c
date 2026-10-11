@@ -1486,13 +1486,136 @@ void buildSongDecodeBufferRing(s32 n) {
     D_main_bss_801499C0[i - 1].next = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", acquireSampleStreamBlock);
+extern SongBufNode *D_main_bss_801499AC;
+extern s32 D_main_bss_801499B0;
+extern u16 D_main_bss_80149724;
+extern u8 *D_main_bss_80149728;
+u8 *acquireSampleStreamBlock(s32 key) {
+    u8 *n;
+    u8 *t;
+    u8 *rec;
+    u16 idx;
+    u8 *buf;
+    n = (u8 *)D_main_bss_801499B0;
+    if (n != 0) {
+        do {
+            if (*(s32 *)(n + 0xC) == key) {
+                *(u16 *)(n + 0x10) = 2;
+                return *(u8 **)(n + 8);
+            }
+            n = *(u8 **)n;
+        } while (n != 0);
+    }
+    t = (u8 *)D_main_bss_801499AC;
+    if (t != 0) {
+        n = t;
+        t = *(u8 **)n;
+        D_main_bss_801499AC = (SongBufNode *)t;
+        if (t != 0) {
+            *(u8 **)(t + 4) = 0;
+        }
+        if (D_main_bss_801499B0 != 0) {
+            *(u8 **)(D_main_bss_801499B0 + 4) = n;
+        }
+        t = (u8 *)D_main_bss_801499B0;
+        D_main_bss_801499B0 = (s32)n;
+        *(u8 **)n = t;
+    } else {
+        n = (u8 *)D_main_bss_801499B0;
+        for (; n != 0; n = *(u8 **)n) {
+            if (*(u16 *)(n + 0x10) == 0) {
+                break;
+            }
+        }
+    }
+    idx = D_main_bss_80149724;
+    rec = (u8 *)(idx * 12 + (s32)D_main_bss_80149728);
+    *(u16 *)(n + 0x10) = 2;
+    *(s32 *)(n + 0xC) = key;
+    *(s32 *)(rec + 4) = key;
+    *(s32 *)rec = 0x100;
+    buf = *(u8 **)(n + 8);
+    D_main_bss_80149724 = idx + 1;
+    *(u8 **)(rec + 8) = buf;
+    return *(u8 **)(n + 8);
+}
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", initSampleStreamBlockCache);
+typedef struct SSBNode { struct SSBNode *next; struct SSBNode *prev; u8 pad[0xC]; u8 *buf; } SSBNode;
+void *rs_malloc(u32, u16);
+extern u8 *D_main_bss_801499C4;
+extern SSBNode *D_main_bss_801499C8;
+extern SSBNode *D_main_bss_801499CC;
+extern SSBNode *D_main_bss_801499B4;
+extern SSBNode *D_main_bss_801499E4;
+void initSampleStreamBlockCache(u16 n) {
+    s32 i;
+    u32 sz = n * 0x600;
+    D_main_bss_801499C4 = rs_malloc(sz, 0);
+    osInvalDCache(D_main_bss_801499C4, sz);
+    D_main_bss_801499C8 = rs_malloc(n * 0x18, 0);
+    D_main_bss_801499E4 = 0;
+    D_main_bss_801499B4 = 0;
+    D_main_bss_801499CC = D_main_bss_801499C8;
+    D_main_bss_801499C8[0].prev = 0;
+    D_main_bss_801499C8[0].buf = D_main_bss_801499C4;
+    for (i = 1; i < n; i++) {
+        D_main_bss_801499C8[i - 1].next = &D_main_bss_801499C8[i];
+        D_main_bss_801499C8[i].prev = &D_main_bss_801499C8[i - 1];
+        D_main_bss_801499C8[i].buf = D_main_bss_801499C4 + i * 0x600;
+    }
+    D_main_bss_801499C8[i - 1].next = 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", moveSampleBlockToFront);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", recycleSampleStreamBlock);
+SSBNode *recycleSampleStreamBlock(void) {
+    register SSBNode *n asm("$3");
+    SSBNode *t;
+    register SSBNode *t2 asm("$2");
+    register SSBNode *t1 asm("$2");
+    register SSBNode *c asm("$2");
+    c = D_main_bss_801499CC;
+    if (c != 0) {
+        n = c;
+        t1 = n->next;
+        D_main_bss_801499CC = t1;
+        if (t1 != 0) {
+            t1->prev = 0;
+        }
+        if (D_main_bss_801499B4 == 0) {
+            n->next = D_main_bss_801499E4;
+            if (D_main_bss_801499E4 != 0) {
+                D_main_bss_801499E4->prev = n;
+            }
+            D_main_bss_801499E4 = n;
+        } else {
+            n->next = 0;
+            n->prev = D_main_bss_801499B4;
+            D_main_bss_801499B4->next = n;
+        }
+        D_main_bss_801499B4 = n;
+    } else {
+        n = D_main_bss_801499E4;
+        if (n != D_main_bss_801499B4) {
+            t = n->next;
+            if (t != 0) {
+                t->prev = n->prev;
+            }
+            t = n->prev;
+            if (t != 0) {
+                t->next = n->next;
+            } else {
+                D_main_bss_801499E4 = n->next;
+            }
+            t2 = D_main_bss_801499B4;
+            D_main_bss_801499B4 = n;
+            t2->next = n;
+            n->prev = t2;
+            n->next = 0;
+        }
+    }
+    return n;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", fillSampleStreamRange);
 
@@ -1514,7 +1637,45 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", reapplyAudioConfig);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", shutdownAudioEngine);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", waitForMusyXAudioTaskDone);
+extern u8 gMusyXActiveFlag;
+extern void *D_main_bss_801496FC;
+extern u8 *D_main_bss_80149728;
+extern volatile u8 D_main_bss_8014974C;
+extern void *D_main_bss_80149758;
+extern void *D_main_bss_8014975C;
+extern void *D_main_bss_80149764;
+extern s32 D_main_bss_80149768;
+extern void *D_main_bss_80149770;
+extern volatile s16 D_main_bss_8014998A;
+extern u8 *D_main_bss_801499BC;
+extern SongBufNode *D_main_bss_801499C0;
+extern void (*D_main_bss_801499D8)(void (*)(void));
+void musyxSynthFrame(void);
+void rs_free(void *);
+void waitForMusyXAudioTaskDone(void) {
+    if (gMusyXActiveFlag != 0) {
+        D_main_bss_8014998A = 0x10;
+        while (D_main_bss_8014998A > 0) {
+        }
+        D_main_bss_801499D8(musyxSynthFrame);
+        if (D_main_bss_80149768 != 0) {
+            D_main_bss_80149768 = 0;
+            rs_free(0);
+        }
+        if (D_main_bss_80149770 != 0) {
+            rs_free(D_main_bss_80149770);
+        }
+        while (D_main_bss_8014974C != 0) {
+        }
+        rs_free(D_main_bss_80149728);
+        rs_free(D_main_bss_801499BC);
+        rs_free(D_main_bss_801499C0);
+        rs_free(D_main_bss_80149758);
+        rs_free(D_main_bss_8014975C);
+        rs_free(D_main_bss_801496FC);
+        rs_free(D_main_bss_80149764);
+    }
+}
 
 extern OSMesgQueue D_main_bss_80149990;
 extern OSMesg D_main_bss_801499A8;
