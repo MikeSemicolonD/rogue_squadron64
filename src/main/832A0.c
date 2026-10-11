@@ -2645,11 +2645,121 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", serviceAudioOutputBuffers);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", runAiAudioStreamPlaybackLoop);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", buildSongTempoSchedule);
+extern void *D_main_bss_80149770;
+extern s32 D_main_bss_801496F4;
+extern u32 D_main_bss_8014976C;
+extern s32 D_main_bss_80149768;
+typedef struct { void *buf; u32 sz; u16 a8; u16 aA; u32 w[8]; u16 b[10]; u16 c[4]; } TempoSchedBTS;
+void *rs_malloc(u32, u16);
+void rs_memset(u8 *, s32, s32);
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+void buildSongTempoScheduleImpl(u8 *song) __asm__("buildSongTempoSchedule");
+void buildSongTempoScheduleImpl(u8 *song) {
+    TempoSchedBTS *p;
+    register u32 sz asm("$17");
+    register u32 q asm("$3");
+    register u32 m asm("$2");
+    u32 i;
+    void *buf;
+    if (D_main_bss_80149770 != 0) {
+        sz = (u32)(*(u16 *)song * D_main_bss_801496F4) / 1000;
+        q = sz / 192;
+        m = q * 192;
+        sz = m + 0xC0;
+        p = rs_malloc(0x48, 0);
+        buf = D_main_bss_80149770;
+        p->buf = buf;
+        rs_memset(buf, 0, sz * 2);
+        osWritebackDCache(p->buf, sz * 2);
+        p->sz = sz;
+        p->aA = song[0x1B] << 8;
+        p->a8 = song[0x1A];
+        for (i = 0; i < song[0x1A]; i++) {
+            p->w[i] = (((u32)(D_main_bss_801496F4 * ((u16 *)song)[1 + i]) / 1000) + 3) & 0xFFFC;
+            p->b[i] = *(song + i + 0x12) << 8;
+        }
+        if (song[0x1C] == 1) {
+            for (i = 0; i < 4; i++) {
+                p->c[i] = ((u16 *)(song + 0x1E))[i];
+            }
+        } else {
+            p->c[0] = 0;
+            p->c[1] = 0;
+            p->c[2] = 0;
+            p->c[3] = 0x7FFF;
+        }
+        osWritebackDCache(p, 0x48);
+        factor5MutexAcquire();
+        D_main_bss_8014976C = 0;
+        D_main_bss_80149768 = (s32)p;
+        factor5MutexRelease();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", allocateSongChannelArray);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setupSongRenderBuffers);
+extern const f64 D_main_8003DD68;
+extern const f32 D_main_8003DD70;
+extern const f32 D_main_8003DD74;
+extern const f32 D_main_8003DD78;
+extern const f32 D_main_8003DD7C;
+extern const f64 D_main_8003DD80;
+extern const f32 D_main_8003DD88;
+extern const f32 D_main_8003DD8C;
+extern u16 D_main_bss_8014971C;
+extern u32 D_main_bss_80149720;
+extern u8 *D_main_bss_80149728;
+extern OSMesgQueue D_main_bss_80149730;
+extern OSMesg D_main_bss_80149748;
+extern u8 D_main_bss_8014974C;
+extern u16 D_main_800A1760[];
+void *rs_malloc(u32, u16);
+void buildSongDecodeBufferRing(s32);
+void initSampleStreamBlockCache(u16);
+void setupSongRenderBuffers(u16 n, u32 x, u8 mode) {
+    f64 d;
+    f32 f;
+    u32 q;
+    u32 t1;
+    u32 sz;
+    u32 nn;
+    register u32 k asm("$4");
+    nn = n;
+    d = (s32)x;
+    if ((s32)x >= 0) goto L1;
+    d = d + D_main_8003DD68;
+L1:
+    f = (f32)d / D_main_8003DD70 * D_main_8003DD74 / D_main_8003DD78;
+    if (f >= D_main_8003DD7C) goto L2;
+    q = (s32)f;
+    goto L3;
+L2:
+    q = (s32)(f - D_main_8003DD7C) | 0x80000000;
+L3:
+    t1 = nn * ((u16)q + 1);
+    k = 0x310;
+    D_main_bss_80149720 = k;
+    D_main_bss_8014971C = t1;
+    sz = (u16)t1 * k;
+    d = (s32)sz;
+    if ((s32)sz >= 0) goto L4;
+    d = d + D_main_8003DD80;
+L4:
+    f = (f32)d * D_main_8003DD88;
+    if (f >= D_main_8003DD8C) goto L5;
+    q = (s32)f;
+    goto L6;
+L5:
+    q = (s32)(f - D_main_8003DD8C) | 0x80000000;
+L6:
+    D_main_bss_80149720 = ((((q + 0x3F) >> 6) * 40) + 0xF) & 0xFFF0;
+    D_main_bss_80149728 = rs_malloc(D_main_bss_8014971C * 24, 0);
+    osCreateMesgQueue(&D_main_bss_80149730, &D_main_bss_80149748, 1);
+    D_main_bss_8014974C = 0;
+    buildSongDecodeBufferRing(D_main_bss_8014971C);
+    initSampleStreamBlockCache(D_main_800A1760[mode] * n);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", advanceVolumeFadeEnvelope);
 
