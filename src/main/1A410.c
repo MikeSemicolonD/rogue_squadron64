@@ -67,7 +67,79 @@ void clearPendingViChanges(void) {
     D_main_bss_80128E94 = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/1A410", applyPendingViChanges);
+extern volatile s32 gViReqOn __asm__("D_main_bss_80128E90");
+extern volatile s32 gViReqOff __asm__("D_main_bss_80128E94");
+extern u8 D_main_bss_8011A862;
+extern u8 D_main_bss_8011A864;
+extern u8 D_main_bss_8011A865;
+extern u8 D_main_bss_8011A866;
+extern u8 D_main_bss_8011A867;
+extern u8 D_main_bss_8011A868;
+extern OSViMode D_main_bss_80128D50[4];
+void applyPendingViChanges(void) {
+    OSViMode *m;
+    if (gViReqOff & 1) {
+        D_main_bss_8011A862 = 0;
+    }
+    if (gViReqOff & 8) {
+        D_main_bss_8011A865 = 0;
+    }
+    if (gViReqOn & 1) {
+        D_main_bss_8011A862 = 1;
+    }
+    if (gViReqOn & 8) {
+        D_main_bss_8011A865 = 1;
+    }
+    if ((gViReqOff | gViReqOn) & 9) {
+        if (D_main_bss_8011A865 == 0 || D_main_bss_8011A864 != 0) {
+            m = &D_main_bss_80128D50[0];
+            if (D_main_bss_8011A862 == 0) {
+                m = &D_main_bss_80128D50[1];
+            }
+        } else {
+            m = &D_main_bss_80128D50[3];
+            if (D_main_bss_8011A862 != 0) {
+                m = &D_main_bss_80128D50[2];
+            }
+        }
+        osViSetMode(m);
+        if (!((gViReqOn | gViReqOff) & 2)) {
+            osViSetSpecialFeatures(D_main_bss_8011A868 ? 1 : 2);
+        }
+        if (!((gViReqOn | gViReqOff) & 4)) {
+            osViSetSpecialFeatures(D_main_bss_8011A866 ? 0x40 : 0x80);
+        }
+        if (!((gViReqOn | gViReqOff) & 0x10)) {
+            osViSetSpecialFeatures(D_main_bss_8011A867 ? 0x10 : 0x20);
+        }
+    }
+    if (gViReqOff & 2) {
+        osViSetSpecialFeatures(2);
+        D_main_bss_8011A868 = 0;
+    }
+    if (gViReqOff & 4) {
+        osViSetSpecialFeatures(0x80);
+        D_main_bss_8011A866 = 0;
+    }
+    if (gViReqOff & 0x10) {
+        osViSetSpecialFeatures(0x20);
+        D_main_bss_8011A867 = 0;
+    }
+    if (gViReqOn & 2) {
+        osViSetSpecialFeatures(1);
+        D_main_bss_8011A868 = 1;
+    }
+    if (gViReqOn & 4) {
+        osViSetSpecialFeatures(0x40);
+        D_main_bss_8011A866 = 1;
+    }
+    if (gViReqOn & 0x10) {
+        osViSetSpecialFeatures(0x10);
+        D_main_bss_8011A867 = 1;
+    }
+    gViReqOff = 0;
+    gViReqOn = 0;
+}
 
 extern u8 D_main_bss_8011A862;
 extern u8 D_main_bss_8011A864;
