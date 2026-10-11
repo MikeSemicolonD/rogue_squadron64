@@ -414,7 +414,7 @@ SECTIONS
         build/asm/libultra/libc/xlitob.o(.data);
         build/asm/libultra/os/yieldthread.o(.data);
         build/asm/data/main/rspbootText.o(.data);
-        build/asm/main/832A0.o(.data);
+        build/src/main/832A0.o(.data);
         build/src/main/94A80.o(.data);
         build/src/main/94F50.o(.data);
         build/src/main/97D20.o(.data);
@@ -528,7 +528,7 @@ SECTIONS
         build/asm/libultra/libc/xlitob.o(.rodata);
         build/asm/libultra/os/yieldthread.o(.rodata);
         build/asm/data/main/rspbootText.o(.rodata);
-        build/asm/main/832A0.o(.rodata);
+        build/src/main/832A0.o(.rodata);
         build/src/main/94A80.o(.rodata);
         build/src/main/94F50.o(.rodata);
         build/src/main/97D20.o(.rodata);
@@ -619,7 +619,8 @@ SECTIONS
         build/src/main/7CEA0.o(.text);
         build/src/main/82E70.o(.text);
         build/asm/data/main/rspbootText.o(.text);
-        build/asm/main/832A0.o(.text);
+        build/src/main/832A0.o(.text);
+        build/asm/main/93130.o(.text);
         build/src/main/94A80.o(.text);
         build/src/main/94F50.o(.text);
         build/src/main/97D20.o(.text);
