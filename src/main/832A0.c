@@ -720,7 +720,63 @@ s32 factor5SortedTableRemoveWidePair(s32 v) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5SortedTableInsertVoiceRecord);
+typedef struct { u16 h[6]; } TblVRI;
+typedef struct { u16 key; u16 h2; u8 b4; u8 b5; u8 b6; u8 b7; u8 b8; u8 b9; u8 pad[2]; } RecVRI;
+extern RecVRI gRecVRI[] __asm__("D_main_bss_8013CC80");
+extern s32 gCountVRI __asm__("D_main_bss_80140800");
+extern u8 gTblVRI[] __asm__("D_main_bss_8013CC80");
+extern TblVRI gShiftVRI[] __asm__("D_main_bss_8013CC8C");
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+s32 factor5SortedTableInsertVoiceRecord(u16 key, u16 h2, u8 b7, u8 b6, u8 b5, u8 b4, u8 b8) {
+    s32 i;
+    s32 j;
+    s32 off;
+    s32 v;
+    factor5MutexAcquire();
+    for (i = 0; i < gCountVRI; i++) {
+        off = i * 12;
+        if (!(*(u16 *)(gTblVRI + off) < (u32)key)) {
+            break;
+        }
+    }
+    if (i < gCountVRI) {
+        if (*(u16 *)(gTblVRI + i * 12) != key) {
+            j = gCountVRI - 1;
+            if (gCountVRI < 0x100) {
+                if (j >= i) {
+                    do {
+                        gShiftVRI[j] = gShiftVRI[j - 1];
+                        j--;
+                    } while (j >= i);
+                }
+                v = gCountVRI + 1;
+                goto setcount;
+            }
+            goto fail;
+        }
+        goto store;
+    }
+    if (gCountVRI >= 0x100) {
+fail:
+        factor5MutexRelease();
+        return 0;
+    }
+    v = gCountVRI + 1;
+setcount:
+    gCountVRI = v;
+store:
+    gRecVRI[i].key = key;
+    gRecVRI[i].h2 = h2;
+    gRecVRI[i].b7 = b7;
+    gRecVRI[i].b6 = b6;
+    gRecVRI[i].b5 = b5;
+    gRecVRI[i].b4 = b4;
+    gRecVRI[i].b8 = b8;
+    gRecVRI[i].b9 = 0x1F;
+    factor5MutexRelease();
+    return 1;
+}
 
 typedef struct { u16 h[6]; } TblE12VR;
 extern s32 gCountVR __asm__("D_main_bss_80140800");
