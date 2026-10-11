@@ -2119,7 +2119,18 @@ s32 setChannelFlag24Bit80(u8 *ch) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetPanSweep);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpSetProgramTableValue);
+s32 soundMacroOpSetProgramTableValue(u8 *ch, u32 *cmd) {
+    u32 c = *(volatile u32 *)cmd;
+    u8 *e = ch + ((c >> 8) & 0xFF) * 12;
+    s32 x = *(s32 *)(e + 0x168);
+    s32 t = (c >> 16) << 8;
+
+    if (x != 0) {
+        *(s32 *)(e + 0x164) = 0;
+    }
+    *(s32 *)(e + 0x168) = *(volatile s32 *)&t;
+    return 0;
+}
 
 s32 divideByMixerBaseFrequency(u16);
 s32 soundMacroOpStartPitchEnvelope(u8 *ch, u32 *cmd) {
@@ -3246,7 +3257,25 @@ void initSampleStreamBlockCache(u16 n) {
     D_main_bss_801499C8[i - 1].next = 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", moveSampleBlockToFront);
+void moveSampleBlockToFront(SSBNode *n) {
+    SSBNode *t;
+
+    if (n != D_main_bss_801499B4) {
+        if (n->next != NULL) {
+            n->next->prev = n->prev;
+        }
+        if (n->prev != NULL) {
+            n->prev->next = n->next;
+        } else {
+            D_main_bss_801499E4 = n->next;
+        }
+        t = D_main_bss_801499B4;
+        D_main_bss_801499B4 = n;
+        t->next = n;
+        n->prev = t;
+        n->next = NULL;
+    }
+}
 
 SSBNode *recycleSampleStreamBlock(void) {
     register SSBNode *n asm("$3");
