@@ -1286,7 +1286,254 @@ s32 advancePlayerAtStLocomotion(f32 *p) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0CFB20", updatePlayerAtStBehavior);
+typedef struct AtStPl {
+    /* 0x00 */ f32 x;
+    /* 0x04 */ f32 y;
+    /* 0x08 */ f32 z;
+    /* 0x0C */ f32 fwd[3];
+    /* 0x18 */ f32 axis[3];
+    /* 0x24 */ f32 vel[3];
+    /* 0x30 */ u8 pad30[0x18];
+    /* 0x48 */ f32 f48;
+    /* 0x4C */ f32 f4C;
+    /* 0x50 */ f32 f50;
+    /* 0x54 */ f32 f54;
+    /* 0x58 */ f32 f58;
+    /* 0x5C */ u8 gunSide;
+    /* 0x5D */ u8 pad5D[3];
+    /* 0x60 */ f32 speed;
+    /* 0x64 */ f32 f64;
+    /* 0x68 */ f32 f68;
+    /* 0x6C */ f32 f6C;
+    /* 0x70 */ u8 pad70[0x10];
+    /* 0x80 */ s32 animSlot;
+    /* 0x84 */ u8 pad84[4];
+    /* 0x88 */ f32 phase;
+    /* 0x8C */ f32 cycle;
+    /* 0x90 */ f32 f90;
+    /* 0x94 */ u8 pad94[0xE];
+    /* 0xA2 */ u8 blockFwd;
+    /* 0xA3 */ u8 blockBack;
+    /* 0xA4 */ u8 padA4[6];
+    /* 0xAA */ u8 stepL;
+    /* 0xAB */ u8 stepR;
+    /* 0xAC */ u8 padAC[2];
+    /* 0xAE */ u8 stop;
+} AtStPl;
+
+typedef struct AtStBtn {
+    u8 pad0[0x12];
+    u16 h12;
+    u8 pad14[4];
+    u16 h18;
+    u16 h1A;
+    u8 pad1C[8];
+} AtStBtn;
+
+extern u16 atBtn[][3] __asm__("D_main_bss_80130B88");
+extern u8 D_main_bss_80130B92;
+extern AtStBtn atMap[] __asm__("D_mission_overlay_8010BE18");
+extern f32 D_mission_overlay_8010BDD8[][2];
+s32 orthonormalizeFrameAndSnapToZero(void *);
+extern s32 fnAtStLoco(AtStPl *, f32) __asm__("advancePlayerAtStLocomotion");
+
+void updatePlayerAtStBehavior(AtStPl *o, f32 dt) {
+    f32 q[4];
+    f32 sy;
+    f32 k;
+    f32 ab;
+    f32 z;
+    f32 fv;
+    register f32 sx __asm__("$f2");
+    s32 pi;
+
+    pi = 0;
+    if (!(atBtn[0][0] & atMap[0].h12)) {
+        fv = o->f64;
+        z = 0.0f;
+        sy = D_mission_overlay_8010BDD8[0][1];
+        sx = *(volatile f32 *)&D_mission_overlay_8010BDD8[0][0];
+        if (fv == z) {
+            if (fabsf(sy) < 0.1f) {
+                sy = z;
+            }
+            o->speed = sy * ((atBtn[0][0] & atMap[0].h18) ? 5.0f : 3.0f);
+        } else {
+            fv -= dt;
+            o->f64 = fv;
+            if (fv < 0.0f) {
+                o->f64 = 0.0f;
+            }
+        }
+        if ((o->blockFwd && 0.0f < o->speed) || (o->blockBack && o->speed < 0.0f)) {
+            o->speed = 0.0f;
+        } else if (0.0f < o->speed && o->blockBack) {
+            o->blockBack = 0;
+        } else if (o->speed < 0.0f && o->blockFwd) {
+            o->blockFwd = 0;
+        }
+        if (fnAtStLoco(o, dt) & 0xFF) {
+            if (0.0f < o->speed) {
+                o->blockFwd = 1;
+            } else if (o->speed < 0.0f) {
+                o->blockBack = 1;
+            }
+            o->speed = 0.0f;
+        }
+        __asm__ volatile("abs.s %0, %1" : "=f"(ab) : "f"(o->speed));
+        if (0.05f < ab) {
+            quatFromAxisAngle(q, o->axis, D_mission_overlay_8010BDD8[0][0] * sy);
+            rotateVec3ByQuat(q, o->fwd, o->fwd);
+            rotateVec3ByQuat(q, o->axis, o->axis);
+            orthonormalizeFrameAndSnapToZero(o);
+        }
+        if (D_main_bss_80130B92 != 1) {
+            o->f68 = 0.0f;
+            o->f6C = 0.0f;
+        } else {
+            o->f68 = D_mission_overlay_8010BDD8[1][0] * 80.0f;
+            o->f6C = D_mission_overlay_8010BDD8[1][1] * -30.0f;
+            pi = 1;
+        }
+    } else {
+        if ((o->blockFwd && 0.0f < o->speed) || (o->blockBack && o->speed < 0.0f)) {
+            o->speed = 0.0f;
+        } else if (0.0f < o->speed && o->blockBack) {
+            o->blockBack = 0;
+        } else if (o->speed < 0.0f && o->blockFwd) {
+            o->blockFwd = 0;
+        }
+        if (fnAtStLoco(o, dt) & 0xFF) {
+            if (0.0f < o->speed) {
+                o->blockFwd = 1;
+            } else if (o->speed < 0.0f) {
+                o->blockBack = 1;
+            }
+            o->speed = 0.0f;
+        }
+        if (o->stop) {
+            o->speed = 0.0f;
+        }
+        o->f68 = D_mission_overlay_8010BDD8[pi][0] * 80.0f;
+        o->f6C = D_mission_overlay_8010BDD8[pi][1] * -30.0f;
+        o->f64 = 0.06f;
+    }
+    fv = o->speed;
+    z = 0.0f;
+    if (fv == z) {
+        o->stop = 0;
+        o->f64 = z;
+        if (0.83f < o->phase || o->phase < 0.36f) {
+            if (0.13f < o->phase && o->phase < 0.36f) {
+                o->stop = 1;
+                o->speed = -2.0f;
+            } else if (0.83f < o->phase) {
+                o->stop = 1;
+                o->speed = 2.0f;
+            }
+        } else if (o->phase <= 0.83f && 0.6f < o->phase) {
+            o->stop = 1;
+            o->speed = -2.0f;
+        } else if (o->phase < 0.53f) {
+            o->stop = 1;
+            o->speed = 2.0f;
+        }
+    }
+    if (0.5f < o->speed) {
+        if (0.0176f <= o->phase && o->phase < 0.16f && o->stepR == 0) {
+            o->stepR = 1;
+            play3DSoundEvent(0, o, o->vel, 18.0f, 0.6f, 0, 5, 0x78, 0x32);
+            o->stepL = 0;
+        } else if (0.16f <= o->phase && o->phase < 0.545f && o->stepL == 0) {
+            o->stepL = 1;
+            play3DSoundEvent(0, o, o->vel, 16.0f, 0.5f, 0, 6, 0x78, 0x32);
+            o->stepR = 0;
+        } else if (0.545f <= o->phase && o->phase < 0.625f && o->stepR == 0) {
+            o->stepR = 1;
+            play3DSoundEvent(0, o, o->vel, 18.0f, 0.6f, 0, 5, 0x78, 0x32);
+            o->stepL = 0;
+        } else if (0.625f <= o->phase && o->phase < 1.0f && o->stepL == 0) {
+            o->stepL = 1;
+            play3DSoundEvent(0, o, o->vel, 16.0f, 0.5f, 0, 6, 0x78, 0x32);
+            o->stepR = 0;
+        }
+    } else if (o->speed < -0.5f) {
+        if (o->phase < 1.0f && 0.625f < o->phase && o->stepL == 0) {
+            o->stepL = 1;
+            play3DSoundEvent(0, o, o->vel, 16.0f, 0.5f, 0, 6, 0x78, 0x32);
+            o->stepR = 0;
+        } else if (o->phase < 0.59f && 0.545f < o->phase && o->stepR == 0) {
+            o->stepR = 1;
+            play3DSoundEvent(0, o, o->vel, 18.0f, 0.6f, 0, 5, 0x78, 0x32);
+            o->stepL = 0;
+        } else if (o->phase < 0.53f && 0.16f < o->phase && o->stepL == 0) {
+            o->stepL = 1;
+            play3DSoundEvent(0, o, o->vel, 16.0f, 0.5f, 0, 6, 0x78, 0x32);
+            o->stepR = 0;
+        } else if (o->phase < 0.12f && 0.0176f < o->phase && o->stepR == 0) {
+            o->stepR = 1;
+            play3DSoundEvent(0, o, o->vel, 18.0f, 0.6f, 0, 5, 0x78, 0x32);
+            o->stepL = 0;
+        }
+    }
+    if (o->f48 != o->f68) {
+        o->f48 = o->f48 + (o->f68 - o->f48) * dt * 3.0f;
+    }
+    if (o->f4C != o->f6C) {
+        o->f4C = o->f4C + (o->f6C - o->f4C) * dt * 3.0f;
+    }
+    if (0.0f < o->speed) {
+        o->cycle = 1.0f / (o->speed * o->f90);
+        setModelAnimSlotCycleDuration(o->animSlot, o->cycle);
+        o->phase = o->phase + dt / o->cycle;
+        if (1.0f < o->phase) {
+            o->phase = o->phase - 1.0f;
+        }
+        seekAllModelAnimChannelsInSlotToTime(o->animSlot, o->phase * o->cycle);
+    } else if (o->speed < 0.0f) {
+        o->cycle = -1.0f / (o->speed * o->f90);
+        setModelAnimSlotCycleDuration(o->animSlot, o->cycle);
+        o->phase = o->phase - dt / o->cycle;
+        if (o->phase < 0.0f) {
+            o->phase = o->phase + 1.0f;
+        }
+        seekAllModelAnimChannelsInSlotToTime(o->animSlot, o->phase * o->cycle);
+    }
+    o->vel[0] = o->fwd[0] * o->speed * 0.1f;
+    o->vel[1] = o->fwd[1] * o->speed * 0.1f;
+    o->vel[2] = o->fwd[2] * o->speed * 0.1f;
+    o->x = o->x + o->vel[0] * dt;
+    o->z = o->z + o->vel[2] * dt;
+    o->y = wrapAngleToCyclicRange(o->x, o->z, D_main_bss_80138058, 0);
+    if (o->f58 != 0.0f) {
+        o->f58 = o->f58 - dt;
+        if (o->f58 < 0.0f) {
+            o->f58 = 0.0f;
+        }
+    }
+    if (o->f58 == 0.0f) {
+        if ((atBtn[pi][0] & atMap[pi].h1A) || o->gunSide == 1) {
+            spawnPlayerAtStCannonFire((PcObj *)o, o->gunSide);
+            k = 0.4f;
+            o->gunSide ^= 1;
+            if (o->gunSide != 0) {
+                k = 0.1f;
+            }
+            o->f58 = k;
+        }
+    }
+    if (o->f50 < 1.0f) {
+        o->f50 = o->f50 + dt * 5.0f;
+        if (1.0f < o->f50) {
+            o->f50 = 1.0f;
+            o->f54 = 0.0f;
+        } else if (o->f50 < 0.2f) {
+            o->f54 = o->f50 * 5.0f;
+        } else {
+            o->f54 = 1.0f - (o->f50 - 0.2f) * 1.25f;
+        }
+    }
+}
 
 typedef struct { f32 m[12]; } PaMat;
 typedef struct {
@@ -1365,7 +1612,7 @@ void loadPlayerStartPosition(void *, void *);
 void clearObjectFlagBit4(void *);
 void resetTransientPlayerStateFlags(void);
 void teardownHudInstancesAndUnbindNpcs(void);
-void updatePlayerAtStBehavior(void *, s32);
+void fnUpdAtStPl(void *, s32) __asm__("updatePlayerAtStBehavior");
 void computeBootConfigScaledVec4(s32, s32, s32, void *, f32, f32);
 void cbsvF(s32, f32, f32, void *, f32, f32) __asm__("computeBootConfigScaledVec4");
 void vec3ExtrapolateFirstOrder(void *, s32, void *, f32);
@@ -1489,7 +1736,7 @@ s32 playerAtStUpdate(u8 *arg0, s32 action, u8 *arg2) {
         D_main_bss_80130B88[0] &= 0xF0FF;
         gGameSettings.unlockAndSettingsFlags[0] &= ~0x80;
         if (s2->wB0 > 0) {
-            updatePlayerAtStBehavior(s2, *(s32 *)arg2);
+            fnUpdAtStPl(s2, *(s32 *)arg2);
         }
         *(PaMat *)(s4 + 4) = *(PaMat *)s2;
         {
