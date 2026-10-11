@@ -1,4 +1,6 @@
 #include "common.h"
+#include "common_types.h"
+#include "PR/os.h"
 
 INCLUDE_ASM("asm/nonmatchings/main/1A410", awaitFrameSyncMesgBlock);
 
