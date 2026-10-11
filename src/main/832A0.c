@@ -2972,11 +2972,63 @@ L6:
     initSampleStreamBlockCache(D_main_800A1760[mode] * n);
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD90);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD98);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDA0);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", advanceVolumeFadeEnvelope);
+typedef struct {
+    u8 b0;
+    u8 keyOn;
+    u8 pad2[0x28];
+    u16 decayTime;
+    f32 sustain;
+    u16 releaseTime;
+    u8 pad32[0x26];
+    u16 duration;
+    u8 pad5A[2];
+    f32 cur;
+    u32 elapsed;
+    f32 target;
+    f32 start;
+    u8 state;
+} EnvVE;
+extern u32 gRateVE __asm__("D_main_bss_801496F4");
+void advanceVolumeFadeEnvelope(EnvVE *e, u16 dt, u8 *done) {
+    u32 step = (dt * 32000 / gRateVE) << 11;
+    f32 t;
+
+    if (e->keyOn == 0 && e->state != 3) {
+        e->state = 3;
+        e->target = 0.0f;
+        e->elapsed = 0;
+        e->start = e->cur;
+        e->duration = e->releaseTime;
+    } else if ((u16)(e->elapsed >> 16) >= e->duration) {
+        switch (e->state) {
+        case 0:
+            e->state = 1;
+            e->elapsed = 0;
+            e->start = 1.0f;
+            e->target = e->sustain;
+            e->duration = e->decayTime;
+            break;
+        case 1:
+            e->state = 2;
+            e->start = e->sustain;
+            e->target = e->sustain;
+            e->cur = e->sustain;
+            return;
+        case 3:
+            *done = 0;
+            e->cur = 0.0f;
+            return;
+        }
+    }
+    if (e->duration != 0) {
+        t = (f32)e->elapsed / (f32)(e->duration << 16);
+    } else {
+        t = 1.0f;
+    }
+    e->cur = (e->target - e->start) * t + e->start;
+    e->elapsed += step;
+}
 
 typedef struct SongBufNode { struct SongBufNode *next; struct SongBufNode *prev; u8 *buf; u8 pad[8]; } SongBufNode;
 void *rs_malloc(u32, u16);
