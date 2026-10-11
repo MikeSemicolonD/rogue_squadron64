@@ -3310,12 +3310,73 @@ INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDE0);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxRenderVoiceSamples);
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDE8);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDF0);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDF8);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE00);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxKeyOnVoice);
+typedef struct { s32 a; s32 b; s32 c; } Copy12KO;
+extern u8 *gFramesKO __asm__("D_main_bss_80149750");
+extern u16 gFrameIdxKO __asm__("D_main_bss_80149760");
+f64 truncDouble(f64);
+#define KB(p, o) (*(u8 *)((p) + (o)))
+#define KH(p, o) (*(u16 *)((p) + (o)))
+#define KS(p, o) (*(s16 *)((p) + (o)))
+#define KW(p, o) (*(s32 *)((p) + (o)))
+#define KD(p, o) (*(f64 *)((p) + (o)))
+#define KC(p, o) (*(Copy12KO *)((p) + (o)))
+void musyxKeyOnVoice(u8 *v) {
+    u8 *frame = gFramesKO + gFrameIdxKO * 0xA10;
+    u8 *c = frame + (KH(frame, 0) * 0x50 + 0x10);
+    u32 pos;
+
+    if (KB(v, 0x21) != 0) {
+        if (KB(v, 0x21) != 3) {
+            return;
+        }
+        KH(c, 0x22) = KH(v, 0x24);
+        pos = (KD(v, 0x50) - truncDouble(KD(v, 0x50))) * 65536.0;
+        KH(c, 0x20) = pos;
+        KH(c, 0x4C) = pos + (KH(v, 0x24) << 4) * KH(v, 0x44);
+        KB(c, 0x3C) = (KH(v, 0x44) + (KH(v, 0x48) & 0x1F) + 0x1F) >> 5;
+        KB(c, 0x3E) = KH(v, 0x48);
+        KC(c, 0x24) = KC(v, 0x28);
+        KW(c, 0x40) = KW(v, 0x40);
+        KH(c, 0x4E) = KH(v, 0x64);
+        if (KW(v, 0x34) != 0) {
+            KB(c, 0x3D) = (KH(v, 0x46) + (KH(v, 0x4A) & 0x1F) + 0x1F) >> 5;
+            KB(c, 0x3F) = KH(v, 0x4A);
+            KC(c, 0x30) = KC(v, 0x34);
+        } else {
+            KB(c, 0x3D) = 0;
+        }
+    } else {
+        KH(c, 0x22) = KH(v, 0x24);
+        pos = (KD(v, 0x50) - truncDouble(KD(v, 0x50))) * 65536.0;
+        KH(c, 0x20) = pos;
+        KH(c, 0x4C) = pos + (KH(v, 0x24) << 4) * KH(v, 0x44);
+        KH(c, 0x40) = KH(v, 0x44);
+        KB(c, 0x3C) = 0;
+        KB(c, 0x3E) = KH(v, 0x48);
+        KC(c, 0x24) = KC(v, 0x28);
+        KH(c, 0x4E) = KH(v, 0x64);
+        if (KW(v, 0x34) != 0) {
+            KH(c, 0x42) = KH(v, 0x46);
+            KB(c, 0x3F) = KH(v, 0x4A);
+            KC(c, 0x30) = KC(v, 0x34);
+        } else {
+            KH(c, 0x42) = 0;
+        }
+    }
+    KH(c, 0x48) = KW(v, 0x58);
+    KH(c, 0x4A) = KW(v, 0x5C);
+    KW(c, 0x44) = 0;
+    KW(c, 0x0) = KS(v, 0x6E) << 16;
+    KW(c, 0x4) = KS(v, 0x70) << 16;
+    KW(c, 0x8) = KS(v, 0x72) << 16;
+    KW(c, 0xC) = KS(v, 0x74) << 16;
+    KW(c, 0x10) = ((KS(v, 0x66) - KS(v, 0x6E)) << 16) / KH(v, 0x60);
+    KW(c, 0x14) = ((KS(v, 0x68) - KS(v, 0x70)) << 16) / KH(v, 0x60);
+    KW(c, 0x18) = ((KS(v, 0x6A) - KS(v, 0x72)) << 16) / KH(v, 0x60);
+    KW(c, 0x1C) = ((KS(v, 0x6C) - KS(v, 0x74)) << 16) / KH(v, 0x60);
+    KH(frame, 0)++;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxMixActiveVoices);
 
