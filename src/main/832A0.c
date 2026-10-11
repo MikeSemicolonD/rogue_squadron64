@@ -223,7 +223,33 @@ void seekModelAnimChannelToTime(u32 h, f32 t) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", seekAllModelAnimChannelsInSlotToTime);
+typedef struct { s32 a; s32 b; u32 *c; u8 *ch; u8 state; u8 pad[3]; } MaSlotSA;
+extern MaSlotSA gSlotsSA[] __asm__("gActiveModelAnimSlots");
+void findModelAnimKeyframeByPhase(s32 slotId, s32 group, f32 phase);
+static __inline__ u8 maSlotValidSA(u32 id) {
+    s32 r = 0;
+    if (id != 0 && id <= 32) {
+        r = gSlotsSA[id - 1].state == 1;
+    }
+    return r;
+}
+void seekAllModelAnimChannelsInSlotToTime(u32 id, f32 t) {
+    u32 i;
+    f32 tt;
+
+    if (maSlotValidSA(id)) {
+        for (i = 0; i < *gSlotsSA[id - 1].c; i++) {
+            if (t < 0.0f) {
+                tt = 0.0f;
+            } else if (*(f32 *)(i * 16 + gSlotsSA[id - 1].ch + 4) < t) {
+                tt = *(f32 *)(i * 16 + gSlotsSA[id - 1].ch + 4);
+            } else {
+                tt = t;
+            }
+            findModelAnimKeyframeByPhase(id, i, tt / *(f32 *)(i * 16 + gSlotsSA[id - 1].ch + 4));
+        }
+    }
+}
 
 typedef struct { s32 a; s32 b; s32 c; u8 *ch; u8 state; u8 pad[3]; } MaSlotSD;
 extern MaSlotSD gSlotsSD[] __asm__("gActiveModelAnimSlots");
