@@ -50,6 +50,61 @@ void drawDebugTextString(u8 *s) {
     gDbgCurY += 8;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/24D30", loadDebugAssets);
+#include "textures.h"
+typedef struct { s32 w[3]; } DbgW3;
+extern char strDbgData[];
+extern char strDbgFont[];
+extern char strDbgFonttex[];
+extern DbgW3 strDbgFontmat;
+extern u8 D_main_bss_80128F20;
+extern s16 D_main_bss_80128F22;
+extern s16 D_main_bss_8012BF28;
+extern s16 D_main_bss_8012BF2A;
+extern s16 D_main_bss_8012BF2C;
+s32 findManifestEntryByName(char *);
+s32 get_asset_size_extra(s32, char *);
+void *rs_malloc(s32, s32);
+void rs_free(void *);
+s32 findAssetAcrossSegments(s32, s32, s32, char *, s32);
+void setupAssetDma(s32, s32, s32, s32, s32, void *);
+void teardownAssetDma(s32, s32);
+s32 freeManifestSegmentAssets(s32);
+s32 registerHmtTextureInTable(struct material_entry *, struct texture_entry *, u8);
+void loadDebugAssets(s32 seg) {
+    struct material_entry mat;
+    struct texture_entry tex;
+    s32 entry;
+    s32 size;
+    u8 *data;
+    s32 asset;
+
+    D_main_bss_80128F20 = 0;
+    D_main_bss_8012BF28 = 0;
+    entry = findManifestEntryByName(strDbgData);
+    if (entry != -1) {
+        size = get_asset_size_extra(entry, strDbgFont);
+        data = rs_malloc(size, 8);
+        asset = findAssetAcrossSegments(seg, 0, entry, strDbgFont, 0);
+        setupAssetDma(seg, 0, asset, 0, size, data);
+        teardownAssetDma(seg, asset);
+        tex.pixel_offsets[0] = (u32)(data + 0x3C);
+        tex.plte_offset = (u32)(data + 0xC);
+        tex.texture_name_offset = (u32)strDbgFonttex;
+        tex.width = *(u16 *)(data + 4);
+        tex.height = *(u16 *)(data + 6);
+        tex.one = 1;
+        tex.flags_type = data[0] | 0x4000;
+        ((u8 *)&tex.transparency_color)[0] = 0;
+        ((u8 *)&tex.transparency_color)[1] = 0;
+        ((u8 *)&tex.transparency_color)[2] = 0;
+        *(DbgW3 *)mat.material_name = strDbgFontmat;
+        D_main_bss_80128F22 = registerHmtTextureInTable(&mat, &tex, 1);
+        rs_free(data);
+        freeManifestSegmentAssets(entry);
+        D_main_bss_8012BF2A = 0x28;
+        D_main_bss_8012BF2C = 0x10;
+        D_main_bss_80128F20 = 1;
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/24D30", fake_func_80024878);
