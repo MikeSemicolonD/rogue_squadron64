@@ -3527,9 +3527,127 @@ s32 initMusyXEngine(s32 arg0) {
     return 0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", setDisplayMode);
+extern u8 gMusyXActiveFlag;
+extern u8 gVoicesSD __asm__("D_main_bss_80141AD0");
+extern u8 gA2SD __asm__("D_main_bss_80141AD1");
+extern u8 gA3SD __asm__("D_main_bss_8013B038");
+extern u8 gGlobRegsSD[] __asm__("D_main_bss_80148C58");
+extern s32 gZ1SD __asm__("D_main_bss_8013C44C");
+extern s32 gZ2SD __asm__("D_main_bss_8013AF0C");
+extern s32 gZ3SD __asm__("D_main_bss_8013C450");
+extern s32 gZ4SD __asm__("D_main_bss_8013AF08");
+extern s32 gZ5SD __asm__("D_main_bss_80148C50");
+extern s16 gBucketsSD[][2] __asm__("D_main_bss_8013C480");
+extern volatile u8 gZ6SD __asm__("D_main_bss_8013ACF4");
+s32 initAudioSubsystemSD(u32 *, u16, u16, s32) __asm__("initAudioSubsystem");
+void resetSongSubsystemCounterSD(void) __asm__("resetSongSubsystemCounter");
+void initSongSequencerPoolsSD(void) __asm__("initSongSequencerPools");
+void resetMusyXEngineStateSD(u32) __asm__("resetMusyXEngineState");
+void clearStreamedVoiceFlagsSD(void) __asm__("clearStreamedVoiceFlags");
+void reset3DAudioListsSD(void) __asm__("reset3DAudioLists");
+s32 setDisplayMode(u32 freq, u8 voices, u8 a2, u8 a3, u16 a4, s32 a5) {
+    s32 r;
+    s32 i;
+    u32 f;
+    u8 *p;
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", reapplyDisplayMode);
+    gMusyXActiveFlag = 0;
+    if (voices <= 32) {
+        gVoicesSD = voices;
+    } else {
+        gVoicesSD = 32;
+    }
+    gA3SD = a3;
+    gA2SD = a2;
+    r = initAudioSubsystemSD(&freq, gVoicesSD, a4, a5);
+    if (r == 0) {
+    f = freq;
+    resetSongSubsystemCounterSD();
+    i = 15;
+    p = &gGlobRegsSD[15];
+    for (; i >= 0; i--) {
+        *p-- = 0;
+    }
+    gZ1SD = 0;
+    gZ2SD = 0;
+    gZ3SD = 0;
+    gZ4SD = 0;
+    gZ5SD = 0;
+    for (i = 0; i < 0x800; i += 4) {
+        *(s16 *)((s32)gBucketsSD + i) = 0;
+        *(s16 *)((s32)gBucketsSD + i + 2) = 0;
+    }
+    initSongSequencerPoolsSD();
+    gZ6SD = 0;
+    resetMusyXEngineStateSD(f);
+    clearStreamedVoiceFlagsSD();
+    reset3DAudioListsSD();
+    r = 0;
+    gMusyXActiveFlag = 1;
+    }
+    return r;
+}
+
+extern u8 gMusyXActiveFlag;
+extern u8 gVoicesRD __asm__("D_main_bss_80141AD0");
+extern u8 gA2RD __asm__("D_main_bss_80141AD1");
+extern u8 gA3RD __asm__("D_main_bss_8013B038");
+extern u8 gGlobRegsRD[] __asm__("D_main_bss_80148C58");
+extern s32 gZ1RD __asm__("D_main_bss_8013C44C");
+extern s32 gZ2RD __asm__("D_main_bss_8013AF0C");
+extern s32 gZ3RD __asm__("D_main_bss_8013C450");
+extern s32 gZ4RD __asm__("D_main_bss_8013AF08");
+extern s32 gZ5RD __asm__("D_main_bss_80148C50");
+extern s16 gBucketsRD[][2] __asm__("D_main_bss_8013C480");
+extern volatile u8 gZ6RD __asm__("D_main_bss_8013ACF4");
+s32 reapplyAudioConfigRD(u32 *, u16, u16, s32) __asm__("reapplyAudioConfig");
+void resetSongSubsystemCounterRD(void) __asm__("resetSongSubsystemCounter");
+void initSongSequencerPoolsRD(void) __asm__("initSongSequencerPools");
+void resetMusyXEngineStateRD(u32) __asm__("resetMusyXEngineState");
+void clearStreamedVoiceFlagsRD(void) __asm__("clearStreamedVoiceFlags");
+void reset3DAudioListsRD(void) __asm__("reset3DAudioLists");
+s32 reapplyDisplayMode(u32 freq, u8 voices, u8 a2, u8 a3, u16 a4, s32 a5) {
+    s32 r;
+    s32 i;
+    u32 f;
+    u8 *p;
+
+    gMusyXActiveFlag = 0;
+    if (voices <= 32) {
+        gVoicesRD = voices;
+    } else {
+        gVoicesRD = 32;
+    }
+    gA3RD = a3;
+    gA2RD = a2;
+    r = reapplyAudioConfigRD(&freq, gVoicesRD, a4, a5);
+    if (r == 0) {
+    f = freq;
+    resetSongSubsystemCounterRD();
+    i = 15;
+    p = &gGlobRegsRD[15];
+    for (; i >= 0; i--) {
+        *p-- = 0;
+    }
+    gZ1RD = 0;
+    gZ2RD = 0;
+    gZ3RD = 0;
+    gZ4RD = 0;
+    gZ5RD = 0;
+    for (i = 0; i < 0x800; i += 4) {
+        *(s16 *)((s32)gBucketsRD + i) = 0;
+        *(s16 *)((s32)gBucketsRD + i + 2) = 0;
+    }
+    initSongSequencerPoolsRD();
+    gZ6RD = 0;
+    resetMusyXEngineStateRD(f);
+    clearStreamedVoiceFlagsRD();
+    reset3DAudioListsRD();
+    r = 0;
+    gMusyXActiveFlag = 1;
+    }
+    return r;
+}
 
 extern u8 gMusyXActiveFlag;
 extern void * volatile D_main_bss_8013AF14;
