@@ -21,7 +21,30 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", allocateModelAnimSlot);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", appendAnimHandleAndDescendantsToBuffer);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", flattenAnimTreeAndAllocateSlot);
+void *rs_malloc(u32, u16);
+s32 allocateModelAnimSlot(void *, void *, u16);
+void appendAnimHandleAndDescendantsToBuffer(s32);
+extern s32 D_main_bss_8013AC10;
+extern u8 D_main_bss_8013A9A1[];
+s32 flattenAnimTreeAndAllocateSlot(u8 *a, u8 *b) {
+    u16 n = *(u16 *)(*(u8 **)(b + 4) + 0xE);
+    s32 *buf = rs_malloc(n * 4, 0);
+    s32 slot;
+    D_main_bss_8013AC10 = (s32)(buf + 1);
+    *buf = (s32)(a + 0x1C);
+    if (*(s32 *)(a + 0xC) != 0) {
+        appendAnimHandleAndDescendantsToBuffer(*(s32 *)(a + 0xC));
+    }
+    if (*(s32 *)a != 0) {
+        appendAnimHandleAndDescendantsToBuffer(*(s32 *)a);
+    }
+    slot = allocateModelAnimSlot(buf, b, n);
+    if (slot != 0) {
+        s32 idx = slot - 1;
+        *(u8 *)((s32)D_main_bss_8013A9A1 + idx * 0x14) = 1;
+    }
+    return slot;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", model_animation_offset_convert);
 
@@ -211,7 +234,28 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5BucketedTableInsertEntry);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", factor5BucketedTableRemoveEntry);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", binarySearchWithComparator);
+s32 binarySearchWithComparator(s32 arg0, u8 *base, s32 n, s32 size, s32 (*cmp)(s32, u8 *)) {
+    s32 lo, hi, mid, r;
+    u8 *p;
+    if (n != 0) {
+        lo = 1;
+        hi = n;
+        do {
+            mid = (lo + hi) >> 1;
+            p = base + size * (mid - 1);
+            r = cmp(arg0, p);
+            if (r == 0) {
+                return (s32)p;
+            }
+            if (r < 0) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        } while (hi >= lo);
+    }
+    return 0;
+}
 
 s32 func_main_80085CD8(u8 *a, u8 *b) {
     return *(u16 *)(a + 4) - *(u16 *)(b + 4);
@@ -243,7 +287,36 @@ s32 cmpU16ByValue(u8 *a, u8 *b) {
     return *(u16 *)(a + 0) - *(u16 *)(b + 0);
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxSortedInsertByU16);
+extern u16 D_main_bss_8013AC90;
+extern u8 D_main_bss_8013CC80[];
+extern s32 D_main_bss_80140800;
+s32 cmpU16ByValue(u8 *a, u8 *b);
+static __inline__ u8 *bsrch(u8 *key, u8 *base, s32 n, s32 size, s32 (*cmp)(u8 *, u8 *)) {
+    s32 lo, hi, mid, r;
+    u8 *p;
+    if (n != 0) {
+        lo = 1;
+        hi = n;
+        do {
+            mid = (lo + hi) >> 1;
+            p = base + size * (mid - 1);
+            r = cmp(key, p);
+            if (r == 0) {
+                return p;
+            }
+            if (r < 0) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        } while (hi >= lo);
+    }
+    return 0;
+}
+u8 *musyxSortedInsertByU16(s16 key) {
+    D_main_bss_8013AC90 = key;
+    return bsrch((u8 *)&D_main_bss_8013AC90, D_main_bss_8013CC80, D_main_bss_80140800, 0xC, cmpU16ByValue);
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", freeSynthVoiceFromActiveList);
 
@@ -253,7 +326,30 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", resolveVoiceSlotByHandle);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", allocateSynthVoice);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", stopVoiceByKey);
+s32 allocateSynthVoice(u8, u8, u16, s32);
+void freeSynthVoiceFromActiveList();
+s32 isAudioSlotActive(s32);
+void stopVoiceMarkRetrigger(s32);
+extern u8 D_main_8013D880[];
+extern u8 D_main_bss_8013D8AE[];
+extern s32 D_main_bss_8013D8E4[];
+extern u8 D_main_bss_8013D939[];
+s32 stopVoiceByKey(u8 key) {
+    s32 v = allocateSynthVoice(key, 0xFF, 0xFFFF, 1);
+    s32 off;
+    if (v != -1) {
+        off = (v * 0x5F) << 2;
+        D_main_bss_8013D939[off] = 1;
+        freeSynthVoiceFromActiveList(off + (s32)D_main_8013D880);
+        *(s32 *)((s32)D_main_bss_8013D8E4 + off) = -1;
+        if ((u8)isAudioSlotActive(v)) {
+            stopVoiceMarkRetrigger(v);
+        }
+        *(s32 *)((s32)D_main_8013D880 + off) = 0;
+        D_main_bss_8013D8AE[off] = 0;
+    }
+    return v;
+}
 
 extern u8 D_main_bss_8013D939[];
 s32 isAudioSlotActive(s32);
@@ -538,7 +634,21 @@ s32 soundMacroOpPortamentoStartWait(u8 *ch, s32 *out) {
     return computeChannelWaitDuration();
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", computeChannelPitchSweepStep);
+s32 scaleFixedPointByRatioA(u16);
+s32 scaleFixedPointByRatioB(u16);
+s32 computeChannelPitchSweepStep(u8 *a) {
+    s32 r;
+    if (*(s8 *)(a + 0xBC) != 0) {
+        if (*(s8 *)(a + 0xBC) > 0) {
+            r = (((scaleFixedPointByRatioA(*(u16 *)(a + 0x72)) & 0xFFFF) - *(s32 *)(a + 0x70)) * *(s8 *)(a + 0xBC)) / 100;
+        } else {
+            r = ((*(s32 *)(a + 0x70) - (scaleFixedPointByRatioB(*(u16 *)(a + 0x72)) & 0xFFFF)) * *(s8 *)(a + 0xBC)) / 100;
+        }
+    } else {
+        r = 0;
+    }
+    return r;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpStartNoteAbsoluteSweep);
 
@@ -822,7 +932,48 @@ void runMusyXTaskLocked(void) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", initMusyXEngine);
+void resetSongSubsystemCounter(void);
+void initSongSequencerPools(void);
+void resetMusyXEngineState(s32);
+void clearStreamedVoiceFlags(void);
+void reset3DAudioLists(void);
+extern s8 D_main_bss_80148C67;
+extern s32 D_main_bss_8013AF08;
+extern s32 D_main_bss_8013AF0C;
+extern s32 D_main_bss_8013C44C;
+extern s32 D_main_bss_8013C450;
+extern s16 D_main_bss_8013C480[][2];
+extern s32 D_main_bss_80148C50;
+extern volatile u8 D_main_bss_8013ACF4;
+extern u8 gMusyXActiveFlag;
+s32 initMusyXEngine(s32 arg0) {
+    s32 i;
+    s8 *p;
+    resetSongSubsystemCounter();
+    i = 0xF;
+    p = &D_main_bss_80148C67;
+    do {
+        *p = 0;
+        i--;
+        p--;
+    } while (i >= 0);
+    D_main_bss_8013C44C = 0;
+    D_main_bss_8013AF0C = 0;
+    D_main_bss_8013C450 = 0;
+    D_main_bss_8013AF08 = 0;
+    D_main_bss_80148C50 = 0;
+    for (i = 0; i < 0x200; i++) {
+        D_main_bss_8013C480[i][0] = 0;
+        D_main_bss_8013C480[i][1] = 0;
+    }
+    initSongSequencerPools();
+    D_main_bss_8013ACF4 = 0;
+    resetMusyXEngineState(arg0);
+    clearStreamedVoiceFlags();
+    reset3DAudioLists();
+    gMusyXActiveFlag = 1;
+    return 0;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", setDisplayMode);
 
