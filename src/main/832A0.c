@@ -436,7 +436,25 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosubModulatorLoop);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosubRandomLoop);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroOpGosub);
+s32 factor5BucketedTableLookupValue(u16);
+void freeSynthVoiceFromActiveList();
+s32 soundMacroOpGosub(u8 *ch, u16 *cmd) {
+    s32 v = factor5BucketedTableLookupValue(cmd[0]);
+    s32 old;
+    if (v != 0) {
+        old = *(s32 *)ch;
+        *(s32 *)ch = v;
+        *(s32 *)(ch + 8) = old;
+        *(s32 *)(ch + 0xC) = *(s32 *)(ch + 4);
+        *(s32 *)(ch + 4) = v + cmd[3] * 8;
+        return 0;
+    }
+    *(s32 *)ch = 0;
+    ch[0x2E] = 0;
+    freeSynthVoiceFromActiveList(ch);
+    *(s32 *)(ch + 0x64) = -1;
+    return 1;
+}
 
 s32 factor5BucketedTableLookupValue(u16);
 s32 soundMacroOpGosubAltReturnFrame(u8 *ch, u16 *cmd) {
@@ -633,7 +651,24 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", tickAudioChannel);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", tickAllAudioChannels);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", tickAudioSequencerFrame);
+extern s32 D_main_bss_8013ACC8;
+extern s32 D_main_bss_8013B03C;
+extern s32 D_main_bss_8013C448;
+extern s32 D_main_bss_8013C454;
+extern s32 D_main_bss_8013C458;
+extern s32 D_main_bss_80142038;
+extern s32 D_main_bss_801440C0;
+void tickAllAudioChannels(s32);
+void tickAudioSequencerFrame(void) {
+    D_main_bss_8013C448 = 0;
+    D_main_bss_8013C458 = 0;
+    D_main_bss_8013B03C = 0;
+    D_main_bss_8013C454 = 0;
+    if (D_main_bss_80142038 != 0) {
+        D_main_bss_8013ACC8 = (D_main_bss_80142038 * 0x7D00) / D_main_bss_801440C0 * 8;
+        tickAllAudioChannels(D_main_bss_80142038);
+    }
+}
 
 extern u8 gMusyXActiveFlag;
 void factor5MutexAcquire(void);
@@ -694,7 +729,22 @@ void playSimpleAudioCmd(u8 a, u16 b, u8 c) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", applyMusicOrSfxVolume);
+extern u8 gMusyXActiveFlag;
+void factor5MutexAcquire(void);
+void factor5MutexRelease(void);
+void dispatchAudioCommand(u8, u16, u8, s32, s32);
+void applyMusicOrSfxVolume(u8 a, u16 b, u8 music, u8 sfx) {
+    if (gMusyXActiveFlag != 0) {
+        factor5MutexAcquire();
+        if (music) {
+            dispatchAudioCommand(a, b, 0x15, 0, 0);
+        }
+        if (sfx) {
+            dispatchAudioCommand(a, b, 0x16, 0, 0);
+        }
+        factor5MutexRelease();
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", isAudioFaderRampActive);
 
