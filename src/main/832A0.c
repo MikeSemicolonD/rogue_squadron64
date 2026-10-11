@@ -3382,11 +3382,190 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxMixActiveVoices);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxBuildVoiceCommandList);
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE08);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE10);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE18);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxSynthFrame);
+typedef struct SfNodeSF { struct SfNodeSF *next; u8 pad4[0xC]; u16 h10; } SfNodeSF;
+typedef struct { u8 b0; u8 pad1[7]; f64 pos; u32 w10; u32 w14; u8 pad18[0x70]; } SfVoiceSF;
+typedef struct { u32 type, flags; u8 *ucode_boot; u32 ucode_boot_size; u8 *ucode; u32 ucode_size; u8 *ucode_data; u32 ucode_data_size; u32 dram_stack, dram_stack_size, output_buff, output_buff_size; u8 *data_ptr; u32 data_size, yield_data_ptr, yield_data_size; } SfTaskSF;
+extern SfTaskSF gAspTaskSF __asm__("aspTask");
+extern u8 rspbootTextStart[];
+extern u8 gRspbootEndSF[] __asm__("findModelAnimKeyframeByPhase");
+extern u8 aspMainTextStart[];
+extern u8 aspMainDataStart[];
+extern volatile u8 gSfRingSF __asm__("D_main_bss_801496F0");
+extern u8 gMusyXActiveFlag;
+extern u16 gSfPosSF __asm__("D_main_bss_80149988");
+extern u16 gSfPos2SF __asm__("D_main_bss_80149988");
+extern u16 gSfFreeSF __asm__("D_main_bss_80149988+2");
+extern u8 gSfPendSF __asm__("D_main_bss_8014974C");
+extern OSMesgQueue gSfQueueSF __asm__("D_main_bss_80149730");
+extern u8 gSfSideSF __asm__("D_main_bss_80149702");
+extern u8 *gSfCmdBufSF[2] __asm__("D_main_bss_80149708");
+extern u16 gSfCmdCntSF[2] __asm__("D_main_bss_80149710");
+extern SfNodeSF *gSfNodesSF __asm__("D_main_bss_801499B0");
+extern u16 gSfDmaCntSF __asm__("D_main_bss_80149724");
+extern u8 *gSfDmaListSF __asm__("D_main_bss_80149728");
+extern u16 gSfNumVoicesSF __asm__("D_main_bss_80149700");
+extern SfVoiceSF *gSfVoicesSF __asm__("D_main_bss_801496F8");
+extern u16 gSfNumBufSF __asm__("D_main_bss_8014974E");
+extern u8 *gSfMixBufSF[16] __asm__("D_main_bss_801496B0");
+extern u32 gSfTickSF __asm__("D_main_bss_80149714");
+extern u32 gSfTickReloadSF __asm__("D_main_bss_80149718");
+extern u8 gSfAspPendSF __asm__("D_main_bss_8014974D");
+extern OSMesgQueue gSfSpQueueSF __asm__("D_main_bss_8011A800");
+extern u16 gSfFramesSF __asm__("D_main_bss_80149760");
+extern u8 *gSfFrameBufSF __asm__("D_main_bss_80149750");
+extern void (*gSfStartTaskSF)(SfTaskSF *) __asm__("D_main_bss_801499D0");
+extern void (*gSfSubmitSF)(u8 *, u16, OSMesgQueue *) __asm__("D_main_bss_801499DC");
+extern u32 gSfLastDtSF __asm__("D_main_800A1778");
+extern f32 gSfDtSumSF __asm__("D_main_800A176C");
+extern f32 gSfDtCntSF __asm__("D_main_800A1770");
+extern f32 gSfDtAvgSF __asm__("D_main_800A1774");
+extern u32 gSfCostSF __asm__("D_main_bss_801499E8");
+void factor5QueueBlock(void);
+void factor5QueueSignal(void);
+void recordFrameTimestamp();
+void update3DAudioFrame();
+void musyxBuildVoiceCommandList();
+void tickAllActiveSongs();
+void tickAudioSequencerFrame(void);
+void musyxMixActiveVoices();
+void flushStreamedVoiceBuffers();
+void yieldFromSpThread();
+void serviceStreamedVoices();
+u32 getTimeSinceLastFrame();
+u32 __osDisableInt(void);
+void __osRestoreInt(u32);
+void osYieldThread(void);
+static __inline__ void sfMixOne(u16 idx, u16 off) {
+    if (gMusyXActiveFlag && --gSfTickSF == 0) {
+        gSfTickSF = gSfTickReloadSF;
+        tickAllActiveSongs();
+        tickAudioSequencerFrame();
+    }
+    musyxMixActiveVoices(gSfMixBufSF[idx], off, 0xC0);
+}
+void musyxSynthFrame(void) {
+    u32 t0;
+    u32 mask;
+    u16 end;
+    u16 i;
+    u16 n;
+    u16 off;
+    s32 k;
+    SfNodeSF *p;
+    SfVoiceSF *v;
+    u32 dt;
+    u8 *fb;
+    u16 fc;
+
+    factor5QueueBlock();
+    recordFrameTimestamp();
+    t0 = osGetTime();
+    mask = __osDisableInt();
+    if (gSfRingSF != 0) {
+        end = gSfRingSF - 1;
+    } else {
+        end = 15;
+    }
+    __osRestoreInt(mask);
+    if (gMusyXActiveFlag) {
+        update3DAudioFrame();
+    }
+    if (gSfPosSF != 0xFFFF) {
+        if (gSfPendSF) {
+            osRecvMesg(&gSfQueueSF, NULL, OS_MESG_BLOCK);
+            gSfPendSF = 0;
+            osYieldThread();
+        }
+        musyxBuildVoiceCommandList(gSfCmdBufSF[gSfSideSF ^ 1], gSfCmdCntSF[gSfSideSF ^ 1]);
+        gSfDmaCntSF = 0;
+        gSfCmdCntSF[gSfSideSF] = 0;
+        for (p = gSfNodesSF; p != NULL; p = p->next) {
+            if (p->h10 != 0) {
+                p->h10--;
+            }
+        }
+        if (gSfPosSF != end) {
+            for (k = 0; k < gSfNumVoicesSF; k++) {
+                if (gSfVoicesSF[k].b0) {
+                    gSfVoicesSF[k].w14 = gSfVoicesSF[k].w10;
+                    gSfVoicesSF[k].w10 = gSfVoicesSF[k].pos;
+                }
+            }
+            off = 0;
+            n = 0;
+            if (end > (u32)gSfPosSF) {
+                for (i = gSfPosSF; i < end;) {
+                    if (n >= gSfNumBufSF) {
+                        break;
+                    }
+                    sfMixOne(i++, off);
+                    off += 0xC0;
+                    n++;
+                }
+            } else {
+                for (i = gSfPos2SF; i < 16;) {
+                    if (n >= gSfNumBufSF) {
+                        break;
+                    }
+                    sfMixOne(i++, off);
+                    off += 0xC0;
+                    n++;
+                }
+                for (i = 0; i < end;) {
+                    if (n >= gSfNumBufSF) {
+                        break;
+                    }
+                    sfMixOne(i++, off);
+                    off += 0xC0;
+                    n++;
+                }
+            }
+            if (gSfDmaCntSF != 0) {
+                gSfPendSF = 1;
+                gSfSubmitSF(gSfDmaListSF, gSfDmaCntSF, &gSfQueueSF);
+            }
+            gSfPosSF = i;
+            gSfFreeSF -= n;
+        }
+        flushStreamedVoiceBuffers();
+        if (gSfAspPendSF) {
+            osRecvMesg(&gSfSpQueueSF, NULL, OS_MESG_BLOCK);
+            yieldFromSpThread();
+            gSfAspPendSF = 0;
+        }
+        fb = gSfFrameBufSF;
+        fc = gSfFramesSF;
+        if (fc != 0) {
+            gAspTaskSF.type = 2;
+            gAspTaskSF.flags = 0;
+            gAspTaskSF.ucode_boot = rspbootTextStart;
+            gAspTaskSF.ucode_boot_size = gRspbootEndSF - rspbootTextStart;
+            gAspTaskSF.ucode = aspMainTextStart;
+            gAspTaskSF.ucode_size = 0x1000;
+            gAspTaskSF.ucode_data = aspMainDataStart;
+            gAspTaskSF.ucode_data_size = 0x800;
+            gAspTaskSF.data_ptr = fb;
+            gAspTaskSF.data_size = fc;
+            osWritebackDCache(fb, fc * 0xA10);
+            gSfStartTaskSF(&gAspTaskSF);
+            gSfAspPendSF = 1;
+        }
+        gSfSideSF ^= 1;
+        if (gMusyXActiveFlag) {
+            serviceStreamedVoices();
+        }
+    } else {
+        gSfPosSF = end;
+    }
+    dt = getTimeSinceLastFrame();
+    gSfLastDtSF = dt;
+    gSfDtSumSF += (f32)dt;
+    gSfDtCntSF += 1.0f;
+    gSfDtAvgSF = gSfDtSumSF / gSfDtCntSF;
+    gSfCostSF = (u32)osGetTime() - t0;
+    factor5QueueSignal();
+}
 
 
 void postViThreadCommand();
