@@ -7,6 +7,9 @@ extern MaSlotF gSlotsF[] __asm__("gActiveModelAnimSlots");
 extern const f32 D_main_8003DB14;
 typedef struct { f32 f0; s32 pad4; s32 pad8; s32 *p; } MaChF;
 #define CHP (((MaChF *)((u8 *)((group * 16) + (s32)gSlotsF[slotId - 1].ch)))->p)
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB10);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB14);
+
 void findModelAnimKeyframeByPhase(s32 slotId, s32 group, f32 phase) {
     s16 ts = (s32)(phase * D_main_8003DB14);
     u8 *g = *(u8 **)(gSlotsF[slotId - 1].c + 4) + (group * 16);
@@ -72,6 +75,8 @@ s32 resetModelAnimSlotTable(void) {
 
 extern const f32 D_main_8003DB18;
 void *rs_malloc(u32, u16);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB18);
+
 s32 allocateModelAnimSlotImpl(void *a, void *b, s32 n) __asm__("allocateModelAnimSlot");
 typedef struct { s32 w0; f32 f4; u8 b8; u8 pad9[3]; s32 *p; } MaChAMA;
 s32 allocateModelAnimSlotImpl(void *a, void *b, s32 n) {
@@ -149,11 +154,19 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", seekAllModelAnimChannelsInSlotToTime)
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", setModelAnimChannelEntryDuration);
 
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB1C);
+
 INCLUDE_ASM("asm/nonmatchings/main/832A0", getModelAnimChannelEntryDuration);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", setModelAnimSlotCycleDuration);
 
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB20);
+
 INCLUDE_ASM("asm/nonmatchings/main/832A0", sampleModelAnimKeyframeVec3);
+
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB24);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB28);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB2C);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", parseModelAnimType2Entry);
 
@@ -2254,19 +2267,35 @@ s32 soundMacroSetFlagBitTremolo(u8 *ch) {
     return 0;
 }
 
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DB30);
+
 INCLUDE_ASM("asm/nonmatchings/main/832A0", soundMacroPushEffectEvent);
+
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DB48);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler40);
 
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DB60);
+
 INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler41);
+
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DB78);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler42);
 
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DB90);
+
 INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler43);
+
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DBA8);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler44);
 
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DBC0);
+
 INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler45);
+
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DBD8);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", seqCmdHandler46);
 
@@ -2336,6 +2365,8 @@ s32 soundMacroSetPitchTarget(u8 *ch, u8 *op) {
     }
     return 0;
 }
+
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DBF0);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", tickAudioChannel);
 
@@ -2466,6 +2497,8 @@ extern u8 D_main_bss_801483C8;
 void setMusyXVoiceTickGate(u8 arg0) {
     D_main_bss_801483C8 = arg0;
 }
+
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DD38);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", dispatchAudioCommand);
 
@@ -2756,6 +2789,12 @@ void buildSongTempoScheduleImpl(u8 *song) {
     }
 }
 
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD50);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD58);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD5C);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD60);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD64);
+
 INCLUDE_ASM("asm/nonmatchings/main/832A0", allocateSongChannelArray);
 
 extern const f64 D_main_8003DD68;
@@ -2776,6 +2815,15 @@ extern u16 D_main_800A1760[];
 void *rs_malloc(u32, u16);
 void buildSongDecodeBufferRing(s32);
 void initSampleStreamBlockCache(u16);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD68);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD70);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD74);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD78);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD7C);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD80);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD88);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD8C);
+
 void setupSongRenderBuffers(u16 n, u32 x, u8 mode) {
     f64 d;
     f32 f;
@@ -2819,6 +2867,10 @@ L6:
     buildSongDecodeBufferRing(D_main_bss_8014971C);
     initSampleStreamBlockCache(D_main_800A1760[mode] * n);
 }
+
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD90);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD98);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDA0);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", advanceVolumeFadeEnvelope);
 
@@ -2981,7 +3033,21 @@ SSBNode *recycleSampleStreamBlock(void) {
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", fillSampleStreamRange);
 
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDA8);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDB0);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDB8);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDC0);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDC8);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDD0);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDD8);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDE0);
+
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxRenderVoiceSamples);
+
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDE8);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDF0);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDF8);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE00);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxKeyOnVoice);
 
@@ -2989,7 +3055,18 @@ INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxMixActiveVoices);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxBuildVoiceCommandList);
 
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE08);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE10);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE18);
+
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxSynthFrame);
+
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE1C);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE30);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE38);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE3C);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE40);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE44);
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", initN64RspMixer);
 
@@ -3084,6 +3161,9 @@ s32 audioStubReturnZero(void) {
     return 0;
 }
 
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE48);
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE50);
+
 INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxInitVoiceFromSample);
 
 extern u8 *D_main_bss_801496F8;
@@ -3103,6 +3183,8 @@ void msvrImpl(s32 i, u8 flag) {
 
 extern u8 *D_main_bss_801496F8;
 extern f64 D_main_8003DE58;
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE58);
+
 void musyxStoreVoiceAdsrParams(s32 i, u16 *p) {
     s32 b = (s32)D_main_bss_801496F8;
     u8 *v = (u8 *)(i * 0x88 + b);
@@ -3114,6 +3196,8 @@ void musyxStoreVoiceAdsrParams(s32 i, u16 *p) {
 
 extern u8 *D_main_bss_801496F8;
 extern f32 D_main_8003DE60;
+INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DE60);
+
 void musyxTriggerVoiceAttack(u16 i) {
     u8 *v = D_main_bss_801496F8 + i * 0x88;
     f32 f = D_main_8003DE60;
