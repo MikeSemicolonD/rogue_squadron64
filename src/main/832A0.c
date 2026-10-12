@@ -5027,7 +5027,159 @@ SSBNode *recycleSampleStreamBlock(void) {
     return n;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", fillSampleStreamRange);
+typedef struct SBlkFS { struct SBlkFS *next; struct SBlkFS *prev; u32 start; s32 key; u32 len; u8 *buf; } SBlkFS;
+typedef struct { u32 size; u32 dst; u8 *src; } SRecFS;
+typedef struct { u8 *p0; u8 *p1; u16 l0; u16 l1; } SOutFS;
+extern SBlkFS *gHeadFS __asm__("D_main_bss_801499B4");
+extern SBlkFS *gTailFS __asm__("D_main_bss_801499E4");
+extern SBlkFS *gFreeFS __asm__("D_main_bss_801499CC");
+extern u16 gRecIdxFS __asm__("D_main_bss_80149724");
+extern SRecFS *gRecFS __asm__("D_main_bss_80149728");
+extern SRecFS *gRec2FS __asm__("D_main_bss_80149728");
+#define TOFRONT_FS(n)     if ((n) != gHeadFS) {         if ((n)->next != NULL) {             (n)->next->prev = (n)->prev;         }         if ((n)->prev != NULL) {             (n)->prev->next = (n)->next;         } else {             gTailFS = (n)->next;         }         t = gHeadFS;         gHeadFS = (n);         t->next = (n);         (n)->prev = t;         (n)->next = NULL;     }
+void fillSampleStreamRange(SOutFS *out, u32 start, u32 len, s32 key) {
+    u32 seg[3][2];
+    u16 n;
+    SBlkFS *b;
+    SBlkFS *nx;
+    SBlkFS *f;
+    SBlkFS *t;
+    SBlkFS *g;
+    u32 mask;
+    u32 *q;
+    u32 need;
+    u32 l;
+    u32 off;
+    u32 end;
+    u32 be;
+
+    n = 0;
+    for (b = gHeadFS; b != NULL; b = nx) {
+        nx = b->prev;
+        if (b->key == key) {
+            end = start + len;
+            if (b->start < end && start < (be = b->start + 0x600)) {
+            if (b->len != 0x600 && b->start + b->len < end) {
+                if (end >= be) {
+                    need = 0x600 - b->len;
+                } else {
+                    need = (end - (b->start + b->len) + 0xFF) & ~0xFF;
+                }
+                gRecFS[gRecIdxFS].dst = b->start + b->len;
+                gRecFS[gRecIdxFS].size = need;
+                gRecFS[gRecIdxFS].src = b->buf + b->len;
+                gRecIdxFS++;
+                b->len += need;
+            }
+            TOFRONT_FS(b);
+            if (start < b->start) {
+                u32 l1;
+                seg[0][n] = (u32)(b->buf);
+                seg[2][n] = b->start;
+                l1 = len - (b->start - start);
+                seg[1][n] = l1;
+                n++;
+                len -= l1;
+            } else if (start + len > b->start + b->len) {
+                u32 l2;
+                seg[0][n] = (u32)(b->buf + (start - b->start));
+                seg[2][n] = start;
+                l2 = b->start + b->len - start;
+                seg[1][n] = l2;
+                n++;
+                len -= l2;
+                start = b->start + b->len;
+            } else {
+                seg[0][n] = (u32)(b->buf + (start - b->start));
+                seg[1][n] = len;
+                len = 0;
+                seg[2][n] = start;
+                n++;
+                break;
+            }
+        }
+        }
+    }
+    if (len != 0) {
+        off = (start - key) % 0x600;
+        do {
+            g = gFreeFS;
+            if (g != NULL) {
+                f = g;
+                gFreeFS = f->next;
+                if (gFreeFS != NULL) {
+                    gFreeFS->prev = NULL;
+                }
+                if (gHeadFS == NULL) {
+                    f->next = gTailFS;
+                    if (gTailFS != NULL) {
+                        gTailFS->prev = f;
+                    }
+                    gTailFS = f;
+                } else {
+                    f->next = NULL;
+                    f->prev = gHeadFS;
+                    gHeadFS->next = f;
+                }
+                gHeadFS = f;
+                b = f;
+            } else {
+                f = gTailFS;
+                TOFRONT_FS(f);
+                b = f;
+            }
+            b->start = start - off;
+            b->key = key;
+            if (len + off > 0x600) {
+                b->len = 0x600;
+                gRec2FS[gRecIdxFS].dst = b->start;
+                gRec2FS[gRecIdxFS].size = 0x600;
+                gRec2FS[gRecIdxFS].src = b->buf;
+                gRecIdxFS++;
+                seg[0][n] = (u32)b->buf + off;
+                seg[2][n] = b->start + off;
+                seg[1][n] = 0x600 - off;
+                n++;
+                len = len + (off - 0x600);
+                l = off + -0x600;
+                start = start + 0x600 - off;
+            } else {
+                u32 nd;
+                mask = ~0xFF;
+                nd = (len + off + 0xFF) & mask;
+                b->len = nd;
+                if (nd > 0x600) {
+                    __asm__ volatile("break 1, 7");
+                }
+                gRec2FS[gRecIdxFS].dst = b->start;
+                gRec2FS[gRecIdxFS].size = b->len;
+                gRec2FS[gRecIdxFS].src = b->buf;
+                seg[0][n] = (u32)(b->buf + off);
+                seg[2][n] = b->start + off;
+                seg[1][n] = len;
+                len = 0;
+                gRecIdxFS++;
+                n++;
+            }
+            off = 0;
+        } while (len != 0);
+    }
+    if (n == 1) {
+        out->p0 = (u8 *)seg[0][0];
+        out->l0 = seg[1][0];
+        out->l1 = 0;
+    } else if (seg[2][0] < seg[2][1]) {
+        out->p0 = (u8 *)seg[0][0];
+        out->p1 = (u8 *)seg[0][1];
+        out->l0 = seg[1][0];
+        out->l1 = seg[1][1];
+    } else {
+        out->p0 = (u8 *)seg[0][1];
+        out->p1 = (u8 *)seg[0][0];
+        out->l0 = seg[1][1];
+        out->l1 = seg[1][0];
+    }
+}
 
 INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDA8);
 INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDB0);
