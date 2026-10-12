@@ -362,7 +362,7 @@ void tickAtAtAudioAndWeaponState(u8 *arg0) {
     *(s32 *)(arg0 + 0x7C) = markModelAnimChannelEntryActive(*(s32 *)(arg0 + 0x78), 0);
     setModelAnimSlotCycleDuration(*(s32 *)(arg0 + 0x78), *(f32 *)(arg0 + 0x84));
     if (arg0[0x6F] == 0) {
-        register f32 d asm("$f4") = *(f32 *)(arg0 + 0x84);
+        f32 d = *(f32 *)(arg0 + 0x84);
         register f32 c asm("$f0") = 10.0f;
         register f32 y asm("$f2") = *(f32 *)(arg0 + 0xF0);
         t2 = y + c / d;

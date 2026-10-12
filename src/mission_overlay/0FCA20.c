@@ -785,7 +785,7 @@ void dispatchHudInstanceWeaponEffect(s32 arg0, s32 arg1, u8 *arg2, s32 arg3, s32
     f32 scale[3];
     struct hud_struct *h;
     register u8 *p2 asm("$19") = arg2;
-    register s32 tex asm("$7") = arg3;
+    s32 tex = arg3;
     u16 r;
     f32 one;
     f32 t;

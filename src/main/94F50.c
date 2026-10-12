@@ -1382,7 +1382,7 @@ void tickAllActiveSongs(void)
   struct SNG_unk0C_type *temp_v1;
   u32 temp_a0;
   u32 temp_a0_2;
-  register u32 temp_lo asm("$2");
+  u32 temp_lo;
   u32 temp_v0;
   register u32 temp_v1_2 asm("$3");
   u32 var_s5;

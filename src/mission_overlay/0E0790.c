@@ -521,7 +521,7 @@ void tickCraftSplineOrientation(SplCraft *arg0, f32 arg1) {
         mat3x3InverseInto(m58, m28);
         if ((a = s_isPendingChildNpcActive(arg0->obj)) == 1 && (b = computeActorAnchorDeltaAfterLOS(arg0->obj)) == a) {
             f32 *p98;
-            register f32 *p88 asm("$18");
+            f32 *p88;
             f32 *mm = getObjectMeshTransformOrLocal(arg0->obj, mA8);
                         p98 = &v98.x;
             s_transformVec3ByMat34(m58, mm, p98);
@@ -599,7 +599,7 @@ void tickCraftSplineOrientation(SplCraft *arg0, f32 arg1) {
                     ang = t;
                 }
                 {
-                register f32 *pv asm("$19") = &v128.x;
+                f32 *pv = &v128.x;
                 vec3Cross(pv, qE8, &D_spl_axis.x);
                 normalize_vector(pv);
                 quatFromAxisAngle(q138, pv, ang);

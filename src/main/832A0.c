@@ -2272,7 +2272,7 @@ static __inline__ u32 snAlloc(u8 *v) {
     u8 *t0;
     u8 *a1;
     u8 *t;
-    register u32 ret asm("$4");
+    u32 ret;
     do {
         n = snNextId;
         snNextId = n + 1;
@@ -6008,7 +6008,7 @@ void buildSongTempoScheduleImpl(u8 *song) __asm__("buildSongTempoSchedule");
 void buildSongTempoScheduleImpl(u8 *song) {
     TempoSchedBTS *p;
     register u32 sz asm("$17");
-    register u32 q asm("$3");
+    u32 q;
     register u32 m asm("$2");
     u32 i;
     void *buf;

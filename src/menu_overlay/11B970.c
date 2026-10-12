@@ -4783,7 +4783,6 @@ void runMenuModelViewerScreen(void) {
         drawFrameProfilerBars();
         submitGfxFrame();
         __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
     }
     bufferArbiterProducerScanWait();
     tickMusyXIfActive();
