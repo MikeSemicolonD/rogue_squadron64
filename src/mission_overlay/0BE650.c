@@ -16,8 +16,7 @@ extern s32 countTrailingZeros16(u16);
 void playerNabooStarfighterInit(s32 *arg0, s32 arg1, s32 arg2) {
     u8 *p = sCraftBytes[arg1];
     f32 hp;
-    register f32 i asm("$f10");
-    f32 b, c, d, e, g, h, j, k, l, m, n, o, q;
+    f32 b, c, d, e, g, h, i, j, k, l, m, n, o, q;
     *(s16 *)(p + 0x180) = arg2;
     arg0[0] = arg1;
     *(u16 *)(p + 0xB4) = 8;
@@ -26,7 +25,6 @@ void playerNabooStarfighterInit(s32 *arg0, s32 arg1, s32 arg2) {
     if (D_main_bss_80130B58 & 0x40) {
         hp = 40.0f;
     }
-    *(f32 *)(p + 0xF8) = 1.6f;
     b = 3.0f;
     c = 0.1f;
     d = 15.0f;
@@ -66,6 +64,7 @@ void playerNabooStarfighterInit(s32 *arg0, s32 arg1, s32 arg2) {
     *(f32 *)(p + 0x130) = l;
     *(f32 *)(p + 0x134) = m;
     *(f32 *)(p + 0x138) = n;
+    *(f32 *)(p + 0xF8) = 1.6f;
     *(f32 *)(p + 0x140) = e;
     *(f32 *)(p + 0x144) = j;
     *(f32 *)(p + 0x148) = e;
