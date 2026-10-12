@@ -380,11 +380,146 @@ s32 sampleModelAnimKeyframeVec3(u32 h, f32 *out) {
     return 0;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB24);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB28);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DB2C);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", parseModelAnimType2Entry);
+typedef struct { u32 count; u32 flags; u32 pad8; s16 *posKeys; s16 *sclKeys; s16 *rotKeys; s16 *trnKeys; } AnimTrackPA;
+typedef struct { AnimTrackPA *tracks; u8 pad4[0xA]; u16 numTracks; } AnimGroupPA;
+typedef struct { u32 numGroups; AnimGroupPA *groups; } AnimDefPA;
+typedef struct { f32 f0; f32 f4; u8 active; u8 pad9[3]; u32 *keys; } AnimGroupStatePA;
+typedef struct { f32 **outs; s32 b; AnimDefPA *def; AnimGroupStatePA *state; u8 status; u8 pad[3]; } MaSlotPA;
+extern MaSlotPA gSlotsPA[] __asm__("gActiveModelAnimSlots");
+void slerpQuaternions(f32 *, f32 *, f32, f32 *);
+void quatToRotationMatrix(f32 *, f32 *);
+static __inline__ u8 maSlotValidPA(u32 id) {
+    s32 r = 0;
+    if (id != 0 && id <= 32) {
+        r = gSlotsPA[id - 1].status == 1;
+    }
+    return r;
+}
+void parseModelAnimType2Entry(u32 id) {
+    u32 g;
+    u32 j;
+    AnimTrackPA *tr;
+    f32 *out;
+    u32 key;
+    u32 *kp;
+    u32 next;
+    f32 t;
+    f32 u;
+    f32 px, py, pz;
+    f32 sx, sy, sz;
+    f32 bx, by, bz;
+    f32 m0, m1, m2;
+    f32 mat[12];
+    f32 q[4];
+    f32 q0[4];
+    f32 q1[4];
+
+    if (!maSlotValidPA(id)) {
+        return;
+    }
+    for (g = 0; g < gSlotsPA[id - 1].def->numGroups; g++) {
+        if (gSlotsPA[id - 1].state[g].active != 1) {
+            continue;
+        }
+        for (j = 0; j < gSlotsPA[id - 1].def->groups[g].numTracks; j++) {
+            {
+                register u32 o8 asm("$6") = j * 8;
+                u32 *ks = gSlotsPA[id - 1].state[g].keys;
+                tr = &gSlotsPA[id - 1].def->groups[g].tracks[j];
+                kp = (u32 *)((u8 *)ks + o8);
+            }
+            t = *(f32 *)&kp[1];
+            u = 1.0f - t;
+            out = gSlotsPA[id - 1].outs[j];
+            key = kp[0];
+            next = key + (key != tr->count - 1);
+            if (tr->flags & 1) {
+                px = (u * tr->posKeys[key * 3 + 0] + t * tr->posKeys[next * 3 + 0]) * 0.00390625f;
+                py = (u * tr->posKeys[key * 3 + 1] + t * tr->posKeys[next * 3 + 1]) * 0.00390625f;
+                pz = (u * tr->posKeys[key * 3 + 2] + t * tr->posKeys[next * 3 + 2]) * 0.00390625f;
+            } else {
+                px = tr->posKeys[0] * 0.00390625f;
+                do {
+                    py = tr->posKeys[1] * 0.00390625f;
+                } while (0);
+                pz = tr->posKeys[2] * 0.00390625f;
+            }
+            if (tr->flags & 2) {
+                sx = (u * tr->sclKeys[key * 3 + 0] + t * tr->sclKeys[next * 3 + 0]) * 0.000244140625f;
+                sy = (u * tr->sclKeys[key * 3 + 1] + t * tr->sclKeys[next * 3 + 1]) * 0.000244140625f;
+                sz = (u * tr->sclKeys[key * 3 + 2] + t * tr->sclKeys[next * 3 + 2]) * 0.000244140625f;
+            } else {
+                sx = tr->sclKeys[0] * 0.000244140625f;
+                sy = tr->sclKeys[1] * 0.000244140625f;
+                sz = tr->sclKeys[2] * 0.000244140625f;
+            }
+            if (tr->flags & 4) {
+                q0[1] = tr->rotKeys[key * 4 + 0] * 0.000244140625f;
+                q0[2] = tr->rotKeys[key * 4 + 1] * 0.000244140625f;
+                q0[3] = tr->rotKeys[key * 4 + 2] * 0.000244140625f;
+                q0[0] = tr->rotKeys[key * 4 + 3] * 0.000244140625f;
+                q1[1] = tr->rotKeys[next * 4 + 0] * 0.000244140625f;
+                q1[2] = tr->rotKeys[next * 4 + 1] * 0.000244140625f;
+                q1[3] = tr->rotKeys[next * 4 + 2] * 0.000244140625f;
+                q1[0] = tr->rotKeys[next * 4 + 3] * 0.000244140625f;
+                slerpQuaternions(q0, q1, t, q);
+                quatToRotationMatrix(q, mat);
+            } else {
+                q0[1] = tr->rotKeys[0] * 0.000244140625f;
+                q0[2] = tr->rotKeys[1] * 0.000244140625f;
+                q0[3] = tr->rotKeys[2] * 0.000244140625f;
+                q0[0] = tr->rotKeys[3] * 0.000244140625f;
+                quatToRotationMatrix(q0, mat);
+            }
+            if (tr->flags & 8) {
+                bx = (u * tr->trnKeys[key * 3 + 0] + t * tr->trnKeys[next * 3 + 0]) * 0.00390625f;
+                by = (u * tr->trnKeys[key * 3 + 1] + t * tr->trnKeys[next * 3 + 1]) * 0.00390625f;
+                bz = (u * tr->trnKeys[key * 3 + 2] + t * tr->trnKeys[next * 3 + 2]) * 0.00390625f;
+            } else {
+                bx = tr->trnKeys[0] * 0.00390625f;
+                by = tr->trnKeys[1] * 0.00390625f;
+                bz = tr->trnKeys[2] * 0.00390625f;
+            }
+            {
+                f32 a0, e0, a1, e1, a2;
+                a0 = mat[0] * sx;
+                out[0] = a0;
+                e0 = px * a0;
+                a1 = mat[1] * sy;
+                e1 = py * a1;
+                out[1] = a1;
+                a2 = mat[2] * sz;
+                out[2] = a2;
+                out[9] = px + bx - e0 - e1 - pz * a2;
+            }
+            {
+                f32 a0, e0, a1, e1, a2;
+                a0 = mat[3] * sx;
+                out[3] = a0;
+                e0 = px * a0;
+                a1 = mat[4] * sy;
+                e1 = py * a1;
+                out[4] = a1;
+                a2 = mat[5] * sz;
+                out[5] = a2;
+                out[10] = py + by - e0 - e1 - pz * a2;
+            }
+            {
+                f32 a0, e0, a1, e1, a2;
+                a0 = mat[6] * sx;
+                out[6] = a0;
+                e0 = px * a0;
+                a1 = mat[7] * sy;
+                e1 = py * a1;
+                out[7] = a1;
+                a2 = mat[8] * sz;
+                out[8] = a2;
+                out[11] = pz + bz - e0 - e1 - pz * a2;
+            }
+        }
+    }
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", audioSeqMallocZero);
 
