@@ -657,7 +657,7 @@ void slerpQuaternions(Vec4f arg0, Vec4f arg1, f32 arg2, Vec4f arg3) {
     f32 temp_ft3;
     f64 temp_fs0;
     f64 temp_fs0_2;
-    register f64 temp_fs1 asm("$f22");
+    f64 temp_fs1;
     f64 var_fa0;
     f64 var_fs2;
 
