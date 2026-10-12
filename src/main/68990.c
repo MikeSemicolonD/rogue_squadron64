@@ -1,6 +1,129 @@
 #include "common.h"
 
-INCLUDE_ASM("asm/nonmatchings/main/68990", wrapAngleToCyclicRange);
+#include "common_types.h"
+typedef struct {
+    u16 *grid;
+    u8 *cells;
+    u8 pad8[8];
+    f32 scale;
+    u8 pad14[4];
+    f32 baseY;
+    u8 pad1C[4];
+    f32 x0;
+    f32 x1;
+    u8 pad28[4];
+    f32 z0;
+    f32 z1;
+    u8 pad34[4];
+    u16 w;
+    u16 h;
+} TerrainGridWA;
+typedef struct { u8 pad[5]; s8 h[5][5]; } TerrainCellWA;
+typedef struct { f32 x; f32 y; f32 z; f32 nx; f32 ny; f32 nz; } TerrainHitWA;
+extern TerrainGridWA gGridWA __asm__("D_main_bss_80136DC0");
+
+f32 wrapAngleToCyclicRange(f32 x, f32 z, void *unused, TerrainHitWA *out) {
+    f32 fx;
+    f32 fz;
+    s32 ix;
+    s32 iz;
+    s32 tx;
+    s32 tz;
+    s32 sx;
+    s32 sz;
+    TerrainCellWA *cell;
+    s32 a;
+    s32 db;
+    s32 dc;
+    f32 scale;
+    f32 y;
+    f32 len;
+    f32 sq;
+    f32 d;
+
+    fx = x - gGridWA.x0;
+    if (fx < 0.0f) {
+        fx = (fx - 2.0f * (f32)(s32)(fx * 0.5f)) + 2.0f;
+    } else if (gGridWA.x1 <= fx) {
+        fx -= 2.0f * (f32)(s32)(fx * 0.5f);
+    }
+    fx = 2.0f * fx;
+    ix = fx;
+    fx -= (f32)ix;
+    sx = ix / 4;
+    tx = sx;
+    sx = ix - tx * 4;
+    ix = tx;
+    fz = z - gGridWA.z0;
+    if (fz < 0.0f) {
+        fz = (fz - 2.0f * (f32)(s32)(fz * 0.5f)) + 2.0f;
+    } else if (gGridWA.z1 <= fz) {
+        fz -= 2.0f * (f32)(s32)(fz * 0.5f);
+    }
+    fz = 2.0f * fz;
+    iz = fz;
+    fz -= (f32)iz;
+    sz = iz / 4;
+    tz = sz;
+    sz = iz - tz * 4;
+    __asm__("" : : : "$5");
+    iz = tz;
+    if (ix < 0 || ix >= gGridWA.w || iz < 0 || iz >= gGridWA.h) {
+        if (out != NULL) {
+            out->x = x;
+            out->y = 0.0f;
+            out->z = z;
+            out->nx = 0.0f;
+            out->nz = 0.0f;
+            out->ny = 1.0f;
+        }
+        return 0.0f;
+    }
+    scale = gGridWA.scale * 0.00390625f;
+    d = fx - fz;
+    cell = (TerrainCellWA *)(gGridWA.cells + (gGridWA.grid[ix + iz * gGridWA.w] & 0x1FFF) * 0x1E);
+    if (d >= 0.0f) {
+        __asm__("" : : "r"(cell));
+        a = cell->h[sz][sx + 1];
+        db = cell->h[sz][sx] - a;
+        dc = cell->h[sz + 1][sx + 1] - a;
+        y = (1.0f - fx) * (f32)db;
+        y += fz * (f32)dc;
+        __asm__("" : "+r"(dc) : : "$2", "$3");
+        __asm__("" : : "r"(db));
+        y += (f32)a;
+        if (out != NULL) {
+            out->ny = 1.0f;
+            out->nx = (f32)db * scale;
+            out->nz = (f32)-dc * scale;
+        }
+    } else {
+        a = cell->h[sz + 1][sx];
+        db = cell->h[sz + 1][sx + 1] - a;
+        y = fx * (f32)db;
+        dc = cell->h[sz][sx] - a;
+        y += (1.0f - fz) * (f32)dc;
+        y += (f32)a;
+        if (out != NULL) {
+            out->ny = 1.0f;
+            out->nx = (f32)-db * scale;
+            out->nz = (f32)dc * scale;
+        }
+    }
+    y *= scale;
+    y += gGridWA.baseY;
+    if (out != NULL) {
+        sq = out->nx * out->nx + 1.0f + out->nz * out->nz;
+        __asm__ volatile("sqrt.s %0, %1" : "=&f"(scale) : "f"(sq));
+        out->nx /= scale;
+        out->x = x;
+        out->y = y;
+        out->z = z;
+        out->ny /= scale;
+        out->nz /= scale;
+    }
+    return y;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/68990", sampleTerrainSurfaceAtWorldXz);
 
