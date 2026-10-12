@@ -93,37 +93,47 @@ void orthonormalizeFrame(Mat4x3 arg0) {
     vec3Cross(arg0[2], arg0[1], sp10);
 }
 
-#if 0
+__asm__(".section .rodata
+.globl D_main_8003ADB8
+D_main_8003ADB8:
+.word 0x33D6BF95
+.word 0xAFB00014
+.section .text");
+static __inline__ f32 absOR(f32 x) {
+    f32 r;
+    __asm__ volatile("abs.s %0, %1" : "=&f"(r) : "f"(x));
+    return r;
+}
 void orthonormalizeFrameAndSnapToZero(Mat4x3 arg0) {
     Vec3f sp10;
     f32 val;
+    f32 eps;
 
     normalize_vector(arg0[1]);
     vec3Cross(sp10, arg0[2], arg0[1]);
     normalize_vector(sp10);
     vec3Cross(arg0[2], arg0[1], sp10);
-    if (fabsf(arg0[1][0]) < 1e-7f) {
+    val = absOR(arg0[1][0]);
+    __asm__ volatile("lwc1 %0, D_main_8003ADB8" : "=f"(eps));
+    if (val < eps) {
         arg0[1][0] = 0.0f;
     }
-    if (fabsf(arg0[1][1]) < 1e-7f) {
+    if (absOR(arg0[1][1]) < eps) {
         arg0[1][1] = 0.0f;
     }
-    if (fabsf(arg0[1][2]) < 1e-7f) {
+    if (absOR(arg0[1][2]) < eps) {
         arg0[1][2] = 0.0f;
     }
-    if (fabsf(arg0[2][0]) < 1e-7f) {
+    if (absOR(arg0[2][0]) < eps) {
         arg0[2][0] = 0.0f;
     }
-    if (fabsf(arg0[2][1]) < 1e-7f) {
+    if (absOR(arg0[2][1]) < eps) {
         arg0[2][1] = 0.0f;
     }
-    if (fabsf(arg0[2][2]) < 1e-7f) {
+    if (absOR(arg0[2][2]) < eps) {
         arg0[2][2] = 0.0f;
     }
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/5A750", orthonormalizeFrameAndSnapToZero);
-#endif
 
 typedef struct {
     u8 pad0[0x10];
