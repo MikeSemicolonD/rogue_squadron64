@@ -442,7 +442,7 @@ void *loadDatFile(s32 arg0) {
     GRID->dat = dat;
 
     {
-    register f32 v asm("$f2");
+    f32 v;
     f32 r;
     if (mn[0] < 0.0f) {
         r = floatModulo(mn[0], 4.0f);

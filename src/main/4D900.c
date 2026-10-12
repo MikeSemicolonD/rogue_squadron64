@@ -1141,7 +1141,6 @@ void computeBootConfigScaledVec4(s32 idx, f32 a, f32 b, s32 key, f32 c, f32 d) {
         __asm__("");
         w.x = 0.0f;
         w.y = 0.0f;
-        __asm__("");
         w.z = o->v84[2];
         cbStep(&v.x, o->v58, o->v64, o->fA8);
         cbStep(&w.x, o->v78, o->v84, o->fA8);
@@ -1933,7 +1932,7 @@ typedef struct { s32 a, b, c; } IeV3;
 void initEffectObjectDefaults(s32 arg0, u16 arg1) {
     u8 *e;
     u8 *s5;
-    register u16 a1s asm("$20");
+    u16 a1s;
     u8 *ctx;
     u16 key;
     register s32 four asm("$7");
