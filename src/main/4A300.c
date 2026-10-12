@@ -713,15 +713,14 @@ s32 scaleObjectPosToGridUnits(ObjPos *o, s32 insert) {
                 if (a != 0xFFFF) {
                     a &= 0x7FFF;
                     while (sopPool[a].kind != 2) {
-                        register s32 b asm("$2") = sopPool[a].prev;
-                        if (b == 0xFFFF) {
+                        if (sopPool[a].prev == 0xFFFF) {
                             sopPool[a].prev = n;
                             sopPool[n].next = a;
                             a = 0xFFFF;
                             sopPool[n].prev = a;
                             break;
                         }
-                        a = b;
+                        a = sopPool[a].prev;
                     }
                     if (a != 0xFFFF) {
                         sopPool[n].next = sopPool[a].next;
