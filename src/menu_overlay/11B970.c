@@ -1798,7 +1798,7 @@ void updateMenuPerFrameU8(void *argp, f32 arg1, f32 arg2, s32 arg3, u8 arg4)
 {
   register MenuAnimView *arg0 asm("$20") = argp;
   struct rgba col;
-  register struct ui_element *e asm("$17");
+  struct ui_element *e;
   struct ui_element *e2;
   f32 t;
   f32 fs1;
@@ -4586,7 +4586,7 @@ void tsImpl(TsMdl *mdl, f32 *mtx, f32 *cam, f32 scale) {
     f32 dot;
 
     {
-        register s32 ff asm("$3") = 0xFFFF;
+        s32 ff = 0xFFFF;
         register s32 j asm("$5");
         j = 0x3F;
         hp = D_menu_overlay_800CFA80 + j;
