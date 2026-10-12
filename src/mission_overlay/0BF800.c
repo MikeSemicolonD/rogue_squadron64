@@ -150,9 +150,11 @@ void initAllPlayersHudTracking(void) {
 // or that string interning order is sensitive to things like function names
 const u8 demo_format[] = "demo/%s_DEM";
 
-#if 0
-// There's some dumb floating point register allocation issues near the fabsf calls
-// Permuter hasn't turned up anything yet :(
+static __inline__ f32 absPH(f32 x) {
+    f32 r;
+    __asm__ volatile("abs.s %0, %1" : "=&f"(r) : "f"(x));
+    return r;
+}
 // https://decomp.me/scratch/6pt2m
 void tickPlayerHudIndicators(f32 arg0) {
     s32 var_a0;
@@ -184,7 +186,7 @@ void tickPlayerHudIndicators(f32 arg0) {
             if (D_mission_overlay_8010BDD8[var_s3][0] < -1.0f) {
                 D_mission_overlay_8010BDD8[var_s3][0] = -1.0f;
             }
-            if (fabsf(D_mission_overlay_8010BDD8[var_s3][0]) < 0.015f) {
+            if (absPH(D_mission_overlay_8010BDD8[var_s3][0]) < 0.015f) {
                 D_mission_overlay_8010BDD8[var_s3][0] = 0.0f;
             }
 
@@ -195,7 +197,7 @@ void tickPlayerHudIndicators(f32 arg0) {
             if (D_mission_overlay_8010BDD8[var_s3][1] < -1.0f) {
                 D_mission_overlay_8010BDD8[var_s3][1] = -1.0f;
             }
-            if (fabsf(D_mission_overlay_8010BDD8[var_s3][1]) < 0.015f) {
+            if (absPH(D_mission_overlay_8010BDD8[var_s3][1]) < 0.015f) {
                 D_mission_overlay_8010BDD8[var_s3][1] = 0.0f;
             }
 
@@ -225,11 +227,7 @@ const u32 rodata_0BF800_pad[] = {
     0x27BDFFB0,
     0xAFBF0048,
 };
-#else
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BF800", tickPlayerHudIndicators);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BF800", D_mission_overlay_800A6230);
-#endif
 
 void loadPlayerSlotHudPreset(s32 arg0, s32 arg1) {
     s32 var_a1;
