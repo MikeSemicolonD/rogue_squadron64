@@ -621,7 +621,224 @@ void startPlayerSlotAnimationChannelFlagged(u8 *arg0, s32 arg1, s8 arg2) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/61FC0", startPlayerSlotAnimationChannelLooping);
+typedef struct {
+    struct ui_element e;
+    f32 t30;
+    f32 t34;
+    f32 scale;
+    u8 slot;
+    u8 idx;
+    u16 cur;
+    u16 u40;
+    u16 u42;
+    s16 total;
+    u8 rate;
+    u8 loops;
+    u8 alpha;
+    u8 pad49;
+    struct xy_offset xy[0x100];
+    u8 pad44A[2];
+    struct ui_element *e2;
+    void *lookup;
+    u8 f454;
+    u8 f455;
+    u8 f456;
+} PsAnim;
+
+typedef struct { u8 pad[0x4A]; s16 x; s16 y; } PsXy;
+
+s32 startPlayerSlotAnimationChannelLooping(PsAnim *a, f32 dt) {
+    struct ui_element *e2 = a->e2;
+    s32 ret = 0;
+    struct ui_element *elem;
+    struct ui_element *out;
+    struct someFontThing *font;
+    struct xy_offset *xy;
+    u16 y;
+    u16 y2;
+    register u32 lim asm("$7");
+    u16 i;
+    u16 n;
+    register u16 cnt asm("$3");
+    register u16 tc asm("$2");
+    f32 f;
+    f32 sc;
+    f32 k;
+    f32 ox;
+    f32 oy;
+    s32 v;
+    s8 al;
+    u16 *tip;
+    u8 c;
+
+    if (a->f454 != 0) {
+        if (a->t30 == 0.0f) {
+            ret = 3;
+        }
+        a->t30 += dt;
+        if (!(a->t30 > 0.05f)) {
+            goto end;
+        }
+        a->t30 = 0.0f;
+        elem = D_main_8009FC10[a->slot]->unk034[a->idx];
+        y = elem->xy_offset_pointer[0].y;
+        i = 0;
+        if (ret != 3) {
+            ret = 4;
+        }
+        while (elem->xy_offset_pointer[i].y == y) {
+            i++;
+            if (elem->texture_count == i) {
+                a->f454 = 0;
+                if (a->lookup != NULL) {
+                    setLookupEntryField5ByKey(a->lookup, D_main_8009FC10[a->slot]->unk034[a->idx], 0);
+                    setLookupEntryField5ByKey(a->lookup, e2, 0);
+                    setLookupEntryField5ByKey(a->lookup, (struct ui_element *)a, 0);
+                }
+                return 5;
+            }
+        }
+        ((volatile struct ui_element *)elem)->texture_id_pointer += i;
+        ((volatile struct ui_element *)elem)->xy_offset_pointer += i;
+        tc = ((volatile struct ui_element *)elem)->texture_count;
+        elem->texture_count = cnt = tc - i;
+        xy = elem->xy_offset_pointer;
+        y = xy[0].y;
+        i = 0;
+        if (xy[0].y == y) {
+            lim = cnt;
+            y2 = y;
+            do {
+                if (lim == i) {
+                    goto end;
+                }
+                i++;
+            } while (xy[i].y == y2);
+        }
+        n = i;
+        out = (struct ui_element *)a;
+    } else {
+        if (a->f456 == 0) {
+            goto end;
+        }
+        f = a->t30;
+        elem = D_main_8009FC10[a->slot]->unk034[a->idx];
+        if (f == 0.0f) {
+            ret = 1;
+        }
+        f = f + dt;
+        a->t30 = f;
+        a->cur = (u32)(f * (f32)a->rate);
+        if (a->cur == 0) {
+            a->cur = 1;
+        }
+        if (a->cur > a->total) {
+            a->cur = a->total;
+        }
+        elem->texture_count = a->cur;
+        n = elem->texture_count;
+        out = (struct ui_element *)a;
+        if (a->loops < n) {
+            n = a->loops;
+        }
+    }
+    font = D_main_8009FC10[a->slot];
+    sc = a->scale;
+    k = sc - 1.0f;
+    ox = (f32)*(u16 *)((u8 *)font + 2) * k / (2.0f * sc);
+    oy = (f32)*(u16 *)((u8 *)font + 6) * k / (2.0f * sc);
+    for (i = 0; i < n; i++) {
+        if (a->f454 == 0) {
+            PsXy *p = (PsXy *)((struct xy_offset *)a + i);
+            p->x = ((f32)elem->xy_offset_pointer[elem->texture_count - n + i].x - ox) / a->scale + 0.5f;
+            p->y = ((f32)elem->xy_offset_pointer[elem->texture_count - n + i].y - oy) / a->scale + 0.5f;
+        } else {
+            PsXy *p = (PsXy *)((struct xy_offset *)a + i);
+            p->x = ((f32)elem->xy_offset_pointer[i].x - ox) / a->scale + 0.5f;
+            p->y = ((f32)elem->xy_offset_pointer[i].y - oy) / a->scale + 0.5f;
+        }
+    }
+    out->xy_offset_pointer = a->xy;
+    out->texture_count = n;
+    tip = elem->texture_id_pointer;
+    if (a->f454 == 0) {
+        tip += elem->texture_count - n;
+    }
+    out->texture_id_pointer = tip;
+    out->xpos = elem->xpos;
+    out->ypos = elem->ypos;
+    f = elem->rgba.r * 1.2f;
+    c = 0xFF;
+    if (!(f > 255.0f)) {
+        c = (u32)f;
+    }
+    out->rgba.r = c;
+    f = elem->rgba.g * 1.2f;
+    c = 0xFF;
+    if (!(f > 255.0f)) {
+        c = (u32)f;
+    }
+    out->rgba.g = c;
+    f = elem->rgba.b * 1.2f;
+    c = 0xFF;
+    if (!(f > 255.0f)) {
+        c = (u32)f;
+    }
+    out->rgba.b = c;
+    out->rgba.a = a->alpha;
+    out->width_scale = a->scale;
+    out->height_scale = a->scale;
+    e2->xpos = elem->xpos + elem->xy_offset_pointer[elem->texture_count - 1].x;
+    e2->ypos = elem->ypos + elem->xy_offset_pointer[elem->texture_count - 1].y;
+    f = elem->rgba.r * 1.8f;
+    c = 0xFF;
+    if (!(f > 255.0f)) {
+        c = (u32)f;
+    }
+    e2->rgba.r = c;
+    f = elem->rgba.g * 1.8f;
+    c = 0xFF;
+    if (!(f > 255.0f)) {
+        c = (u32)f;
+    }
+    e2->rgba.g = c;
+    f = elem->rgba.b * 1.8f;
+    c = 0xFF;
+    if (!(f > 255.0f)) {
+        c = (u32)f;
+    }
+    e2->rgba.b = c;
+    al = 0;
+    if (a->f454 == 0) {
+        al = -0x80;
+    }
+    e2->rgba.a = al;
+    if (a->lookup != NULL) {
+        setLookupEntryField5ByKey(a->lookup, e2, (u8)al != 0);
+        setLookupEntryField5ByKey(a->lookup, (struct ui_element *)a, out->texture_count != 0);
+        setLookupEntryField5ByKey(a->lookup, elem, a->cur != 0);
+    }
+    if (a->f454 == 0 && a->cur == a->total) {
+        if (a->lookup != NULL) {
+            setLookupEntryField5ByKey(a->lookup, e2, 0);
+        }
+        if (a->f455 == 0) {
+            a->f455 = 1;
+            ret = 2;
+        }
+        if (a->loops != 0) {
+            a->t34 += dt;
+            if (a->t34 > 0.033333335f) {
+                a->t34 = 0.0f;
+                a->loops--;
+            }
+        } else {
+            a->f456 = 0;
+        }
+    }
+end:
+    return ret;
+}
 __asm__(".section .rodata\n.globl D_main_8003B7C8\nD_main_8003B7C8:\n.word 0x00010000\n.word 0x3F800000\n.word 0x3F800000\n.word 0x00000000\n.word 0x00000000\n.align 2\n.globl strZAFnt\nstrZAFnt:\n.word 0x5A415F66\n.word 0x6E740000\n.word 0x00000000\n.word 0x00000000\n.align 2\n.globl D_main_8003B7EC\nD_main_8003B7EC:\n.word 0x5A415F66\n.word 0x6E740000\n.globl D_main_8003B7F4\nD_main_8003B7F4:\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x8003B7EC\n.word 0x00000000\n.word 0x01000005\n.word 0x00000000\n.globl D_main_8003B828\nD_main_8003B828:\n.word 0x3F800000\n.word 0x19C00016\n.section .text");
 
 
