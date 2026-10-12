@@ -3947,9 +3947,624 @@ s32 soundMacroSetPitchTarget(u8 *ch, u8 *op) {
     return 0;
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", jtbl_main_8003DBF0);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", tickAudioChannel);
+extern u32 tacCmdW[] __asm__("D_main_bss_8013ACC0");
+extern u8 tacCmd[] __asm__("D_main_bss_8013ACC0");
+extern volatile u32 tacW0 __asm__("D_main_bss_8013ACC0");
+extern u16 tacH0 __asm__("D_main_bss_8013ACC0");
+extern s16 tacS0 __asm__("D_main_bss_8013ACC0");
+extern u8 tacB1 __asm__("D_main_bss_8013ACC1");
+extern u8 tacB2 __asm__("D_main_bss_8013ACC2");
+extern u32 tacW1 __asm__("D_main_bss_8013ACC4");
+extern u16 tacH4 __asm__("D_main_bss_8013ACC4");
+extern u8 tacB5 __asm__("D_main_bss_8013ACC5");
+extern u16 tacCmdH[] __asm__("D_main_bss_8013ACC0");
+typedef struct { s32 id; u8 pad[0x178]; } TacVI;
+typedef struct { u32 flags; u8 pad[0x178]; } TacVF;
+extern TacVI tacVI[] __asm__("D_main_bss_8013D8E4");
+extern TacVF tacVF[] __asm__("D_main_bss_8013D8A4");
+extern u16 tacArgH[] __asm__("D_main_bss_8013ACC4");
+extern u16 tacH6 __asm__("D_main_bss_8013ACC6");
+extern s8 tacB7 __asm__("D_main_bss_8013ACC7");
+extern s32 tacStep __asm__("D_main_bss_8013ACC8");
+extern s32 tacOpCount __asm__("D_main_bss_8013C448");
+extern s32 tacTickCount __asm__("D_main_bss_8013C458");
+extern u32 tacRand __asm__("D_main_800A0F54");
+extern u8 tacNumVoices __asm__("D_main_bss_80141AD0");
+extern u8 tacGlob[] __asm__("D_main_bss_80148C58");
+extern u8 tacPrgTrk[][16] __asm__("D_main_bss_80142040");
+extern u8 tacPrg[] __asm__("D_main_bss_8013C460");
+s32 tacLook() __asm__("factor5BucketedTableLookupValue");
+s32 tacKeyOn(u8 *, u8 *) __asm__("soundMacroOpKeyOnNote");
+s32 tacAdsr(u8 *, u8 *) __asm__("musyxSetVoiceAdsrFromTable");
+s32 tacVol(u8 *, u8 *) __asm__("soundMacroSetVoiceVolume");
+s32 tacRamp(u8 *, u8 *) __asm__("soundMacroSetupVolumeRamp");
+s32 tacKeymap(u8 *, u8 *) __asm__("soundMacroOpPlaySampleKeymap");
+s32 tacRandNote(u8 *, u8 *) __asm__("soundMacroPlayRandomKeyNote");
+s32 tacRelSweep(u8 *, u8 *) __asm__("soundMacroOpStartNoteRelativeSweep");
+s32 tacAbsSweep(u8 *, u8 *) __asm__("soundMacroOpStartNoteAbsoluteSweep");
+s32 tacTrSweep(u8 *, u8 *) __asm__("soundMacroOpStartNoteTransposedSweep");
+s32 tacPitchTgt(u8 *, u8 *) __asm__("soundMacroSetPitchTarget");
+s32 tacPanSweep(u8 *, u8 *) __asm__("soundMacroOpSetPanSweep");
+s32 tacWait(u8 *, u8 *) __asm__("computeChannelWaitDuration");
+s32 tacSeq40(u8 *, u8 *) __asm__("seqCmdHandler40");
+s32 tacSeq41(u8 *, u8 *) __asm__("seqCmdHandler41");
+s32 tacSeq42(u8 *, u8 *) __asm__("seqCmdHandler42");
+s32 tacSeq43(u8 *, u8 *) __asm__("seqCmdHandler43");
+s32 tacSeq44(u8 *, u8 *) __asm__("seqCmdHandler44");
+s32 tacSeq45(u8 *, u8 *) __asm__("seqCmdHandler45");
+s32 tacSeq46(u8 *, u8 *) __asm__("seqCmdHandler46");
+void tacFree(u8 *) __asm__("freeSynthVoiceFromActiveList");
+
+#define TW(o) (*(s32 *)(ch + (o)))
+#define TU(o) (*(u32 *)(ch + (o)))
+#define TH(o) (*(u16 *)(ch + (o)))
+#define TS(o) (*(s16 *)(ch + (o)))
+#define TB(o) (*(u8 *)(ch + (o)))
+#define TP(o) (*(u32 **)(ch + (o)))
+
+static __inline__ u8 tacPrgGet(u8 prg, u8 trk) {
+    if (trk != 0xFF) {
+        return tacPrgTrk[trk][prg];
+    }
+    return tacPrg[prg];
+}
+
+static __inline__ void tacPrgSet(u8 v, u8 trk, u8 prg) {
+    if (trk != 0xFF) {
+        tacPrgTrk[trk][prg] = v;
+    } else {
+        tacPrg[prg] = v;
+    }
+}
+
+void tickAudioChannel(u8 *ch) {
+    u32 f;
+    s32 t;
+    s32 done;
+    s32 neg1;
+    u32 fl;
+    u32 u;
+    u32 v8;
+    s32 k;
+
+    f = TW(0x24);
+    tacTickCount++;
+    if (f & 3) {
+        if (f & 1) {
+            TW(0x24) = f & ~1;
+            stopVoiceMarkRetrigger(TB(0x67));
+        }
+        TW(0x40) -= tacStep;
+        if (TW(0x40) > 0) {
+            return;
+        }
+        TW(0x40) = 0;
+        if (!(TW(0x24) & 0x40)) {
+            register s32 h100 asm("$5");
+            register s32 one asm("$4");
+            register s32 seven asm("$2") = 7;
+            h100 = 0x100;
+            one = 1;
+            TB(0xC0) = seven;
+            TB(0xD2) = 0xA;
+            TB(0xE4) = 0x83;
+            TB(0xF6) = 0x80;
+            TB(0x12C) = 0x40;
+            TB(0x13E) = 0x41;
+            TB(0x150) = 0x5B;
+            TB(0xC1) = 0;
+            TH(0xC2) = h100;
+            TB(0xD0) = one;
+            TB(0xD3) = 0;
+            TH(0xD4) = h100;
+            TB(0xE2) = one;
+            TB(0xE5) = 0;
+            TH(0xE6) = h100;
+            TB(0xF4) = one;
+            TB(0xF7) = 0;
+            TH(0xF8) = h100;
+            TB(0x106) = one;
+            TB(0x11A) = one;
+            TB(0x11B) = 0;
+            TH(0x11C) = h100;
+            TB(0x12A) = one;
+            TB(0x12D) = 0;
+            TH(0x12E) = h100;
+            TB(0x13C) = one;
+            TB(0x13F) = 0;
+            TH(0x140) = h100;
+            TB(0x14E) = one;
+            TB(0x151) = 0;
+            TH(0x152) = h100;
+            TB(0x160) = one;
+            TB(0x108) = 0x84;
+            TB(0x109) = 0;
+            TB(0x118) = one;
+            TH(0x10A) = h100;
+            TW(0x38) = TB(0x57) << 16;
+            t = TB(0x56) << 16;
+            TB(0x4E) = TB(0x58);
+            TB(0x4F) = TB(0x59);
+            TW(0x30) = t;
+            TW(0x34) = t;
+            TB(0x2F) = TB(0x5A);
+            if (tacPrgGet(TB(0x4E), TB(0x4F)) != 0xFF) {
+                TB(0xBD) = tacPrgGet(TB(0x4E), TB(0x4F));
+            } else {
+                TB(0xBD) = TH(0x52);
+            }
+            tacPrgSet(TB(0x53), TB(0x4F), TB(0x4E));
+            TW(0x98) = 0x1F4;
+            TB(0x6E) = 2;
+            TB(0x6F) = 2;
+            TW(0x94) = 0;
+            TB(0xA0) = 0;
+            TH(0x6C) = 0;
+            TB(0x4C) = 0;
+            TB(0x4D) = 0;
+            TW(0x44) = 0;
+            TW(0x48) = 0;
+            TW(0x168) = 0;
+            TH(0x16C) = 0;
+            TW(0x174) = 0;
+            TH(0x178) = 0;
+            TW(0x1C) = 0;
+            TW(0x20) = 0;
+            {
+                register u32 b asm("$5") = TB(0xBB);
+                register u32 g asm("$3") = TW(0x24);
+                TW(0x60) = 0x4000AC44;
+                TH(0xB4) = 0x2000;
+                TH(0xBE) = 0;
+                TB(0xBA) = b;
+                TW(0x24) = g & 8;
+            }
+        } else {
+            TB(0x2E) = 0;
+            TW(0x0) = 0;
+            TW(0x24) = 0;
+            return;
+        }
+    }
+    if (TW(0x20) != 0) {
+        f = TW(0x24);
+        if (!(f & 0x04000000)) {
+            if (f & 8) {
+                TW(0x4) = TW(0x20);
+                TW(0x40) = 0;
+                TW(0x20) = 0;
+                TW(0x0) = TW(0x1C);
+                TW(0x1C) = 0;
+            }
+        }
+    }
+    if (TW(0x40) == 0) {
+        neg1 = -1;
+    top:
+        {
+            tacCmdW[0] = TP(0x4)[0];
+            tacW1 = TP(0x4)[1];
+            TW(0x4) += 8;
+            tacOpCount++;
+            switch (tacCmdW[0] & 0x7F) {
+            case 0x1:
+                if (tacB2 == 0) {
+                    goto stop;
+                }
+                {
+                    s32 r = TW(0x8);
+                    if (r == 0) {
+                        goto stop;
+                    }
+                    TW(0x0) = r;
+                }
+                TW(0x4) = TW(0xC);
+                done = 0;
+                break;
+            case 0x2:
+                u = tacW0;
+                if (TH(0x54) >= tacB2) {
+                    s32 j = tacLook(u >> 16);
+                    done = 0;
+                    if (j != 0) {
+                        TW(0x0) = j;
+                        TW(0x4) = j + tacH6 * 8;
+                    }
+                    goto none;
+                }
+                goto none;
+
+            case 0x3:
+                u = tacW0;
+                if (TH(0x30) >= tacB2) {
+                    s32 j = tacLook(u >> 16);
+                    done = 0;
+                    if (j != 0) {
+                        s32 t;
+                        TW(0x0) = j;
+                        t = j + tacH6 * 8;
+                        __asm__ volatile("");
+                        TW(0x4) = t;
+                    }
+                } else {
+                    done = 0;
+                }
+                break;
+
+            case 0x4:
+                done = tacWait(ch, tacCmd);
+                break;
+            case 0x5:
+                if (TH(0x6C) == 0) {
+                    if (tacH0 & 1) {
+                        register u32 r asm("$4") = tacRand;
+                        r *= 0xA8351D63;
+                        tacRand = r;
+                        TH(0x6C) = ((r >> 6) & 0xFFFF) % tacH4;
+                    } else {
+                        TH(0x6C) = tacH4;
+                    }
+                    if (TH(0x6C) == 0xFFFF) {
+                        goto loop;
+                    }
+                    TH(0x6C)++;
+                }
+                if (--TH(0x6C) != 0) {
+            loop:
+                    if ((tacW0 >> 8) & 1) {
+                        f = TW(0x24);
+                        if (!(f & 0x04000000)) {
+                            if (f & 8) {
+                                TH(0x6C) = 0;
+                                done = 0;
+                                break;
+                            }
+                        }
+                    }
+                    TW(0x4) = TW(0x0) + tacH6 * 8;
+                }
+                done = 0;
+                break;
+            case 0x6:
+                {
+                    s32 r = factor5BucketedTableLookupValue(tacH0);
+                    done = 0;
+                    if (r != 0) {
+                        TW(0x8) = TW(0x0);
+                        TW(0xC) = TW(0x4);
+                        TW(0x0) = r;
+                        TW(0x4) = r + tacH6 * 8;
+                        break;
+                    }
+                }
+            case 0x0:
+            stop:
+                TW(0x0) = 0;
+                TB(0x2E) = 0;
+                tacFree(ch);
+                done = 1;
+                TW(0x64) = neg1;
+                break;
+            case 0x7:
+                tacB5 = 1;
+                done = tacWait(ch, tacCmd);
+                break;
+            case 0x8:
+                done = tacKeyOn(ch, tacCmd);
+                break;
+            case 0x9: {
+                u32 key;
+                u32 i;
+                i = 0;
+                key = (TH(0x52) + (tacB2 << 8)) | (tacH0 << 16);
+                if (tacNumVoices == 0) {
+                    done = 0;
+                    break;
+                }
+                do {
+                    s32 id = tacVI[i].id;
+                    if (id == (key | i)) {
+                        if (gMusyXActiveFlag != 0) {
+                            if (id != neg1) {
+                                if (tacVI[id & 0xFF].id == id) {
+                                    tacVF[id & 0xFF].flags |= 8;
+                                }
+                            }
+                        }
+                    }
+                    i++;
+                } while (i < tacNumVoices);
+                done = 0;
+                break;
+            }
+            case 0xA:
+                if (TB(0x4E) == 0xFF) {
+                    done = 0;
+                    break;
+                }
+                v8 = (u8)(evaluateVoiceModulatorRecord(ch, ch + 0x11A) >> 7);
+                k = tacB2;
+                u = tacW0;
+                if (v8 >= k) {
+                    s32 j = tacLook(u >> 16);
+                    if (j != 0) {
+                        s32 t;
+                        TW(0x0) = j;
+                        t = j + tacH6 * 8;
+                        done = 0;
+                        __asm__ volatile("");
+                        TW(0x4) = t;
+                    } else {
+                        done = 0;
+                    }
+                    goto none;
+                }
+                goto none;
+
+            case 0xB:
+                u = tacW0;
+                k = (TH(0x54) - tacB1) << 16;
+                k = k * ((s32)(u << 16) >> 24) / 128 + ((u >> 24) << 16);
+                if (k < 0) {
+                    k = 0;
+                } else if (k > 0x7F0000) {
+                    k = 0x7F0000;
+                }
+                TW(0x38) = k;
+                done = 0;
+                break;
+            case 0xC:
+                done = tacAdsr(ch, tacCmd);
+                break;
+            case 0xD:
+                done = tacVol(ch, tacCmd);
+                break;
+            case 0xE:
+                TW(0x24) |= 0x8000;
+                {
+                    u16 h = tacH0;
+                    s32 b2, b7;
+                    TW(0xA4) = h << 8;
+                    b2 = tacB2 << 16;
+                    b7 = tacB7 << 16;
+                    TW(0x38) = b2;
+                    TW(0xA8) = b7 + b2;
+                    if (TW(0xA4) != 0) {
+                        TW(0x3C) = (u32)b7 / h;
+                    } else {
+                        TW(0x3C) = b7;
+                    }
+                }
+                done = 0;
+                break;
+            case 0xF:
+                done = tacRamp(ch, tacCmd);
+                break;
+            case 0x10:
+                done = tacKeymap(ch, tacCmd);
+                break;
+            case 0x11:
+                musyxStartVoiceRelease(TB(0x67), 1);
+                done = 0;
+                break;
+            case 0x12:
+                done = 0;
+                TW(0x24) |= 0x80;
+                break;
+            case 0x13:
+                if (TB(0x4E) == 0xFF) {
+                    done = 0;
+                    break;
+                }
+                tacRand *= 0xA8351D63;
+                u = tacW0;
+                if (((tacRand >> 6) & 0xFF) >= tacB2) {
+                    s32 j = tacLook(u >> 16);
+                    done = 0;
+                    if (j != 0) {
+                        TW(0x0) = j;
+                        TW(0x4) = j + tacH6 * 8;
+                    }
+                } else {
+                    done = 0;
+                }
+                break;
+
+            case 0x17:
+                done = tacRandNote(ch, tacCmd);
+                break;
+            case 0x18:
+                done = tacRelSweep(ch, tacCmd);
+                break;
+            case 0x19:
+                done = tacAbsSweep(ch, tacCmd);
+                break;
+            case 0x1A:
+                done = tacTrSweep(ch, tacCmd);
+                break;
+            case 0x1B:
+                done = tacPitchTgt(ch, tacCmd);
+                break;
+            case 0x1C:
+                done = tacPanSweep(ch, tacCmd);
+                break;
+            case 0x1D:
+                TW(0x44) = 0;
+                TB(0xAC) = TB(0x4C) = tacW0 >> 8;
+                TW(0x84) = divideByMixerBaseFrequency(tacH0) << 16;
+                tacW0 = 0;
+                done = tacWait(ch, tacCmd);
+                break;
+            case 0x1E:
+                TW(0x48) = 0;
+                TB(0xAD) = TB(0x4D) = tacW0 >> 8;
+                TW(0x88) = divideByMixerBaseFrequency(tacH0) << 16;
+                tacW0 = 0;
+                done = tacWait(ch, tacCmd);
+                break;
+            case 0x1F:
+                TW(0x24) |= 0x100;
+                TW(0x70) = divideByMixerBaseFrequency(tacW0 >> 8) << 16;
+                done = 0;
+                break;
+            case 0x28:
+                k = factor5BucketedTableLookupValue(tacH0);
+                done = 0;
+                if (k != 0) {
+                    TW(0x1C) = k;
+                    TW(0x20) = k + tacH6 * 8;
+                }
+                break;
+            case 0x29:
+                done = 0;
+                TW(0x20) = 0;
+                TW(0x1C) = 0;
+                break;
+            case 0x30:
+                k = TH(0x28) + tacS0;
+                if (k < 0) {
+                    TW(0x28) = 0;
+                } else {
+                    TW(0x28) = k > 0xFFFF ? 0xFFFF0000 : k << 16;
+                }
+                done = 0;
+                break;
+            case 0x31:
+                done = 0;
+                TW(0x28) = tacH0 << 16;
+                break;
+            case 0x32:
+                tacGlob[tacB2] = tacH0;
+                done = 0;
+                break;
+            case 0x33:
+                TB(0x6E) = tacH0;
+                done = 0;
+                TB(0x6F) = tacW0 >> 8;
+                break;
+            case 0x34:
+                f = TW(0x24);
+                done = 0;
+                fl = 0x40000;
+                goto setfl;
+            case 0x35:
+                f = TW(0x24);
+                done = 0;
+                fl = 0x20000;
+            setfl:
+                f |= fl;
+                TW(0x24) = f;
+                break;
+            case 0x36:
+                done = 0;
+                TB(0x2E) = tacW0 >> 8;
+                break;
+            case 0x37: {
+                u16 h = tacH0;
+                s16 v = TB(0x2E) + h;
+                if (v < 0) {
+                    TB(0x2E) = 0;
+                } else if (v >= 0x100) {
+                    TB(0x2E) = 0xFF;
+                } else {
+                    TB(0x2E) = v;
+                }
+                done = 0;
+                break;
+            }
+            case 0x38:
+                if (tacW1 != 0) {
+                    TS(0x2C) = (TU(0x28) >> 8) / tacW1;
+                } else {
+                    TS(0x2C) = 0;
+                }
+                done = 0;
+                break;
+            case 0x40:
+                done = tacSeq40(ch, tacCmd);
+                break;
+            case 0x41:
+                done = tacSeq41(ch, tacCmd);
+                break;
+            case 0x42:
+                done = tacSeq42(ch, tacCmd);
+                break;
+            case 0x43:
+                done = tacSeq43(ch, tacCmd);
+                break;
+            case 0x44:
+                done = tacSeq44(ch, tacCmd);
+                break;
+            case 0x45:
+                done = tacSeq45(ch, tacCmd);
+                break;
+            case 0x46:
+                done = tacSeq46(ch, tacCmd);
+                break;
+            case 0x50: {
+                struct { s32 v[18]; } tmp;
+                register u8 *p asm("$3");
+                register s32 w asm("$2");
+                u = tacW0;
+                {
+                    register u32 b asm("$3") = (u >> 8) & 0xFF;
+                    register u32 o asm("$2") = b * 0xC;
+                    p = ch + o;
+                }
+                w = *(s32 *)(p + 0x168);
+                u = (u >> 16) << 8;
+                tmp.v[0] = u;
+                if (w != 0) {
+                    *(s32 *)(p + 0x164) = 0;
+                }
+                done = 0;
+                *(s32 *)(p + 0x168) = tmp.v[0];
+                break;
+            }
+            default:
+            none:
+                done = 0;
+                __asm__ volatile("");
+                break;
+            }
+        }
+        if (!(done & 0xFF)) {
+            goto top;
+        }
+        return;
+    }
+    f = TW(0x24);
+    if (f & 4) {
+        if (!(f & 0x04000000)) {
+            if (f & 8) {
+                TW(0x24) = f & ~4;
+                TW(0x40) = 0;
+            }
+        }
+    }
+    if ((TW(0x24) & 0x80000) && !(isAudioSlotActive(TB(0x67)) & 0xFF)) {
+        TW(0x40) = 0;
+        TW(0x24) &= 0xFFF7FFFF;
+    }
+    {
+    s32 c40 = TW(0x40);
+    if (c40 != 0xFFFF) {
+        s32 r = c40 - tacStep;
+        TW(0x40) = r;
+        if (r < 0) {
+            TW(0x40) = 0;
+        }
+    }
+    }
+}
+
+#undef TW
+#undef TU
+#undef TH
+#undef TS
+#undef TB
+#undef TP
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", tickAllAudioChannels);
 
