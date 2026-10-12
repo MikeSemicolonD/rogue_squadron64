@@ -3156,10 +3156,12 @@ done:
         *(void **)(s + 0x4C) = n;
         if (n != NULL) {
             n[1] = node;
+            NW(0x50) = 0;
+            list[0] = node;
+        } else {
+            NW(0x50) = 0;
+            list[0] = node;
         }
-        NW(0x50) = 0;
-        __asm__("");
-        list[0] = node;
         if ((u16)(type - 0xD) < 2) {
             buildVwingRenderMatrices(list, t);
         }
