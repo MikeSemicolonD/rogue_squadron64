@@ -450,7 +450,6 @@ s32 stepActiveSongTracks(void) {
     return ret;
 }
 
-#if 0
 // https://decomp.me/scratch/9HNev
 s32 tickScheduledSongEvents(void) {
     s32 temp_v0_3;
@@ -458,8 +457,11 @@ s32 tickScheduledSongEvents(void) {
     struct D_main_bss_801511C0_type *temp_v0;
     struct D_main_bss_801511C0_type *var_s0;
 
-    temp_v0 = D_main_bss_801529C0->unkE78[0];
-    if (temp_v0 == NULL) return 0;
+    var_s0 = D_main_bss_801529C0->unkE78[0];
+    if (var_s0 == NULL) {
+        return 0;
+    }
+    temp_v0 = var_s0;
     while (temp_v0 != NULL) {
         D_main_bss_801499FC += 1;
         temp_s1 = temp_v0->unk00;
@@ -488,9 +490,6 @@ s32 tickScheduledSongEvents(void) {
     }
     return 1;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/94F50", tickScheduledSongEvents);
-#endif
 
 typedef struct {
     s32 baseTime;
