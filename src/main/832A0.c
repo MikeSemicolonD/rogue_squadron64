@@ -2260,7 +2260,145 @@ s32 startNoteOnVoice(u32 key, u16 a1, s32 a2, u8 a3, u8 a4, u8 a5, u8 a6, u16 a7
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", applyNoteEventToGroup);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", dispatchSequencerNoteEvent);
+s32 applyNoteEventToGroupDS(u32, u16, u8, u8, u8, u8, u8, u16, u16, u8) __asm__("applyNoteEventToGroup");
+static __inline__ u8 getChByteAltDS(u8 a, u8 b) {
+    if (b != 0xFF) {
+        return D_main_bss_801483D0[b][a];
+    }
+    return D_main_bss_80142018[a];
+}
+static __inline__ s32 findVoiceForNoteDS(u8 note, u8 a, u8 b) {
+    s32 r;
+
+    if (a != 0xFF && getChByteAltDS(a, b) != 0) {
+        r = findActiveVoiceByKeyPairFV(note & 0x7F, a, b);
+        if (r != -1) {
+            return r;
+        }
+    }
+    return -1;
+}
+static __inline__ u8 *bsrchDS(u8 *key, u8 *base, s32 n, s32 size, s32 (*cmp)(u8 *, u8 *)) {
+    s32 lo, hi, mid, r;
+    u8 *p;
+    if (n != 0) {
+        lo = 1;
+        hi = n;
+        do {
+            mid = (lo + hi) >> 1;
+            p = base + size * (mid - 1);
+            r = cmp(key, p);
+            if (r == 0) {
+                return p;
+            }
+            if (r < 0) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        } while (hi >= lo);
+    }
+    return 0;
+}
+static __inline__ s32 lookupDS(s16 key) {
+    u8 *p;
+    D_main_bss_8013AC6C = key;
+    p = bsrchDS(D_main_bss_8013AC68, D_main_bss_8013BC48, D_main_bss_8013C450, 8, compareHalfwordAtOffset4_v2);
+    D_main_bss_8013AC70 = p;
+    if (p != 0) {
+        return *(s32 *)p;
+    }
+    return 0;
+}
+typedef struct { u16 h0; s8 b2; u8 b3; s16 h4; u16 h6; } DsEnt;
+s32 dispatchSequencerNoteEvent(u32 key, u8 note, u8 vel, u8 a3, u8 a4, u8 a5, u16 a6, u16 a7, u8 a8, s16 a9) {
+    u16 hi = key >> 16;
+    s32 k = (u8)(key >> 8) + a9;
+    s32 t;
+    DsEnt *tbl;
+    u32 i;
+    s32 r;
+    s32 n;
+
+    {
+        s32 t0;
+        if (k >= 0) {
+            if (k < 0x100) {
+                t0 = k;
+            } else {
+                t0 = 0xFF;
+            }
+        } else {
+            t0 = 0;
+        }
+        k = t0;
+    }
+    key = (key & 0xFFFF00FF) | (k << 8);
+    switch (hi & 0xC000) {
+    case 0:
+        r = findVoiceForNoteDS(note, a4, a5);
+        if (r != -1) {
+            return r;
+        }
+        return startNoteOnVoice(key, key >> 16, note, vel, a3, a4, a5, a6, a7, 1, a8);
+    case 0x4000:
+        tbl = (DsEnt *)lookupDS(hi);
+        if (tbl == NULL) {
+            return -1;
+        }
+        i = note & 0x7F;
+        if (tbl[i].h0 == 0xFFFF) {
+            return -1;
+        }
+        if (!(tbl[i].b3 & 0x80)) {
+            s32 t1 = tbl[note].b3 - 0x40;
+            t1 += a3;
+            if (t1 < 0) {
+                a3 = 0;
+            } else if (t1 >= 0x80) {
+                a3 = 0x7F;
+            } else {
+                a3 = t1;
+            }
+        } else {
+            a3 = 0x80;
+        }
+        n = (note & 0x7F) + tbl[i].b2;
+        {
+            s32 t2;
+            if (n < 0x80) {
+                t2 = (n < 0) ? 0 : n;
+            } else {
+                t2 = 0x7F;
+            }
+            n = t2;
+        }
+        k += tbl[i].h4;
+        {
+            s32 t3;
+            if (k < 0x100) {
+                t3 = (k < 0) ? 0 : k;
+            } else {
+                t3 = 0xFF;
+            }
+            key &= 0xFF;
+            key |= t3 << 8;
+            key |= tbl[i].h0 << 16;
+        }
+        if ((tbl[i].h0 & 0xC000) == 0) {
+            r = findVoiceForNoteDS(n, a4, a5);
+            if (r != -1) {
+                return r;
+            }
+            return startNoteOnVoice(key, hi, (u8)(n | (note & 0x80)), vel, a3, a4, a5, a6, a7, 1, a8);
+        }
+        __asm__("" :: "r"(k));
+        return applyNoteEventToGroupDS(key, hi, n | (note & 0x80), vel, a3, a4, a5, a6, a7, a8);
+    case 0x8000:
+        return applyNoteEventToGroupDS(key, key >> 16, note, vel, a3, a4, a5, a6, a7, a8);
+    }
+    return -1;
+}
 
 s32 dispatchSequencerNoteEventK(s32, s32, s32, s32, s32, s32, s32, s32, s32, s32) __asm__("dispatchSequencerNoteEvent");
 s32 musyxNoteEventLockedDispatch(u16 key, u8 a, u8 b) {
