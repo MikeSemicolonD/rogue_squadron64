@@ -2839,10 +2839,12 @@ void easeT16AnimationKeyframe(void **arg0, u8 *arg1, f32 arg2) {
             *(void **)(p + 0x38) = head;
             if (head != 0) {
                 *(u8 **)((u8 *)head + 4) = n;
+                *(s32 *)(n + 4) = 0;
+                *arg0 = n;
+            } else {
+                *(s32 *)(n + 4) = 0;
+                *arg0 = n;
             }
-            *(s32 *)(n + 4) = 0;
-            *arg0 = n;
-            __asm__("" :: "r"(n));
             i++;
         } while (i < 0xE);
     }
