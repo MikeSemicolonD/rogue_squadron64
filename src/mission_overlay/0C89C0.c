@@ -976,7 +976,7 @@ s32 npcTurretUpdate(u8 *arg0, u16 action, u8 *arg2) {
         if (arg2[0x18] == 8) {
             if (getNpcCurrentHealth(s1->obj) > 0) {
                 u8 *b;
-                register s32 one asm("$18");
+                s32 one;
                 s32 o;
                 unregisterAndFreeNpcSlot(s1->slot66, arg0);
                 b = (u8 *)D_main_bss_80139560;

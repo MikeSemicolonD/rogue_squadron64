@@ -1295,7 +1295,7 @@ s32 attachedAudioVisualEmitterNpcHandler(u8 *arg0, u16 action, u8 *arg2) {
                     }
                 }
                 {
-                    register s32 hit asm("$16") = 0;
+                    s32 hit = 0;
                     func_mission_overlay_800EFDE0(s2->obj, *(s32 *)(s2->rec + 0x7C), *(s32 *)(s2->rec + 0x80), dt);
                     aimOrientNpcTowardTarget(s2, dt);
                     if ((u8)isPendingChildNpcActive(s2->obj) == 1) {

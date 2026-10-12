@@ -181,8 +181,8 @@ void loadCharTextureSet(s32 arg0, u16 arg1, u16 arg2, u16 arg3) {
         } while (++i < arg2);
     }
     {
-    register u32 a asm("$17") = arg3;
-    register u32 b asm("$16") = arg2;
+    u32 a = arg3;
+    u32 b = arg2;
     *(u16 *)&f->unk02C = arg2;
     f->unk030 = 0;
     f->unk0F4 = (void *)arg0;

@@ -604,7 +604,7 @@ void convertMat3x4ToQuat(Mat4x3 arg0, Vec4f arg1) {
     f32 c;
     f32 s;
     f32 inv;
-    register u8 i asm("$9");
+    u8 i;
     s32 nv;
     u8 j;
     u8 k;

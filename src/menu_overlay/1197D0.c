@@ -419,13 +419,12 @@ BgObj *loadNamedTextureDescriptor(s32 arg0, s32 arg1, s32 arg2, s32 arg3) {
         sprintf(a.p24 + 2, D_menu_overlay_800A5C40, i);
         {
             u32 iw = obj->info->w;
-            register u32 ow asm("$2");
-            __asm__("" :: "r"(iw));
+            u32 ow;
             ow = obj->w;
             cols = iw / ow;
             {
                 u32 r = i % cols;
-                register u32 q asm("$4") = i / cols;
+                u32 q = i / cols;
                 off = r * ow;
                 off += q * obj->h * iw;
                 off *= obj->depth;

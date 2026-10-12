@@ -591,7 +591,7 @@ void stepSongModulationLanes(void) {
     s32 b0;
     s32 b1;
     s32 delta;
-    register s32 len asm("$8");
+    s32 len;
     u32 t;
     s32 v;
     u8 *p;

@@ -3458,7 +3458,7 @@ struct RvScene {
 
 void resetVertexCacheSlot(struct RvScene *scene, f32 *m, s8 *a2, s8 *a3, s8 *a4, s8 *a5, u16 *lo, u16 *hi) {
     u32 n;
-    register struct TSLEnt *ent asm("$10");
+    struct TSLEnt *ent;
     struct TSLEnt *e;
     struct RvItem *it;
     s32 idx;

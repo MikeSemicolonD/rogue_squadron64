@@ -1834,7 +1834,7 @@ void npcPowerGeneratorHandleDestruction(void) {
                     if (args.scale <= 0.0f) {
                         args.scale = 0.001f;
                     }
-                    spawnNpcOfType((void *)explosionEffectNpcHandler, &args, 1, 10); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0));
+                    spawnNpcOfType((void *)explosionEffectNpcHandler, &args, 1, 10);   __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0));
                     i++;
                 } while (i < count);
             }
@@ -2874,7 +2874,7 @@ void spawnDebrisBurstFromTemplate_(u8 *base, u8 idx) {
     DebrisVec3 v40;
     char name[4];
     u8 i;
-    register u8 *e asm("$16");
+    u8 *e;
     f32 *e2;
     u8 *e3;
     f32 *pv;
@@ -2885,7 +2885,7 @@ void spawnDebrisBurstFromTemplate_(u8 *base, u8 idx) {
     i = 0;
     pv = vel;
     {
-        register s32 off asm("$2") = idx * 12;
+        s32 off = idx * 12;
         e = (u8 *)(off + (s32)base);
     }
     e2 = (f32 *)(e + 0x10C);

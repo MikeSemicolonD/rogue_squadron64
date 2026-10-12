@@ -1239,7 +1239,7 @@ void playerVwingMainUpdate(void *arg0, f32 arg1) {
     u8 *mat;
     VwTrailNode *node;
     f32 fx;
-    register f32 ang asm("$f20");
+    f32 ang;
     f32 fy;
     f32 t;
     f32 sc;
@@ -2742,30 +2742,6 @@ void controllerSettingsScreen(u8 *arg0, s32 arg1) {
             s0++;
         }
         rs_strcpy(s1 + s0, getGameOrFrontText(controllerActionTextIds[s3]));
-        __asm__("" :: "r"(tbl));
-        __asm__("" :: "r"(base0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
-        __asm__("" :: "i"(0));
         a0v = *s2 | s4;
         *s2 = a0v;
         if ((0xE00 >> s3) & 1) {

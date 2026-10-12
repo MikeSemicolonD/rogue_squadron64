@@ -94,7 +94,7 @@ s32 projectModelBoundsToScreen(BoundsView *view, void *arg1, f32 *min, f32 *max,
     Vec3f cube[8];
     Vec3f proj;
     Mat4x3 mat;
-    register u8 i asm("$17");
+    u8 i;
     u8 c0;
     u8 c1;
     f32 *p;

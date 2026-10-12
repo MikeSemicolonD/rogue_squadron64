@@ -1281,7 +1281,7 @@ u16 getTextureAttrBySlot(u16 arg0) {
 u16 texPackTlutAtAllocSlot(u32 arg0, u8 arg1, u8 arg2, u8 *key) {
     u16 fl;
     u16 n;
-    register u16 ret asm("$2");
+    u16 ret;
     u16 tl;
 
     fl = arg1 != 0x10;

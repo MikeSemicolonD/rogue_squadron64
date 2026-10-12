@@ -415,7 +415,7 @@ void playXwingEngineSound(XesNpc *e, f32 dt) {
     f32 f;
     struct { u8 b[0x10]; } sp28;
     u16 out[2];
-    register void *a1 asm("$5");
+    void *a1;
     s32 mode;
     u32 w;
 

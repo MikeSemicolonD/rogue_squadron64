@@ -3678,8 +3678,8 @@ s32 clearChannelFieldsAt1Cand20(u8 *ch) {
 extern u32 D_main_800A0F54;
 s32 soundMacroOpLoopRandomCount(u8 *a0, u8 *cmd) {
     u8 *ch = a0;
-    register u32 t asm("$3");
-    register u32 d asm("$3");
+    u32 t;
+    u32 d;
     u32 w;
     u32 r;
     if (*(u16 *)(ch + 0x6C) == 0) {
@@ -6130,7 +6130,7 @@ void setupSongRenderBuffers(u16 n, u32 x, u8 mode) {
     u32 t1;
     u32 sz;
     u32 nn;
-    register u32 k asm("$4");
+    u32 k;
     nn = n;
     d = (s32)x;
     if ((s32)x >= 0) goto L1;
@@ -6352,11 +6352,11 @@ void moveSampleBlockToFront(SSBNode *n) {
 }
 
 SSBNode *recycleSampleStreamBlock(void) {
-    register SSBNode *n asm("$3");
+    SSBNode *n;
     SSBNode *t;
-    register SSBNode *t2 asm("$2");
-    register SSBNode *t1 asm("$2");
-    register SSBNode *c asm("$2");
+    SSBNode *t2;
+    SSBNode *t1;
+    SSBNode *c;
     c = D_main_bss_801499CC;
     if (c != 0) {
         n = c;

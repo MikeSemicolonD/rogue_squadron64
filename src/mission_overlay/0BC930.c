@@ -257,8 +257,8 @@ u16 dispatchCueByCategory(s32, u16, void *, void *, s32, f32, f32);
 void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
 
 void triggerTieInterceptorEffect(s32 *arg0, s32 arg1) {
-    register s32 *a0p asm("$17") = arg0;
-    register s32 a1v asm("$16") = arg1;
+    s32 *a0p = arg0;
+    s32 a1v = arg1;
     TtFrame f;
     f32 v[4];
     f32 ax[4];
@@ -274,7 +274,6 @@ void triggerTieInterceptorEffect(s32 *arg0, s32 arg1) {
     }
     if (*(u16 *)(ttD18[a0p[0]].p4 + 4) == 3) {
         accumulateVectorInObjectFrame(&f, &D_mission_overlay_801099C4[a1v & 3], pl);
-        __asm__("" :: "r"(a1v));
         if (*(u16 *)(a0p + 2) != 0xFFFF) {
             v[0] = *(f32 *)(a0p + 3) - f.pos.x;
             v[1] = *(f32 *)(a0p + 4) - f.pos.y;

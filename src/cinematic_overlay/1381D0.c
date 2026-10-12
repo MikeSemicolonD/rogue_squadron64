@@ -518,9 +518,8 @@ void cinematicSlotUpdateU8(u8 *arg0, f32 *arg1, f32 arg2, f32 arg3, u8 arg4) {
         *arg1 = (arg2 - e->t) * e->s + e->v;
     } else {
         for (i = 0; i < 4; i++) {
-            register f32 *vp asm("$8") = (f32 *)((i << 2) + (s32)idx);
+            f32 *vp = (f32 *)((i << 2) + (s32)idx);
             vp = (f32 *)((s32)vp + 8);
-            __asm__("" :: "r"(vp));
             x = tm[i];
             j = 0;
             while (((CsuKey *)arg0)[j].t <= x) {

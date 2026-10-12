@@ -650,7 +650,6 @@ void ugcsV(f32 *pos) {
         x0 = ((DatGridInfo *)&D_main_bss_801375D8)->width - 1;
     }
     z = fz - ten;
-    __asm__("" :: "r"(z));
     if (z < 0) {
         z = 0;
     } else if (z >= ((DatGridInfo *)&D_main_bss_801375D8)->depth) {

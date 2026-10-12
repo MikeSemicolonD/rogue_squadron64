@@ -797,13 +797,12 @@ s32 npcAtAtUpdate(u8 *arg0, u16 action, u8 *arg2) {
     case 1:
     case 8:
         {
-            register u8 *rec asm("$18");
+            u8 *rec;
             u8 *a1c = arg2;
             char *name;
             s32 hp;
             u16 fl;
             rec = arg2;
-            __asm__("" : "+r"(rec));
             fl = *(u16 *)(arg0 + 0x14) | 0x100;
             *(u16 *)(arg0 + 0x14) = fl;
             if (!(fl & 0x20)) {
