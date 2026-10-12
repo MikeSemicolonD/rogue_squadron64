@@ -213,9 +213,9 @@ void computeRandomizedOrientationFrame(f32 *arg0, RandOrient *o, f32 (*m)[3], f3
             {
                 f32 q = ((f32)(rand() & 0x7F) - 64.0f) / 160.0f;
                 f32 ab;
-                register f32 k asm("$f4") = 0.1f;
-                FABSF(r, q);
-                r = r + k;
+                f32 k = 0.1f;
+                FABSF(ab, q);
+                r = ab + k;
             }
             if (o->f90 > 0.0f) {
                 t84 = o->f84 - r;
