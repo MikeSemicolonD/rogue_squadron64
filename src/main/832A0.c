@@ -5970,7 +5970,7 @@ u8 isMusyXActive(void) {
     return gMusyXActiveFlag;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", serviceAudioOutputBuffers);
+__asm__(".word 0xC4820000");
 
 extern u8 *gAiBufsRL[16] __asm__("D_main_bss_801496B0");
 extern volatile u8 gAiBufIdxRL __asm__("D_main_bss_801496F0");
