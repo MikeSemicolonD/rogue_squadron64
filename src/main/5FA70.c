@@ -153,9 +153,152 @@ void levelOrientationToReferenceAxis(f32 *p, f32 dt)
  do { if (1.0f < fabsf(ang)) { vec3Cross(cr, p + 4, (f32 *) (&ref)); if (vec3Length(cr) > 0.00001f) { if (ang < 0.0f) { quatFromAxisAngle(q, cr, (ang < -15.0f) ? -15.0f : ang); } else if (ang > 0.0f) { quatFromAxisAngle(q, cr, (ang > 15.0f) ? 15.0f : ang); } rotateVec3ByQuat(q, p + 4, cr); *((LoV3 *) (p + 4)) = *((LoV3 *) cr); rotateVec3ByQuat(q, p + 7, cr); *((LoV3 *) (p + 7)) = *((LoV3 *) cr); orthonormalizeFrame(p + 1); } } x = p[4] * p[22]; y = p[5] * p[22]; p[23] = p[23] + 0.4f; p[10] = x; p[11] = y + p[23]; p[12] = p[6] * p[22]; p[1] = p[1] + (p[10] * dt); p[2] = p[2] + (p[11] * dt); p[3] = p[3] + (p[12] * dt); } while (0);
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/5FA70", D_main_8003B248);
 
-INCLUDE_ASM("asm/nonmatchings/main/5FA70", emitTrailPuffAndCue);
+typedef struct { f32 v[3]; } TpV3;
+typedef struct {
+    u8 pad0[4];
+    TpV3 pos;
+    TpV3 dir;
+    TpV3 up;
+    u8 pad28[0x1C];
+    u16 cue;
+    u8 pad46[0x12];
+    f32 vol;
+    u8 pad5C[0x67];
+    u8 active;
+} TpObj;
+typedef struct { u8 b[5]; } TpTypes;
+static const TpTypes kTrailTypes = { { 0x1F, 5, 6, 7, 0xFF } };
+typedef struct {
+    TpV3 pos;
+    TpV3 dir;
+    f32 range;
+    f32 width;
+    s32 zero;
+    TpTypes *types;
+    u16 self;
+    s8 one;
+    u16 hits[7];
+} TpAim;
+typedef struct {
+    s16 cmd;
+    u16 arg;
+    s32 zero;
+    f32 a;
+    f32 b;
+    f32 c;
+    u8 flag;
+} TpCmd;
+typedef struct {
+    TpV3 pos;
+    TpV3 dir;
+    TpV3 up;
+    TpV3 fwd;
+} TpCue;
+typedef struct {
+    TpCmd cmd;
+    u8 pad18[8];
+    f32 q0[4];
+    f32 q1[4];
+    f32 q2[4];
+    f32 cr[3];
+    u8 pad8C[0x1C];
+} TpLoop;
+typedef union {
+    struct {
+        TpTypes list;
+        TpAim aim;
+    } a;
+    TpLoop l;
+} TpBuf;
+extern s32 acquireNpcTargetsInAimCone(TpAim *);
+extern void zmemcpy(void *, void *, s32);
+extern s32 dispatchCueByCategory(s32, u16, TpCue *, void *, s32, f32, f32);
+extern s32 slotDispatcherIter(s32, s32, TpCmd *);
+extern void quatMultiply(f32 *, f32 *, f32 *);
+extern u8 D_main_8009ED60[];
+
+static __inline__ void cpV3(f32 *d, f32 *s) { d[0] = s[0]; d[1] = s[1]; d[2] = s[2]; }
+
+s32 emitTrailPuffAndCue(TpObj *arg0) {
+    u16 hits[7];
+    s32 n;
+    s32 i;
+    s32 slot;
+    TpBuf u;
+    register u8 *lb __asm__("$3");
+    TpCue cue;
+    register u16 *hp __asm__("$17");
+
+    if (arg0->active == 0) {
+        goto clear;
+    }
+    {
+        u.a.list = kTrailTypes;
+        {
+            register f32 *s_ __asm__("$2") = arg0->pos.v;
+            u.a.aim.pos.v[0] = s_[0];
+            u.a.aim.pos.v[1] = s_[1];
+            u.a.aim.pos.v[2] = s_[2];
+        }
+        lb = (u8 *)&u.a.list;
+        u.a.aim.dir = arg0->dir;
+        *(f32 *)(lb + 0x20) = 35.0f;
+        *(f32 *)(lb + 0x24) = 35.0f;
+        u.a.aim.zero = 0;
+        *(u8 **)(lb + 0x2C) = lb;
+        *(u16 *)(lb + 0x30) = 0xFFFF;
+        *(s8 *)(lb + 0x32) = 1;
+        __asm__("" : "+r"(lb));
+        {
+            TpAim *cp = &u.a.aim;
+            n = acquireNpcTargetsInAimCone(cp);
+            cp = 0;
+        }
+        hp = hits;
+        if (n > 0) {
+            TpAim *ap = &u.a.aim;
+            for (i = 0; n < 7; i++, n++) {
+                ap->hits[n] = ap->hits[i];
+            }
+        }
+        zmemcpy(hp, u.a.aim.hits, 0xE);
+    }
+    if (n == 0) {
+    clear:
+        arg0->active = 0;
+    }
+        u.l.cmd.zero = 0;
+        u.l.cmd.flag = 1;
+        u.l.cmd.a = 15.0f;
+        u.l.cmd.b = 10.0f;
+        u.l.cmd.c = 7.5f;
+        cue.pos = arg0->pos;
+        for (i = 0; i < 7; i++) {
+            if (i == 0) {
+                cue.dir = arg0->dir;
+                cue.up = arg0->up;
+                cue.fwd = cue.dir;
+                vec3Cross(u.l.cr, arg0->up.v, arg0->dir.v);
+                quatFromAxisAngle(u.l.q0, u.l.cr, 6.25f);
+            } else {
+                quatFromAxisAngle(u.l.q1, arg0->dir.v, i * 60.0f);
+                quatMultiply(u.l.q1, u.l.q0, u.l.q2);
+                rotateVec3ByQuat(u.l.q2, arg0->dir.v, cue.dir.v);
+                rotateVec3ByQuat(u.l.q2, arg0->up.v, cue.up.v);
+                cue.fwd = cue.dir;
+            }
+            slot = dispatchCueByCategory(0xA, arg0->cue, &cue, D_main_8009ED60 + 4, 0, arg0->vol, 1.0f);
+            if (arg0->active != 0) {
+                u.l.cmd.cmd = 0;
+                u.l.cmd.arg = hits[i];
+                slotDispatcherIter(slot & 0xFFFF, 0xA, &u.l.cmd);
+            }
+            u.l.cmd.cmd = 5;
+            slotDispatcherIter(slot & 0xFFFF, 0xA, &u.l.cmd);
+        }
+    return 1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/5FA70", guidedEffectNpcHandler);
 
