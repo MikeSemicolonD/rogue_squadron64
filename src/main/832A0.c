@@ -573,21 +573,11 @@ s32 getTrackVoiceTickBudget(u8 *t) {
 extern u8 gNoteTblNC[][0x86] __asm__("D_main_bss_80140A10");
 extern u8 gNoteTrkTblNC[][16][0x86] __asm__("D_main_bss_801440C8");
 void setChannelNoteCell(u8 c, u8 idx, u8 t, u8 v) {
-    register u8 *p asm("$2");
-    u8 *bs;
-    s32 ii;
-    u8 (*row)[0x86];
-    u8 (*row2)[0x86];
     if (t != 0xFF) {
-        bs = (u8 *)gNoteTrkTblNC;
-        row = (u8 (*)[0x86])(bs + t * 0x860);
-        p = (u8 *)(idx * 0x86 + (s32)row);
+        gNoteTrkTblNC[t][idx][c] = v & 0x7F;
     } else {
-        ii = idx;
-        row2 = gNoteTblNC;
-        p = row2[ii];
+        gNoteTblNC[idx][c] = v & 0x7F;
     }
-    p[c] = v & 0x7F;
 }
 
 extern u8 D_main_bss_8013C460[];
