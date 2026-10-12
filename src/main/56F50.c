@@ -1204,17 +1204,13 @@ void applyMeshdef1AnimColors(struct meshdef1 *arg0, u32 arg1) {
 }
 
 void freeAllHobFiles(void) {
-    s32 i; u32 v; u16 n;
+    s32 i; u32 v;
     for (i = 0; i < 25; i++) {
-        v = hobObjectHashMap[i];
-        while (v != 0xFFFF) {
+        while ((v = hobObjectHashMap[i]) != 0xFFFF) {
             if (hobObjectListItems[v].hob_file != NULL) {
                 rs_free(hobObjectListItems[v].hob_file);
             }
-            __asm__("" :: "r"(&hobObjectHashMap[i]), "r"(&hobObjectHashMap[i]));
-            n = hobObjectListItems[v].nextIndex;
-            hobObjectHashMap[i] = n;
-            v = n;
+            hobObjectHashMap[i] = hobObjectListItems[v].nextIndex;
         }
     }
 }
