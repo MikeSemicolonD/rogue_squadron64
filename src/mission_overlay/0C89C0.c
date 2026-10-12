@@ -361,7 +361,7 @@ void computeAnchorRelativePositionByDistanceRatio(void *, void *, f32, void *);
 void mat34CrossRowsAndCopyPos(void *, void *, f32);
 void mat3x3InverseInto(void *, void *);
 void transformVec3ByMat34(void *, void *, void *);
-void vec3NormalizeInto(void *, void *);
+f32 vec3NormalizeInto(void *, void *);
 void buildRotationMatrixSlot0(void *, f32);
 void buildRotationMatrixSlot1(void *, f32);
 void uoComposeSlot1(void *, f32) __asm__("composeRotationMatrixSlot1");

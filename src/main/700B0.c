@@ -573,7 +573,7 @@ extern u8 *D_main_bss_8013A89C;
 extern AttachPt *D_main_bss_8013A8A0;
 extern u8 D_main_800A0B38[][4];
 extern f32 D_main_800A0BD0[];
-void vec3NormalizeInto(f32 *, f32 *);
+f32 vec3NormalizeInto(f32 *, f32 *);
 void computeNamedAttachPointTransform(void *, s32, s32, s32 *, void *, s32, s32);
 
 void walkDatTreeAndVisitChildren(DatWalkNode *n, u8 *arg1, DatWalkCtx *ctx) {

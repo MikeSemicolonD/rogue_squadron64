@@ -139,7 +139,7 @@ void initProbeDroidScatterLaunch(ProbeScatter *arg0) {
 #define FREEH if (*(s32 *)(o + 0x3C) != 0) { rs_free(*(s32 *)(o + 0x3C)); *(s32 *)(o + 0x3C) = 0; }
 extern f32 vec3Dot(f32 *, f32 *);
 extern f32 vec3Length(f32 *);
-extern void vec3NormalizeInto(void *, f32 *);
+extern f32 vec3NormalizeInto(void *, f32 *);
 extern f32 sinfApprox(f32);
 extern void quatFromAxisAngle(f32 *, void *, f32);
 extern void rotateVec3ByQuat(f32 *, void *, void *);

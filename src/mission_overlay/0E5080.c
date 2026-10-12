@@ -272,7 +272,7 @@ extern void mat3x3InverseInto(void *, void *);
 extern u8 computeActorAnchorDeltaAfterLOS(s32);
 extern f32 *getObjectMeshTransformOrLocal(s32, void *);
 extern void computeAnchorRelativePositionByDistanceRatio(void *, f32 *, s32, void *);
-extern void vec3NormalizeInto(void *, void *);
+extern f32 vec3NormalizeInto(void *, void *);
 extern void buildRotationMatrixSlot1(void *, f32);
 extern f32 vec3Dot(void *, void *);
 extern f32 vec3Length(void *);

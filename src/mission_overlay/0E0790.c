@@ -476,7 +476,7 @@ extern u8 s_isPendingChildNpcActive(SplObj *) __asm__("isPendingChildNpcActive")
 extern u8 computeActorAnchorDeltaAfterLOS(SplObj *);
 extern f32 *getObjectMeshTransformOrLocal(SplObj *, f32 *);
 extern void s_transformVec3ByMat34(f32 *, f32 *, f32 *) __asm__("transformVec3ByMat34");
-extern void vec3NormalizeInto(f32 *, f32 *);
+extern f32 vec3NormalizeInto(f32 *, f32 *);
 extern void s_buildRotationMatrixSlot0(f32 *, f32) __asm__("buildRotationMatrixSlot0");
 extern void buildRotationMatrixSlot1(f32 *, f32);
 extern void s_composeRotationMatrixSlot1(f32 *, f32) __asm__("composeRotationMatrixSlot1");

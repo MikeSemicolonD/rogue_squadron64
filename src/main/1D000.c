@@ -360,13 +360,14 @@ f32 normalize_vector(Vec3f v) {
     return len;
 }
 
-void vec3NormalizeInto(Vec3f dst, Vec3f src) {
-    register f32 len asm("$f0");
+f32 vec3NormalizeInto(Vec3f dst, Vec3f src) {
+    f32 len;
 
     SQRTF_ASM(len, src[0] * src[0] + src[1] * src[1] + src[2] * src[2]);
     dst[0] = src[0] / len;
     dst[1] = src[1] / len;
     dst[2] = src[2] / len;
+    return len;
 }
 
 f32 vec3Dot(Vec3f arg0, Vec3f arg1) {

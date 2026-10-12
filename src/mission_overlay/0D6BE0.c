@@ -89,7 +89,7 @@ extern f32 *getObjectMeshTransformOrLocal(s32, void *);
 extern void mat34CrossRowsAndCopyPos(void *, void *, f32);
 extern void mat3x3InverseInto(void *, void *);
 extern void transformVec3ByMat34(void *, void *, void *);
-extern void vec3NormalizeInto(void *, void *);
+extern f32 vec3NormalizeInto(void *, void *);
 extern void buildRotationMatrixSlot0(void *, f32);
 extern void buildRotationMatrixSlot1(void *, f32);
 extern void composeRotationMatrixSlot1(void *, f32);
