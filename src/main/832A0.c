@@ -1754,7 +1754,113 @@ s32 resolveVoiceSlotByHandle(u32 h) {
     return -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", allocateSynthVoice);
+typedef struct {
+    u8 pad0[0x14];
+    u32 flags;
+    u32 time;
+    u8 pad1C[2];
+    u8 prio;
+    u8 pad1F[0x21];
+    u8 group;
+    u8 pad41[0x65];
+    u16 id;
+    u8 padA8;
+    u8 busy;
+    u8 padAA[0xD2];
+} SvA;
+typedef struct { s32 w; u8 pad[0x178]; } SvB;
+extern SvA gSvA[] __asm__("D_main_bss_8013D890");
+extern SvB gSvB[] __asm__("D_main_8013D880");
+extern u8 gSvBusyAS __asm__("D_main_bss_8013ACF4");
+extern u8 gSvCountAS __asm__("D_main_bss_80141AD0");
+extern u8 gSvMaxGroupA __asm__("D_main_bss_8013B038");
+extern u8 gSvMaxGroupB __asm__("D_main_bss_80141AD1");
+static __inline__ s32 svLowerAS(s32 a, s32 b) {
+    s32 r;
+    register u32 ta __asm__("$2");
+    register u32 tb __asm__("$3");
+    register u32 pa __asm__("$2");
+    u32 pb;
+    register s32 o __asm__("$4");
+    register s32 t __asm__("$2");
+    t = b * 95;
+    o = t << 2;
+    pa = gSvA[a].prio;
+    pb = *(u8 *)(o + (s32)gSvA + 0x1E);
+    if (pa != pb) {
+        r = pa < pb;
+    } else {
+        ta = gSvA[a].time;
+        tb = *(u32 *)(o + (s32)gSvA + 0x18);
+        r = ta < tb;
+    }
+    return r;
+}
+s32 allocateSynthVoice(u8 prio, u8 maxSame, u16 id, s32 group) {
+    s32 maxGroup;
+    s32 nSame;
+    s32 nGroup;
+    s32 bestSame;
+    s32 bestGroup;
+    s32 i;
+
+    if (gSvBusyAS == 0) {
+        if ((u8)group) {
+            maxGroup = gSvMaxGroupA;
+        } else {
+            maxGroup = gSvMaxGroupB;
+        }
+        if (maxSame < gSvCountAS || maxGroup < gSvCountAS) {
+            nSame = 0;
+            nGroup = 0;
+            bestSame = -1;
+            bestGroup = -1;
+            for (i = 0; i < gSvCountAS; i++) {
+                if (gSvA[i].busy == 0 && gSvB[i].w != 0) {
+                    __asm__("" :: "r"(i), "r"(i), "r"(i), "r"(i), "r"(i), "r"(i));
+                    if (gSvA[i].group == (u8)group) {
+                        nGroup++;
+                        if (!(gSvA[i].flags & 1)) {
+                            if (bestGroup == -1 || svLowerAS(i, bestGroup)) {
+                                bestGroup = i;
+                            }
+                        }
+                    }
+                    if (gSvA[i].id == id) {
+                        nSame++;
+                        if (!(gSvA[i].flags & 1)) {
+                            if (bestSame == -1 || svLowerAS(i, bestSame)) {
+                                bestSame = i;
+                            }
+                        }
+                    }
+                }
+            }
+            if (nSame >= maxSame) {
+                if (bestSame != -1 && prio >= gSvA[bestSame].prio) {
+                    return bestSame;
+                }
+                return -1;
+            }
+            if (nGroup >= maxGroup) {
+                if (bestGroup != -1 && prio >= gSvA[bestGroup].prio) {
+                    return bestGroup;
+                }
+                return -1;
+            }
+        }
+        bestSame = -1;
+        for (i = 0; i < gSvCountAS; i++) {
+            if (!(gSvA[i].flags & 1) && gSvA[i].busy == 0 && (bestSame == -1 || gSvA[i].prio < gSvA[bestSame].prio || (gSvA[bestSame].prio == gSvA[i].prio && gSvA[bestSame].time > gSvA[i].time))) {
+                bestSame = i;
+            }
+        }
+        if (bestSame != -1 && prio >= gSvA[bestSame].prio) {
+            return bestSame;
+        }
+    }
+    return -1;
+}
 
 s32 allocateSynthVoice(u8, u8, u16, s32);
 void freeSynthVoiceFromActiveList();
