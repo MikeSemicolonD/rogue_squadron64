@@ -29,8 +29,7 @@ void buildRotationMatrixFromEulerAngles(void *, f32, f32, f32);
 void playerXwingInit(s32 *arg0, s32 arg1, s32 arg2) {
     u8 *p = xwCraftBytes[arg1];
     f32 hp;
-    register f32 h asm("$f10");
-    f32 b, c, d, f, e, g, i, j, k, l, m, n, o;
+    f32 b, c, d, f, e, g, h, i, j, k, l, m, n, o;
     f32 z;
     *(s16 *)(p + 0x180) = arg2;
     arg0[0] = arg1;
@@ -40,7 +39,6 @@ void playerXwingInit(s32 *arg0, s32 arg1, s32 arg2) {
     if (D_main_bss_80130B58 & 0x40) {
         hp = 40.0f;
     }
-    *(f32 *)(p + 0xF8) = 1.6f;
     b = 2.625f;
     c = 0.0625f;
     d = 1.75f;
@@ -80,6 +78,7 @@ void playerXwingInit(s32 *arg0, s32 arg1, s32 arg2) {
     *(f32 *)(p + 0x130) = k;
     *(f32 *)(p + 0x134) = l;
     *(f32 *)(p + 0x138) = m;
+    *(f32 *)(p + 0xF8) = 1.6f;
     *(f32 *)(p + 0x140) = e;
     *(f32 *)(p + 0x144) = i;
     *(f32 *)(p + 0x148) = e;
