@@ -667,12 +667,12 @@ void slerpQuaternions(Vec4f arg0, Vec4f arg1, f32 arg2, Vec4f arg3) {
         if ((1.0 - temp_fs0) > 1e-5f) {
             temp_fs1 = M_HALF_PI_F - sinfApprox(temp_fs0);
             {
-                register f32 sq asm("$f20");
+                f32 sq;
                 SQRTF_ASM(sq, 1.0f - (f32) (temp_fs0 * temp_fs0));
-                temp_fs0 = sq;
+                temp_fs0_2 = sq;
             }
-            var_fs2 = sinf((1.0f - arg2) * temp_fs1) / temp_fs0;
-            var_fa0 = sinf(arg2 * temp_fs1) / temp_fs0;
+            var_fs2 = sinf((1.0f - arg2) * temp_fs1) / temp_fs0_2;
+            var_fa0 = sinf(arg2 * temp_fs1) / temp_fs0_2;
         } else {
             var_fa0 = arg2;
             var_fs2 = 1.0f - arg2;
