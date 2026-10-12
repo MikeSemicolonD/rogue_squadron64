@@ -170,7 +170,6 @@ void hudDisplayUpdateWorker(s32 *);
 void loadLevelTextureCache(u32 arg0) {
     LtBuf *b;
     s32 i;
-    s32 r;
     LtCell *c;
     u8 *p;
 
@@ -213,10 +212,8 @@ void loadLevelTextureCache(u32 arg0) {
     b->f3C = 1.0f;
     for (i = 5; i < ltCount; i++) {
         sprintf(b->nm, "ltex_cache_%d", i);
-        r = registerHmtTextureInTable(&b->m34, b, 0);
-        ltCells[i].f4 = r;
-        __asm__("" :: "r"(r));
-        ltCells[i].f6 = getTextureAttrBySlot(r);
+        ltCells[i].f4 = registerHmtTextureInTable(&b->m34, b, 0);
+        ltCells[i].f6 = getTextureAttrBySlot(ltCells[i].f4);
         ltCells[i].f8 = 0xFFFF;
     }
     ltFree(b);
