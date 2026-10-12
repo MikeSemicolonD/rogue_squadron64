@@ -6554,16 +6554,255 @@ void fillSampleStreamRange(SOutFS *out, u32 start, u32 len, s32 key) {
     }
 }
 
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDA8);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDB0);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDB8);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDC0);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDC8);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDD0);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDD8);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DDE0);
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", musyxRenderVoiceSamples);
+typedef struct { u32 s0; u32 s1; u32 l0; u32 l1; u32 n0; u32 n1; } RvSeg;
+typedef struct { u8 *p0; u8 *p1; u16 l0; u16 l1; } RvOut;
+void rvFill(RvOut *, u32, u32, s32) __asm__("fillSampleStreamRange");
+u8 *rvAcquire(s32) __asm__("acquireSampleStreamBlock");
+void rvFade(u8 *, u16, u8 *) __asm__("advanceVolumeFadeEnvelope");
+f64 truncDouble(f64);
+#define RB(p, o) (*(u8 *)((u8 *)(p) + (o)))
+#define RH(p, o) (*(u16 *)((u8 *)(p) + (o)))
+#define RS(p, o) (*(s16 *)((u8 *)(p) + (o)))
+#define RW(p, o) (*(u32 *)((u8 *)(p) + (o)))
+#define RP(p, o) (*(u8 **)((u8 *)(p) + (o)))
+#define RD(p, o) (*(f64 *)((u8 *)(p) + (o)))
+#define RF(p, o) (*(f32 *)((u8 *)(p) + (o)))
+static __inline__ void rvFillAt(RvOut *o, u32 off, u32 base, u32 len, u32 key) {
+    rvFill(o, base + off, len, key);
+}
+static __inline__ void rvLoop(u8 *c, s32 s2, RvSeg *seg) {
+    if (s2 == -1) {
+        RW(c, 0x58) = 0x4000;
+    } else if (s2 == -2) {
+        RW(c, 0x58) = (RH(c, 0x48) & 0x1F) + seg->l0;
+        RW(c, 0x5C) = (RH(c, 0x48) & 0x1F) + seg->l0 - 0x20;
+    } else {
+        RW(c, 0x58) = (RH(c, 0x48) & 0x1F) + seg->l0;
+        if (RP(c, 0x34) != 0) {
+            RW(c, 0x5C) = ((RH(c, 0x4A) & 0x1F) + s2) | 0x8000;
+        } else {
+            RW(c, 0x5C) = (RH(c, 0x48) & 0x1F) + s2;
+        }
+    }
+}
+void musyxRenderVoiceSamples(u8 *v, u16 off, u16 len, u8 *c, u8 flag) {
+    RvSeg seg;
+    u8 mode;
+    u32 n;
+    u32 pos;
+    u32 end;
+    u32 rem;
+    s32 s2;
+    s32 s3;
+    f64 step;
+    f64 dpos;
+    u8 t;
+    u32 o;
+    u32 ll;
+
+    n = (u32)(RH(v, 4) * len + 0xFFF) >> 12;
+    dpos = truncDouble(RD(v, 8));
+    n += 6;
+    pos = dpos;
+    end = RW(v, 0x3C) + RW(v, 0x40);
+    if (RW(v, 0x40) != 0) {
+        rem = RW(v, 0x38) - end;
+        if (rem < 0xA) {
+            rem = 0;
+        }
+    } else {
+        rem = 0;
+    }
+    ll = RW(v, 0x40);
+    mode = 2;
+    if (ll != 0 && ((RB(v, 1) != 0) | (rem == 0)) && end >= pos) {
+        if (end < pos + n) {
+            u32 a = end - pos;
+            u32 ls = RW(v, 0x3C);
+            if (ls >= pos) {
+                seg.s0 = pos;
+                seg.l0 = RW(v, 0x3C) - pos + RW(v, 0x40);
+                seg.l1 = 0;
+                s3 = 0;
+                s2 = RW(v, 0x3C) - pos;
+            } else {
+                u32 b = n - a;
+                if (ll < b || (s3 = 0, b >= pos - ls)) {
+                    seg.s0 = ls;
+                    s3 = pos - ls;
+                    s2 = 0;
+                    seg.l0 = RW(v, 0x40);
+                    seg.l1 = 0;
+                } else {
+                    seg.s0 = pos;
+                    seg.l0 = a;
+                    s2 = 0;
+                    seg.s1 = RW(v, 0x3C);
+                    seg.l1 = b - 6;
+                }
+            }
+        } else {
+            goto keyoff;
+        }
+    } else {
+        if (pos + n >= RW(v, 0x38)) {
+            s3 = 0;
+            seg.s0 = pos;
+            s2 = -2;
+            seg.l0 = RW(v, 0x38) - pos + 0x20;
+            seg.l1 = 0;
+            mode = 0;
+        } else {
+        keyoff:
+            s3 = 0;
+            s2 = -1;
+            seg.s0 = pos;
+            seg.l0 = n - 6;
+            seg.l1 = 0;
+        }
+    }
+    seg.n0 = seg.l0 + 6;
+    if (seg.l1 != 0) {
+        seg.n1 = seg.l1 + 6;
+    }
+    if (RH(v, 2) & 1) {
+        t = RB(v, 0x6D);
+        if (t != 0) {
+            if (t == 3) {
+                if (seg.l1 != 0) {
+                    RH(c, 0x4A) = seg.s1 & 0x3F;
+                    RH(c, 0x46) = seg.n1;
+                    rvFillAt((RvOut *)(c + 0x34), (seg.s1 >> 6) * 0x28 + 0x100, RW(v, 0x34), (((RH(c, 0x46) + (RH(c, 0x4A) & 0x1F) + 0x1F) >> 5) + (RH(c, 0x4A) >> 5) + 1 >> 1) * 0x28, RW(v, 0x34) + 0x100);
+                } else {
+                    RP(c, 0x34) = 0;
+                }
+                RH(c, 0x48) = seg.s0 & 0x3F;
+                RH(c, 0x44) = seg.n0;
+                rvFillAt((RvOut *)(c + 0x28), (seg.s0 >> 6) * 0x28 + 0x100, RW(v, 0x34), (((RH(c, 0x44) + (RH(c, 0x48) & 0x1F) + 0x1F) >> 5) + (RH(c, 0x48) >> 5) + 1 >> 1) * 0x28, RW(v, 0x34) + 0x100);
+                RH(c, 0x64) = s3;
+                RP(c, 0x40) = rvAcquire(RW(v, 0x34));
+                rvLoop(c, s2, &seg);
+            }
+        } else {
+            if (seg.l1 != 0) {
+                RH(c, 0x4A) = seg.s1 & 3;
+                RH(c, 0x46) = seg.n1;
+                rvFillAt((RvOut *)(c + 0x34), (seg.s1 & 0xFFFC) * 2, RW(v, 0x34), ((RH(c, 0x4A) + RH(c, 0x46) + 3) & 0xFFFC) * 2, RW(v, 0x34));
+            } else {
+                RP(c, 0x34) = 0;
+            }
+            RH(c, 0x48) = seg.s0 & 3;
+            RH(c, 0x44) = seg.n0;
+            rvFillAt((RvOut *)(c + 0x28), (seg.s0 & 0xFFFC) * 2, RW(v, 0x34), ((RH(c, 0x48) + RH(c, 0x44) + 3) & 0xFFFC) * 2, RW(v, 0x34));
+            RH(c, 0x64) = s3;
+            rvLoop(c, s2, &seg);
+        }
+    } else {
+        t = RB(v, 0x6D);
+        if (t != 0) {
+            if (t == 3) {
+                if (seg.l1 != 0) {
+                    RH(c, 0x4A) = seg.s1 & 0x3F;
+                    RH(c, 0x46) = seg.n1;
+                    o = (seg.s1 >> 6) * 0x28 + 0x100;
+                    RP(c, 0x34) = (u8 *)(RW(v, 0x34) + o);
+                    RH(c, 0x3E) = 0;
+                    RH(c, 0x3C) = ((((s32)(RH(c, 0x46) + (RH(c, 0x4A) & 0x1F) + 0x1F) >> 5) + (RH(c, 0x4A) >> 5) + 1) >> 1) * 0x28;
+                } else {
+                    RP(c, 0x34) = 0;
+                }
+                RH(c, 0x48) = seg.s0 & 0x3F;
+                RH(c, 0x44) = seg.n0;
+                o = (seg.s0 >> 6) * 0x28 + 0x100;
+                RP(c, 0x28) = (u8 *)(RW(v, 0x34) + o);
+                RH(c, 0x32) = 0;
+                RH(c, 0x64) = s3;
+                RH(c, 0x30) = ((((s32)(RH(c, 0x44) + (RH(c, 0x48) & 0x1F) + 0x1F) >> 5) + (RH(c, 0x48) >> 5) + 1) >> 1) * 0x28;
+                RP(c, 0x40) = (u8 *)RW(v, 0x34);
+                rvLoop(c, s2, &seg);
+            }
+        } else {
+            if (seg.l1 != 0) {
+                RH(c, 0x4A) = seg.s1 & 3;
+                RH(c, 0x46) = seg.n1;
+                RP(c, 0x34) = (u8 *)(RW(v, 0x34) + (seg.s1 & 0xFFFC) * 2);
+                RH(c, 0x3E) = 0;
+                RH(c, 0x3C) = ((RH(c, 0x4A) + RH(c, 0x46) + 3) & 0xFFFC) * 2;
+            } else {
+                RP(c, 0x34) = 0;
+            }
+            RH(c, 0x48) = seg.s0 & 3;
+            RH(c, 0x44) = seg.n0;
+            RP(c, 0x28) = (u8 *)(RW(v, 0x34) + (seg.s0 & 0xFFFC) * 2);
+            RH(c, 0x32) = 0;
+            RH(c, 0x64) = s3;
+            RH(c, 0x30) = ((RH(c, 0x48) + RH(c, 0x44) + 3) & 0xFFFC) * 2;
+            rvLoop(c, s2, &seg);
+        }
+    }
+    RB(c, 0x20) = RB(v, 0);
+    RH(c, 0x24) = RH(v, 4);
+    if (RB(v, 0) == 1) {
+        RH(c, 0x26) = RH(v, 4);
+    } else {
+        RH(c, 0x26) = RH(v, 6);
+    }
+    RW(c, 0x4C) = RW(v, 0x4C) + off * 2;
+    RD(c, 0x50) = RD(v, 8);
+    RH(c, 0x60) = len;
+    RH(c, 0x62) = n;
+    RB(c, 0x21) = RB(v, 0x6D);
+    RP(c, 0x78) = v + 0x78;
+    RB(v, 0x84) = flag;
+    step = (f64)(s32)(RH(v, 4) * len) / 4096.0;
+    if (RW(v, 0x40) == 0 || RB(v, 1) == 0) {
+        f64 np = RD(v, 8) + step;
+        f64 e = RW(v, 0x38);
+        if (e <= np) {
+            RD(v, 8) = RW(v, 0x38) - 1;
+        } else {
+            RD(v, 8) = np;
+        }
+    } else {
+        f64 le = RW(v, 0x3C) + RW(v, 0x40);
+        f64 cur = RD(v, 8);
+        f64 np = cur + step;
+        if (!(np < le)) {
+            f64 x;
+            step -= le - cur;
+            x = truncDouble(step / (f64)RW(v, 0x40));
+            step -= x * (f64)RW(v, 0x40);
+            np = (f64)RW(v, 0x3C) + step;
+        }
+        RD(v, 8) = np;
+    }
+    RH(v, 6) = RH(v, 4);
+    rvFade(v, len, &mode);
+    RH(v, 0x18) = (s16)(RS(v, 0x44) * RF(v, 0x5C));
+    RH(v, 0x1A) = (s16)(RS(v, 0x46) * RF(v, 0x5C));
+    RH(v, 0x1C) = (s16)(RS(v, 0x48) * RF(v, 0x5C));
+    RH(v, 0x1E) = (s16)(RS(v, 0x4A) * RF(v, 0x5C));
+    RH(c, 0x66) = RH(v, 0x18);
+    RH(c, 0x68) = RH(v, 0x1A);
+    RH(c, 0x6A) = RH(v, 0x1C);
+    RH(c, 0x6C) = RH(v, 0x1E);
+    if (RB(v, 0) == 1) {
+        RH(v, 0x20) = RH(v, 0x18);
+        RH(v, 0x22) = RH(v, 0x1A);
+        RH(v, 0x24) = RH(v, 0x1C);
+        RH(v, 0x26) = RH(v, 0x1E);
+    }
+    RH(c, 0x6E) = RH(v, 0x20);
+    RH(c, 0x70) = RH(v, 0x22);
+    RH(c, 0x72) = RH(v, 0x24);
+    RH(c, 0x74) = RH(v, 0x26);
+    RB(v, 0) = mode;
+    RH(v, 0x20) = RH(v, 0x18);
+    RH(v, 0x22) = RH(v, 0x1A);
+    RH(v, 0x24) = RH(v, 0x1C);
+    RH(v, 0x26) = RH(v, 0x1E);
+}
 
 
 typedef struct { s32 a; s32 b; s32 c; } Copy12KO;
