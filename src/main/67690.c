@@ -407,7 +407,6 @@ void setAudioFaderRampLocked(s32, s32, s32);
 
 void tickSpeechSubsystem(f32 arg0)
 {
-    register f32 t asm("$f0");
     SubtitleSlot *s;
     s32 n;
     s32 m;
@@ -435,7 +434,7 @@ void tickSpeechSubsystem(f32 arg0)
                         D_main_bss_80139C78 = 0;
                     }
                 } else if (D_main_bss_80139C8F == 0 && (subtitleSlots[subtitleSlotHead].flags & 6)) {
-                    t = *(f32 *)&D_main_bss_80139C78 - arg0;
+                    f32 t = *(f32 *)&D_main_bss_80139C78 - arg0;
                     *(f32 *)&D_main_bss_80139C78 = t;
                     if (t < 0.5f) {
                         setAudioFaderRampLocked(0x46, 0x258, 0xFD);
@@ -443,7 +442,7 @@ void tickSpeechSubsystem(f32 arg0)
                         D_main_bss_80139C8F = 1;
                     }
                 } else {
-                    t = *(f32 *)&D_main_bss_80139C78 - arg0;
+                    f32 t = *(f32 *)&D_main_bss_80139C78 - arg0;
                     *(f32 *)&D_main_bss_80139C78 = t;
                     if (t < 0.0f) {
                         *(f32 *)&D_main_bss_80139C78 = 0.0f;
@@ -453,7 +452,7 @@ void tickSpeechSubsystem(f32 arg0)
         }
     } else if (D_main_bss_80139C8F != 0) {
         if (!speechSlotActiveInline(D_main_80139C73)) {
-            t = *(f32 *)&D_main_bss_80139C78 + arg0;
+            f32 t = *(f32 *)&D_main_bss_80139C78 + arg0;
             *(f32 *)&D_main_bss_80139C78 = t;
             if (t >= 0.25f) {
                 setAudioFaderRampLocked(0x7F, 0x12C, 0xFF);
@@ -462,7 +461,7 @@ void tickSpeechSubsystem(f32 arg0)
         }
     }
     if (D_main_bss_80139C7C > 0.0f) {
-        t = D_main_bss_80139C7C - (arg0 + arg0);
+        f32 t = D_main_bss_80139C7C - (arg0 + arg0);
         D_main_bss_80139C7C = t;
         if (t < 0.0f) {
             s32 i = D_main_80139C73;
