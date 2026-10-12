@@ -7,22 +7,19 @@
 #include "main/033C0.h"
 #include "main/7A8E0.h"
 
-#if 0
 void setNewAndPreviousButtonsPressed(void) {
-    u32 var_a0;
-    u32 temp_v0;
-    u32 why;
+    u32 i;
+    u32 t;
+    s32 pad[2];
 
-    for (var_a0 = 0;  var_a0 < 4; var_a0++) {
-        temp_v0 = readControllerInputs(var_a0);
-        gNewButtonsPressed[var_a0] = temp_v0;
-        gNewButtonsPressed[var_a0] &= ~gPreviousButtonsPressed[var_a0];
-        gPreviousButtonsPressed[var_a0] = temp_v0;
+    for (i = 0; i < 4; i++) {
+        t = readControllerInputs(i);
+        __asm__("" :: "r"(&gPreviousButtonsPressed[i]));
+        gNewButtonsPressed[i] = t;
+        gNewButtonsPressed[i] &= ~gPreviousButtonsPressed[i];
+        gPreviousButtonsPressed[i] = t;
     }
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/7A8E0", setNewAndPreviousButtonsPressed);
-#endif
 
 u32 getControllerButtonAndStick(u8 arg0) {
     f32 var_fv1;
