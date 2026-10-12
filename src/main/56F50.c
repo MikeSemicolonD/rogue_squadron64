@@ -1203,26 +1203,21 @@ void applyMeshdef1AnimColors(struct meshdef1 *arg0, u32 arg1) {
     }
 }
 
-#if 0
-// https://decomp.me/scratch/X81CI
 void freeAllHobFiles(void) {
-    s32 var_s2;
-    u16 var_v1;
-
-    for (var_s2 = 0; var_s2 < 25; var_s2++) {
-        var_v1 = hobObjectHashMap[var_s2];
-        while (var_v1 != 0xFFFF) {
-            if (hobObjectListItems[var_v1].hob_file != NULL) {
-                rs_free(hobObjectListItems[var_v1].hob_file);
+    s32 i; u32 v; u16 n;
+    for (i = 0; i < 25; i++) {
+        v = hobObjectHashMap[i];
+        while (v != 0xFFFF) {
+            if (hobObjectListItems[v].hob_file != NULL) {
+                rs_free(hobObjectListItems[v].hob_file);
             }
-            var_v1 = hobObjectListItems[var_v1].nextIndex;
-            hobObjectHashMap[var_s2] = var_v1;
+            __asm__("" :: "r"(&hobObjectHashMap[i]), "r"(&hobObjectHashMap[i]));
+            n = hobObjectListItems[v].nextIndex;
+            hobObjectHashMap[i] = n;
+            v = n;
         }
     }
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/56F50", freeAllHobFiles);
-#endif
 
 extern void clearStructPair2C30(void *);
 
