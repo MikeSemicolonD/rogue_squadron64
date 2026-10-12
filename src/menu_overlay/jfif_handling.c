@@ -347,7 +347,6 @@ static __inline__ s32 sofCdiv(s32 a, s32 b) { s32 t = a - 1; return (t + b) / b;
 s32 parseJfifSOF0Marker(SofSt *s) {
     u8 i;
     u8 p;
-    u8 t;
     SofComp *c;
 
     s->cur += 2;
@@ -373,10 +372,9 @@ s32 parseJfifSOF0Marker(SofSt *s) {
         if (s->comp[i].id != i + 1) {
             return 0x13;
         }
-        t = *s->cur++;
-        s->comp[i].h = t >> 4;
-        s->comp[i].v = t & 0xF;
-        __asm__("" :: "r"(t));
+        p = *s->cur++;
+        s->comp[i].h = p >> 4;
+        s->comp[i].v = p & 0xF;
         s->comp[i].tq = *s->cur++;
     }
     s->maxH = 1;
