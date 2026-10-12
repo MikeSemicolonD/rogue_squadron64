@@ -923,17 +923,16 @@ void executeActorType2Effect(void *arg0, f32 dt) {
         if (s->timeBase != 0.0f) {
             s->timer -= dt;
             if (s->active == 0 && s->timer <= 0.0f) {
-                f32 a;
                 f32 ab;
-                register f32 x asm("$f0");
+                f32 x;
                 FABSF(ab, ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->timeRange));
                 s->timer = s->timeBase + ab;
                 FABSF(ab, ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->angRange));
-                a = s->angBase + ab;
+                ang = s->angBase + ab;
                 if (rand() & 1) {
-                    x = a;
+                    x = ang;
                 } else {
-                    x = -a;
+                    x = -ang;
                 }
                 quatFromAxisAngle(q, &m[6], x);
                 rotateVec3ByQuat(q, fw, (f32 *)s);
@@ -1112,17 +1111,16 @@ void executeActorType3Effect(void *arg0, f32 dt) {
         if (s->timeBase != 0.0f) {
             s->timer -= dt;
             if (s->active == 0 && s->timer <= 0.0f) {
-                f32 a;
                 f32 ab;
-                register f32 x asm("$f0");
+                f32 x;
                 FABSF(ab, ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->timeRange));
                 s->timer = s->timeBase + ab;
                 FABSF(ab, ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->angRange));
-                a = s->angBase + ab;
+                ang = s->angBase + ab;
                 if (rand() & 1) {
-                    x = a;
+                    x = ang;
                 } else {
-                    x = -a;
+                    x = -ang;
                 }
 
                 quatFromAxisAngle(q, &m[6], x);
