@@ -493,7 +493,11 @@ s32 npcGroundTroopUpdate(GtNpc *npc, u16 action, void *arg) {
                 setType2ActorVelocity(o->actor, 4.0f, 3.0f, 22.5f, 180.0f, 1.0f);
                 if (npc->flags & 0x20) {
                     half = 64.0f;
-                    { register f32 q asm("$f4") = (f32)(rand() & 0x7F) - half; o->pos.x = li->pos.x + q / (half / li->f1C); }
+                    {
+                        f32 q = (f32)(rand() & 0x7F);
+                        q -= half;
+                        o->pos.x = li->pos.x + q / (half / li->f1C);
+                    }
                     o->pos.y = li->pos.y;
                     o->pos.z = li->pos.z + ((f32)(rand() & 0x7F) - half) / (half / li->f1C);
                     d.x = o->pos.x - li->pos.x;
