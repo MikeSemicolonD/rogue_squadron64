@@ -56,7 +56,60 @@ loop_2:
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/6C310", applyCentripetalBankingToNpcCorners);
+typedef struct { f32 x, y, z; } AcV3;
+extern u8 D_main_bss_80138058[];
+f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
+
+void applyCentripetalBankingToNpcCorners(f32 *pos, u8 *npc, f32 *m) {
+    f32 s[3];
+    f32 w;
+    f32 l;
+    AcV3 *p;
+    f32 x8;
+    f32 z8;
+
+    w = *(f32 *)(npc + 8);
+    l = *(f32 *)(npc + 0xC);
+    p = (AcV3 *)(npc + 0x178);
+    if (m[7] >= 0.0f) {
+        s[0] = (m[7] * m[5] - m[8] * m[4]) * w;
+        s[1] = (m[8] * m[3] - m[6] * m[5]) * w;
+        s[2] = (m[6] * m[4] - m[7] * m[3]) * w;
+    } else {
+        s[0] = -(m[7] * m[5] - m[8] * m[4]) * w;
+        s[1] = -(m[8] * m[3] - m[6] * m[5]) * w;
+        s[2] = -(m[6] * m[4] - m[7] * m[3]) * w;
+    }
+    p[0].x = m[3] * l - s[0];
+    p[0].z = m[5] * l - s[2];
+    p[2].x = m[3] * l + s[0];
+    p[2].z = m[5] * l + s[2];
+    p[6].x = -m[3] * l - s[0];
+    p[6].z = -m[5] * l - s[2];
+    p[8].x = -m[3] * l + s[0];
+    p[8].z = -m[5] * l + s[2];
+    p[0].y = wrapAngleToCyclicRange(pos[0] + p[0].x, pos[2] + p[0].z, D_main_bss_80138058, 0) - pos[1];
+    p[2].y = wrapAngleToCyclicRange(pos[0] + p[2].x, pos[2] + p[2].z, D_main_bss_80138058, 0) - pos[1];
+    p[6].y = wrapAngleToCyclicRange(pos[0] + p[6].x, pos[2] + p[6].z, D_main_bss_80138058, 0) - pos[1];
+    p[8].y = wrapAngleToCyclicRange(pos[0] + p[8].x, pos[2] + p[8].z, D_main_bss_80138058, 0) - pos[1];
+    p[1].x = p[0].x + (p[2].x - p[0].x) * 0.5f;
+    p[1].z = p[0].z + (p[2].z - p[0].z) * 0.5f;
+    p[3].x = p[0].x + (p[6].x - p[0].x) * 0.5f;
+    p[3].z = p[0].z + (p[6].z - p[0].z) * 0.5f;
+    p[4].x = p[0].x + (p[8].x - p[0].x) * 0.5f;
+    p[4].z = p[0].z + (p[8].z - p[0].z) * 0.5f;
+    p[5].x = p[8].x + (p[2].x - p[8].x) * 0.5f;
+    p[5].z = p[8].z + (p[2].z - p[8].z) * 0.5f;
+    x8 = p[8].x;
+    p[7].x = x8 + (p[6].x - x8) * 0.5f;
+    z8 = p[8].z;
+    p[7].z = p[8].z + (p[6].z - z8) * 0.5f;
+    p[1].y = wrapAngleToCyclicRange(pos[0] + p[1].x, pos[2] + p[1].z, D_main_bss_80138058, 0) - pos[1];
+    p[3].y = wrapAngleToCyclicRange(pos[0] + p[3].x, pos[2] + p[3].z, D_main_bss_80138058, 0) - pos[1];
+    p[4].y = wrapAngleToCyclicRange(pos[0] + p[4].x, pos[2] + p[4].z, D_main_bss_80138058, 0) - pos[1];
+    p[5].y = wrapAngleToCyclicRange(pos[0] + p[5].x, pos[2] + p[5].z, D_main_bss_80138058, 0) - pos[1];
+    p[7].y = wrapAngleToCyclicRange(pos[0] + p[7].x, pos[2] + p[7].z, D_main_bss_80138058, 0) - pos[1];
+}
 
 extern u8 D_main_800A09C0[];
 extern void clearStructPair2C30(void *);
