@@ -803,11 +803,11 @@ extern void mat3x4Multiply_l(void *, void *, void *) __asm__("mat3x4Multiply");
 
 void initVec4F(f32 *, f32, f32, f32) __asm__("initVec4TripletFromArgs");
 static __inline__ void usScale(f32 *m, s32 type) {
-    register f32 c asm("$5") = 0.0125f;
     if (type == 5) {
-        c = 0.021875f;
+        initVec4F(m, 0.021875f, 0.021875f, 0.021875f);
+    } else {
+        initVec4F(m, 0.0125f, 0.0125f, 0.0125f);
     }
-    initVec4F(m, c, c, c);
 }
 void updateSplineCraftTransform(SplineCraft *arg0, f32 arg1) {
     f32 q[4];
@@ -945,11 +945,11 @@ extern void mat3x4Multiply(void *, f32 *, f32 *);
 
 void initVec4F(f32 *, f32, f32, f32) __asm__("initVec4TripletFromArgs");
 static __inline__ void cotScale(f32 *m, s32 type) {
-    register f32 c asm("$5") = 0.0125f;
     if (type == 5) {
-        c = 0.021875f;
+        initVec4F(m, 0.021875f, 0.021875f, 0.021875f);
+    } else {
+        initVec4F(m, 0.0125f, 0.0125f, 0.0125f);
     }
-    initVec4F(m, c, c, c);
 }
 void computeOrientedTransformFromQuat(u8 *arg0, f32 dt)
 {
