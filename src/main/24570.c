@@ -441,70 +441,70 @@ void setProfilerBarGate(u8 arg0) {
     D_main_80038CE0 = arg0;
 }
 
-#if 0
+#include "PR/mbi.h"
 // https://decomp.me/scratch/dRR0M
-extern Gfx *D_main_bss_801163D4;
+extern Gfx *gDlEndPB __asm__("D_main_bss_801163D4");
 Gfx *emitProfilerBarSegment(Gfx *arg0, u32 arg1, s16 arg2, u8 arg3, u8 arg4, u8 arg5) {
     u64 huh;
     u32 var_s3;
 
     if (D_main_80038CE0 != 0) {
-        huh = u64DivU64((u64)arg1 * 0x3B9ACA00, osClockRate);
-        var_s3 = u64DivU64(huh * 32, 0x32DCD5);
+        huh = ((u64)arg1 * 1000000000) / osClockRate;
+        var_s3 = (huh * 32) / 0x32DCD5;
         if (var_s3 >= 0x141U) {
             var_s3 = 0x140;
         }
-        if (arg0 >= D_main_bss_801163D4) {
+        if (arg0 >= gDlEndPB) {
             gSPLine3D(arg0, 0, 0, 0);
             arg0 = allocateDisplayListBuffer();
         }
         gDPPipeSync(arg0++);
-        if (arg0 >= D_main_bss_801163D4) {
+        if (arg0 >= gDlEndPB) {
             gSPLine3D(arg0, 0, 0, 0);
             arg0 = allocateDisplayListBuffer();
         }
         gDPSetRenderMode(arg0++, G_RM_OPA_SURF, G_RM_OPA_SURF2);
-        if (arg0 >= D_main_bss_801163D4) {
+        if (arg0 >= gDlEndPB) {
             gSPLine3D(arg0, 0, 0, 0);
             arg0 = allocateDisplayListBuffer();
         }
         gDPSetCycleType(arg0++, G_CYC_FILL);
-        if (arg0 >= D_main_bss_801163D4) {
+        if (arg0 >= gDlEndPB) {
             gSPLine3D(arg0, 0, 0, 0);
             arg0 = allocateDisplayListBuffer();
         }
         gDPSetFillColor(arg0++, 0x42114211);
-        if (arg0 >= D_main_bss_801163D4) {
+        if (arg0 >= gDlEndPB) {
             gSPLine3D(arg0, 0, 0, 0);
             arg0 = allocateDisplayListBuffer();
         }
         gDPFillRectangle(arg0++, 0, arg2, 160, arg2+3);
-        if (arg0 >= D_main_bss_801163D4) {
+        if (arg0 >= gDlEndPB) {
             gSPLine3D(arg0, 0, 0, 0);
             arg0 = allocateDisplayListBuffer();
         }
         gDPPipeSync(arg0++);
-        if (arg0 >= D_main_bss_801163D4) {
+        if (arg0 >= gDlEndPB) {
             gSPLine3D(arg0, 0, 0, 0);
             arg0 = allocateDisplayListBuffer();
         }
         gDPSetFillColor(arg0++, 0x21092109);
-        if (arg0 >= D_main_bss_801163D4) {
+        if (arg0 >= gDlEndPB) {
             gSPLine3D(arg0, 0, 0, 0);
             arg0 = allocateDisplayListBuffer();
         }
         gDPFillRectangle(arg0++, 161, arg2, 320, arg2+3);
-        if (arg0 >= D_main_bss_801163D4) {
+        if (arg0 >= gDlEndPB) {
             gSPLine3D(arg0, 0, 0, 0);
             arg0 = allocateDisplayListBuffer();
         }
         gDPPipeSync(arg0++);
-        if (arg0 >= D_main_bss_801163D4) {
+        if (arg0 >= gDlEndPB) {
             gSPLine3D(arg0, 0, 0, 0);
             arg0 = allocateDisplayListBuffer();
         }
         gDPSetFillColor(arg0++, (GPACK_RGBA5551(arg3, arg4, arg5, 1) << 0x10) | GPACK_RGBA5551(arg3, arg4, arg5, 1));
-        if (arg0 >= D_main_bss_801163D4) {
+        if (arg0 >= gDlEndPB) {
             gSPLine3D(arg0, 0, 0, 0);
             arg0 = allocateDisplayListBuffer();
         }
@@ -512,8 +512,5 @@ Gfx *emitProfilerBarSegment(Gfx *arg0, u32 arg1, s16 arg2, u8 arg3, u8 arg4, u8 
     }
     return arg0;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/main/24570", emitProfilerBarSegment);
-#endif
 
 INCLUDE_ASM("asm/nonmatchings/main/24570", fake_func_80024128);
