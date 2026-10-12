@@ -84,22 +84,21 @@ void computeAngleToTargetFromTransform(Mat4x3 m, Vec3f pos, Vec3f ang) {
 
 void buildOrientationFromPosAndAngles(Mat4x3 m, Vec3f pos, Vec3f ang) {
     f32 t[6];
-    register f32 k asm("$f24") = 0.017453292f;
     f32 a, b, c;
     f32 p1, p2, p3, p4;
     f32 sx, cx, sy, cy, sz, cz;
     m[3][0] = pos[0];
     m[3][1] = pos[1];
     m[3][2] = pos[2];
-    a = ang[0] * k;
-    b = ang[1] * k;
+    a = ang[0] * 0.017453292f;
+    b = ang[1] * 0.017453292f;
     c = ang[2];
     t[1] = cosf(a);
     t[0] = sinf(a);
     t[3] = cosf(b);
     t[2] = sinf(b);
-    t[5] = cosf(c * k);
-    t[4] = sinf(c * k);
+    t[5] = cosf(c * 0.017453292f);
+    t[4] = sinf(c * 0.017453292f);
     cx = t[1];
     cz = t[5];
     p1 = cx * cz;
