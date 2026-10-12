@@ -71,7 +71,545 @@ void parseDatItemCommon(s32 arg0, u8 *arg1) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/47220", loadDatFile);
+typedef struct {
+    u16 type;
+    u8 pad2[4];
+    u16 id;
+    u8 pad8[4];
+    void *ptrC;
+    f32 pos[3];
+    u8 pad1C[0x18];
+    u16 f34;
+    u8 pad36[0x16];
+    s32 flags;
+    u8 pad50[4];
+    s32 f54;
+    u8 pad58[4];
+    void *name;
+} DatObjA;
+
+typedef struct {
+    u8 pad0[0xC];
+    void *ptrC;
+    f32 pos[3];
+} DatObjB;
+
+typedef struct {
+    u8 pad0[0xC];
+    void *ptrC;
+    u8 pad10[0x10];
+    void *ptr20;
+    u8 pad24[4];
+    s32 f28;
+    void *ptr2C;
+} DatObjC;
+
+typedef struct {
+    u16 type;
+    u8 pad2[4];
+    u16 id;
+    u8 pad8[4];
+    void *ptrC;
+    f32 x;
+    u8 pad14[4];
+    f32 z;
+    u8 pad1C[0xC];
+    f32 w;
+    u8 pad2C[4];
+    f32 d;
+    s32 flags;
+} DatObjD;
+
+typedef struct {
+    u8 pad0[6];
+    u16 id;
+    u8 pad8[4];
+    void *ptrC;
+    u8 pad10[0x10];
+    s32 flags;
+} DatObjE;
+
+typedef struct {
+    u32 numObjs;
+    void **objs;
+    u32 pad8;
+    u32 padC;
+    u32 numB;
+    void **b;
+    u32 numC;
+    void **c;
+    u8 pad20[0x10];
+    u32 numD;
+    void **d;
+    u32 numE;
+    void **e;
+    u32 pad40;
+    void *refs;
+} DatFile;
+
+typedef struct {
+    DatFile *dat;
+    f32 minX;
+    f32 minZ;
+    f32 maxX;
+    f32 maxZ;
+    s32 width;
+    s32 depth;
+    u16 *cells;
+} DatGridFull;
+
+extern u8 D_main_bss_80130B39;
+extern s32 D_main_bss_801375D4;
+extern s32 D_main_bss_801375D0;
+extern u8 D_main_bss_80130B3A;
+extern u8 D_main_bss_80130B63;
+extern u8 D_main_bss_80130BA0;
+extern s32 D_main_bss_80136DC0;
+extern s32 D_main_bss_80136FB0;
+extern s32 D_main_bss_80137CE4;
+extern s32 gCurrentLevel;
+extern s32 gGameSettings;
+f32 floatModulo(f32, f32);
+s32 getAssetNameForNpcType(s32);
+void *load_asset(s32 *);
+s32 load_dat_file_assets();
+s32 load_hmt_and_hob(s32 *, s32 *, s32, s32);
+s32 markHighLodCellsInGrid(f32, f32, f32, f32);
+s32 markLowLodCellsInGrid(f32, f32, f32, f32);
+s32 parseDatEventTriggers(void **, u32);
+s32 parseDatSpawnPositions(void *, s32);
+s32 rs_malloc(s32, s32);
+s32 sprintf(s32 *, s32 *, s32);
+void **walkMeshdef0List(s32 *);
+void parseDatItemCommon(s32, u8 *);
+void setupNpcUpdateFunctions(s32);
+void releaseMeshAsset(void *);
+
+#define GRID ((DatGridFull *)&D_main_bss_801375D8)
+
+void *loadDatFile(s32 arg0) {
+    s32 path[10];
+    f32 mn[4];
+    f32 mx[4];
+    DatFile *dat;
+    u32 i;
+    f32 *bnd;
+
+    sprintf(path, "%s/dat", arg0);
+    dat = load_asset(path);
+    bnd = (f32 *)&D_main_bss_80136DC0;
+    mn[0] = bnd[8];
+    mn[2] = bnd[11];
+    mx[0] = bnd[9];
+    mx[2] = bnd[12];
+    mn[1] = mx[1] = 0.0f;
+
+    i = 0;
+    if (dat->numObjs != 0) {
+        void **list = (void **)((u8 *)dat + (s32)dat->objs);
+        dat->objs = list;
+        if (dat->numObjs != 0) {
+            s32 ff = 0xFFFF;
+            do {
+                DatObjA *a;
+                f32 v;
+                u8 *gs;
+                a = (DatObjA *)((u8 *)list + (s32)list[i]);
+                list[i] = a;
+                if (a->ptrC != NULL) {
+                    a->ptrC = (u8 *)a + (s32)a->ptrC;
+                    a->f34 = ff;
+                    a->id = ff;
+                    __asm__("" :: "r"(ff));
+                    a->f54 = 0x80000000;
+                }
+                if (!(a->flags & 2)) {
+                    if (a->name != NULL) {
+                        a->name = (u8 *)a + (s32)a->name;
+                    }
+                }
+                if (D_main_bss_80130B39 != 0) {
+                    switch (a->type) {
+                    case 0:
+                    case 0xD:
+                    case 0x14:
+                    case 0x21:
+                    case 0x28:
+                    case 0x2A:
+                    case 0x2B:
+                    case 0x2E:
+                    case 0x33:
+                    case 0x41:
+                    case 0x42:
+                    case 0x44:
+                    case 0x4A:
+                    case 0x4B:
+                        break;
+                    case 0x32:
+                        if (D_main_bss_80130BA0 == 0) {
+                            break;
+                        }
+                    default:
+                        a->type = ff;
+                        break;
+                    }
+                } else if (gCurrentLevel == 3 && (gs = (u8 *)&gGameSettings, gs[0x23] == 0) && a->type == 0xC) {
+                    a->type = 0x13;
+                }
+                v = a->pos[0];
+                if (v < mn[0]) {
+                    mn[0] = v;
+                } else if (mx[0] < v) {
+                    mx[0] = v;
+                }
+                v = a->pos[1];
+                if (v < mn[1]) {
+                    mn[1] = v;
+                } else if (mx[1] < v) {
+                    mx[1] = v;
+                }
+                v = a->pos[2];
+                if (v < mn[2]) {
+                    mn[2] = v;
+                } else if (mx[2] < v) {
+                    mx[2] = v;
+                }
+                i++;
+            } while (i < dat->numObjs);
+        }
+    } else {
+        dat->objs = NULL;
+    }
+
+    i = 0;
+    if (dat->numB != 0) {
+        void **list = (void **)((u8 *)dat + (s32)dat->b);
+        dat->b = list;
+        if (dat->numB != 0) {
+            do {
+                f32 v;
+                DatObjB *b = (DatObjB *)((u8 *)list + (s32)list[i]);
+                list[i] = b;
+                if (b->ptrC != NULL) {
+                    b->ptrC = (u8 *)b + (s32)b->ptrC;
+                }
+                v = b->pos[0];
+                if (v < mn[0]) {
+                    mn[0] = v;
+                } else if (mx[0] < v) {
+                    mx[0] = v;
+                }
+                v = b->pos[1];
+                if (v < mn[1]) {
+                    mn[1] = v;
+                } else if (mx[1] < v) {
+                    mx[1] = v;
+                }
+                v = b->pos[2];
+                if (v < mn[2]) {
+                    mn[2] = v;
+                } else if (mx[2] < v) {
+                    mx[2] = v;
+                }
+                i++;
+            } while (i < dat->numB);
+        }
+    } else {
+        dat->b = NULL;
+    }
+
+    i = 0;
+    if (dat->numC != 0) {
+        void **list = (void **)((u8 *)dat + (s32)dat->c);
+        dat->c = list;
+        if (dat->numC != 0) {
+            do {
+                DatObjC *c = (DatObjC *)((u8 *)list + (s32)list[i]);
+                list[i] = c;
+                if (c->ptrC != NULL) {
+                    c->ptrC = (u8 *)c + (s32)c->ptrC;
+                }
+                if (c->ptr20 != NULL) {
+                    c->ptr20 = (u8 *)c + (s32)c->ptr20;
+                }
+                if (c->f28 != 0) {
+                    c->ptr2C = (u8 *)c + (s32)c->ptr2C;
+                }
+                i++;
+            } while (i < dat->numC);
+        }
+    } else {
+        dat->c = NULL;
+    }
+
+    i = 0;
+    if (dat->numD != 0) {
+        void **list = (void **)((u8 *)dat + (s32)dat->d);
+        dat->d = list;
+        if (dat->numD != 0) {
+            do {
+                DatObjD *d = (DatObjD *)((u8 *)list + (s32)list[i]);
+                list[i] = d;
+                if (d->ptrC != NULL) {
+                    d->ptrC = (u8 *)d + (s32)d->ptrC;
+                    d->id = 0xFFFF;
+                }
+                switch (d->type) {
+                case 4:
+                    markHighLodCellsInGrid(d->x, d->x + d->w, d->z, d->z + d->d);
+                    break;
+                case 5:
+                    markLowLodCellsInGrid(d->x, d->x + d->w, d->z, d->z + d->d);
+                    break;
+                }
+                i++;
+            } while (i < dat->numD);
+        }
+    } else {
+        dat->d = NULL;
+    }
+
+    i = 0;
+    if (dat->numE != 0) {
+        void **list = (void **)((u8 *)dat + (s32)dat->e);
+        dat->e = list;
+        if (dat->numE != 0) {
+            do {
+                DatObjE *e = (DatObjE *)((u8 *)list + (s32)list[i]);
+                list[i] = e;
+                if (e->ptrC != NULL) {
+                    e->ptrC = (u8 *)e + (s32)e->ptrC;
+                    e->id = 0xFFFF;
+                }
+                i++;
+            } while (i < dat->numE);
+        }
+    } else {
+        dat->e = NULL;
+    }
+
+    if (dat->refs != NULL) {
+        dat->refs = (u8 *)dat->refs + (s32)dat;
+        for (i = 0; (s32)i < 0x100; i++) {
+            u32 *ent;
+            void **list;
+            s32 off;
+            void **slot = (void **)(i * 4 + (s32)dat->refs);
+            if (*slot != NULL) {
+                ent = (u32 *)((u8 *)*slot + (s32)dat->refs);
+                *slot = ent;
+                while (*ent != -1) {
+                    switch (*ent) {
+                    case 0:
+                        list = dat->objs;
+                        off = ent[1] * 4;
+                        break;
+                    case 2:
+                        list = dat->b;
+                        off = ent[1] * 4;
+                        break;
+                    case 3:
+                        list = dat->c;
+                        off = ent[1] * 4;
+                        break;
+                    case 6:
+                        list = dat->d;
+                        off = ent[1] * 4;
+                        break;
+                    case 7:
+                        list = dat->e;
+                        off = ent[1] * 4;
+                        break;
+                    default:
+                        goto clear;
+                    }
+                    *ent = *(u32 *)(off + (s32)list);
+                    ent[1] = ((DatObjB *)*ent)->ptrC;
+                    goto adv;
+                clear:
+                    *ent = 0;
+                    ent[1] = 0;
+                adv:
+                    ent += 2;
+                }
+            }
+        }
+    }
+
+    if (D_main_bss_80130B3A == 1) {
+        return dat;
+    }
+    GRID->dat = dat;
+
+    {
+    register f32 v asm("$f2");
+    f32 r;
+    if (mn[0] < 0.0f) {
+        r = floatModulo(mn[0], 4.0f);
+        v = mn[0] - 4.0f;
+        v = v - r;
+    } else {
+        r = floatModulo(mn[0], 4.0f);
+        v = mn[0];
+        v = v - r;
+    }
+    mn[0] = v;
+    if (mn[2] < 0.0f) {
+        r = floatModulo(mn[2], 4.0f);
+        v = mn[2] - 4.0f;
+        v = v - r;
+    } else {
+        r = floatModulo(mn[2], 4.0f);
+        v = mn[2];
+        v = v - r;
+    }
+    mn[2] = v;
+    if (mx[0] < 0.0f) {
+        r = floatModulo(mx[0], 4.0f);
+        v = mx[0] - r;
+    } else {
+        r = floatModulo(mx[0], 4.0f);
+        v = mx[0] + 4.0f - r;
+    }
+    mx[0] = v;
+    if (mx[2] < 0.0f) {
+        r = floatModulo(mx[2], 4.0f);
+        v = mx[2] - r;
+    } else {
+        r = floatModulo(mx[2], 4.0f);
+        v = mx[2] + 4.0f - r;
+    }
+    mx[2] = v;
+    }
+
+    GRID->width = (s32)((mx[0] - mn[0]) * 0.25f);
+    if (GRID->width <= 0) {
+        GRID->width = 1;
+    }
+    GRID->depth = (s32)((mx[2] - mn[2]) * 0.25f);
+    if (GRID->depth <= 0) {
+        GRID->depth = 1;
+    }
+    GRID->minX = mn[0];
+    GRID->minZ = mn[2];
+    GRID->maxX = mx[0];
+    GRID->maxZ = mx[2];
+
+    if (D_main_bss_80130B39 == 0) {
+        parseDatEventTriggers(dat->e, dat->numE);
+    }
+    load_dat_file_assets();
+
+    if (D_main_bss_80130B39 != 0) {
+        i = 0;
+        if (GRID->dat->numObjs != 0) {
+            do {
+                DatObjA *a = (DatObjA *)GRID->dat->objs[i];
+                u16 n = a->type;
+                if (n != 0xFFFF && n != 0x14 && n != 0x32 && n != 0x4A) {
+                    if (a->name == NULL) {
+                        a->name = (void *)getAssetNameForNpcType(n & 0xFF);
+                    }
+                    a->type = 0;
+                }
+                i++;
+            } while (i < GRID->dat->numObjs);
+        }
+    }
+
+    i = 0;
+    GRID->cells = (u16 *)rs_malloc(GRID->width * GRID->depth * 2, 0);
+    if (GRID->width * GRID->depth > 0) {
+        do {
+            GRID->cells[i] = 0xFFFF;
+            i++;
+        } while ((s32)i < GRID->width * GRID->depth);
+        i = 0;
+    }
+
+    i = 0;
+    D_main_bss_801375D4 = 0;
+    if (dat->numObjs != 0) {
+        do {
+            DatObjA *a = dat->objs[i];
+            s32 n;
+            if (!(a->flags & 4)) {
+                if (D_main_bss_80130B39 == 0) {
+                    n = parseDatSpawnPositions(a, D_main_bss_80137CE4);
+                } else {
+                    n = 1;
+                }
+                if (n == 1) {
+                    a = dat->objs[i];
+                    parseDatItemCommon((s32)a, (u8 *)a + 0x10);
+                } else if (n == 2) {
+                    D_main_bss_801375D4++;
+                }
+            }
+            i++;
+        } while (i < dat->numObjs);
+    }
+
+    if (D_main_bss_801375D4 != 0) {
+        s32 n;
+        s32 *p = &D_main_bss_801375D0;
+        *p = rs_malloc(D_main_bss_801375D4 * 4, 0);
+        n = 0;
+        i = 0;
+        if (dat->numObjs != 0) {
+            do {
+                DatObjA *a = dat->objs[i];
+                if (!(a->flags & 4)) {
+                    if (parseDatSpawnPositions(a, D_main_bss_80137CE4) == 2) {
+                        *(void **)(n++ * 4 + D_main_bss_801375D0) = dat->objs[i];
+                    }
+                }
+                i++;
+            } while (i < dat->numObjs);
+        }
+    } else {
+        D_main_bss_801375D0 = 0;
+    }
+
+    if (D_main_bss_80130B39 == 0) {
+        i = 0;
+        if (dat->numE != 0) {
+            do {
+                DatObjE *e = dat->e[i];
+                if (!(e->flags & 4)) {
+                    parseDatItemCommon((s32)e, (u8 *)e + 0x10);
+                }
+                i++;
+            } while (i < dat->numE);
+        }
+        i = 0;
+        if (dat->numD != 0) {
+            do {
+                DatObjD *d = dat->d[i];
+                if (d->flags & 0x80) {
+                    setupNpcUpdateFunctions((s32)d);
+                }
+                i++;
+            } while (i < dat->numD);
+        }
+    }
+
+    sprintf(path, "%s/opkg", arg0);
+    load_hmt_and_hob(path, &D_main_bss_80136FB0, 1, 0);
+    if (D_main_bss_80130B63 != 0) {
+        sprintf(path, "%s/opkg2", arg0);
+        load_hmt_and_hob(path, &D_main_bss_80136FB0, 1, 0);
+    }
+    if (gCurrentLevel == 0xA) {
+        void **m = walkMeshdef0List("b_tsp_hi");
+        if (m != NULL) {
+            u8 *mesh = *m;
+            *(f32 *)(mesh + 0x44) = *(f32 *)(mesh + 0x44) * 1.5f;
+            releaseMeshAsset(m);
+        }
+    }
+    return NULL;
+}
 
 extern u8 D_main_bss_80130B39;
 extern s32 D_main_bss_801375D0;
