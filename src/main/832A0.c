@@ -2131,7 +2131,132 @@ s32 findVoiceForNote(u8 note, u8 a, u8 b) {
     return -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", startNoteOnVoice);
+extern u8 snV[] __asm__("D_main_8013D880");
+typedef struct { u8 b[0x17C]; } SnVs;
+extern SnVs snVs[] __asm__("D_main_8013D880");
+extern u32 snNextId __asm__("D_main_bss_8013ACF8");
+extern u8 *snHead __asm__("D_main_bss_8013AF00");
+extern u8 *snFree __asm__("D_main_bss_8013AF04");
+void snFreeV() __asm__("freeSynthVoiceFromActiveList");
+#define SV(T, k, o) (*(T *)(snV + (k) + (o)))
+static __inline__ u32 snAlloc(u8 *v) {
+    register u32 id asm("$5");
+    u32 k;
+    u32 n;
+    u8 *a2;
+    u8 *t0;
+    u8 *a1;
+    u8 *t;
+    register u32 ret asm("$4");
+    do {
+        n = snNextId;
+        snNextId = n + 1;
+        id = n;
+    } while (n == -1);
+    a2 = snHead;
+    t0 = 0;
+    while (a2 != 0) {
+        k = *(u32 *)(a2 + 8);
+        if (id < k) {
+            break;
+        }
+        if (k == id) {
+            do {
+                n = snNextId;
+                snNextId = n + 1;
+            } while (n == -1);
+            id = n;
+        }
+        t0 = a2;
+        a2 = *(u8 **)a2;
+    }
+    a1 = snFree;
+    if (a1 == 0) {
+        ret = -1;
+        return ret;
+    }
+    t = *(u8 **)a1;
+    snFree = t;
+    if (t != 0) {
+        *(s32 *)(t + 4) = 0;
+    }
+    if (t0 == 0) {
+        snHead = a1;
+    } else {
+        *(u8 **)t0 = a1;
+    }
+    *(u8 **)(a1 + 4) = t0;
+    *(u8 **)a1 = a2;
+    if (a2 != 0) {
+        *(u8 **)(a2 + 4) = a1;
+    }
+    *(u32 *)(a1 + 8) = id;
+    *(s32 *)(a1 + 0xC) = *(s32 *)(v + 0x64);
+    *(u8 **)(v + 0x18) = a1;
+    __asm__("" : "=r"(ret) : "0"(id));
+    return ret;
+}
+s32 startNoteOnVoice(u32 key, u16 a1, s32 a2, u8 a3, u8 a4, u8 a5, u8 a6, u16 a7, u16 a8, u8 a9, u8 a10) {
+    u8 k8 = key >> 8;
+    u32 hi = key >> 16;
+    u8 vel = a2;
+    s32 tbl;
+    s32 idx;
+    u32 id;
+    u8 kk = key;
+    s32 off;
+    s32 o2;
+
+    tbl = factor5BucketedTableLookupValue(hi);
+    if (tbl != 0) {
+        idx = allocateSynthVoice(k8, kk, a1, vel >> 7);
+        if (idx != -1) {
+            off = (idx * 0x5F) << 2;
+            snFreeV(snV + off);
+            SV(u32, 0x24, off) = (SV(u32, 0x24, off) & 0x10) | 2;
+            if ((u8)isAudioSlotActive(idx)) {
+                SV(u32, 0x24, off) |= 1;
+            }
+            SV(s32, 0x40, off) = 0;
+            if (a2 & 0x80) {
+                vel = a2 & 0x7F;
+                SV(u8, 0x50, off) = 1;
+                resetChannelStateRecord(idx, 0xFF);
+                SV(u8, 0x58, off) = idx;
+                SV(u8, 0x59, off) = 0xFF;
+            } else {
+                SV(u8, 0x50, off) = 0;
+                SV(u8, 0x58, off) = a5;
+                SV(u8, 0x59, off) = a6;
+            }
+            o2 = idx * 0x17C;
+            SV(u8, 0x2E, o2) = k8;
+            SV(u32, 0x28, o2) = 0xEA600000;
+            SV(u16, 0x68, o2) = hi;
+            SV(u16, 0xB6, o2) = a1;
+            SV(u16, 0x2C, o2) = 0x10;
+            SV(s32, 0x00, o2) = tbl;
+            SV(s32, 0x04, o2) = tbl + a7 * 8;
+            SV(u16, 0x52, o2) = vel;
+            SV(u16, 0x54, o2) = vel;
+            SV(u8, 0xBC, o2) = 0;
+            SV(u8, 0x56, o2) = a3;
+            SV(u8, 0x57, o2) = a4;
+            SV(u8, 0x5A, o2) = a8;
+            SV(s32, 0x10, o2) = -1;
+            SV(s32, 0x14, o2) = -1;
+            SV(s32, 0x08, o2) = 0;
+            SV(u8, 0xBB, o2) = a10;
+            id = (hi << 16) | (vel << 8) | idx;
+            SV(u32, 0x64, o2) = id;
+            if (a9 != 0) {
+                return snAlloc(snV + o2);
+            }
+            return id;
+        }
+    }
+    return -1;
+}
 
 INCLUDE_ASM("asm/nonmatchings/main/832A0", applyNoteEventToGroup);
 
