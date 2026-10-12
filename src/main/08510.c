@@ -2149,12 +2149,10 @@ s32 heapFreeListDequeue(u32 *face, HfdMesh *mesh, u32 prev, s32 arg3) {
     u32 flags;
     u8 *colors;
     u16 *idx;
-    s32 t; s32 sz;
-    s32 n;
+    s32 sz;
     s32 r;
     s32 m;
     s32 i;
-    u8 k;
 
     if (mesh->f2c & 0x40000000) {
         if (D_main_bss_801163BC >= 0x40) {
@@ -2256,12 +2254,11 @@ s32 heapFreeListDequeue(u32 *face, HfdMesh *mesh, u32 prev, s32 arg3) {
     gfx->words.w1 = (cache[0] * 5 << 16) | (cache[1] * 5 << 8) | (cache[2] * 5);
     if (flags & 8) {
         gfx->words.w0 = 0xB4000004;
-        k = cache[3];
+        gfx->words.w1 |= cache[3] * 5 << 24;
     } else {
         gfx->words.w0 = 0xBF000000;
-        k = cache[0];
+        gfx->words.w1 |= cache[0] * 5 << 24;
     }
-    { register u32 w asm("$3") = gfx->words.w1; gfx->words.w1 = w | (k * 5 << 24); }
     if (flags & 4) {
         s16 *uv;
         u32 *src;
