@@ -735,44 +735,45 @@ s32 playerFalconUpdate(FalconUpdNpc *arg0, s32 arg1, u32 *arg2) {
     return 1;
 }
 
-#if 0
-// https://decomp.me/scratch/yyxM0
-f32 integrateFalconFlightPhysics(f32 arg0, f32 arg1, f32 arg2) {
-    f32 temp_fa0;
-    f32 var_fv0;
+static __inline__ f32 absIF(f32 x) {
+    f32 r;
+    __asm__ volatile("abs.s %0, %1" : "=&f"(r) : "f"(x));
+    return r;
+}
+f32 integrateFalconFlightPhysics(f32 a, f32 b, f32 dt) {
+    f32 d;
+    register f32 v asm("$f0");
 
-    if (!(fabsf(arg1 - arg0) > 0.35f)) {
-        return arg1;
-    }
-    if (!(arg0 < arg1)) {
-        if (!((arg0 - arg1) > 180.0f)) {
-            var_fv0 = -70.0f;
-        } else {
-            var_fv0 = 70.0f;
+    d = b - a;
+    if (absIF(d) > 0.35f) {
+    if (a < b) {
+        if (180.0f < d) {
+            goto neg;
         }
+        v = 70.0f;
     } else {
-        if (!(arg1 - arg0 > 180.0f)) {
-            var_fv0 = 70.0f;
+        v = 180.0f;
+        if (v < a - b) {
+            v = 70.0f;
         } else {
-            var_fv0 = -70.0f;
+neg:
+            v = -70.0f;
         }
     }
-    arg0 += (arg2 * var_fv0);
-    if (arg0 < 0.0f) {
-        arg0 += 360.0f;
-    } else if (360.0f < arg0) {
-        arg0 -= 360.0f;
+    a += dt * v;
+    if (a < 0.0f) {
+        a += 360.0f;
+    } else if (360.0f < a) {
+        a -= 360.0f;
     }
-    return arg0;
+    } else {
+        a = b;
+    }
+    return a;
 }
 
-// DO NOT DELETE ME I AM REQUIRED FOR MATCHING
 const u32 rodata_pad_0BAFF0[2] = {
     0x03A0F021,
     0x24040014,
 };
-#else
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0BAFF0", integrateFalconFlightPhysics);
 
-INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0BAFF0", D_mission_overlay_800A5ED4);
-#endif
