@@ -226,7 +226,7 @@ s32 emitTrailPuffAndCue(TpObj *arg0) {
     s32 i;
     s32 slot;
     TpBuf u;
-    register u8 *lb __asm__("$3");
+    u8 *lb;
     TpCue cue;
     register u16 *hp __asm__("$17");
 
@@ -236,7 +236,7 @@ s32 emitTrailPuffAndCue(TpObj *arg0) {
     {
         u.a.list = kTrailTypes;
         {
-            register f32 *s_ __asm__("$2") = arg0->pos.v;
+            f32 *s_ = arg0->pos.v;
             u.a.aim.pos.v[0] = s_[0];
             u.a.aim.pos.v[1] = s_[1];
             u.a.aim.pos.v[2] = s_[2];
@@ -249,7 +249,6 @@ s32 emitTrailPuffAndCue(TpObj *arg0) {
         *(u8 **)(lb + 0x2C) = lb;
         *(u16 *)(lb + 0x30) = 0xFFFF;
         *(s8 *)(lb + 0x32) = 1;
-        __asm__("" : "+r"(lb));
         {
             TpAim *cp = &u.a.aim;
             n = acquireNpcTargetsInAimCone(cp);

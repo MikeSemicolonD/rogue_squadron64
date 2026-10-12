@@ -3419,8 +3419,6 @@ s32 renderUnlitMeshFaces(f32 *pa0, f32 *pa1, u8 *powner)
               }
             }
             r = r->next;
-            __asm__("" :: "r"(end));
-            __asm__("" :: "r"(end));
             slot++;
             if (slot < (end + 0x40))
             {

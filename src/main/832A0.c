@@ -2124,7 +2124,7 @@ static __inline__ u32 fvAlloc(u8 *v) {
     register u32 id asm("$6");
     u32 k;
     u32 n;
-    register u8 *a2 asm("$4");
+    u8 *a2;
     register u8 *t0 asm("$5");
     u8 *a1;
     u8 *t;
@@ -2441,8 +2441,8 @@ static __inline__ u32 agAlloc(u8 *v) {
     register u32 id asm("$7");
     u32 k;
     u32 n;
-    register u8 *a2 asm("$5");
-    register u8 *t0 asm("$6");
+    u8 *a2;
+    u8 *t0;
     u8 *a1;
     u8 *t;
     register u32 ret asm("$22");
@@ -4185,7 +4185,7 @@ s32 soundMacroOpSetVolumeRamp(u8 *ch, u8 *cmd) {
 s32 soundMacroOpSetPitchRelativeToNote(u8 *ch, u8 *cmd) {
     u32 c;
     register s32 h asm("$2");
-    register s32 b asm("$3");
+    s32 b;
     register s32 t asm("$3");
     s32 m, p;
     s32 x;

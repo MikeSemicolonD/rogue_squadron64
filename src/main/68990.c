@@ -84,7 +84,6 @@ f32 wrapAngleToCyclicRange(f32 x, f32 z, void *unused, TerrainHitWA *out) {
     d = fx - fz;
     cell = (TerrainCellWA *)(gGridWA.cells + (gGridWA.grid[ix + iz * gGridWA.w] & 0x1FFF) * 0x1E);
     if (d >= 0.0f) {
-        __asm__("" : : "r"(cell));
         a = cell->h[sz][sx + 1];
         db = cell->h[sz][sx] - a;
         dc = cell->h[sz + 1][sx + 1] - a;

@@ -943,7 +943,6 @@ s32 tpImpl(u8 *obj, f32 *src, TpCh *ch, f32 *out) {
         ch->f20 = st.range;
         break;
     }
-    __asm__("" :: "f"(r));
     if (n == 0) {
         return 1;
     }
