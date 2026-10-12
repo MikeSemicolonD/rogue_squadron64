@@ -1283,9 +1283,6 @@ f32 computeTurnVectorTowardTarget(Mat4x3 arg0, Vec3f arg1, struct Struct3f *arg2
     return temp_fs0;
 }
 
-#if 0
-// The register allocation surrounding the struct copy is a little incorrect, which is annoying because
-// that works just fine in `computeTurnAxisTowardTarget`
 // https://decomp.me/scratch/D6Lx1
 f32 computeTurnVectorAndDistanceToTarget(Mat4x3 arg0, Vec3f arg1, struct Struct3f *arg2, f32 *arg3) {
     Vec3f sp10;
@@ -1304,9 +1301,6 @@ f32 computeTurnVectorAndDistanceToTarget(Mat4x3 arg0, Vec3f arg1, struct Struct3
     *arg2 = sp20;
     return temp_fs0;
 }
-#else
-INCLUDE_ASM("asm/nonmatchings/mission_overlay/0F09E0", computeTurnVectorAndDistanceToTarget);
-#endif
 
 typedef struct {
     u8 active;
