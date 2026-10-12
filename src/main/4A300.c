@@ -600,7 +600,161 @@ void mapCellGeometryToGridSpace(McgCell *a) {
     }
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/4A300", scaleObjectPosToGridUnits);
+typedef struct { u16 next; u16 prev; u16 kind; u16 idx; void *obj; } PoolNode;
+typedef struct { u8 pad[3]; s8 lo; s8 hi; u8 pad2[25]; } GridCell30;
+typedef struct {
+    u16 *cells;
+    GridCell30 *tbl;
+    u16 *heads;
+    u32 pad0;
+    f32 f10;
+    u8 pad14[0x24];
+    u16 w;
+    u16 h;
+} GridDesc;
+typedef struct {
+    u8 pad0[0x10];
+    f32 x;
+    f32 y;
+    f32 z;
+    f32 r;
+} ObjPos;
+
+extern u8 D_main_bss_80136DC0[];
+#define GD (*(GridDesc *)D_main_bss_80136DC0)
+extern u16 D_main_bss_80136FC0;
+extern PoolNode *sopPool __asm__("gDoublyLinkedNodePool12");
+
+s32 scaleObjectPosToGridUnits(ObjPos *o, s32 insert) {
+    s32 count = 0;
+    s32 two;
+    s32 row;
+    s32 col;
+    s32 rowEnd;
+    s32 colEnd;
+    s32 idx;
+    f32 r;
+    f32 rr;
+    f32 sc;
+
+    o->x = o->x * 0.5f;
+    o->y = o->y * 0.5f;
+    o->z = o->z * 0.5f;
+    r = o->r * 0.5f;
+    o->r = r;
+    rr = r * r;
+    sc = GD.f10 * 0.00390625f * 0.5f;
+    row = (s32)(o->z - r);
+    if (row < 0) {
+        row = count;
+    }
+    rowEnd = (s32)(o->z + r);
+    if (rowEnd >= GD.h) {
+        rowEnd = GD.h - 1;
+    }
+    colEnd = (s32)(o->x + r);
+    if (colEnd >= GD.w) {
+        colEnd = GD.w - 1;
+    }
+    if (row <= rowEnd) {
+    for (; row <= rowEnd; row++) {
+        col = (s32)(o->x - o->r);
+        if (col < 0) {
+            col = 0;
+        }
+        idx = col + row * GD.w;
+        for (; col <= colEnd; col++) {
+            GridCell30 *cell = &GD.tbl[GD.cells[idx] & 0x1FFF];
+            f32 dz = o->z - (f32)row;
+            f32 dx;
+            f32 dy;
+            f32 dd;
+            two = 2;
+            if (dz > 0.0f) {
+                dz -= 1.0f;
+            }
+            dx = o->x - (f32)col;
+            if (dx > 0.0f) {
+                dx -= 1.0f;
+            }
+            dy = (f32)cell->lo * sc - o->y;
+            if (dy < 0.0f) {
+                dy = o->y - (f32)cell->hi * sc;
+                if (dy < 0.0f) {
+                    dy = 0.0f;
+                }
+            }
+            dd = dx * dx + dy * dy + dz * dz;
+            if (o->pad0[0xE] != 0 || dd < rr) {
+            count++;
+            if (insert == 0) {
+                continue;
+            }
+            {
+                s32 n = D_main_bss_80136FC0;
+                s32 a;
+                if (n == 0xFFFF) {
+                    return count;
+                }
+                a = sopPool[n].prev;
+                if (a != 0xFFFF) {
+                    sopPool[a].next = sopPool[n].next;
+                }
+                {
+                PoolNode *q = &sopPool[n];
+                a = q->next;
+                if (a != 0xFFFF) {
+                    sopPool[a].prev = q->prev;
+                } else {
+                    D_main_bss_80136FC0 = sopPool[n].prev;
+                }
+                }
+                a = GD.heads[idx];
+                if (a != 0xFFFF) {
+                    a &= 0x7FFF;
+                    while (sopPool[a].kind != 2) {
+                        register s32 b asm("$2") = sopPool[a].prev;
+                        if (b == 0xFFFF) {
+                            sopPool[a].prev = n;
+                            sopPool[n].next = a;
+                            a = 0xFFFF;
+                            sopPool[n].prev = a;
+                            break;
+                        }
+                        a = b;
+                    }
+                    if (a != 0xFFFF) {
+                        sopPool[n].next = sopPool[a].next;
+                        if (sopPool[n].next != 0xFFFF) {
+                            sopPool[sopPool[a].next].prev = n;
+                        } else {
+                            GD.heads[idx] = n;
+                        }
+                        sopPool[n].prev = a;
+                        sopPool[a].next = n;
+                    }
+                } else {
+                    sopPool[n].next = a;
+                    sopPool[n].prev = a;
+                    GD.heads[idx] = n;
+                }
+                sopPool[n].kind = two;
+                sopPool[n].idx = idx;
+                sopPool[n].obj = o;
+            }
+            }
+            idx++;
+        }
+    }
+    }
+    if (insert == 0) {
+    o->x = o->x + o->x;
+    o->y = o->y + o->y;
+    o->z = o->z + o->z;
+    o->r = o->r + o->r;
+    }
+    return count;
+}
 
 typedef struct {
     f32 x;
