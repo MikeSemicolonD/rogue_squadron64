@@ -2393,7 +2393,219 @@ s32 startNoteOnVoice(u32 key, u16 a1, s32 a2, u8 a3, u8 a4, u8 a5, u8 a6, u16 a7
     return -1;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/832A0", applyNoteEventToGroup);
+extern u8 agV[] __asm__("D_main_8013D880");
+extern u32 agNextId __asm__("D_main_bss_8013ACF8");
+extern u8 *agHead __asm__("D_main_bss_8013AF00");
+extern u8 *agFree __asm__("D_main_bss_8013AF04");
+static __inline__ u8 *bsrchAG(u8 *key, u8 *base, s32 n, s32 size, s32 (*cmp)(u8 *, u8 *)) {
+    s32 lo, hi, mid, r;
+    u8 *p;
+    if (n != 0) {
+        lo = 1;
+        hi = n;
+        do {
+            mid = (lo + hi) >> 1;
+            p = base + size * (mid - 1);
+            r = cmp(key, p);
+            if (r == 0) {
+                return p;
+            }
+            if (r < 0) {
+                hi = mid - 1;
+            } else {
+                lo = mid + 1;
+            }
+        } while (hi >= lo);
+    }
+    return 0;
+}
+static __inline__ s32 lookupAG(s16 key, u16 *out) {
+    u8 *p;
+    D_main_bss_8013AC7C = key;
+    p = bsrchAG(D_main_bss_8013AC78, D_main_bss_80148450, D_main_bss_8013AF08, 8, compareHalfwordAtOffset4_v3);
+    D_main_bss_8013AC80 = p;
+    if (p != 0) {
+        *out = *(u16 *)(p + 6);
+        return *(s32 *)D_main_bss_8013AC80;
+    }
+    return 0;
+}
+static __inline__ u8 getChByteAltAG(u8 a, u8 b) {
+    if (b != 0xFF) {
+        return D_main_bss_801483D0[b][a];
+    }
+    return D_main_bss_80142018[a];
+}
+static __inline__ s32 findVoiceForNoteAG(u8 note, u8 a, u8 b) {
+    s32 r;
+
+    if (a != 0xFF && getChByteAltAG(a, b) != 0) {
+        r = findActiveVoiceByKeyPairFV(note & 0x7F, a, b);
+        if (r != -1) {
+            return r;
+        }
+    }
+    return -1;
+}
+static __inline__ u32 agAlloc(u8 *v) {
+    register u32 id asm("$7");
+    u32 k;
+    u32 n;
+    register u8 *a2 asm("$5");
+    register u8 *t0 asm("$6");
+    u8 *a1;
+    u8 *t;
+    register u32 ret asm("$22");
+    do {
+        n = agNextId;
+        agNextId = n + 1;
+        id = n;
+    } while (n == -1);
+    a2 = agHead;
+    t0 = 0;
+    while (a2 != 0) {
+        k = *(u32 *)(a2 + 8);
+        if (id < k) {
+            break;
+        }
+        if (k == id) {
+            do {
+                n = agNextId;
+                agNextId = n + 1;
+            } while (n == -1);
+            id = n;
+        }
+        t0 = a2;
+        a2 = *(u8 **)a2;
+    }
+    a1 = agFree;
+    ret = -1;
+    if (a1 != 0) {
+        t = *(u8 **)a1;
+        agFree = t;
+        if (t != 0) {
+            *(s32 *)(t + 4) = 0;
+        }
+        if (t0 == 0) {
+            agHead = a1;
+        } else {
+            *(u8 **)t0 = a1;
+        }
+        *(u8 **)(a1 + 4) = t0;
+        *(u8 **)a1 = a2;
+        if (a2 != 0) {
+            *(u8 **)(a2 + 4) = a1;
+        }
+        *(u32 *)(a1 + 8) = id;
+        ret = id;
+        *(s32 *)(a1 + 0xC) = *(s32 *)(v + 0x64);
+        *(u8 **)(v + 0x18) = a1;
+    }
+    return ret;
+}
+typedef struct { u16 h0; u8 b2; u8 b3; s8 b4; u8 b5; s16 h6; u8 b8; u8 pad[3]; } AgEnt;
+s32 applyNoteEventToGroup(u32 key, u16 a1, u8 note, u8 vel, u8 a4, u8 a5, u8 a6, u16 a7, u16 a8, u8 a9) {
+    u16 cnt;
+    AgEnt *e;
+    AgEnt *tbl;
+    s32 ret = -1;
+    s32 prev;
+    s32 i;
+    s32 n;
+    s32 r;
+    s32 v4;
+    u8 v2;
+    u32 k2;
+    s32 kk;
+    register u32 h0 asm("$2");
+
+    tbl = (AgEnt *)lookupAG(key >> 16, &cnt);
+    if (tbl != NULL) {
+        for (i = 0; i < cnt; i++) {
+            e = &tbl[i];
+            if (e->h0 == 0xFFFF) {
+                continue;
+            }
+            if ((note & 0x7F) < e->b2) {
+                continue;
+            }
+            if (e->b3 < (note & 0x7F)) {
+                continue;
+            }
+            n = (note & 0x7F) + e->b4;
+            {
+                s32 t2;
+                if (n < 0x80) {
+                    t2 = (n < 0) ? 0 : n;
+                } else {
+                    t2 = 0x7F;
+                }
+                n = t2;
+            }
+            {
+                s32 r1 = findVoiceForNoteAG(n, a5, a6);
+                if (r1 != -1) {
+                    return r1;
+                }
+            }
+            if (!(e->b8 & 0x80)) {
+                s32 t0;
+                v4 = e->b8 - 0x40;
+                v4 += a4;
+                if (v4 >= 0) {
+                    if (v4 < 0x80) {
+                        t0 = v4;
+                    } else {
+                        t0 = 0x7F;
+                    }
+                } else {
+                    t0 = 0;
+                }
+                v4 = t0;
+            } else {
+                v4 = 0x80;
+            }
+            v2 = (vel * e->b5) / 127;
+            {
+                s32 t3;
+                kk = (key >> 8) & 0xFF;
+                kk += e->h6;
+                if (kk < 0x100) {
+                    t3 = (kk < 0) ? 0 : kk;
+                } else {
+                    t3 = 0xFF;
+                }
+                k2 = key & 0xFF;
+                t3 <<= 8;
+                k2 |= t3;
+                h0 = e->h0;
+                k2 |= h0 << 16;
+            }
+            if (h0 & 0xC000) {
+                continue;
+            }
+            __asm__("" :: "r"(kk));
+            if (ret == -1) {
+                prev = startNoteOnVoice(k2, a1, (u8)(n | (note & 0x80)), v2, v4, a5, a6, a7, a8, 0, a9);
+                if (prev != -1) {
+                    ret = agAlloc(agV + (prev & 0xFF) * 0x17C);
+                }
+            } else {
+                r = startNoteOnVoice(k2, a1, (u8)(n | (note & 0x80)), v2, v4, a5, a6, a7, a8, 0, a9);
+                if (r != -1) {
+                    s32 o;
+                    o = (prev & 0xFF) * 0x17C;
+                    *(s32 *)(agV + 0x10 + o) = r;
+                    o = (r & 0xFF) * 0x17C;
+                    *(s32 *)(agV + 0x14 + o) = prev;
+                    prev = r;
+                }
+            }
+        }
+        return ret;
+    }
+    return ret;
+}
 
 s32 applyNoteEventToGroupDS(u32, u16, u8, u8, u8, u8, u8, u16, u16, u8) __asm__("applyNoteEventToGroup");
 static __inline__ u8 getChByteAltDS(u8 a, u8 b) {
