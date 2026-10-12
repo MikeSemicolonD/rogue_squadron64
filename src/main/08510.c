@@ -4198,7 +4198,232 @@ void setRenderViewScaleFloat(f32 arg0) {
     D_main_bss_8011A840 = arg0;
 }
 
-INCLUDE_ASM("asm/nonmatchings/main/08510", buildAndRegisterDefaultMaterial);
+typedef struct { s32 w[3]; } W3;
+extern volatile u8 vA89D __asm__("D_main_bss_8011A89D");
+extern volatile u8 vA89E __asm__("D_main_bss_8011A89E");
+extern struct D_main_bss_8011A444 *D_main_bss_8010E8A8;
+extern struct D_main_bss_8011A444 *D_main_bss_801143AC;
+extern struct D_main_bss_8011A444 *D_main_bss_801163B4;
+extern void *rs_malloc_l() __asm__("rs_malloc");
+extern void rs_memset();
+extern void initTextureLUTAndAllocBuffers();
+extern u16 D_main_bss_8011A8B4;
+extern s32 D_main_bss_8011A844;
+extern s32 D_main_bss_8011A84C;
+extern s32 D_main_bss_8011A850;
+extern s32 D_main_bss_8011A854;
+extern u8 D_main_bss_8011A860_l[2] __asm__("D_main_bss_8011A860");
+extern s8 D_main_bss_8011A862;
+extern s8 D_main_bss_8011A863;
+extern s8 D_main_bss_8011A864;
+extern s8 D_main_bss_8011A865;
+extern s8 D_main_bss_8011A866;
+extern s8 D_main_bss_8011A867;
+extern s8 D_main_bss_8011A868;
+extern s32 bmA_11A8BC __asm__("D_main_bss_8011A8BC");
+extern s32 D_main_bss_8011A890;
+extern s32 D_main_bss_8011A894;
+extern s32 D_main_bss_8011A8F0;
+extern u8 D_main_801132C0[];
+extern u8 D_main_bss_80113242[];
+extern s16 bmA_1142C0 __asm__("D_main_bss_801142C0");
+extern s8 D_main_bss_801142C2;
+extern s32 D_main_bss_801163C8[];
+extern s32 bmA_11A4B0[] __asm__("D_main_bss_8011A4B0");
+extern s32 bmA_11A458[] __asm__("D_main_bss_8011A458");
+extern s32 D_main_bss_8011A4A0[];
+extern s32 D_main_bss_8011A468[];
+
+extern u8 aA899[] __asm__("D_main_bss_8011A899");
+extern u8 aA454[] __asm__("D_main_bss_8011A454");
+extern u8 aA870[] __asm__("D_main_bss_8011A870");
+extern u8 aA872[] __asm__("D_main_bss_8011A872");
+extern u8 aA873[] __asm__("D_main_bss_8011A873");
+extern u8 aA874[] __asm__("D_main_bss_8011A874");
+extern u8 aA875[] __asm__("D_main_bss_8011A875");
+extern s32 aA858[] __asm__("D_main_bss_8011A858");
+extern u8 aA86C[] __asm__("D_main_bss_8011A86C");
+extern u8 aA86D[] __asm__("D_main_bss_8011A86D");
+extern u8 aA86E[] __asm__("D_main_bss_8011A86E");
+extern f32 aA878[] __asm__("D_main_bss_8011A878");
+extern f32 aA87C[] __asm__("D_main_bss_8011A87C");
+extern u8 aA898[] __asm__("D_main_bss_8011A898");
+extern u8 aA88C[] __asm__("D_main_bss_8011A88C");
+extern s32 aA85C[] __asm__("D_main_bss_8011A85C");
+extern s32 aA8C4[] __asm__("D_main_bss_8011A8C4");
+extern s32 aGsp[] __asm__("gspTask");
+extern s32 s42C4 __asm__("D_main_bss_801142C4");
+extern volatile u32 vA8B8 __asm__("D_main_bss_8011A8B8");
+extern volatile u8 wA871 __asm__("D_main_bss_8011A871");
+extern volatile u8 wA89B __asm__("D_main_bss_8011A89B");
+extern volatile u8 wA89F __asm__("D_main_bss_8011A89F");
+extern volatile u8 wA89C __asm__("D_main_bss_8011A89C");
+u8 bdmImpl(s16 arg0, s16 arg1, s16 arg2, s16 arg3, u16 arg4, s32 *arg5, s32 arg6, u32 arg7, u32 arg8, s32 *arg9, s32 arg10, s32 arg11, s32 arg12, s32 arg13, u32 arg14, u8 arg15, u16 arg16, u16 arg17) __asm__("buildAndRegisterDefaultMaterial");
+u8 bdmImpl(s16 arg0, s16 arg1, s16 arg2, s16 arg3, u16 arg4, s32 *arg5, s32 arg6, u32 arg7, u32 arg8, s32 *arg9, s32 arg10, s32 arg11, s32 arg12, s32 arg13, u32 arg14, u8 arg15, u16 arg16, u16 arg17) {
+    struct { struct material_entry m; u32 extra[3]; } matw;
+#define mat matw.m
+    u8 temp;
+    u32 u;
+    u32 *cur;
+    u32 *end;
+    u32 *pc;
+    u8 j;
+    s32 n1;
+    s32 n2;
+    u32 *prevn;
+    u8 *pa;
+    u8 *pb;
+    s32 t9;
+    u8 r89;
+    register s32 k71 asm("$3");
+
+    D_main_bss_8011A838 = arg0;
+    D_main_bss_8011A83C = arg1;
+    D_main_bss_8011A844 = arg1 + arg2 + arg3;
+    D_main_bss_8011A848 = arg4;
+    if (!(arg14 & 0x200)) {
+        D_main_bss_8011A84C = arg6;
+    } else {
+        D_main_bss_8011A84C = 0;
+    }
+    pa = D_main_bss_8011A860_l;
+    pb = pa + 1;
+    if (!(arg14 & 1)) {
+        pa[1] = arg14 & 2;
+    } else {
+        pa[1] = 1;
+    }
+    D_main_bss_8011A862 = (arg14 >> 2) & 1;
+    D_main_bss_8011A868 = (arg14 >> 5) & 1;
+    D_main_bss_8011A866 = (arg14 >> 3) & 1;
+    D_main_bss_8011A867 = (arg14 >> 4) & 1;
+    D_main_bss_8011A863 = (arg14 >> 6) & 1;
+    D_main_bss_8011A864 = (arg14 >> 7) & 1;
+    temp = *pb;
+    D_main_bss_8011A865 = (arg14 >> 8) & 1;
+    D_main_bss_8011A850 = arg10;
+    D_main_bss_8011A854 = arg10 + arg11;
+    D_main_bss_8011A8B4 = arg16;
+    *pb = temp;
+    *pa = temp;
+    D_main_bss_8011A840 = 1.3333334f;
+    D_main_bss_8011A444 = rs_malloc_l(arg16 * 4, 0, pa, pb);
+    if (!(arg14 & 0x1000)) {
+        D_main_bss_801163B4 = rs_malloc_l(D_main_bss_8011A8B4 * 0x10, 0);
+    } else {
+        D_main_bss_801163B4 = NULL;
+    }
+    if (!(arg14 & 0x800)) {
+        D_main_bss_801143AC = rs_malloc_l(D_main_bss_8011A8B4 * 0x10, 0);
+    } else {
+        D_main_bss_801143AC = NULL;
+    }
+    {
+        u16 *cnt = &D_main_bss_8011A8B4;
+        for (n1 = 0; n1 < *cnt; n1++) {
+            D_main_bss_8011A444[n1].material_type = 0;
+        }
+    }
+    mat.material_type = 2;
+    *(W3 *)mat.material_name = *(W3 *)"mat_default";
+    if ((registerHmtTextureInTable(&matw.m, NULL, 1) & 0xFFFF) == 0xFFFF) {
+        return 0;
+    }
+    pc = &D_main_bss_8011A8B8;
+    *pc = (D_main_bss_8011A8B4 + 1) * 2;
+    bmA_11A8BC = (*pc / 255) + 2;
+    D_main_bss_8010E8A8 = rs_malloc_l((D_main_bss_8011A8B4 + 1) * 8, 0);
+    D_main_bss_8010E8AC = rs_malloc_l(*pc, 0);
+    aA899[0] = 0;
+    D_main_bss_8011A8C0[0] = ((volatile s32 *)arg9)[0];
+    t9 = ((volatile s32 *)arg9)[1];
+    k71 = arg14 >> 9;
+    k71 ^= 1;
+    k71 &= 1;
+    vA89D = 0;
+    r89 = vA89D;
+    s42C4 = 0;
+    aA454[0] = 1;
+    aA870[0] = 1;
+    aA872[0] = 1;
+    aA873[0] = 0xFF;
+    aA874[0] = 0xFF;
+    aA875[0] = 0xFF;
+    wA871 = k71;
+    aA858[0] = 0x40;
+    wA89B = r89;
+    vA89E = 0;
+    aA86C[0] = 0;
+    aA86D[0] = 0;
+    aA86E[0] = 0;
+    aA878[0] = 400.0f;
+    aA87C[0] = 720.0f;
+    aA898[0] = 0;
+    aA88C[0] = 0;
+    aA85C[0] = 0;
+    aGsp[10] = arg12;
+    aGsp[11] = arg12 + (arg13 - 0x10);
+    aA8C4[0] = t9;
+    wA89C = vA89E;
+    wA89F = 0;
+    u = 0;
+    if (D_main_bss_8011A8B8 != 0) {
+        do {
+            ((u8 *)D_main_bss_8010E8AC)[u] = 0;
+            u++;
+        } while (u < vA8B8);
+    }
+    D_main_bss_80114380 = 0;
+    __asm__("" :: "r"(arg9));
+    u = 0;
+    __asm__("" :: "r"(arg13));
+    do {
+        D_main_bss_8010F8B0[u] = 0;
+        u++;
+    } while (u < 0x400);
+    D_main_bss_801143A4 = 0;
+    initTextureLUTAndAllocBuffers(arg17, arg17);
+    cur = (u32 *)arg7;
+    end = (u32 *)(arg7 + (arg8 / 264) * 0x108);
+    prevn = NULL;
+    if (cur < end) {
+        do {
+            u32 *nx;
+            cur[1] = (u32)prevn;
+            prevn = cur;
+            __asm__("" : "=r"(prevn) : "0"(prevn));
+            nx = (u32 *)((u8 *)prevn + 0x108);
+            prevn[0] = (u32)nx;
+            __asm__ volatile("");
+            __asm__("" : "=r"(cur) : "0"(nx));
+        } while (cur < end);
+    }
+    cur[-0x42] = 0;
+    D_main_bss_801163B0 = (struct DisplayListBuffer *)arg7;
+    for (j = 0; j < 2; j++) {
+        D_main_bss_801163C8[j] = 0;
+        bmA_11A4B0[j] = 0;
+        bmA_11A458[j] = 0;
+        D_main_bss_8011A4A0[j] = 0;
+        D_main_bss_8011A468[j] = 0;
+    }
+    D_main_bss_80113230 = 0;
+    D_main_bss_8011A894 = 1;
+    rs_memset(D_main_801132C0, 0, 0x1000);
+    n2 = 0x7C;
+    do {
+        *(s16 *)(D_main_bss_80113242 + n2) = 0;
+        n2 -= 4;
+    } while (n2 >= 0);
+    bmA_1142C0 = 1;
+    D_main_bss_801142C2 = 0;
+    D_main_bss_8011A890 = 0;
+    D_main_bss_8011A8F0 = -1;
+    D_main_bss_8011A900 = -1;
+    D_main_bss_8011A904 = 0;
+    D_main_bss_8011A89A = 0;
+    return 1;
+}
 
 extern void clearPendingViChanges(void);
 extern void clearPostSwapPendingFlags(void);
