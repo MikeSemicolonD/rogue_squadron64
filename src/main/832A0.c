@@ -1799,9 +1799,9 @@ u32 allocVoiceHandleNode(u8 *v) {
     register u32 id asm("$7");
     u32 k;
     u32 n;
-    register u8 *a2 asm("$6");
+    u8 *a2;
     register u8 *t0 asm("$8");
-    register u8 *a1 asm("$5");
+    u8 *a1;
     u8 *t;
     register u32 ret asm("$2");
     do {
@@ -1903,10 +1903,10 @@ extern u8 gSvMaxGroupB __asm__("D_main_bss_80141AD1");
 static __inline__ s32 svLowerAS(s32 a, s32 b) {
     s32 r;
     register u32 ta __asm__("$2");
-    register u32 tb __asm__("$3");
+    u32 tb;
     register u32 pa __asm__("$2");
     u32 pb;
-    register s32 o __asm__("$4");
+    s32 o;
     register s32 t __asm__("$2");
     t = b * 95;
     o = t << 2;

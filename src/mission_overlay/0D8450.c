@@ -1515,7 +1515,6 @@ void tdImpl(TdObj *o, s32 a1, s32 a2, s32 a3) {
     register s32 q2 asm("$16") = a2;
     if (q3 == 0 && (u16)q2 == (u16)getPlayerField2(0)) {
         f32 *c;
-        __asm__("" :: "r"(q1));
         __asm__("" :: "r"(q2));
         c = getCraftRecordByIdx(0);
         v[0] = c[0] - o->x;

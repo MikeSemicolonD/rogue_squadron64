@@ -168,7 +168,7 @@ void computeNpcOrientationFromAimVectors(void *arg0, f32 dt) {
     f32 v90[3];
     f32 meshbuf[12];
     f32 deg;
-    register f32 ang asm("$f20");
+    f32 ang;
     f32 lim;
     f32 a;
     f32 b;

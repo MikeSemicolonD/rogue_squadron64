@@ -123,7 +123,7 @@ void buildOrientationFromPosAndAngles(Mat4x3 m, Vec3f pos, Vec3f ang) {
 extern f32 floatModulo(f32, f32);
 void stepAngleTowardTarget(f32 *cur, f32 *tgt, f32 t, f32 *out) {
     register f32 a asm("$f12");
-    register f32 b asm("$f4");
+    f32 b;
     register f32 b1 asm("$f4");
     register f32 q asm("$f0");
     f32 a1, sum, r, d;

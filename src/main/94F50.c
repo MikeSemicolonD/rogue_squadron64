@@ -787,7 +787,7 @@ void updateSongTempoTickRate(u32 arg0) {
     struct SNG_unk0C_type *prev;
     u32 budget;
     register u32 lo asm("$2");
-    register s32 neg asm("$16");
+    s32 neg;
 
     D_main_bss_801529C0->unkE6C = D_main_bss_801529C0->unkE68;
     D_main_bss_801529C0->unkE74 = arg0;
