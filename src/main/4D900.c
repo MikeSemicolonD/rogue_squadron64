@@ -1431,10 +1431,10 @@ void updateEffectObjectTransformPieces(void *s3v, s32 arg1, s32 arg2, f32 arg3, 
     u8 *sp34;
     f32 (*tb1)[3];
     f32 (*tb2)[3];
-    register u8 *s4 asm("$20");
+    u8 *s4;
     register u8 *s6 asm("$22");
-    register f32 *s2 asm("$18");
-    register f32 *s0 asm("$16");
+    f32 *s2;
+    f32 *s0;
     u8 *s1;
     register s32 s5 asm("$21");
     register s32 s7 asm("$23");

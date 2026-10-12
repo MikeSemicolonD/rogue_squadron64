@@ -137,7 +137,7 @@ static __inline__ void tsPlayArgs(TSArgs *a, s32 flags) {
 
 void tickActiveSongSlots(void) {
     TSArgs args;
-    register TSArgs *a asm("$4");
+    TSArgs *a;
     TSSlot *s;
     TSSlot *pb;
     TSSlot *t;

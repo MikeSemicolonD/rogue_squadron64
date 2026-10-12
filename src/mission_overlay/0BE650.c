@@ -169,7 +169,7 @@ void nbImpl(NbArg *arg0, f32 dt) {
     f32 sc;
     u16 bits;
     register f32 *tb asm("$16");
-    register NbCfg *cf asm("$17");
+    NbCfg *cf;
 
     c = (NbCraft *)sCraftBytes[arg0->index];
     if (*(u16 *)((s32)sCraftBytes + c->owner * 0x2A0 + 0x180) & 1) {

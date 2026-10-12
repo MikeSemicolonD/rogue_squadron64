@@ -5256,7 +5256,7 @@ void tickAudioChannel(u8 *ch) {
                 register s32 w asm("$2");
                 u = tacW0;
                 {
-                    register u32 b asm("$3") = (u >> 8) & 0xFF;
+                    u32 b = (u >> 8) & 0xFF;
                     register u32 o asm("$2") = b * 0xC;
                     p = ch + o;
                 }

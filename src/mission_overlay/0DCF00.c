@@ -354,7 +354,7 @@ dflt:
         }
     case 4:
         {
-        register u8 *d asm("$16");
+        u8 *d;
         u8 *m;
         d = *(u8 **)(n + 0x44);
         m = *(u8 **)(n + 0x3C) + 0x1C;

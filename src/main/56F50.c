@@ -639,7 +639,7 @@ static __inline__ void avSetLod(u8 *inst, s32 lod) {
     nd = (AvNode *)(inst + (n * 0x4C + 0xC));
     e = (AvEnt *)(inst + 0xC);
     for (i = 0; i < n; i++, e++, src++) {
-        __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
+        __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
         if (*src != NULL) {
             prev = NULL;
             e->head = nd;
@@ -817,7 +817,7 @@ static __inline__ void smSetLod(u8 *inst, s32 lod) {
     nd = (SmNode *)(inst + (n * 0x4C + 0xC));
     e = (SmEnt *)(inst + 0xC);
     for (i = 0; i < n; i++, e++, src++) {
-        __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
+        __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
         if (*src != NULL) {
             prev = NULL;
             e->head = nd;
@@ -1277,7 +1277,7 @@ void setMeshInstanceLodAndRebuildNodes(u8 *inst, s32 lod) {
     nd = (MlNode *)(inst + (n * 0x4C + 0xC));
     e = (MlEnt *)(inst + 0xC);
     for (i = 0; i < n; i++, e++, src++) {
-        __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
+        __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
         if (*src != NULL) {
             prev = NULL;
             e->head = nd;

@@ -4271,7 +4271,7 @@ u8 bdmImpl(s16 arg0, s16 arg1, s16 arg2, s16 arg3, u16 arg4, s32 *arg5, s32 arg6
     u8 *pb;
     s32 t9;
     u8 r89;
-    register s32 k71 asm("$3");
+    s32 k71;
 
     D_main_bss_8011A838 = arg0;
     D_main_bss_8011A83C = arg1;
@@ -4370,9 +4370,7 @@ u8 bdmImpl(s16 arg0, s16 arg1, s16 arg2, s16 arg3, u16 arg4, s32 *arg5, s32 arg6
         } while (u < vA8B8);
     }
     D_main_bss_80114380 = 0;
-    __asm__("" :: "r"(arg9));
     u = 0;
-    __asm__("" :: "r"(arg13));
     do {
         D_main_bss_8010F8B0[u] = 0;
         u++;
@@ -4387,7 +4385,6 @@ u8 bdmImpl(s16 arg0, s16 arg1, s16 arg2, s16 arg3, u16 arg4, s32 *arg5, s32 arg6
             u32 *nx;
             cur[1] = (u32)prevn;
             prevn = cur;
-            __asm__("" : "=r"(prevn) : "0"(prevn));
             nx = (u32 *)((u8 *)prevn + 0x108);
             prevn[0] = (u32)nx;
             __asm__ volatile("");
