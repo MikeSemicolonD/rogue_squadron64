@@ -63,9 +63,8 @@ void rdImpl(u8 *npc, f32 dt) {
                 npc[0xB0] = los;
                 play3DSoundEventVariant(npc + 0x6C, npc, npc + 0x24, 8.0f, 0.1f, 7, 0x4B, los, 0x64, 0x28);
             }
-            { register f32 t asm("$f0") = dt * 30.0f; register f32 l asm("$f2") = *(f32 *)(npc + 0x60) * t; lim = l; }
-            if (lim < ang) {
-                ang = lim;
+            if (*(f32 *)(npc + 0x60) * (dt * 30.0f) < ang) {
+                ang = *(f32 *)(npc + 0x60) * (dt * 30.0f);
             }
             vec3Cross(&axis, &dir, &tgt);
             normalize_vector(&axis);
