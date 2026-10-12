@@ -900,14 +900,13 @@ struct C13C { u8 p[2]; u8 t; u8 q[0x139]; };
 extern f32 D_cinematic_overlay_800B0B30;
 extern u8 D_cinematic_overlay_800A52B4[];
 
-f32 *cinematicSlotDispatcher(u8 *arg0, s32 arg1, void *arg2, f32 arg3) {
+f32 *cinematicSlotDispatcher(u8 *arg0, u8 arg1, void *arg2, f32 arg3) {
     struct { f32 a18, a1C, a20, a24, a28, a2C, a30, a34; f32 q[4]; f32 a48, a4C; } L;
-    register void *a2v asm("$20") = arg2;
     s32 off;
     u8 *b;
     f32 sc;
     u8 tv;
-    u8 *s1 = arg0 + ((arg1 & 0xFF) * 0x4C + 0x13D8);
+    u8 *s1 = arg0 + (arg1 * 0x4C + 0x13D8);
 
     if (s1[0x1F] & 0x40) {
         cinematicSlotUpdate(arg0 + (*(s32 *)(s1 + 0x20) * 0xC + 0x25AC), &D_cinematic_overlay_800B0950[0], arg3, 6.0f, 0);
@@ -942,10 +941,10 @@ f32 *cinematicSlotDispatcher(u8 *arg0, s32 arg1, void *arg2, f32 arg3) {
     L.a30 *= 0.25f;
     if (s1[0x1F] & 0x80) {
         if (!(bytesDiffer(s1, D_cinematic_overlay_800A52B4, 2) & 0xFF)) {
-            L.a48 = D_800AF92C[((struct C13C *)D_cinematic_overlay_800B1900)[arg1 & 0xFF].t].v;
+            L.a48 = D_800AF92C[((struct C13C *)D_cinematic_overlay_800B1900)[arg1].t].v;
         } else {
             f32 t = L.a48 * 0.22222222f;
-            f32 u = D_800AF92C[((struct C13C *)D_cinematic_overlay_800B1900)[arg1 & 0xFF].t].v;
+            f32 u = D_800AF92C[((struct C13C *)D_cinematic_overlay_800B1900)[arg1].t].v;
             L.a48 = t;
             if (u != 0.0f) {
                 L.a48 = t * u;
@@ -954,27 +953,27 @@ f32 *cinematicSlotDispatcher(u8 *arg0, s32 arg1, void *arg2, f32 arg3) {
     } else {
         L.a48 = 1.0f;
     }
-    off = arg1 & 0xFF;
+    off = arg1;
     b = (u8 *)D_cinematic_overlay_800B1900;
     off *= 0x13C;
     *(f32 *)(off + (s32)b + 0x64) = L.a48;
-    setVec3At0x24f(a2v, -L.a28, -L.a2C, -L.a30);
+    setVec3At0x24f(arg2, -L.a28, -L.a2C, -L.a30);
     tv = ((u8 *)D_cinematic_overlay_800B1900)[off + 2];
     if (tv == 0x1A) goto rot;
     if (tv == 0x1B) {
 rot:
         {
-        composeRotationMatrixSlot1(a2v, 180.0f);
+        composeRotationMatrixSlot1(arg2, 180.0f);
         }
     }
     quatFromAxisAngleSafe(L.q, &L.a18, L.a4C);
-    composeQuatToMat3x4(a2v, L.q);
+    composeQuatToMat3x4(arg2, L.q);
     sc = L.a48;
-    applyScaleToMat3x4f(a2v, sc, sc, sc);
-    if (((u8 *)D_cinematic_overlay_800B1900)[(arg1 & 0xFF) * 0x13C + 2] == 0x1B) {
-        applyScaleToMat3x4f(a2v, D_cinematic_overlay_800B0B30, D_cinematic_overlay_800B0B30, D_cinematic_overlay_800B0B30);
+    applyScaleToMat3x4f(arg2, sc, sc, sc);
+    if (((u8 *)D_cinematic_overlay_800B1900)[arg1 * 0x13C + 2] == 0x1B) {
+        applyScaleToMat3x4f(arg2, D_cinematic_overlay_800B0B30, D_cinematic_overlay_800B0B30, D_cinematic_overlay_800B0B30);
     }
-    addVec3At0x24(a2v, L.a28 + D_cinematic_overlay_800B0950[0], L.a2C + D_cinematic_overlay_800B0950[1], L.a30 + D_cinematic_overlay_800B0950[2]);
+    addVec3At0x24(arg2, L.a28 + D_cinematic_overlay_800B0950[0], L.a2C + D_cinematic_overlay_800B0950[1], L.a30 + D_cinematic_overlay_800B0950[2]);
     return D_cinematic_overlay_800B0950;
 }
 
