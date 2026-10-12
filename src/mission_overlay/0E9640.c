@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 f32 fabsf(f32);
 s32 rand(void);
@@ -52,9 +53,9 @@ void runDestructionPhaseSequence(RdObj *obj) {
             pos.y += obj->pos.y;
             pos.z += obj->pos.z;
             scaleVec3ByRandomRange(&dir, 1.0f, 2.0f);
-            __asm__ volatile("abs.s %0, %1" : "=f"(a) : "f"(((f32)(rand() & 0x7F) - 64.0f) / 12.8f)); a += 12.0f;
-            __asm__ volatile("abs.s %0, %1" : "=f"(b) : "f"(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f)); b += 0.6f;
-            __asm__ volatile("abs.s %0, %1" : "=f"(c) : "f"(((f32)(rand() & 0x7F) - 64.0f) / 320.0f)); c += 0.2f; spawnDebris1Npc(&pos, &dir, a, b, c);
+            FABSF(a, ((f32)(rand() & 0x7F) - 64.0f) / 12.8f); a += 12.0f;
+            FABSF(b, ((f32)(rand() & 0x7F) - 64.0f) / 213.33333f); b += 0.6f;
+            FABSF(c, ((f32)(rand() & 0x7F) - 64.0f) / 320.0f); c += 0.2f; spawnDebris1Npc(&pos, &dir, a, b, c);
         }
         spawnSplineWalkerCraft(obj, obj->speed, obj->speed * 1.5f, 0xC);
         break;
@@ -72,9 +73,9 @@ void runDestructionPhaseSequence(RdObj *obj) {
             pos.y += obj->pos.y;
             pos.z += obj->pos.z;
             scaleVec3ByRandomRange(&dir, 1.5f, 4.0f);
-            __asm__ volatile("abs.s %0, %1" : "=f"(a) : "f"(((f32)(rand() & 0x7F) - 64.0f) / 12.8f)); a += 12.0f;
-            __asm__ volatile("abs.s %0, %1" : "=f"(b) : "f"(((f32)(rand() & 0x7F) - 64.0f) / 25.6f)); b += 2.5f;
-            __asm__ volatile("abs.s %0, %1" : "=f"(c) : "f"(((f32)(rand() & 0x7F) - 64.0f) / 320.0f)); c += 0.2f; spawnDebris1Npc(&pos, &dir, a, b, c);
+            FABSF(a, ((f32)(rand() & 0x7F) - 64.0f) / 12.8f); a += 12.0f;
+            FABSF(b, ((f32)(rand() & 0x7F) - 64.0f) / 25.6f); b += 2.5f;
+            FABSF(c, ((f32)(rand() & 0x7F) - 64.0f) / 320.0f); c += 0.2f; spawnDebris1Npc(&pos, &dir, a, b, c);
         }
         spawnSplineWalkerCraft(obj, obj->speed * 6.0f, obj->speed * 10.0f, 0xC);
         break;

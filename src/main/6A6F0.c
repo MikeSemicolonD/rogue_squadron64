@@ -1,9 +1,9 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 INCLUDE_ASM("asm/nonmatchings/main/6A6F0", collideSegmentAgainstObjectNodes);
 
-static __inline__ f32 fsSqrt(f32 x) { f32 r; __asm__ volatile("sqrt.s %0, %1" : "=f"(r) : "f"(x)); return r; }
 f32 *intersectSegmentWithObjectSphere(void *, void *, f32 *, f32 *);
 s32 collideSegmentAgainstObjectNodes(void *, f32 *, f32 *, f32 *);
 void normalize_vector(void *);
@@ -26,8 +26,8 @@ s32 findSegmentObjectSphereHit(u8 **obj, f32 *p, f32 *d, f32 *out) {
                 aa = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
                 b2 = b * b;
                 dd = s[3] - dd + b2 / aa;
-                len = fsSqrt(aa);
-                q = fsSqrt(dd);
+                len = sqrtfInline(aa);
+                q = sqrtfInline(dd);
                 b = b / len - q;
                 out[6] = b / len;
                 out[0] = p[0] + d[0] * out[6];
@@ -37,8 +37,8 @@ s32 findSegmentObjectSphereHit(u8 **obj, f32 *p, f32 *d, f32 *out) {
                 out[4] = s[1] - out[1];
                 out[5] = s[2] - out[2];
                 normalize_vector(&out[3]);
-                out[7] = fsSqrt((d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) * out[6] * out[6]);
-                t = fsSqrt(s[3]);
+                out[7] = sqrtfInline((d[0] * d[0] + d[1] * d[1] + d[2] * d[2]) * out[6] * out[6]);
+                t = sqrtfInline(s[3]);
                 out[8] = s[3] * 4.1887903f * t;
                 ((s32 *)out)[9] = 0;
             }
@@ -51,7 +51,6 @@ s32 findSegmentObjectSphereHit(u8 **obj, f32 *p, f32 *d, f32 *out) {
     return 0;
 }
 
-static __inline__ f32 ppSqrt(f32 x) { f32 r; __asm__ volatile("sqrt.s %0, %1" : "=f"(r) : "f"(x)); return r; }
 f32 *intersectSegmentWithObjectSphere(void *, void *, f32 *, f32 *);
 
 f32 projectPointOntoObjectSphereHit(u8 **obj, f32 *p, f32 *d) {
@@ -72,8 +71,8 @@ f32 projectPointOntoObjectSphereHit(u8 **obj, f32 *p, f32 *d) {
         aa = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
         b2 = b * b;
         dd = s[3] - dd + b2 / aa;
-        len = ppSqrt(aa);
-        q = ppSqrt(dd);
+        len = sqrtfInline(aa);
+        q = sqrtfInline(dd);
         b = b / len - q;
         r = b / len;
     }

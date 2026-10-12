@@ -3,6 +3,7 @@
 
 #include "level_objectives.h"
 #include "mission_overlay/0F3E90.h"
+#include "rs_math.h"
 
 typedef struct { s32 unk0; u8 pad[0x20]; } ModelAnimSlot24;
 extern ModelAnimSlot24 D_mission_overlay_8010C4A0[];
@@ -213,7 +214,7 @@ void computeRandomizedOrientationFrame(f32 *arg0, RandOrient *o, f32 (*m)[3], f3
                 f32 q = ((f32)(rand() & 0x7F) - 64.0f) / 160.0f;
                 f32 ab;
                 register f32 k asm("$f4") = 0.1f;
-                __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(q));
+                FABSF(r, q);
                 r = r + k;
             }
             if (o->f90 > 0.0f) {
@@ -264,7 +265,7 @@ void computeRandomizedOrientationFrame(f32 *arg0, RandOrient *o, f32 (*m)[3], f3
             o->fA4 = 0.0f;
             o->fAC = c98;
             x = o->f9C - c98;
-            __asm__ volatile("abs.s %0, %1" : "=f"(d) : "f"(x));
+            FABSF(d, x);
             if (d > 180.0f) {
                 d = 360.0f - d;
             }
@@ -925,9 +926,9 @@ void executeActorType2Effect(void *arg0, f32 dt) {
                 f32 a;
                 f32 ab;
                 register f32 x asm("$f0");
-                __asm__ volatile("abs.s %0, %1" : "=f"(ab) : "f"(((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->timeRange)));
+                FABSF(ab, ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->timeRange));
                 s->timer = s->timeBase + ab;
-                __asm__ volatile("abs.s %0, %1" : "=f"(ab) : "f"(((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->angRange)));
+                FABSF(ab, ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->angRange));
                 a = s->angBase + ab;
                 if (rand() & 1) {
                     x = a;
@@ -1114,9 +1115,9 @@ void executeActorType3Effect(void *arg0, f32 dt) {
                 f32 a;
                 f32 ab;
                 register f32 x asm("$f0");
-                __asm__ volatile("abs.s %0, %1" : "=f"(ab) : "f"(((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->timeRange)));
+                FABSF(ab, ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->timeRange));
                 s->timer = s->timeBase + ab;
-                __asm__ volatile("abs.s %0, %1" : "=f"(ab) : "f"(((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->angRange)));
+                FABSF(ab, ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / s->angRange));
                 a = s->angBase + ab;
                 if (rand() & 1) {
                     x = a;

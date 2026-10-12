@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 typedef struct { f32 x, y, z; } RdV3;
 typedef union { RdV3 v; f32 w[4]; } RdV4;
@@ -317,13 +318,13 @@ s32 npcRadarDishUpdate(u8 *arg0, s32 arg1, u8 *arg2) {
                     sp38[2] += sp28[2];
                     scaleVec3ByRandomRange(p48, 1.5f, 3.0f);
                     c = ((f32)(rand() & 0x7F) - 64.0f) / 12.8f;
-                    __asm__ volatile("abs.s %0, %1" : "=f"(a) : "f"(c));
+                    FABSF(a, c);
                     a += 12.0f;
                     c = ((f32)(rand() & 0x7F) - 64.0f) / 42.666668f;
-                    __asm__ volatile("abs.s %0, %1" : "=f"(b) : "f"(c));
+                    FABSF(b, c);
                     b += 2.5f;
                     c = ((f32)(rand() & 0x7F) - 64.0f) / 320.0f;
-                    __asm__ volatile("abs.s %0, %1" : "=f"(d3) : "f"(c));
+                    FABSF(d3, c);
                     spawnDebris1Npc(p38, p48, a, b, d3 + 0.2f);
                     i++;
                 } while (i < cnt);

@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 extern u8 ssCraftBytes[][0x2A0] __asm__("D_main_bss_80137DBC");
 extern struct { u8 pad[0xC]; u32 pl[3]; u32 flags; } ssGs __asm__("gGameSettings");
@@ -537,7 +538,7 @@ void ctTick(CtObj *o, f32 dt) __asm__("tickCinematicEffectObject");
 
 static __inline__ f32 ctAbs(f32 x) {
     f32 r;
-    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+    FABSF(r, x);
     return r;
 }
 

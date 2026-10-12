@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 typedef struct { f32 x, y, z; } RseV3;
 typedef struct RseCtx {
@@ -105,7 +106,6 @@ s32 rseImpl(RseNpc *npc, u16 cmd, void *arg) {
     return 1;
 }
 
-#define VABS(x) ({ f32 _x = (x); f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); _r; })
 typedef struct { f32 x, y, z; } V3;
 typedef struct ColorFxCtx {
     struct ColorFxCtx *next;
@@ -194,7 +194,7 @@ s32 randomlyScaledColoredEffectNpcHandler(ColorFxNpc *npc, u16 cmd, void *arg) {
             c->f12 = *(u16 *)D_main_bss_80139910;
             break;
         }
-        s = (VABS(((f32)(rand() & 0x7F) - 64.0f) * 0.00390625f) + 0.625f) * p->f8;
+        s = (FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.00390625f) + 0.625f) * p->f8;
         c->f48 = s;
         c->f4C = p->fC * 0.875f - c->f48;
         c->f20 = c->f24 = c->f48;

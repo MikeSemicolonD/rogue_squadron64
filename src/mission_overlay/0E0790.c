@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E0790", D_mission_overlay_800A7F60);
 
@@ -855,7 +856,7 @@ u8 sfImpl(SfObj *s, f32 dt) {
     f32 h;
 
     ang = constMinusSinfApprox(vec3Dot(up, s->fwd.v)) * 57.29578f;
-    __asm__ volatile("abs.s %0, %1" : "=f"(h) : "f"(ang));
+    FABSF(h, ang);
     if (h > 1.0f) {
         vec3Cross(axis, s->fwd.v, up);
         if (vec3Length(axis) > 1e-5f) {
@@ -1103,7 +1104,6 @@ void setObjectFlagBit4(void *);
 void setType1ActorParams(s32, s32, u8, u8, u8, s32);
 void updateType1AnimRamp(s32, s32, s32, s32, s32);
 void dispatchSlotAction5IfActive(void *, void *);
-#define TCABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 
 s32 npcTrainCarUpdate(u8 *arg0, u16 action, u8 *arg2) {
     TcObj *s2 = *(TcObj **)(arg0 + 4);
@@ -1214,7 +1214,7 @@ s32 npcTrainCarUpdate(u8 *arg0, u16 action, u8 *arg2) {
         createAndInitObject(&s2->obj, 0xE0, arg0, applyCraftAnimAndDetailParams, 0);
         {
             TcSub *sb1 = *(TcSub **)(s2->obj + 0x1A8);
-            sb1->phase = TCABSF(((f32)(rand() & 0x7F) - 64.0f) / 320.0f);
+            sb1->phase = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 320.0f);
             sb1->on0 = 0;
             sb1->on1 = 0;
             sb1->rate = 1.0f;
@@ -1363,7 +1363,7 @@ s32 npcTrainCarUpdate(u8 *arg0, u16 action, u8 *arg2) {
                         sp[0] = s2->pos.x + ((f32)(rand() & 0x7F) - 64.0f) / 640.0f;
                         sp[1] = s2->pos.y - 0.6f;
                         sp[2] = s2->pos.z + ((f32)(rand() & 0x7F) - 64.0f) * 0.015625f;
-                        spawnNpcType0xAFromTemplate(sp, TCABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f) + 1.0f);
+                        spawnNpcType0xAFromTemplate(sp, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f) + 1.0f);
                         play3DSoundEvent(0, s2, &s2->vel, 24.0f, 0.4f, 0, 0x2A, 0x6E, 0x50);
                     } else {
                         spawnNpcType0xAFromTemplate(s2, s2->radius * 3.0f);
@@ -1404,9 +1404,9 @@ s32 npcTrainCarUpdate(u8 *arg0, u16 action, u8 *arg2) {
                         sp[1] += s2->pos.y;
                         sp[2] += s2->pos.z;
                         scaleVec3ByRandomRange(&sp[4], 3.0f, 4.0f);
-                        a = TCABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.03125f * 5.0f) + 20.0f;
-                        b = TCABSF(((f32)(rand() & 0x7F) - 64.0f) / 25.6f) + 2.0f;
-                        c = TCABSF(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f;
+                        a = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.03125f * 5.0f) + 20.0f;
+                        b = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 25.6f) + 2.0f;
+                        c = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f;
                         spawnDebris1Npc(sp, &sp[4], a, b, c);
                         k++;
                     }

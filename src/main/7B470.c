@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 void *rs_malloc(s32, s32);
 
@@ -92,8 +93,6 @@ typedef struct {
     TmLight lights[4];
 } TmObj;
 
-static __inline__ f32 tmSqrt(f32 x) { f32 r; __asm__ volatile("sqrt.s %0, %1" : "=f"(r) : "f"(x)); return r; }
-
 void tmImpl(TmObj *o) __asm__("transformMeshVerticesForNpc");
 void tmImpl(TmObj *o) {
     u32 **dst;
@@ -122,7 +121,7 @@ void tmImpl(TmObj *o) {
             if (L->fl & 2) {
                 s32 x = v[0];
                 s32 z = v[2];
-                d = tmSqrt((f32)(x * x + z * z));
+                d = sqrtfInline((f32)(x * x + z * z));
                 if (0.0f < d) {
                     d = (f32)(L->h18 * x + L->h1C * z) * 256.0f / d;
                 }
@@ -212,7 +211,7 @@ void npcDeformingMeshUpdate(u8 *arg0, f32 dt) {
                 rotateVec3ByMat3x3(m, v, o);
                 {
                     f32 a = o[0];
-                    __asm__ volatile("sqrt.s %0, %1" : "=f"(len) : "f"(a * a + o[1] * o[1] + o[2] * o[2]));
+                    SQRTF(len, a * a + o[1] * o[1] + o[2] * o[2]);
                     len = len * 0.00390625f;
                     if (zero < len) {
                         S16(p, -8) = a / len;

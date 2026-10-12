@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 typedef struct {
     s32 name;
@@ -234,7 +235,7 @@ extern void tickHangarDisplayItemAnimations(HvState *, u8, f32);
 
 static __inline__ f32 hvAbs(f32 x) {
     f32 r;
-    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+    FABSF(r, x);
     return r;
 }
 

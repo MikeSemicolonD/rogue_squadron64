@@ -101,7 +101,7 @@ D_main_8003ADB8:
 .section .text");
 static __inline__ f32 absOR(f32 x) {
     f32 r;
-    __asm__ volatile("abs.s %0, %1" : "=&f"(r) : "f"(x));
+    FABSF(r, x);
     return r;
 }
 void orthonormalizeFrameAndSnapToZero(Mat4x3 arg0) {

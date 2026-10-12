@@ -3,6 +3,7 @@
 
 #include "main/08510.h"
 #include "main/1EE30.h"
+#include "rs_math.h"
 
 // Interim BSS externs
 extern struct DisplayListBuffer *D_main_bss_801163B0;

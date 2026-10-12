@@ -205,7 +205,7 @@ extern void updateAudioListenerPosFromPlayer(void);
 void pvImpl(PvObj *o, f32 dt) __asm__("updatePlayerVehicleByControlMode");
 static __inline__ f32 pvAbs(f32 x) {
     f32 r;
-    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+    FABSF(r, x);
     return r;
 }
 
@@ -567,7 +567,7 @@ void applyPlayerVehicleStateUpdate(u8 *arg0);
 
 static __inline__ f32 alAbs(f32 x) {
     f32 r;
-    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+    FABSF(r, x);
     return r;
 }
 
@@ -814,7 +814,7 @@ void buildTransformMatrixFromEulerAngles(void *, f32, f32, f32);
 void mat3x4Multiply(void *, void *, void *);
 static __inline__ f32 beAbs(f32 x) {
     f32 r;
-    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+    FABSF(r, x);
     return r;
 }
 
@@ -1629,17 +1629,17 @@ void spawnRandomizedEffectBurst(u8 *arg0) {
     *(s32 *)(e + 0x9C) = 0;
     *(s32 *)(e + 0x98) = 0;
     x = ((f32)(rand() & 0x7F) - 64.0f) / 6.4f;
-    __asm__ volatile("abs.s %0, %1" : "=f"(f) : "f"(x));
+    FABSF(f, x);
     f = f + 10.0f;
     *(s32 *)(e + 0xDC) = 0;
     *(f32 *)(e + 0xAC) = 0.075f;
     *(f32 *)(e + 0x94) = f * 0.25f;
     x = ((f32)(rand() & 0x7F) - 64.0f) / 0.17777778f;
-    __asm__ volatile("abs.s %0, %1" : "=f"(g) : "f"(x));
+    FABSF(g, x);
     *(f32 *)(e + 0xD0) = g;
     *(s32 *)(e + 0xD8) = 0;
     x = ((f32)(rand() & 0x7F) - 64.0f) / 1.0666667f;
-    __asm__ volatile("abs.s %0, %1" : "=f"(g) : "f"(x));
+    FABSF(g, x);
     *(f32 *)(e + 0xE0) = g;
     *(s32 *)(e + 0x58) = 0;
     *(s32 *)(e + 0x5C) = 0;
@@ -1672,7 +1672,7 @@ typedef struct {
 } SsdLocals;
 static __inline__ f32 ssdAbs(f32 x) {
     f32 r;
-    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+    FABSF(r, x);
     return r;
 }
 extern void clampVec3ToUnitIfLongerThan(f32 *);
@@ -2096,7 +2096,7 @@ void seImpl(s32 idx, u8 *o) {
     *(s32 *)(o + 0x9C) = 0;
     c64 = 64.0f;
     k = 0.015625f;
-    __asm__ volatile("abs.s %0, %1" : "=f"(t0) : "f"(((f32)(rand() & 0x7F) - c64) * k));
+    FABSF(t0, ((f32)(rand() & 0x7F) - c64) * k);
     half = 0.5f;
     if (t0 > half) {
         f32 t = fabsf(((f32)(rand() & 0x7F) - c64) * k);

@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "common_types.h"
+#include "rs_math.h"
 
 typedef struct {
     u16 h0;
@@ -70,7 +71,6 @@ typedef struct {
     u16 h;
 } EsGrid;
 extern EsV3 *esVerts __asm__("D_main_bss_80137A54");
-#define ES_SQRT(r, x) __asm__ volatile("sqrt.s %0, %1" : "=f"(r) : "f"(x))
 
 void emitGridCellTileStrip_impl(EsCell *a, EsGrid *g) __asm__("emitGridCellTileStrip");
 void emitGridCellTileStrip_impl(EsCell *a, EsGrid *g) {
@@ -120,25 +120,25 @@ void emitGridCellTileStrip_impl(EsCell *a, EsGrid *g) {
     yy = y * y;
     dx = (f32)(((s8 *)l)[3] - ((s8 *)c)[1]);
     dz = (f32)(((s8 *)u)[0xF] - ((s8 *)c)[5]);
-    ES_SQRT(len, dx * dx + yy + dz * dz);
+    SQRTF(len, dx * dx + yy + dz * dz);
     o[0].x = dx / len;
     o[0].y = y / len;
     o[0].z = dz / len;
     dx = (f32)(((s8 *)c)[3] - ((s8 *)r)[1]);
     dz = (f32)(((s8 *)u)[0x13] - ((s8 *)c)[9]);
-    ES_SQRT(len, dx * dx + yy + dz * dz);
+    SQRTF(len, dx * dx + yy + dz * dz);
     o[1].x = dx / len;
     o[1].y = y / len;
     o[1].z = dz / len;
     dx = (f32)(((s8 *)l)[0x17] - ((s8 *)c)[0x15]);
     dz = (f32)(((s8 *)c)[0xF] - ((s8 *)d)[5]);
-    ES_SQRT(len, dx * dx + yy + dz * dz);
+    SQRTF(len, dx * dx + yy + dz * dz);
     o[2].x = dx / len;
     o[2].y = y / len;
     o[2].z = dz / len;
     dx = (f32)(((s8 *)c)[0x17] - ((s8 *)r)[0x15]);
     dz = (f32)(((s8 *)c)[0x13] - ((s8 *)d)[9]);
-    ES_SQRT(len, dx * dx + yy + dz * dz);
+    SQRTF(len, dx * dx + yy + dz * dz);
     o[3].x = dx / len;
     o[3].y = y / len;
     o[3].z = dz / len;
@@ -203,31 +203,31 @@ void emitGridCellTileStripAdjacent_impl(EaCell *a, EsGrid *g) {
     yy = y * y;
     dx = (f32)(((s8 *)c)[1] - ((s8 *)c)[3]);
     dz = (f32)(((s8 *)u)[0x11] - ((s8 *)c)[7]);
-    ES_SQRT(len, dx * dx + yy + dz * dz);
+    SQRTF(len, dx * dx + yy + dz * dz);
     o[0].x = dx / len;
     o[0].y = y / len;
     o[0].z = dz / len;
     dx = (f32)(((s8 *)l)[0xD] - ((s8 *)c)[0xB]);
     dz = (f32)(((s8 *)c)[5] - ((s8 *)c)[0xF]);
-    ES_SQRT(len, dx * dx + yy + dz * dz);
+    SQRTF(len, dx * dx + yy + dz * dz);
     o[1].x = dx / len;
     o[1].y = y / len;
     o[1].z = dz / len;
     dx = (f32)(((s8 *)c)[0xB] - ((s8 *)c)[0xD]);
     dz = (f32)(((s8 *)c)[7] - ((s8 *)c)[0x11]);
-    ES_SQRT(len, dx * dx + yy + dz * dz);
+    SQRTF(len, dx * dx + yy + dz * dz);
     o[2].x = dx / len;
     o[2].y = y / len;
     o[2].z = dz / len;
     dx = (f32)(((s8 *)c)[0xD] - ((s8 *)r)[0xB]);
     dz = (f32)(((s8 *)c)[9] - ((s8 *)c)[0x13]);
-    ES_SQRT(len, dx * dx + yy + dz * dz);
+    SQRTF(len, dx * dx + yy + dz * dz);
     o[3].x = dx / len;
     o[3].y = y / len;
     o[3].z = dz / len;
     dx = (f32)(((s8 *)c)[0x15] - ((s8 *)c)[0x17]);
     dz = (f32)(((s8 *)c)[0x11] - ((s8 *)d)[7]);
-    ES_SQRT(len, dx * dx + yy + dz * dz);
+    SQRTF(len, dx * dx + yy + dz * dz);
     o[4].x = dx / len;
     o[4].y = y / len;
     o[4].z = dz / len;
@@ -247,7 +247,7 @@ typedef struct {
     s16 gz;
 } EdCell;
 
-#define ES_VEC(o, dxe, dze)     dx = (f32)(dxe);     dz = (f32)(dze);     ES_SQRT(len, dx * dx + y * y + dz * dz);     (o)->x = dx / len;     (o)->y = y / len;     (o)->z = dz / len;
+#define ES_VEC(o, dxe, dze)     dx = (f32)(dxe);     dz = (f32)(dze);     SQRTF(len, dx * dx + y * y + dz * dz);     (o)->x = dx / len;     (o)->y = y / len;     (o)->z = dz / len;
 #define B(p, i) (((s8 *)(p))[i])
 
 void emitGridCellTileStripDiagonal_impl(EdCell *a, EsGrid *g) __asm__("emitGridCellTileStripDiagonal");
@@ -347,7 +347,7 @@ extern u8 D_main_bss_80136DC0[];
 static inline f32 m2cSqrt(f32 x)
 {
     f32 r;
-    __asm__ volatile("sqrt.s %0, %1" : "=f"(r) : "f"(x));
+    SQRTF(r, x);
     return r;
 }
 typedef struct {

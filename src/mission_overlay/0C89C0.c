@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 struct NiObj { u8 pad0[0x34]; u8 *f34; s32 f38; u8 pad3C[0x34]; s16 f70; s16 f72; s16 f74; u8 pad76[2]; f32 f78; f32 f7C; s32 f80; s32 f84; };
 typedef struct { u8 pad0[4]; struct NiObj *obj; } NiActor;
@@ -574,8 +575,6 @@ typedef struct {
     u8 audioOn;
 } Turret;
 
-#define TABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
-
 extern u8 D_main_bss_801399F8[];
 extern u16 D_main_bss_80139560[];
 extern u16 D_main_bss_80139574;
@@ -849,9 +848,9 @@ s32 npcTurretUpdate(u8 *arg0, u16 action, u8 *arg2) {
         case 2:
             s1->t84 -= dt;
             if (s1->t84 <= 0.0) {
-                s1->t84 = TABSF(((f32)(rand() & 0x7F) - 64.0f) / 800.0f) + 0.1f;
+                s1->t84 = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 800.0f) + 0.1f;
                 sp28.x = s1->pos.x + ((f32)(rand() & 0x7F) - 64.0f) / 400.0f * 4.0f;
-                sp28.y = s1->pos.y - TABSF(((f32)(rand() & 0x7F) - 64.0f) / 320.0f * 4.0f);
+                sp28.y = s1->pos.y - FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 320.0f * 4.0f);
                 sp28.z = s1->pos.z + ((f32)(rand() & 0x7F) - 64.0f) / 400.0f * 4.0f;
                 spawnRandomScaleEffectDefault(&sp28);
                 play3DSoundEvent(0, s1, &s1->vel, 24.0f, 0.5f, 0, 0x2A, 0x7F, 0x50);
@@ -876,13 +875,13 @@ s32 npcTurretUpdate(u8 *arg0, u16 action, u8 *arg2) {
                         sp38[2] += s1->pos.z;
                         scaleVec3ByRandomRange(&sp38[4], 3.0f, 4.0f);
                         if (s1->kind != 2) {
-                            f32 a = TABSF(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
-                            f32 b = TABSF(((f32)(rand() & 0x7F) - 64.0f) / 42.666668f) + 2.0f;
-                            spawnDebris1Npc(sp38, &sp38[4], a, b, TABSF(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
+                            f32 a = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
+                            f32 b = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 42.666668f) + 2.0f;
+                            spawnDebris1Npc(sp38, &sp38[4], a, b, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
                         } else {
-                            f32 a = TABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.125f) + 18.0f;
-                            f32 b = TABSF(((f32)(rand() & 0x7F) - 64.0f) / 25.6f) + 3.0f;
-                            spawnDebris1Npc(sp38, &sp38[4], a, b, TABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f) + 0.5f);
+                            f32 a = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.125f) + 18.0f;
+                            f32 b = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 25.6f) + 3.0f;
+                            spawnDebris1Npc(sp38, &sp38[4], a, b, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f) + 0.5f);
                         }
                     }
                 }

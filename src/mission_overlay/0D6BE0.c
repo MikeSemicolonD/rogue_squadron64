@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 typedef struct { u8 pad0[0x30]; s32 f30; u8 *f34; s32 f38; u8 pad3C[0xB7]; u8 bF3; f32 fF4; f32 fF8; s32 fFC; } SmObj;
 typedef struct { u8 pad0[4]; SmObj *obj; } SmActor;
@@ -235,8 +236,6 @@ other:
     }
 }
 
-#define TD_ABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
-
 typedef struct {
     u8 pad0[0x4C];
     u32 flags;
@@ -469,9 +468,9 @@ s32 npcTankDroidUpdate(u8 *arg0, u16 action, u8 *arg2) {
                 u.b.p[1] += *(f32 *)(n + 4);
                 u.b.p[2] += *(f32 *)(n + 8);
                 scaleVec3ByRandomRange(u.b.v, 3.0f, 4.0f);
-                a = TD_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 27.0f;
-                b = TD_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 91.42857f) + 0.6f;
-                spawnDebris1Npc(u.b.p, u.b.v, a, b, TD_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
+                a = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 27.0f;
+                b = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 91.42857f) + 0.6f;
+                spawnDebris1Npc(u.b.p, u.b.v, a, b, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
             }
             spawnDestructionEffectBurst(n, 0xFFFF, 1.0f, 0.7f, 1.2f, 0.5f);
             spawnSplineWalkerCraft(n, *(f32 *)(n + 0x50) * 8.0f, *(f32 *)(n + 0x50) * 10.0f, 0xC);

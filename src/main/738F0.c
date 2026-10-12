@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 extern u16 spawnNpcOfType(void *, void *, u32, u8);
 
@@ -156,7 +157,7 @@ f32 sinf(f32);
 f32 sinfApprox(f32);
 static __inline__ f32 wsAbs(f32 v) {
     f32 r;
-    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(v));
+    FABSF(r, v);
     return r;
 }
 void wsDestroy(u16) __asm__("destroyNpcSlotByIndex");
@@ -1089,11 +1090,11 @@ void transformLimbStrideAnchorsLocal(u16 idx, f32 *out, f32 *out2) {
     b = an->b;
     transformVec3ByMat34(m, a, pa);
     transformVec3ByMat34(m, b, pb);
-    __asm__ volatile("sqrt.s %0, %1" : "=f"(s) : "f"(obj->m[0][0] * obj->m[0][0] + m[1][0] * m[1][0] + m[2][0] * m[2][0]));
+    SQRTF(s, obj->m[0][0] * obj->m[0][0] + m[1][0] * m[1][0] + m[2][0] * m[2][0]);
     out[0] = (an->b[0] - an->a[0]) * s;
-    __asm__ volatile("sqrt.s %0, %1" : "=f"(s) : "f"(m[0][1] * m[0][1] + m[1][1] * m[1][1] + m[2][1] * m[2][1]));
+    SQRTF(s, m[0][1] * m[0][1] + m[1][1] * m[1][1] + m[2][1] * m[2][1]);
     out[1] = (b[1] - a[1]) * s;
-    __asm__ volatile("sqrt.s %0, %1" : "=f"(s) : "f"(m[0][2] * m[0][2] + m[1][2] * m[1][2] + m[2][2] * m[2][2]));
+    SQRTF(s, m[0][2] * m[0][2] + m[1][2] * m[1][2] + m[2][2] * m[2][2]);
     out[2] = (b[2] - a[2]) * s;
     if (out2 != NULL) {
         out2[0] = pa[0] + (pb[0] - pa[0]) * 0.5f;
@@ -1161,14 +1162,13 @@ typedef struct {
 } RPSpawn;
 typedef struct { RPLink **headp; } RPLinks;
 typedef struct { u8 p0[4]; RPNode *unk04; u8 p8[0xE]; u16 unk16; } RPSelf;
-#include "rs_math.h"
 #include "main/192E0.h"
 #include "main/1D000.h"
 #include "main/5A750.h"
 extern s16 rand(void);
 static __inline__ f32 absf_(f32 v) {
     f32 r;
-    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(v));
+    FABSF(r, v);
     return r;
 }
 extern void *rs_malloc(u32, u16);
@@ -1727,8 +1727,6 @@ extern ExplColor D_main_8003D220;
 extern ExplColor D_main_8003D224;
 void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);
 
-static __inline__ f32 pgAbs(f32 x) { f32 r; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); return r; }
-
 void npcPowerGeneratorHandleDestruction(void) {
     f32 d[3];
     f32 cp[3];
@@ -1777,7 +1775,7 @@ void npcPowerGeneratorHandleDestruction(void) {
                 d[2] = *(f32 *)(obj + 0x18) - cp[2];
                 sq = d[0] * d[0] + d[1] * d[1] + d[2] * d[2];
                 if (sq < 900.0f) {
-                    __asm__("sqrt.s %0, %1" : "=f"(len) : "f"(sq));
+                    SQRTF(len, sq);
                     if (0.0f < len) {
                         if (vec3Dot(fwd, d) / len >= 0.0f) {
                             lp[n] = i;
@@ -1854,7 +1852,7 @@ void npcPowerGeneratorHandleDestruction(void) {
             }
             fwd[0] = fwd[1] = fwd[2] = 0.0f;
             play3DSoundEvent(0, pos, fwd, 18.0f, 0.5f, 0, 0x7D, 0x5A, 0x14);
-            pgNext = D_main_bss_80130BA4 + (pgAbs(((f32)(randX() & 0x7F) - 64.0f) * 0.015625f) + 0.5f) / ((f32)n / 3.0f);
+            pgNext = D_main_bss_80130BA4 + (fabsfInline(((f32)(randX() & 0x7F) - 64.0f) * 0.015625f) + 0.5f) / ((f32)n / 3.0f);
         } else {
             pgNext = D_main_bss_80130BA4;
         }
@@ -2869,7 +2867,6 @@ extern void spawnDebris1Npc(f32 *, f32 *, f32, f32, f32);
 extern void spawnOrientedNpc_sdbt(s32, void *, void *, void *, f32, f32, f32, f32) __asm__("spawnOrientedNpc");
 extern void spawnNpcType0xAFromTemplate(f32 *, f32);
 
-static __inline__ f32 avabs(f32 x) { f32 r; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); return r; }
 void spawnDebrisBurstFromTemplate_(u8 *base, u8 idx) __asm__("spawnDebrisBurstFromTemplate");
 void spawnDebrisBurstFromTemplate_(u8 *base, u8 idx) {
     f32 pos[3];
@@ -2901,11 +2898,11 @@ void spawnDebrisBurstFromTemplate_(u8 *base, u8 idx) {
         pos[2] = e2[2] + pos[2];
         scaleVec3ByRandomRange(pv, 2.0f, 4.0f);
         t = ((f32)(rand() & 0x7F) - 64.0f) / 12.8f;
-        a = avabs(t) + 12.0f;
+        a = fabsfInline(t) + 12.0f;
         t = ((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f;
-        b = (avabs(t) + 1.0f) * 3.0f + 6.0f;
+        b = (fabsfInline(t) + 1.0f) * 3.0f + 6.0f;
         t = ((f32)(rand() & 0x7F) - 64.0f) / 320.0f;
-        spawnDebris1Npc(pos, pv, a, b, (avabs(t) + 0.6f) * 1.5f);
+        spawnDebris1Npc(pos, pv, a, b, (fabsfInline(t) + 0.6f) * 1.5f);
         if (i & 1) {
             composeRandomRotationMatrix(pos, pv, 5.0f, 0x78, 0, 0);
             scaleVec3ByRandomRange(pos, 0.25f, 1.5f);

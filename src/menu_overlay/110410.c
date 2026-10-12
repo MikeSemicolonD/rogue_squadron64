@@ -13,6 +13,7 @@
 #include "main/6C310.h"
 #include "menu_overlay/110410.h"
 #include "menu_overlay/12CA40.h"
+#include "rs_math.h"
 
 // Interim Data externs
 extern u8 hangarActiveSecondaryWeaponString;
@@ -282,8 +283,8 @@ void composeNpcOrientationMatrix(void) {
             pos = ((HEnt *)gCutAssetEnts)[i].pos;
             e = (HEnt *)(i * sizeof(HEnt) + (s32)gCutAssetEnts);
             q = *e->unk4;
-            __asm__ volatile("abs.s %0, %1" : "=f"(sx) : "f"(*(f32 *)(q + 0x68) - *(f32 *)(q + 0x5C)));
-            __asm__ volatile("abs.s %0, %1" : "=f"(sz) : "f"(*(f32 *)(q + 0x70) - *(f32 *)(q + 0x64)));
+            FABSF(sx, *(f32 *)(q + 0x68) - *(f32 *)(q + 0x5C));
+            FABSF(sz, *(f32 *)(q + 0x70) - *(f32 *)(q + 0x64));
             fl = e->flags;
             p = e->link;
             if (fl & 0x100) {

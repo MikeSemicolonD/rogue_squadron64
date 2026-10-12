@@ -3,6 +3,7 @@
 #include "hob.h"
 
 #include "main/5AD20.h"
+#include "rs_math.h"
 
 struct vertex D_main_8009ECC0[] = {
     {0xFF80, 0x0000, 0xFF80, 0x0000},
@@ -269,7 +270,7 @@ void updWPP(WpNode **head, s32 arg1, u8 *arg2, f32 *arg3, f32 *arg4) {
             }
         }
         cell->prevZ = arg4[2] * cell->speed;
-        __asm__ volatile("abs.s %0, %1" : "=f"(v) : "f"(arg3[4]));
+        FABSF(v, arg3[4]);
         if (v < 0.999f) {
             f32 b;
             f32 c;
@@ -355,7 +356,7 @@ void linkDirectionalTrailSegments(f32 *arg0, u8 *arg1) {
     u8 *m;
 
     f32 ab;
-    __asm__ volatile("abs.s %0, %1" : "=f"(ab) : "f"(arg0[4]));
+    FABSF(ab, arg0[4]);
     if (0.7f < ab) {
         lo = 0;
         hi = 7;
@@ -426,7 +427,6 @@ typedef struct SWObj {
     u8 *p18;
 } SWObj;
 
-#define SW_SQRT(out, in) __asm__ volatile("sqrt.s %0, %1" : "=f"(out) : "f"(in))
 #define SW_LO16(v, off) (*(u16 *)((u8 *)(v) + (off)))
 
 u32 getBootConfigField12(void);
@@ -485,7 +485,7 @@ void setupWalkerSpriteTileQuad_d(SWSrc *arg0, SWObj *arg1, SWObj *arg2) {
     f32 fb;
 
     sq = arg1->f14 * arg1->f14 + arg1->f10 * arg1->f10;
-    SW_SQRT(len, sq);
+    SQRTF(len, sq);
     fs1 = len * arg1->f4;
     fx = arg2->fC;
     l.v10[0] = fx;
@@ -494,7 +494,7 @@ void setupWalkerSpriteTileQuad_d(SWSrc *arg0, SWObj *arg1, SWObj *arg2) {
     fa = fx * fx;
     fb = fy * fy;
     l.v10[2] = fy;
-    SW_SQRT(fs0, fa + fb);
+    SQRTF(fs0, fa + fb);
     if (!(fs0 < 0.5f)) {
         l.v10[0] = fx / fs0;
         l.v10[1] = arg1->f10 / arg1->f14 / fs0;
@@ -521,8 +521,8 @@ void setupWalkerSpriteTileQuad_d(SWSrc *arg0, SWObj *arg1, SWObj *arg2) {
         ent = arg0->buf->data + arg0->buf->count * 8;
         t0 = gx + gx * q[0][3];
         t3 = gy + gy * q[0][4];
-        __asm__ volatile("abs.s %0, %1" : "=f"(gb) : "f"(arg0->view->f3c));
-        __asm__ volatile("abs.s %0, %1" : "=f"(ga) : "f"(arg0->view->f38));
+        FABSF(gb, arg0->view->f3c);
+        FABSF(ga, arg0->view->f38);
         if (ga < gb) {
             if (t0 & 3) {
                 t0 = (t0 + 4) & 0xFFFC;
@@ -780,8 +780,6 @@ void updateWalkerParticlePositions(void *, void *, CwW *, f32 *, f32 *);
 void addVec3At0x24(void *, f32, f32, f32);
 void setupWalkerSpriteTileQuad(void *, CwW *, f32 *);
 
-#define CW_SQRT(out, in) __asm__ volatile("sqrt.s %0, %1" : "=f"(out) : "f"(in))
-
 static __inline__ void cwOrient(f32 *v, f32 *out, CwCam *cam, f32 zero, f32 k, f32 r0, f32 r2, f32 r1) {
     f32 m[12];
     f32 sq;
@@ -791,7 +789,7 @@ static __inline__ void cwOrient(f32 *v, f32 *out, CwCam *cam, f32 zero, f32 k, f
     if (v[0] == zero) {
         v[0] = 1.0f;
     }
-    CW_SQRT(sq, v[0] * v[0] + v[2] * v[2]);
+    SQRTF(sq, v[0] * v[0] + v[2] * v[2]);
     v[1] = -sq / k;
     normalize_vector(v);
     cwInitF(m, 18.0f, 18.0f, 18.0f);

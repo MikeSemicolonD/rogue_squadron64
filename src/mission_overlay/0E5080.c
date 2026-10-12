@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "common_types.h"
+#include "rs_math.h"
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E5080", D_mission_overlay_800A8290);
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0E5080", D_mission_overlay_800A8298);
@@ -625,7 +626,6 @@ void scaleVec3ByRandomRange(void *, f32, f32);
 void spawnDebris1Npc(void *, void *, f32, f32, f32);
 void spawnOrientedNpc(s32, void *, s32, void *, f32, f32, f32, f32);
 void spawnWaterSprayDebrisAndBurst(void *, f32, f32, f32, f32, f32);
-#define WC_ABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 
 void npcWaterCraftHandleDestruction(WcObj *o) {
     f32 p[3];
@@ -659,11 +659,11 @@ void npcWaterCraftHandleDestruction(WcObj *o) {
             p[1] += pos[1];
             p[2] += pos[2];
             scaleVec3ByRandomRange(v, 2.0f, 3.0f);
-            a = WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) / 12.8f);
+            a = FABSF_VAL(((f32)(wcRand() & 0x7F) - 64.0f) / 12.8f);
             a = a + 12.0f;
-            b = WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) * 0.015625f);
+            b = FABSF_VAL(((f32)(wcRand() & 0x7F) - 64.0f) * 0.015625f);
             b = b + 1.0f;
-            spawnDebris1Npc(p, v, a, b, WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
+            spawnDebris1Npc(p, v, a, b, FABSF_VAL(((f32)(wcRand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
         }
         spawnWaterSprayDebrisAndBurst(o, sc * 1.5f, sc * 2.5f, sc * 3.0f, sc * 6.0f, 1.0f);
         break;
@@ -689,11 +689,11 @@ void npcWaterCraftHandleDestruction(WcObj *o) {
             p[1] += pos[1];
             p[2] += pos[2];
             scaleVec3ByRandomRange(v, 2.0f, 3.0f);
-            a = WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) / 12.8f);
+            a = FABSF_VAL(((f32)(wcRand() & 0x7F) - 64.0f) / 12.8f);
             a = a + 12.0f;
-            b = WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) * 0.03125f);
+            b = FABSF_VAL(((f32)(wcRand() & 0x7F) - 64.0f) * 0.03125f);
             b = b + 2.5f;
-            spawnDebris1Npc(p, v, a, b, WC_ABSF(((f32)(wcRand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
+            spawnDebris1Npc(p, v, a, b, FABSF_VAL(((f32)(wcRand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
         }
         spawnWaterSprayDebrisAndBurst(o, sc * 4.0f, sc * 6.0f, sc * 5.0f, sc * 10.0f, 2.0f);
         break;

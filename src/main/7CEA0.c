@@ -2,6 +2,7 @@
 #include "common_types.h"
 
 #include "main/7CEA0.h"
+#include "rs_math.h"
 
 Vec3f D_main_800A0D90 = {0.0f, 0.0f, 1.0f};
 
@@ -1162,7 +1163,6 @@ void clearPendingChildNpc(s32);
 void setObjectFlagBit4(void *);
 s32 slotDispatcherIter(s32, s32, void *);
 void dispatchSlotAction5IfActive(void *, void *);
-#define AVABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 #define AV_JOINT_HEAD(k) \
     m = s2->m[k]; \
     n = s2->n[k] + 0x1C; \
@@ -1337,7 +1337,7 @@ s32 attachedAudioVisualEmitterNpcHandler(u8 *arg0, u16 action, u8 *arg2) {
                     s2->timer = (s16)(rand() % 3) * 0.033333335f;
                     play3DSoundEvent(0, s2, &s2->vel, 24.0f, 0.4f, 0, 0x2A, 0x7E, 0x3C);
                     sp[64] = s2->pos.x + ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / (s2->radius * 0.5f));
-                    sp[65] = s2->pos.y - AVABSF(((f32)(rand() & 0x7F) - 64.0f) / (64.0f / (s2->radius * 0.5f)));
+                    sp[65] = s2->pos.y - FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / (64.0f / (s2->radius * 0.5f)));
                     sp[66] = s2->pos.z + ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / (s2->radius * 0.5f));
                     spawnRandomScaleEffectDefault(&sp[64]);
                 }
@@ -1531,9 +1531,9 @@ s32 npcShieldGeneratorUpdate(u8 *arg0, u16 action, u8 *arg2) {
                         sp[65] += s2->pos.y;
                         sp[66] += s2->pos.z;
                         scaleVec3ByRandomRange(&sp[68], 1.5f, 3.0f);
-                        a = AVABSF(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
-                        b = AVABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f) + 1.5f;
-                        c = AVABSF(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.2f;
+                        a = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
+                        b = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f) + 1.5f;
+                        c = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.2f;
                         spawnDebris1Npc(&sp[64], &sp[68], a, b, c);
                         distanceAndDopplerNpcHelper(&sp[64], 0.1f, 2.0f);
                     }

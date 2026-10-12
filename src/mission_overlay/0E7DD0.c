@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 typedef struct {
     f32 m[12];
@@ -516,9 +517,9 @@ s32 npcGroundTroopUpdate(GtNpc *npc, u16 action, void *arg) {
                 setType3ActorParams(o->actor, 4.0f, 3.0f, 22.5f, 180.0f, 1.0f);
                 if (npc->flags & 0x20) {
                     half = 64.0f;
-                    { f32 q; __asm__ volatile("abs.s %0, %1" : "=f"(q) : "f"(((f32)(rand() & 0x7F) - half) / (half / li->f28)));
+                    { f32 q; FABSF(q, ((f32)(rand() & 0x7F) - half) / (half / li->f28));
                     o->pos.x = li->pos.x + q; }
-                    { f32 q; __asm__ volatile("abs.s %0, %1" : "=f"(q) : "f"(((f32)(rand() & 0x7F) - half) / (half / li->f30)));
+                    { f32 q; FABSF(q, ((f32)(rand() & 0x7F) - half) / (half / li->f30));
                     o->pos.z = li->pos.z + q; }
                     o->pos.y = wrapAngleToCyclicRange(o->pos.x, o->pos.z, D_main_bss_80138058, 0);
                     scale = 0.015625f;

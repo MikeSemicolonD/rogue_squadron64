@@ -2,6 +2,7 @@
 #include "common_types.h"
 
 #include "main/5D220.h"
+#include "rs_math.h"
 
 u8 D_main_8009ECF0[] = {
     0x20,
@@ -180,9 +181,9 @@ void collectNearbyNpcsForEffect(u8 *arg0, u16 arg1) {
                     r = *(f32 *)(arg0 + 0xD0);
                     dist2 = v[0] * v[0] + v[1] * v[1] + v[2] * v[2];
                     if (dist2 <= r * r) {
-                        __asm__("sqrt.s %0, %1" : "=f"(sq) : "f"(dist2));
+                        SQRTF(sq, dist2);
                         t = (r - sq) / r;
-                        __asm__ volatile("sqrt.s %0, %1" : "=f"(sq2) : "f"(t));
+                        SQRTF(sq2, t);
                         val = (f32)*(u16 *)(arg0 + 0xD6) * sq2;
                         if (!(two31 <= val)) {
                             ev.d = (s32)val;

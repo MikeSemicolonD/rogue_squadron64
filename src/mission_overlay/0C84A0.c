@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 void *getNpcContextField8(u16);
 s32 getPlayerField2(s32);
@@ -18,7 +19,7 @@ f32 calculateDatItemDistanceToPlayer(char *arg0) {
         d[0] = a[0] - b[0];
         d[1] = a[1] - b[1];
         d[2] = a[2] - b[2];
-        __asm__("sqrt.s %0, %1" : "=f"(len) : "f"(d[0] * d[0] + d[1] * d[1] + d[2] * d[2]));
+        SQRTF(len, d[0] * d[0] + d[1] * d[1] + d[2] * d[2]);
         return len;
     }
     return 1e7f;

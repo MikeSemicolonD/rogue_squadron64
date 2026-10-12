@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 typedef struct {
     u16 vol;
@@ -113,7 +114,7 @@ s32 attached3DSoundEmitterNpcHandler(Emitter3DNpc *npc, u16 action, Emitter3DSpa
         }
         updateActive3DAudioSource(c->source, t, &t->x, d->b3);
         v = (s32)(-t->f10 * d->falloff + 8192.0f);
-        __asm__ volatile("sqrt.s %0, %1" : "=f"(dist) : "f"(t->x * t->x + t->y * t->y + t->z * t->z));
+        SQRTF(dist, t->x * t->x + t->y * t->y + t->z * t->z);
         v = v + (dist + 0.5f - d->minDist) / (d->maxDist - d->minDist) * d->range;
         if (v >= 0) {
             r = 0x3FFF;

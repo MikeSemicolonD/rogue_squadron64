@@ -4,6 +4,7 @@
 #include "main/1D000.h"
 #include "mission_overlay/0F09E0.h"
 #include "mission_stats.h"
+#include "rs_math.h"
 
 extern s32 D_main_bss_80137CE4;
 
@@ -555,7 +556,7 @@ void tickObjectAnimSubstruct(u8 *obj, TickSub *sub, f32 arg2, f32 arg3) {
         if (sub->unk8 != 0.0f) {
             f32 r;
             f32 x = ((f32)(rand() & 0x7F) - 64.0f) / (64.0f / sub->unk8);
-            __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x));
+            FABSF(r, x);
             sub->unkC = sub->unkC + r;
         }
     } else {
@@ -609,7 +610,7 @@ void resolveNpcAttachmentPos(u8 *arg0, f32 *arg1, f32 arg2, f32 arg3) {
     computeAnchorRelativePositionByDistanceRatio(arg1, (void *)rnapMeshInl(arg0, (s32)sp10), arg2, sp40);
     *(struct Struct3f *)sp10 = *(struct Struct3f *)sp40;
     ang = rnapTurnInl((void *)arg1, sp10[0], (struct Struct3f *)sp40);
-    __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(ang));
+    FABSF(r, ang);
     if (r > 0.1f) {
         Vec4f q;
         if (arg3 < ang) {
@@ -831,7 +832,7 @@ s32 acquireNpcTargetsInAimCone(AcState *p) {
                 if (cs <= dot) {
                     f32 sq;
                     p->ids[n] = idx;
-                    __asm__ volatile("sqrt.s %0, %1" : "=f"(sq) : "f"(d2));
+                    SQRTF(sq, d2);
                     keys[n] = (1.0f - dot) * 100.0f + sq;
                     n++;
                     if (n == 32) {

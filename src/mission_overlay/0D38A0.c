@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 struct TcObj { u8 pad0[0x30]; s32 f30; u8 *f34; s32 f38; u8 pad3C[0x20]; s16 f5C; s16 f5E; u8 pad60[0x65]; u8 fC5; };
 typedef struct { u8 pad0[4]; struct TcObj *obj; } TcActor;
@@ -196,7 +197,6 @@ s32 npcTickEffectChannelWithSlotDispatch(TsActor *arg0) {
     return 0;
 }
 
-#define FABS(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 extern s32 rand();
 extern void spawnNpcType0xAFromTemplate(void *, f32);
 extern void zmemcpy(void *, void *, s32);
@@ -252,10 +252,10 @@ void npcShuttleHandleDestruction(u8 *arg0, s32 arg1, s32 arg2, s32 arg3)
           sp28[1] += *((f32 *) (arg0 + 4));
           sp28[2] += *((f32 *) (arg0 + 8));
           scaleVec3ByRandomRange(sp18, 3.0f, 4.0f);
-          fs1 = FABS(((((f32) (rand() & 0x7F)) - 64.0f) * 0.03125f) * 5.0f);
+          fs1 = FABSF_VAL(((((f32) (rand() & 0x7F)) - 64.0f) * 0.03125f) * 5.0f);
           fs1 = fs1 + 40.0f;
-          fs0 = FABS((((f32) (rand() & 0x7F)) - 64.0f) * 0.0078125f) + 1.0f;
-          spawnDebris1Npc(sp28, sp18, fs1, fs0, FABS((((f32) (rand() & 0x7F)) - 64.0f) / 213.33333f) + 0.3f);
+          fs0 = FABSF_VAL((((f32) (rand() & 0x7F)) - 64.0f) * 0.0078125f) + 1.0f;
+          spawnDebris1Npc(sp28, sp18, fs1, fs0, FABSF_VAL((((f32) (rand() & 0x7F)) - 64.0f) / 213.33333f) + 0.3f);
       }
     break;
   case 1:
@@ -291,12 +291,11 @@ void npcShuttleHandleDestruction(u8 *arg0, s32 arg1, s32 arg2, s32 arg3)
   }
   while (vec3Length(arg0 + 0x70) == 0.0f);
   normalize_vector(arg0 + 0x70);
-  *((f32 *) (arg0 + 0x7C)) = FABS((((f32) (rand() & 0x7F)) - 64.0f) * 0.0625f) + 4.0f;
+  *((f32 *) (arg0 + 0x7C)) = FABSF_VAL((((f32) (rand() & 0x7F)) - 64.0f) * 0.0625f) + 4.0f;
 }
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0D38A0", D_mission_overlay_800A747C);
 
-#define SABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 typedef struct { f32 x, y, z; } ShVec3;
 typedef struct {
     ShVec3 pos;
@@ -664,9 +663,9 @@ s32 npcShuttleUpdate(u8 *arg0, u16 action, u8 *arg2) {
                     q[1] += s1->pos.y;
                     q[2] += s1->pos.z;
                     scaleVec3ByRandomRange_npcs(&v, 3.0f, 4.0f);
-                    a = SABSF(((f32)(rand_npcs() & 0x7F) - 64.0f) * 0.03125f * 5.0f) + 40.0f;
-                    b = SABSF(((f32)(rand_npcs() & 0x7F) - 64.0f) * 0.0078125f) + 1.0f;
-                    spawnDebris1Npc_npcs(q, &v, a, b, SABSF(((f32)(rand_npcs() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
+                    a = FABSF_VAL(((f32)(rand_npcs() & 0x7F) - 64.0f) * 0.03125f * 5.0f) + 40.0f;
+                    b = FABSF_VAL(((f32)(rand_npcs() & 0x7F) - 64.0f) * 0.0078125f) + 1.0f;
+                    spawnDebris1Npc_npcs(q, &v, a, b, FABSF_VAL(((f32)(rand_npcs() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
                 }
             }
             spawnDestructionEffectBurst_npcs(s1, 0xFFFF, 2.0f, 1.5f, 1.2f, 0.8f);

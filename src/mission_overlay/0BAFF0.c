@@ -2,6 +2,7 @@
 
 #include "common_types.h"
 #include "mission_overlay/0BAFF0.h"
+#include "rs_math.h"
 
 typedef struct {
     s32 f00;
@@ -378,7 +379,6 @@ void bfsImpl(FalconInitPlayer *p, BfsTur *t) {
     t->tPit[0] = t->tPit[1] = t->cPit[0] = t->cPit[1] = 0.0f;
 }
 
-static __inline__ f32 pfAbs(f32 x) { f32 r; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); return r; }
 typedef struct {
     u8 pad0[0x4C];
     u32 flags;
@@ -451,7 +451,7 @@ void pfRot1(void *, f32) __asm__("composeRotationMatrixSlot1");
         cur = t->CF[i]; \
         tgt = t->TF[i]; \
         d = tgt - cur; \
-        if (pfAbs(d) > 0.35f) { \
+        if (fabsfInline(d) > 0.35f) { \
             if (cur < tgt) { \
                 if (d > 180.0f) { \
                     s = dt * -70.0f; \
@@ -737,7 +737,7 @@ s32 playerFalconUpdate(FalconUpdNpc *arg0, s32 arg1, u32 *arg2) {
 
 static __inline__ f32 absIF(f32 x) {
     f32 r;
-    __asm__ volatile("abs.s %0, %1" : "=&f"(r) : "f"(x));
+    FABSF(r, x);
     return r;
 }
 f32 integrateFalconFlightPhysics(f32 a, f32 b, f32 dt) {

@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "common_types.h"
+#include "rs_math.h"
 typedef struct {
     u16 *grid;
     u8 *cells;
@@ -114,7 +115,7 @@ f32 wrapAngleToCyclicRange(f32 x, f32 z, void *unused, TerrainHitWA *out) {
     y += gGridWA.baseY;
     if (out != NULL) {
         sq = out->nx * out->nx + 1.0f + out->nz * out->nz;
-        __asm__ volatile("sqrt.s %0, %1" : "=&f"(scale) : "f"(sq));
+        SQRTF(scale, sq);
         out->nx /= scale;
         out->x = x;
         out->y = y;

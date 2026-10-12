@@ -1,6 +1,7 @@
 #include "common.h"
 #include "common_types.h"
 #include "main/3F160.h"
+#include "rs_math.h"
 
 typedef struct { f32 x, y, z; } TrV3;
 typedef struct {
@@ -363,7 +364,7 @@ s32 attachedMeshOverlayNpcHandler(struct D_80130BB8_type *arg0, s32 a1, u16 *arg
         if (ovl != NULL) {
             v = getNpcContextField8(*data);
             sq = v->x * v->x + v->y * v->y + v->z * v->z;
-            __asm__ volatile("sqrt.s %0, %1" : "=f"(len) : "f"(sq));
+            SQRTF(len, sq);
             sp10[0] = *(f32 *)(D_main_bss_80138D1C + 0x4C);
             sp10[1] = *(f32 *)(D_main_bss_80138D1C + 0x50);
             sp10[2] = *(f32 *)(D_main_bss_80138D1C + 0x54);

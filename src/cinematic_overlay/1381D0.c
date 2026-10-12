@@ -6,6 +6,7 @@
 #include "main/192E0.h"
 #include "main/42AF0.h"
 #include "main/66FB0.h"
+#include "rs_math.h"
 
 struct cutsceneIdMapEntry {
     u16 unk0;
@@ -2435,8 +2436,6 @@ void dfBurst(s32, s32, DfV3 *, DfV3 *) __asm__("spawnNpcBurstAlongSegment");
 void dfNormalize(DfV3 *) __asm__("normalize_vector");
 void dfRamped(DfV3 *, s32, f32, f32, f32, f32, f32, f32, f32, f32) __asm__("spawnEffectNpcWithRampedScaleExt");
 s16 dfRand(void) __asm__("rand");
-static __inline__ f32 dfSqrt(f32 x) { f32 r; __asm__ volatile("sqrt.s %0, %1" : "=f"(r) : "f"(x)); return r; }
-static __inline__ f32 dfAbs(f32 x) { f32 r; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); return r; }
 
 static __inline__ DfCtx *dfFindByName(char *name, void *iter, u16 *out) {
     s32 idx;
@@ -2495,7 +2494,7 @@ void dfImpl(ScEv *e) {
             if (ctx != NULL) {
                 o = ctx->obj;
                 s2.type = 1;
-                r = dfSqrt((*o->p30)->f48) * 0.25f;
+                r = sqrtfInline((*o->p30)->f48) * 0.25f;
                 s2.f20 = 6.0f;
                 s2.f1C = r;
                 s2.pos.x = o->x;
@@ -2535,9 +2534,9 @@ void dfImpl(ScEv *e) {
                     v30.y = p.pos.y + v30.y;
                     v30.z = p.pos.z + v30.z;
                     dfScaleRand(&v40, 2.0f, 4.0f);
-                    a = dfAbs(((dfRand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
-                    b = (dfAbs(((dfRand() & 0x7F) - 64.0f) * 0.0078125f) + 1.0f) * 3.0f + 6.0f;
-                    c = (dfAbs(((dfRand() & 0x7F) - 64.0f) / 320.0f) + 0.6f) * 1.5f;
+                    a = fabsfInline(((dfRand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
+                    b = (fabsfInline(((dfRand() & 0x7F) - 64.0f) * 0.0078125f) + 1.0f) * 3.0f + 6.0f;
+                    c = (fabsfInline(((dfRand() & 0x7F) - 64.0f) / 320.0f) + 0.6f) * 1.5f;
                     dfDebris1(&v30, &v40, a, b, c);
                 }
                 dfDispatch(idx, 5, &p);

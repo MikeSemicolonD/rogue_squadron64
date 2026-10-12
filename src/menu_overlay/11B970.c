@@ -5,6 +5,7 @@
 
 #include "main/562A0.h"
 #include "menu_overlay/11B970.h"
+#include "rs_math.h"
 
 INCLUDE_RODATA("asm/nonmatchings/menu_overlay/11B970", strMenuBKasan);
 
@@ -1259,7 +1260,7 @@ void playerVwingMainUpdate(void *arg0, f32 arg1) {
                     slot->angle = slot->angle + (slot->scale * 0.5f + 2.0f);
                     ang = floatModulo(slot->angle, 180.0f) - 90.0f;
                     node = &obj->link;
-                    __asm__ volatile("abs.s %0, %1" : "=f"(av) : "f"(ang));
+                    FABSF(av, ang);
                     slot->angle = slot->angle + quadraticEaseInOut(av / 90.0f) * 3.5f;
                     composeRotationMatrixSlot1(mat, ang);
                     composeRotationMatrixSlot2(mat, 180.0f);
@@ -3075,7 +3076,6 @@ typedef struct {
 } NbFx;
 extern NbFx nbFx __asm__("D_menu_overlay_800CCBF4");
 
-static __inline__ f32 avabs(f32 x) { f32 r; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); return r; }
 #define NF(o) (*(f32 *)(s + (o)))
 #define NW(o) (*(s32 *)(s + (o)))
 
@@ -3111,12 +3111,12 @@ u8 handleNabooFlightInput(void **list, u8 *s, u8 port, f32 t, f32 dt, u8 input, 
     cur = NF(0x14EC);
     if (cur != 0.0f) {
         if (cur < 0.0f) {
-            NF(0x14EC) = cur + avabs(cur) * 5.0f / 25.0f;
+            NF(0x14EC) = cur + fabsfInline(cur) * 5.0f / 25.0f;
             if (NF(0x14EC) > -20.0f) {
                 NF(0x14EC) = -20.0f;
             }
         } else if (cur > 0.0f) {
-            NF(0x14EC) = cur - avabs(cur) * 5.0f / 25.0f;
+            NF(0x14EC) = cur - fabsfInline(cur) * 5.0f / 25.0f;
             if (NF(0x14EC) < 20.0f) {
                 NF(0x14EC) = 20.0f;
             }
@@ -3124,7 +3124,7 @@ u8 handleNabooFlightInput(void **list, u8 *s, u8 port, f32 t, f32 dt, u8 input, 
         fm = floatModulo(NF(0x14F0), 12.41379356f);
         cur = NF(0x14F0);
         tgt = (cur - fm) + 10.0f;
-        if (avabs(NF(0x14EC)) < 25.0f) {
+        if (fabsfInline(NF(0x14EC)) < 25.0f) {
             if ((cur < tgt) ? (tgt - cur < 0.5f) : (cur - tgt < 0.5f)) {
                 NF(0x14F0) = tgt;
                 NF(0x14EC) = 0.0f;

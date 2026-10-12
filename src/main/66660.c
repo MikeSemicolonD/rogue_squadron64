@@ -1,8 +1,9 @@
 #include "common.h"
 
 #include "main/66660.h"
+#include "rs_math.h"
 
-#define VABS(x) ({ f32 _x = (x); f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); _r; })
+#define VABS(x) ({ f32 _x = (x); f32 _r; FABSF(_r, _x); _r; })
 #define ABSF(x) ({ f32 _r = (x); __asm__ volatile("abs.s %0, %0" : "+f"(_r)); _r; })
 typedef struct {
     f32 x;
@@ -84,7 +85,7 @@ typedef struct {
     u8 pad0[0x24];
     f32 nearZ;
 } BoundsView;
-#define VABS(x) ({ f32 _x = (x); f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); _r; })
+#define VABS(x) ({ f32 _x = (x); f32 _r; FABSF(_r, _x); _r; })
 extern Vec3f D_main_8009FC50[8];
 extern u8 D_main_8009FCB0[12][2];
 extern void mat3x4Multiply(void *, void *, void *);

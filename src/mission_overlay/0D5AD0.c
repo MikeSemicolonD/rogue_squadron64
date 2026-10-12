@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "common_types.h"
+#include "rs_math.h"
 typedef struct {
     f32 x, y, z;
 } ChildVec3;
@@ -81,9 +82,9 @@ void npcInitChildLinkedToParent(ChildNpc *npc, s32 arg1, ParentNpc *parent) {
         c->fC9 = 2;
     }
     c->f58 = 0;
-    { f32 _x = ((f32)(rand() & 0x7F) - 64.0f) / 320.0f; f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); c->f60 = _r; }
+    { f32 _x = ((f32)(rand() & 0x7F) - 64.0f) / 320.0f; f32 _r; FABSF(_r, _x); c->f60 = _r; }
     c->f5C = 0;
-    { f32 _x = ((f32)(rand() & 0x7F) - 64.0f) / 320.0f; f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); c->f64 = _r; }
+    { f32 _x = ((f32)(rand() & 0x7F) - 64.0f) / 320.0f; f32 _r; FABSF(_r, _x); c->f64 = _r; }
     c->f68 = 0;
     c->pos0 = c->pos;
     c->rot0 = c->rot;

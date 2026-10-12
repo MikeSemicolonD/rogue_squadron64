@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 typedef struct { u16 *data; u8 *tbl; u8 pad8[0x30]; u16 w; u16 h; } RadarGridC;
 extern RadarGridC gRadarGridC __asm__("D_main_bss_80136DC0");
@@ -629,7 +630,7 @@ after:
 compute:
         d[0] = gRadarContacts[st->sel]->pos[0] - pos[0];
         d[2] = gRadarContacts[st->sel]->pos[2] - pos[2];
-        __asm__ volatile("sqrt.s %0, %1" : "=f"(fs1) : "f"(d[0] * d[0] + d[2] * d[2]));
+        SQRTF(fs1, d[0] * d[0] + d[2] * d[2]);
         if (fs1 > 8.0f) {
             if (fs1 > 20.0f) {
                 fs1 = 20.0f;
@@ -872,7 +873,7 @@ void renderRadarMinimap(RmState *r) {
             r->h85C++;
         }
     }
-    __asm__ volatile("sqrt.s %0, %1" : "=f"(len) : "f"(c[3] * c[3] + c[5] * c[5]));
+    SQRTF(len, c[3] * c[3] + c[5] * c[5]);
     if (D_main_bss_80138D1C->h4 != 3 || !(rmGS.wC & 0x10) || r->bDD0 == 0) {
         r->p900 = r->b948;
         r->m8AC = r->m860;

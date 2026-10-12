@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 s32 setNpcHealth(s32, void *, void *);
 void initActorMotionParams(s32, s32, s32, s32, f32);
@@ -391,8 +392,6 @@ typedef struct {
     s32 outCount;
 } AtPt;
 
-#define PABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
-
 extern u8 D_main_bss_80130B63;
 extern f32 D_main_bss_80130BA4;
 extern u8 *D_main_bss_80138D1C;
@@ -624,7 +623,7 @@ s32 npcAtPtUpdate(u8 *arg0, s32 action, u8 *arg2) {
         s1->anim[2] = load_model_animation("reb_stuff/atpt_stop");
         s1->animSlot = flattenAnimTreeAndAllocateSlot(*(s32 *)(s1->mesh + 0x18), s1->anim[s1->animIdx]);
         s1->chan = markModelAnimChannelEntryActive(s1->animSlot, 0);
-        s1->phase = PABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f);
+        s1->phase = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f);
         s1->dur = 1.0f / (*(f32 *)(s1->rec + 0x90) * s1->rate);
         setModelAnimSlotCycleDuration(s1->animSlot, s1->dur);
         seekAllModelAnimChannelsInSlotToTime(s1->animSlot, 0.0f);
@@ -756,9 +755,9 @@ s32 npcAtPtUpdate(u8 *arg0, s32 action, u8 *arg2) {
                     ((f32 *)&sp28)[1] += (((f32 *)&sp28) + 8)[1];
                     ((f32 *)&sp28)[2] += (((f32 *)&sp28) + 8)[2];
                     scaleVec3ByRandomRange((((f32 *)&sp28) + 4), 3.0f, 4.0f);
-                    a = PABSF(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
-                    b = PABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f) + 1.4f;
-                    spawnDebris1Npc(((f32 *)&sp28), (((f32 *)&sp28) + 4), a, b, PABSF(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
+                    a = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
+                    b = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f) + 1.4f;
+                    spawnDebris1Npc(((f32 *)&sp28), (((f32 *)&sp28) + 4), a, b, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
                 }
                 {
                     f32 sc = s1->scale;

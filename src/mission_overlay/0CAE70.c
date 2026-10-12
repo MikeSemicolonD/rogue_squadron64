@@ -1,6 +1,7 @@
 #include "common.h"
 
 #include "common_types.h"
+#include "rs_math.h"
 extern s32 rand(void);
 extern void setNpcHealth(s32, void *, void *);
 extern void initActorMotionParams(s32, s32, s32, s32, f32);
@@ -17,7 +18,7 @@ void initNpcActorVariant(void *arg0) {
     f32 r;
     *(s16 *)((u8 *)s1 + 0xE2) = 0;
     *(s32 *)((u8 *)s1 + 0x54) = 0;
-    { f32 x = ((f32)(rand() & 0x7F) - 64.0f) * 0.03125f; __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(x)); }
+    { f32 x = ((f32)(rand() & 0x7F) - 64.0f) * 0.03125f; FABSF(r, x); }
     s0 = s1->p34;
     *(f32 *)((u8 *)s1 + 0x58) = r + 1.0f;
     setNpcHealth(s1->h38, s0 + 0x6C, s0);
@@ -130,13 +131,12 @@ void initProbeDroidScatterLaunch(ProbeScatter *arg0) {
         arg0->unk70 = arg0->y;
         arg0->unk74 = arg0->z;
     }
-    { f32 x = ((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f; f32 a; __asm__ volatile("abs.s %0, %1" : "=f"(a) : "f"(x)); r = a + 0.25f; }
+    { f32 x = ((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f; f32 a; FABSF(a, x); r = a + 0.25f; }
     arg0->unkE2 = 1;
     arg0->unk78 = r;
 }
 
 #define FREEH if (*(s32 *)(o + 0x3C) != 0) { rs_free(*(s32 *)(o + 0x3C)); *(s32 *)(o + 0x3C) = 0; }
-#define ABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 extern f32 vec3Dot(f32 *, f32 *);
 extern f32 vec3Length(f32 *);
 extern void vec3NormalizeInto(void *, f32 *);
@@ -177,11 +177,11 @@ void updateProbeDroidHopState(u8 *o, f32 dt) {
             sp20[2] = F(o, 0x14);
             normalize_vector(sp20);
             ang = -sinfApprox(vec3Dot(sp20, sp10)) * 57.29578f;
-            lim = ABSF(ang);
+            lim = FABSF_VAL(ang);
             if (dt * 15.0f < lim) {
                 ang = ang < 0.0f ? dt * -15.0f : dt * 15.0f;
             }
-            lim = ABSF(ang);
+            lim = FABSF_VAL(ang);
             if (0.0001f < lim) {
                 quatFromAxisAngle(sp30, o + 0x18, ang);
                 rotateVec3ByQuat(sp30, o + 0xC, o + 0xC);
@@ -196,7 +196,7 @@ void updateProbeDroidHopState(u8 *o, f32 dt) {
         } else {
             *(s16 *)(o + 0xE2) = 0;
             F(o, 0x54) = 0;
-            F(o, 0x58) = ABSF(((f32)(((s32 (*)())rand)(sp10) & 0x7F) - 64.0f) * 0.03125f) + 1.0f;
+            F(o, 0x58) = FABSF_VAL(((f32)(((s32 (*)())rand)(sp10) & 0x7F) - 64.0f) * 0.03125f) + 1.0f;
             F(o, 0x24) = 0;
             F(o, 0x28) = 0;
             F(o, 0x2C) = 0;
@@ -530,9 +530,9 @@ s32 npcProbeDriod(u8 *arg0, u16 action, u8 *arg2) {
                 sp48[1] += s1->pos.y;
                 sp48[2] += s1->pos.z;
                 scaleVec3ByRandomRange(sp58, 1.0f, 2.5f);
-                a = ABSF(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 20.0f;
-                b = ABSF(((f32)(rand() & 0x7F) - 64.0f) / 80.0f) + 0.5f;
-                spawnDebris1Npc(sp48, sp58, a, b, ABSF(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
+                a = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 20.0f;
+                b = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 80.0f) + 0.5f;
+                spawnDebris1Npc(sp48, sp58, a, b, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
                 distanceAndDopplerNpcHelper(sp48, 0.05f, 0.2f);
             }
             spawnWaterSprayDebrisAndBurst(s1, 0.05f, 0.8f, 0.8f, 1.0f, 1.0f);

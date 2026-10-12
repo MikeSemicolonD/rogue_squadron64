@@ -2,6 +2,7 @@
 #include "common_types.h"
 
 #include "mission_overlay/0AEFF0.h"
+#include "rs_math.h"
 
 typedef struct {
     u16 onTime;
@@ -94,7 +95,7 @@ void computeCraftSelectTurnFromInput(u8 *o, f32 dt) {
     b[2] = 0.0f;
     k = 57.29578f;
     t = sinfApprox(vec3Dot(a, b)) * k;
-    __asm__ volatile("abs.s %0, %1" : "=f"(ang) : "f"(t));
+    FABSF(ang, t);
     zero = 0.0f;
     if (zero < out) {
         *(u16 *)(o + 0x180) |= 2;
@@ -442,7 +443,6 @@ void loadPlayerStartPosition(StartPl *arg0, s32 arg1) {
 
 INCLUDE_RODATA("asm/nonmatchings/mission_overlay/0AEFF0", D_mission_overlay_800A55C0);
 
-#define VABS(x) ({ f32 _x = (x); f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); _r; })
 typedef struct { u8 b[4]; } Bytes4;
 typedef struct {
     u16 f0;
@@ -630,7 +630,7 @@ void spawnSceneDebrisAndEffectCluster(SceneObj *arg0, s32 arg1) {
         n = t + 2;
         if (n > 0) {
             do {
-                spawnNpcType0xAFromTemplate(arg0->pos, VABS(((f32)(rand() & 0x7F) - 64.0f) / 21.333334f + 1.0f));
+                spawnNpcType0xAFromTemplate(arg0->pos, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 21.333334f + 1.0f));
                 i++;
             } while (i < n);
         }
@@ -645,11 +645,11 @@ void spawnSceneDebrisAndEffectCluster(SceneObj *arg0, s32 arg1) {
             composeRandomRotationMatrix(l.m40, l.v30, 2.0f, 0x3C, 0, 0);
             scaleVec3ByRandomRange(l.v30, 3.0f, 4.0f);
             x = ((f32)(rand() & 0x7F) - 64.0f) / 12.8f;
-            a = VABS(x) + 12.0f;
+            a = FABSF_VAL(x) + 12.0f;
             x = ((f32)(rand() & 0x7F) - 64.0f) * 0.0078125f;
-            b = VABS(x) + 0.5f;
+            b = FABSF_VAL(x) + 0.5f;
             x = ((f32)(rand() & 0x7F) - 64.0f) / 320.0f;
-            spawnDebris1Npc(arg0->pos, l.v30, a, b, VABS(x) + 0.2f);
+            spawnDebris1Npc(arg0->pos, l.v30, a, b, FABSF_VAL(x) + 0.2f);
             i++;
         } while (i < n);
     }

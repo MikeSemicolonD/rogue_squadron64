@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 typedef struct {
     f32 x, y, z;
@@ -460,7 +461,6 @@ void composeRandomRotationMatrix(void *, void *, f32, s32, s32, s32);
 void scaleVec3ByRandomRange(void *, f32, f32);
 void spawnDebris1Npc(void *, void *, f32, f32, f32);
 void spawnSplineWalkerCraft(void *, f32, f32, s32);
-#define AABS(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 
 void npcAtAtHandleDestruction(void *arg0, s32 arg1) {
     register AaNpc *npc asm("$20");
@@ -512,11 +512,11 @@ spawn:
                 mtx[1] += pos[1];
                 mtx[2] += pos[2];
                 scaleVec3ByRandomRange(vel, 1.5f, 3.0f);
-                fa = AABS(((f32)(rand() & 0x7F) - 64.0f) * 0.125f);
+                fa = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.125f);
                 fa = fa + 15.0f;
-                fb = AABS(((f32)(rand() & 0x7F) - 64.0f) / 25.6f);
+                fb = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 25.6f);
                 fb = fb + 2.0f;
-                spawnDebris1Npc(mtx, vel, fa, fb, AABS(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
+                spawnDebris1Npc(mtx, vel, fa, fb, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
             }
         }
         spawnSplineWalkerCraft(buf, npc->f54 * 38.4f, npc->f54 * 64.0f, 0xC);
@@ -538,11 +538,11 @@ spawn:
             mtx[1] += pos[1];
             mtx[2] += pos[2];
             scaleVec3ByRandomRange(vel, 1.5f, 3.0f);
-            fa = AABS(((f32)(rand() & 0x7F) - 64.0f) / 12.8f);
+            fa = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 12.8f);
             fa = fa + 12.0f;
-            fb = AABS(((f32)(rand() & 0x7F) - 64.0f) / 42.666668f);
+            fb = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 42.666668f);
             fb = fb + 1.0f;
-            spawnDebris1Npc(mtx, vel, fa, fb, AABS(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.3f);
+            spawnDebris1Npc(mtx, vel, fa, fb, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 320.0f) + 0.3f);
         }
         spawnByteAnimDebrisDefault(npc);
         spawnSplineWalkerCraft(buf, npc->f54 * 30.0f, npc->f54 * 35.0f, 0xC);
@@ -787,7 +787,6 @@ s32 rs_strcmp(char *, char *);
 f32 getActorCurrentValueByType(s32);
 void updateType1AnimRamp(s32, f32, f32, f32, s32);
 void dispatchSlotAction5IfActive(void *, void *);
-#define ATABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 
 s32 npcAtAtUpdate(u8 *arg0, u16 action, u8 *arg2) {
     AtObj *s1 = *(AtObj **)(arg0 + 4);
@@ -928,7 +927,7 @@ s32 npcAtAtUpdate(u8 *arg0, u16 action, u8 *arg2) {
                 s1->rate88 = 0.0379575f / s1->scale;
                 s1->fF4 = D_A630arr[0];
                 s1->sE7 = 0;
-                s1->t80 = ATABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f);
+                s1->t80 = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f);
                 s1->slot6A = popNpcSlotFromTail(D_main_bss_80139580[0], arg0);
             } else {
                 s1->b6F = 1;

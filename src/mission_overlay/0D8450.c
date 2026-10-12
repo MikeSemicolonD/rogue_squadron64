@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 extern void rs_memset(void *, s32, s32);
 extern s32 setNpcHealth(s32, void *, void *);
@@ -402,7 +403,7 @@ void npcWingmanBehaviorByMode(u8 *npc, f32 arg1, s32 mode) {
             if (st->t18 == zero) {
 
                 f32 ab, q = ((f32)(rand() & 0x7F) - 64.0f) * 0.03125f;
-                __asm__ volatile("abs.s %0, %1" : "=f"(ab) : "f"(q));
+                FABSF(ab, q);
                 st->t18 = D_main_bss_80130BA4 + ab + 3.0f;
             }
             if (D_main_bss_80130BA4 >= st->t18) {
@@ -1462,8 +1463,6 @@ void npcTieVariantTickAttachmentEffect(u8 *arg0, f32 dt) {
     }
 }
 
-#define TD_ABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
-
 typedef struct {
     f32 x, y, z;
     f32 fwd[3];
@@ -1545,9 +1544,9 @@ void tdImpl(TdObj *o, s32 a1, s32 a2, s32 a3) {
                 p[1] += o->y;
                 p[2] += o->z;
                 scaleVec3ByRandomRange(v, 3.0f, 4.0f);
-                a = TD_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 16.0f;
-                b = TD_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 106.666664f) + 0.9f;
-                spawnDebris1Npc(p, v, a, b, TD_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
+                a = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 16.0f;
+                b = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 106.666664f) + 0.9f;
+                spawnDebris1Npc(p, v, a, b, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
             }
         }
         break;
@@ -1578,15 +1577,13 @@ void tdImpl(TdObj *o, s32 a1, s32 a2, s32 a3) {
         o->spinAxis[2] = ((f32)(rand() & 0x7F) - 64.0f) * 0.015625f;
     } while (vec3Length(o->spinAxis) == 0.0f);
     normalize_vector(o->spinAxis);
-    o->spin = TD_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 6.4f) + 8.0f;
+    o->spin = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 6.4f) + 8.0f;
     if (o->kind != 4 && o->audioOn != 0) {
         play3DSoundEvent(0, o, o->vel, 24.0f, 0.8f, 0, 1, 0x7F, 0x50);
         spreadVoiceByteParamLocked(mostlyMusyxFlagGatedHelper(o->audio), 0x7F);
     }
     }
 }
-
-#define TV_ABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 
 typedef struct {
     f32 x, y, z;
@@ -1848,9 +1845,9 @@ s32 npcTieVariantUpdate(u8 *arg0, s32 action, u8 *arg2) {
                     sp28.v.y += s1->y;
                     sp28.v.z += s1->z;
                     scaleVec3ByRandomRange(sp38, 3.0f, 4.0f);
-                    a = TV_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 27.0f;
-                    b = TV_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 160.0f) + 0.5f;
-                    spawnDebris1Npc(&sp28, sp38, a, b, TV_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.2f);
+                    a = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 27.0f;
+                    b = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 160.0f) + 0.5f;
+                    spawnDebris1Npc(&sp28, sp38, a, b, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.2f);
                 }
             }
             spawnOrientedEffectIfBudgetOk(s1, 0, 0, 1.0f, 1.0f);
@@ -1870,9 +1867,9 @@ s32 npcTieVariantUpdate(u8 *arg0, s32 action, u8 *arg2) {
                 sp48[1] += s1->y;
                 sp48[2] += s1->z;
                 scaleVec3ByRandomRange(sp58, 1.5f, 3.5f);
-                a = TV_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
-                b = TV_ABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f) + 1.0f;
-                spawnDebris1Npc(sp48, sp58, a, b, TV_ABSF(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
+                a = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 12.8f) + 12.0f;
+                b = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f) + 1.0f;
+                spawnDebris1Npc(sp48, sp58, a, b, FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) / 213.33333f) + 0.3f);
                 distanceAndDopplerNpcHelper(sp48, 0.1f, 0.4f);
             }
             spawnWaterSprayDebrisAndBurst(s1, 0.2f, 2.0f, 2.0f, 4.0f, 1.0f);

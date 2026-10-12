@@ -122,7 +122,6 @@ void buildOrientationFromPosAndAngles(Mat4x3 m, Vec3f pos, Vec3f ang) {
 }
 
 extern f32 floatModulo(f32, f32);
-#define VABS(x) ({ f32 _x = (x); f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(_x)); _r; })
 void stepAngleTowardTarget(f32 *cur, f32 *tgt, f32 t, f32 *out) {
     register f32 a asm("$f12");
     register f32 b asm("$f4");
@@ -138,7 +137,7 @@ void stepAngleTowardTarget(f32 *cur, f32 *tgt, f32 t, f32 *out) {
         q = (b1 - a1) * t;
         r = (a1 + q) - 180.0f;
     } else {
-        sum = VABS(a) + VABS(b);
+        sum = FABSF_VAL(a) + FABSF_VAL(b);
         if (sum < 180.0f) {
             d = sum * t;
         } else {
@@ -166,7 +165,7 @@ void stepAngleTowardTarget(f32 *cur, f32 *tgt, f32 t, f32 *out) {
         q = (b1 - a1) * t;
         r = (a1 + q) - 180.0f;
     } else {
-        sum = VABS(a) + VABS(b);
+        sum = FABSF_VAL(a) + FABSF_VAL(b);
         if (sum < 180.0f) {
             d = sum * t;
         } else {
@@ -194,7 +193,7 @@ void stepAngleTowardTarget(f32 *cur, f32 *tgt, f32 t, f32 *out) {
         q = (b1 - a1) * t;
         r = (a1 + q) - 180.0f;
     } else {
-        sum = VABS(a) + VABS(b);
+        sum = FABSF_VAL(a) + FABSF_VAL(b);
         if (sum < 180.0f) {
             d = sum * t;
         } else {

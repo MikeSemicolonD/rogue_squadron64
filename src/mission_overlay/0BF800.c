@@ -14,6 +14,7 @@
 #include "main/6E500.h"
 #include "mission_overlay/0BF800.h"
 #include "mission_overlay/0FAE50.h"
+#include "rs_math.h"
 
 union ControllerSettings *D_mission_overlay_80109AD0[CONTROLLER_SETTING_NUM] = {
     &LukesControllerSettings,
@@ -152,7 +153,7 @@ const u8 demo_format[] = "demo/%s_DEM";
 
 static __inline__ f32 absPH(f32 x) {
     f32 r;
-    __asm__ volatile("abs.s %0, %1" : "=&f"(r) : "f"(x));
+    FABSF(r, x);
     return r;
 }
 // https://decomp.me/scratch/6pt2m

@@ -1,5 +1,6 @@
 #include "common.h"
 #include "common_types.h"
+#include "rs_math.h"
 
 extern f32 D_mission_overlay_8010A6A4[];
 extern u8 D_mission_overlay_8010A6B8[];
@@ -276,7 +277,6 @@ extern void *walkMeshdef0List(char *);
 extern void releaseMeshAsset(void *);
 extern void initActorRenderDescriptorWithNpcVelocity(s32, s32);
 s16 randS(void) __asm__("rand");
-#define FABS(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 
 typedef struct {
     f32 x, y, z;
@@ -351,10 +351,10 @@ spawn:
             mtx[1] += pos[1];
             mtx[2] += pos[2];
             scaleVec3ByRandomRange(vel, 3.0f, 4.0f);
-            fa = FABS(((f32)(randS() & 0x7F) - 64.0f) / 12.8f);
+            fa = FABSF_VAL(((f32)(randS() & 0x7F) - 64.0f) / 12.8f);
             fa = fa + 12.0f;
-            fb = FABS(((f32)(randS() & 0x7F) - 64.0f) * 0.0078125f) + 1.8f;
-            spawnDebris1Npc(mtx, vel, fa, fb, FABS(((f32)(randS() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
+            fb = FABSF_VAL(((f32)(randS() & 0x7F) - 64.0f) * 0.0078125f) + 1.8f;
+            spawnDebris1Npc(mtx, vel, fa, fb, FABSF_VAL(((f32)(randS() & 0x7F) - 64.0f) / 320.0f) + 0.2f);
         }
     }
     switch (*(s32 *)(npc->u34 + 0xA8)) {
@@ -494,8 +494,6 @@ typedef struct {
     u8 mode;
     u8 bFB;
 } AtSt;
-
-#define SABSF(x) ({ f32 _r; __asm__ volatile("abs.s %0, %1" : "=f"(_r) : "f"(x)); _r; })
 
 extern u8 D_main_bss_80130B39;
 extern u8 D_main_bss_80130B63;
@@ -732,7 +730,7 @@ s32 npcAtStUpdate(u8 *arg0, s32 action, u8 *arg2) {
             s2->anim[2] = load_model_animation("imp_stuff/atst_stop");
             s2->animSlot = flattenAnimTreeAndAllocateSlot(*(s32 *)(s2->mesh + 0x18), s2->anim[s2->animIdx]);
             s2->chan = markModelAnimChannelEntryActive(s2->animSlot, 0);
-            s2->phase = SABSF(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f);
+            s2->phase = FABSF_VAL(((f32)(rand() & 0x7F) - 64.0f) * 0.015625f);
             s2->dur = 1.0f / (*(f32 *)(s2->rec + 0x90) * s2->rate);
             setModelAnimSlotCycleDuration(s2->animSlot, s2->dur);
             seekAllModelAnimChannelsInSlotToTime(s2->animSlot, 0.0f);
@@ -1205,7 +1203,7 @@ s32 spawnPlayerAtStCannonFire(PcObj *arg0, s32 arg1) {
         computeAnchorRelativePositionByDistanceRatio(&buf, &m, 10.0f, &t);
         *(PcV3 *)&m = t;
         a = computeTurnVectorTowardTarget(&buf, &m, &t);
-        __asm__ volatile("abs.s %0, %1" : "=f"(r) : "f"(a));
+        FABSF(r, a);
         if (r > 0.01f) {
             if (lim < a) {
                 a = lim;
@@ -1380,7 +1378,7 @@ void updatePlayerAtStBehavior(AtStPl *o, f32 dt) {
             }
             o->speed = 0.0f;
         }
-        __asm__ volatile("abs.s %0, %1" : "=f"(ab) : "f"(o->speed));
+        FABSF(ab, o->speed);
         if (0.05f < ab) {
             quatFromAxisAngle(q, o->axis, D_mission_overlay_8010BDD8[0][0] * sy);
             rotateVec3ByQuat(q, o->fwd, o->fwd);
