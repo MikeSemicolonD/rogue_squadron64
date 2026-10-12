@@ -468,10 +468,10 @@ void processGridCellByDistance(TCell *, f32);
 
 TCell *cgclImpl(s32, s32) __asm__("clampGridCellLookup");
 TCell *cgclImpl(s32 x, s32 y) {
+    TCell *node;
     s32 cx;
     s32 cy;
     u16 v;
-    TCell *node;
     TCell *c;
     u16 i;
     s32 vv;
@@ -501,25 +501,22 @@ retry:
                     break;
                 }
             }
-            if (i != 0xFFFF) {
-                return c;
+            if (i == 0xFFFF) {
+                processGridCellByDistance(node, 1.0f);
+                c = gcvaL(cx, cy, 0);
+                if (c == NULL) {
+                    return NULL;
+                }
+                c->x = x;
+                c->y = y;
+                c->flags |= 0x20;
+                c->next = node->next;
+                if (c->next != 0xFFFF) {
+                    sTCells[node->next].prev = c->self;
+                }
+                c->prev = c->h8 = node->self;
+                node->next = c->self;
             }
-            processGridCellByDistance(node, 1.0f);
-            __asm__("" :: "r"(node));
-            c = gcvaL(cx, cy, 0);
-            if (c == NULL) {
-                return NULL;
-            }
-            c->x = x;
-            c->y = y;
-            c->flags |= 0x20;
-            c->next = node->next;
-            if (c->next != 0xFFFF) {
-                sTCells[node->next].prev = c->self;
-            }
-            c->prev = c->h8 = node->self;
-            node->next = c->self;
-            __asm__("");
             return c;
         }
         node = gcvaL(cx, cy, 1);
