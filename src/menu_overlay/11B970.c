@@ -3232,7 +3232,7 @@ u16 handleNabooActionButtons(u8 arg0, s32 arg1, f32 arg2, TieAnimBuf *arg3, f32 
     u8 flag0;
     u32 i;
     char *txt;
-    register s32 ret asm("$22");
+    s32 ret;
 
     ret = arg1;
     if (arg0 == 1) {
@@ -3303,7 +3303,7 @@ u16 handleNabooActionButtons(u8 arg0, s32 arg1, f32 arg2, TieAnimBuf *arg3, f32 
         } while (j < 5);
         t = arg4 * 85.0f * ((f32)((u8 *)getPlayerSlotFieldAt34(5, arg3->unk94))[0x2F] / 255.0f);
         activateAnimationKeyframe(5, 8, (u8)t);
-        return ret & 0xFFFF;
+        break;
     case 2:
         if (getControllerNewButtonsPressed(arg5) & 0x9000) {
             if (arg3->unk94 == 3) {
