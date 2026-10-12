@@ -2337,7 +2337,190 @@ s32 spawnTieInterceptorParticles(void) {
     return (s32)obj;
 }
 
-INCLUDE_ASM("asm/nonmatchings/menu_overlay/11B970", playerTieInterceptorMainUpdate);
+typedef struct { f32 x; f32 y; f32 z; } PtiVec3;
+typedef struct { u8 pad[0xA7C]; PtiVec3 verts[1]; } PtiTie;
+void playerTieInterceptorMainUpdate(void *arg) {
+    u8 *obj = arg;
+    u32 start;
+    u32 count;
+    f32 rowY;
+    f32 colX;
+    s32 step;
+    PtiTie *tie;
+    u8 *grid;
+    u8 *src;
+    u32 n;
+    s32 vi;
+    s32 mode;
+    start = 0;
+    rowY = 0.0f;
+    step = 0;
+    count = 0;
+    tie = *(PtiTie **)(obj + 0x14);
+    grid = *(u8 **)(*(u8 **)(obj + 4) + 0xC);
+    colX = rowY;
+    src = *(u8 **)(*(u8 **)(obj + 8) + 0xC);
+    mode = obj[0xC];
+    if (mode != 1) {
+        if (mode < 2) {
+            if (mode == 0) {
+                u16 h = *(u16 *)(grid + 0xA);
+                rowY = -(f32)h * 0.5f;
+                step = 1;
+                count = h * 3;
+                start = (s32) *(f32 *)obj;
+                start -= 1;
+                colX = ((-(f32) *(u16 *)(grid + 8) * 0.5f) + *(f32 *)obj) - 1.0f;
+            }
+        }
+    } else {
+        u16 h = *(u16 *)(grid + 0xA);
+        u16 w = *(u16 *)(grid + 8);
+        rowY = -(f32)h * 0.5f;
+        step = -1;
+        colX = ((f32)w * 0.5f) - *(f32 *)obj;
+        count = h * 3;
+        start = (s32) *(f32 *)obj;
+        start = w - start;
+    }
+    vi = 0;
+    n = vi;
+    *(s16 *)tie = count;
+    *(s32 *)((u8 *)tie + 0x64) = count * 4;
+    *(s32 *)((u8 *)tie + 0xB8) = count;
+    if (count != 0) {
+        u8 *rec;
+        do {
+            u32 idx = start;
+            u32 q = n / 3;
+            u16 w;
+            s32 i;
+            s32 k;
+            f32 fr;
+            s16 x;
+            u8 y;
+            rec = (u8 *)tie + (n * 0x34 + 0xBC);
+            if (n % 3 == 1) {
+                idx += step;
+            }
+            w = *(u16 *)(grid + 8);
+            if (idx >= w) {
+                idx = w - 1;
+            }
+            idx += q * w;
+            *(s32 *)(rec + 8) = (*(u16 *)(*(u8 **)(src + 0xC) + idx * 2)) << 16;
+            for (i = 0; i < 2; i++) {
+                for (k = 0; k < 2; k++) {
+                    tie->verts[vi + k + i * 2].y = rowY + (f32)i;
+                    tie->verts[vi + k + i * 2].z = 0.0f;
+                    tie->verts[vi + k + i * 2].x = colX + (f32)k;
+                }
+            }
+            if (colX < 0.0f) {
+                k = (s32)colX;
+            } else {
+                k = (s32)(colX + 1.0f);
+            }
+            fr = (colX - (f32)k) + 1.0f;
+            switch (((u8 *)arg)[0xC]) {
+            case 0:
+                x = (u32)(fr * 4096.0f);
+                y = (u32)(fr * 255.0f);
+                switch (n % 3) {
+                case 2:
+                    tie->verts[vi].x = (f32)(k - 1);
+                    tie->verts[vi + 2].x = (f32)(k - 1);
+                    tie->verts[vi + 1].x -= 1.0f;
+                    tie->verts[vi + 3].x -= 1.0f;
+                    *(s16 *)(rec + 0x14) = 0;
+                    *(s16 *)(rec + 0x18) = x;
+                    *(s16 *)(rec + 0x1C) = x;
+                    *(s16 *)(rec + 0x20) = 0;
+                    rec[0x33] = 0xFF;
+                    rec[0x2F] = 0xFF;
+                    rec[0x2B] = 0xFF;
+                    rec[0x27] = 0xFF;
+                    break;
+                case 0:
+                    tie->verts[vi + 1].x = (f32)k;
+                    tie->verts[vi + 3].x = (f32)k;
+                    *(s16 *)(rec + 0x14) = x;
+                    *(s16 *)(rec + 0x18) = 0x1000;
+                    *(s16 *)(rec + 0x1C) = 0x1000;
+                    *(s16 *)(rec + 0x20) = x;
+                    rec[0x27] = 0xFF;
+                    rec[0x2B] = y;
+                    rec[0x2F] = y;
+                    rec[0x33] = 0xFF;
+                    break;
+                case 1:
+                    tie->verts[vi].x = (f32)k;
+                    tie->verts[vi + 2].x = (f32)k;
+                    *(s16 *)(rec + 0x14) = 0;
+                    *(s16 *)(rec + 0x18) = x;
+                    *(s16 *)(rec + 0x1C) = x;
+                    *(s16 *)(rec + 0x20) = 0;
+                    rec[0x27] = y;
+                    rec[0x2B] = 0;
+                    rec[0x2F] = 0;
+                    rec[0x33] = y;
+                    break;
+                }
+                break;
+            case 1:
+                x = (u32)((1.0f - fr) * 4096.0f);
+                y = (u32)((1.0f - fr) * 255.0f);
+                switch (n % 3) {
+                case 2:
+                    tie->verts[vi + 1].x = (f32)(k + 1);
+                    tie->verts[vi + 3].x = (f32)(k + 1);
+                    tie->verts[vi].x += 1.0f;
+                    tie->verts[vi + 2].x += 1.0f;
+                    *(s16 *)(rec + 0x14) = 0x1000 - x;
+                    *(s16 *)(rec + 0x18) = 0x1000;
+                    *(s16 *)(rec + 0x1C) = 0x1000;
+                    *(s16 *)(rec + 0x20) = 0x1000 - x;
+                    rec[0x33] = 0xFF;
+                    rec[0x2F] = 0xFF;
+                    rec[0x2B] = 0xFF;
+                    rec[0x27] = 0xFF;
+                    break;
+                case 0:
+                    tie->verts[vi].x = (f32)k;
+                    tie->verts[vi + 2].x = (f32)k;
+                    *(s16 *)(rec + 0x14) = 0;
+                    *(s16 *)(rec + 0x18) = 0x1000 - x;
+                    *(s16 *)(rec + 0x1C) = 0x1000 - x;
+                    *(s16 *)(rec + 0x20) = 0;
+                    rec[0x27] = y;
+                    rec[0x2B] = 0xFF;
+                    rec[0x2F] = 0xFF;
+                    rec[0x33] = y;
+                    break;
+                case 1:
+                    tie->verts[vi + 1].x = (f32)k;
+                    tie->verts[vi + 3].x = (f32)k;
+                    *(s16 *)(rec + 0x14) = 0x1000 - x;
+                    *(s16 *)(rec + 0x18) = 0x1000;
+                    *(s16 *)(rec + 0x1C) = 0x1000;
+                    *(s16 *)(rec + 0x20) = 0x1000 - x;
+                    rec[0x27] = 0;
+                    rec[0x2B] = y;
+                    rec[0x2F] = y;
+                    rec[0x33] = 0;
+                    break;
+                }
+                break;
+            }
+            if (n % 3 == 2) {
+                colX += 0.0f;
+                rowY += 1.0f;
+            }
+            vi += 4;
+            n++;
+        } while (n < count);
+    }
+}
 
 extern void normalize_vector(f32 *);
 extern void vec3Cross(f32 *, f32 *, f32 *);
