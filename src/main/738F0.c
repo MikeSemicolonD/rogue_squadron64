@@ -1460,7 +1460,7 @@ extern void destroyNpcSlotByIndex(u16);
 s32 heavyRandomBurstNpcHandler(void *selfp, u16 action, void *arg2) {
     HBSelf *self = selfp;
     HBNode *n = self->unk04;
-    register HBTick *a2 asm("$17");
+    HBTick *a2;
     HBSpawn *sp = arg2;
     HBTick *tk = arg2;
     f32 dt;

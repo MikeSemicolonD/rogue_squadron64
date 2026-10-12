@@ -2027,7 +2027,7 @@ void silenceVoiceSlot(s32 i) {
 extern s32 gGlideStepGP __asm__("D_main_bss_8013ACC8");
 u32 computeVoiceGlidePitch(u8 *v) {
     u32 cur;
-    register u32 end asm("$3");
+    u32 end;
     u32 d;
     u32 t;
     u32 r;

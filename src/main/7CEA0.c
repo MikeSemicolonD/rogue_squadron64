@@ -64,7 +64,7 @@ extern s32 npcTexturedEffectUpdateWithSlotChain(void *, s32);
 
 void initNpcTexturedEffectFromTemplate(void *arg0) {
     register u8 *eff asm("$17") = *(u8 **)((u8 *)arg0 + 4);
-    register u8 *tpl asm("$16") = *(u8 **)(eff + 0x34);
+    u8 *tpl = *(u8 **)(eff + 0x34);
     u8 *row;
     f32 b, a, c, d;
     void *fn;
