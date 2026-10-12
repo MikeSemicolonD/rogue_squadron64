@@ -48,7 +48,7 @@ struct ProbeFrame {
 extern V3i D_mission_overlay_800A6B94;
 extern void *getObjectMeshTransformOrLocal(s32, void *);
 extern void vec3Cross(f32 *, f32 *, f32 *);
-extern void normalize_vector(f32 *);
+extern f32 normalize_vector(f32 *);
 extern void generatePerpEmitDirectionWithJitter(s32, void *, s32);
 extern s32 tickProgressChannel(s32, void *, s32, f32 *);
 extern void triggerCueWithSlotEffect(s32, s32, void *, void *, s32, f32, f32);

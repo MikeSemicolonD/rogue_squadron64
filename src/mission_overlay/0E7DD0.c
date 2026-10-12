@@ -83,7 +83,7 @@ f32 vec3Dot(void *, void *);
 f32 vec3Length(void *);
 f32 constMinusSinfApprox(f32);
 void vec3Cross(void *, void *, void *);
-void normalize_vector(void *);
+f32 normalize_vector(void *);
 void quatFromAxisAngle(void *, void *, f32);
 void rotateVec3ByQuat(void *, void *, void *);
 
@@ -334,7 +334,7 @@ void updateObjectFlags110(s32, s32, s32);
 s32 rand(void);
 f32 vec3Length(void *);
 f32 wrapAngleToCyclicRange(f32, f32, void *, s32);
-void normalize_vector(void *);
+f32 normalize_vector(void *);
 void *allocateAndInitCraftNpcContext(f32, f32, s32);
 void rs_free(void *);
 s32 getNpcCurrentHealth(s32);

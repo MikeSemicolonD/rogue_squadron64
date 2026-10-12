@@ -1160,7 +1160,7 @@ extern s32 buildVisibleTerrainGridAroundCamera(CaVec3 *, s32 *, s32);
 extern void computeGridLayerScrollOffset(void *);
 extern void setViewStateBytesAndFadeScale(u8, u8, u8, f32, f32);
 extern void setMissionLevelInitByte(s32);
-extern void normalize_vector(CaVec3 *);
+extern f32 normalize_vector(CaVec3 *);
 extern f32 vec3Dot(CaVec3 *, CaVec3 *);
 extern u8 isCameraTransitionIdle();
 extern void slotDispatcherIter(u16, s32, void *);

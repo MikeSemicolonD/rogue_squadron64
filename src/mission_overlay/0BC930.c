@@ -247,7 +247,7 @@ extern TtV3 D_mission_overlay_801099C4[];
 extern u8 D_mission_overlay_801099B0[];
 void lookupHmtTextureByName(s32, char *, s32, void *, void *, s32);
 void accumulateVectorInObjectFrame(void *, void *, void *);
-void normalize_vector(void *);
+f32 normalize_vector(void *);
 f32 vec3Dot(void *, void *);
 f32 constMinusSinfApprox(f32);
 void vec3Cross(void *, void *, void *);

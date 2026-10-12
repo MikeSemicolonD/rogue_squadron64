@@ -796,7 +796,7 @@ extern void addScaledVec3ToVec3(void *, void *, f32, void *);
 void spawnSceneDebrisAndEffectClusterU(void *, u8) __asm__("spawnSceneDebrisAndEffectCluster");
 extern void integrateCraftVelocityAndCollide(void *, f32);
 extern u8 stepObjectOrientationTowardTarget(void *, f32, void *, void *, void *, u8 *);
-extern void normalize_vector(void *);
+extern f32 normalize_vector(void *);
 extern void spawnSplineWalkerCraft(void *, f32, f32, s32);
 extern void initVec4TripletFromArgs_l(void *, s32, s32, s32) __asm__("initVec4TripletFromArgs");
 extern void mat3x4Multiply_l(void *, void *, void *) __asm__("mat3x4Multiply");

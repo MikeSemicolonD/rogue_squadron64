@@ -6,7 +6,7 @@ INCLUDE_ASM("asm/nonmatchings/main/6A6F0", collideSegmentAgainstObjectNodes);
 
 f32 *intersectSegmentWithObjectSphere(void *, void *, f32 *, f32 *);
 s32 collideSegmentAgainstObjectNodes(void *, f32 *, f32 *, f32 *);
-void normalize_vector(void *);
+f32 normalize_vector(void *);
 
 s32 findSegmentObjectSphereHit(u8 **obj, f32 *p, f32 *d, f32 *out) {
     f32 *s;

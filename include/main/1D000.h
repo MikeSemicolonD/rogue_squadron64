@@ -19,7 +19,7 @@ void buildRotationMatrixSlot1(Mat4x3, f32);
 void composeRotationMatrixSlot2(Mat4x3, f32);
 void buildRotationMatrixSlot2(Mat4x3, f32);
 f32  vec3Length(Vec3f);
-void normalize_vector(Vec3f);
+f32 normalize_vector(Vec3f);
 void vec3NormalizeInto(Vec3f, Vec3f);
 f32  vec3Dot(Vec3f, Vec3f);
 f32  vec2Cross2D(Vec3f, Vec3f);

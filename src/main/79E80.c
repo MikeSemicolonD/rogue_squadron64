@@ -27,7 +27,7 @@ extern HmNode *lookupHmtMaterialByName(void *, s32, void *);
 extern u16 findFreeNpcSlotByKey(u16, u16);
 extern void zmemcpy(void *, void *, u32);
 extern void mat3x4Multiply(void *, void *, void *);
-extern void normalize_vector(void *);
+extern f32 normalize_vector(void *);
 extern void popNpcSlotFromTail(u16, void *);
 extern s32 slotDispatcherIter(u16, s32, void *);
 extern void destroyNpcSlotChain(u16);

@@ -13,7 +13,7 @@ typedef struct {
 extern void evalCubicSplineAtTimeF(void *, f32, V3 *) __asm__("evalCubicSplineAtTime");
 f32 sinfApprox(f32);
 void buildRotationMatrixSlot1(Mat4x3, f32);
-void normalize_vector(Vec3f);
+f32 normalize_vector(Vec3f);
 void transformVec3ByMat34(Mat4x3, Vec3f, Vec3f);
 
 void buildPositionAndCallTransformHelper(void *spline, void *offv, void *outv, void *rotv, f32 arg4, f32 arg5, f32 t) {

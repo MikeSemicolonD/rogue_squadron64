@@ -350,13 +350,14 @@ f32 vec3Length(Vec3f v) {
     return len;
 }
 
-void normalize_vector(Vec3f v) {
-    register f32 len asm("$f0");
+f32 normalize_vector(Vec3f v) {
+    f32 len;
 
     SQRTF_ASM(len, v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     v[0] /= len;
     v[1] /= len;
     v[2] /= len;
+    return len;
 }
 
 void vec3NormalizeInto(Vec3f dst, Vec3f src) {

@@ -484,7 +484,7 @@ extern f32 vec3Dot(f32 *, f32 *);
 extern f32 vec3Length(f32 *);
 extern f32 constMinusSinfApprox(f32);
 extern void vec3Cross(f32 *, f32 *, f32 *);
-extern void normalize_vector(f32 *);
+extern f32 normalize_vector(f32 *);
 extern void quatFromAxisAngle(f32 *, f32 *, f32);
 extern void rotateVec3ByQuat(f32 *, f32 *, f32 *);
 extern void s_factor5RemoveListNode(void *) __asm__("factor5RemoveListNode");

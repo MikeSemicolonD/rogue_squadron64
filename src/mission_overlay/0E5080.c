@@ -278,7 +278,7 @@ extern f32 vec3Dot(void *, void *);
 extern f32 vec3Length(void *);
 extern f32 constMinusSinfApprox(f32);
 extern void vec3Cross(void *, void *, void *);
-extern void normalize_vector(void *);
+extern f32 normalize_vector(void *);
 extern void quatFromAxisAngle(void *, void *, f32);
 extern void rotateVec3ByQuat(void *, void *, void *);
 

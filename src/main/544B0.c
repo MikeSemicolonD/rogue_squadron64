@@ -21,7 +21,7 @@ extern u16 D_main_bss_80137AD0[16];
 extern TrV3 D_main_bss_80137AF0[16];
 extern TrV3 D_main_bss_80137BB0[16];
 void rotateVec3ByMat3x3(void *, void *, void *);
-void normalize_vector(void *);
+f32 normalize_vector(void *);
 void transformVec3ByMat34(void *, void *, void *);
 
 void trackResourceListWithMappingTables(TrMdl *mdl, f32 *mtx, f32 *cam) {

@@ -109,7 +109,7 @@ f32 constMinusSinfApprox(f32);
 f32 vec3Dot(void *, void *);
 f32 vec3Length(void *);
 void vec3Cross(void *, void *, void *);
-void normalize_vector(void *);
+f32 normalize_vector(void *);
 void quatFromAxisAngle(void *, void *, f32);
 void rotateVec3ByQuat(void *, void *, void *);
 void factor5RemoveListNode(void *);

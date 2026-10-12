@@ -1146,7 +1146,7 @@ void animateVwingThrusterMaterial(void **arg0, f32 arg1, f32 arg2, f32 arg3)
 
 extern u8 vtLight[] __asm__("D_menu_overlay_800CCC58");
 f32 cosf(f32);
-void normalize_vector(f32 *);
+f32 normalize_vector(f32 *);
 void trackResourceListWithMappingTables(void *, void *, f32 *);
 
 void updateVwingTrailGeometry(void *arg0, f32 arg1, f32 arg2) {
@@ -2523,7 +2523,7 @@ void playerTieInterceptorMainUpdate(void *arg) {
     }
 }
 
-extern void normalize_vector(f32 *);
+extern f32 normalize_vector(f32 *);
 extern void vec3Cross(f32 *, f32 *, f32 *);
 extern u8 D_menu_overlay_800CCAA0[];
 
@@ -2959,7 +2959,7 @@ u8 *allocT16EffectContext(void) {
 
 extern u8 *D_menu_overlay_800CCBF0;
 s16 findCharEntryByteByKey(s32, u8);
-void normalize_vector(f32 *);
+f32 normalize_vector(f32 *);
 void vec3Cross(f32 *, f32 *, f32 *);
 
 void computeNabooBankingOrientation(u8 *arg0, u8 arg1, f32 arg2)

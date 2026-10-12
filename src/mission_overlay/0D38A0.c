@@ -208,7 +208,7 @@ extern void spawnDebris1Npc(f32 *, f32 *, f32, f32, f32);
 extern void spawnDestructionDebris(u16, void *, f32, f32, f32);
 extern void spawnDirectionalDebrisBurst(void *, u16, f32, f32, s32, f32);
 extern f32 vec3Length(void *);
-extern void normalize_vector(void *);
+extern f32 normalize_vector(void *);
 
 void npcShuttleHandleDestruction(u8 *arg0, s32 arg1, s32 arg2, s32 arg3)
 {

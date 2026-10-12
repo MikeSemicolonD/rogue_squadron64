@@ -2396,7 +2396,7 @@ void emitTexturedFaceGeometry(u32 *face, u32 *out, u32 *col, EtfVtx *dst, EtfVtx
 
 f32 cosf(f32);
 f32 vec3Length(f32 *);
-void normalize_vector(f32 *);
+f32 normalize_vector(f32 *);
 void transformVec3ByMat34(f32 *, f32 *, f32 *);
 void rotateVec3ByMat3x3(f32 *, f32 *, f32 *);
 

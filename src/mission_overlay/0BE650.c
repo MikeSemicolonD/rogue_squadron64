@@ -255,7 +255,7 @@ extern NeV3 D_mission_overlay_80109AB4[];
 extern u8 D_mission_overlay_80109A60[];
 void neLookupHmt(s32, char *, s32, void *, void *, s32) __asm__("lookupHmtTextureByName");
 void accumulateVectorInObjectFrame(void *, void *, void *);
-void normalize_vector(void *);
+f32 normalize_vector(void *);
 f32 vec3Dot(void *, void *);
 f32 constMinusSinfApprox(f32);
 void vec3Cross(void *, void *, void *);

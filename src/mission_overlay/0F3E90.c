@@ -532,7 +532,7 @@ f32 sinfApprox(f32);
 f32 constMinusSinfApprox(f32);
 f32 vec3Dot(f32 *, f32 *);
 void vec3Cross(f32 *, f32 *, f32 *);
-void normalize_vector(f32 *);
+f32 normalize_vector(f32 *);
 void quatFromAxisAngle(f32 *, f32 *, f32);
 void quatFromAxisAngleSafe(f32 *, f32 *, f32);
 void rotateVec3ByQuat(f32 *, f32 *, f32 *);
@@ -850,7 +850,7 @@ typedef struct {
 
 void vec3Cross(f32 *, f32 *, f32 *);
 f32 constMinusSinfApprox(f32);
-void normalize_vector(f32 *);
+f32 normalize_vector(f32 *);
 f32 vec3Dot(f32 *, f32 *);
 f32 vec3Length(f32 *);
 void quatFromAxisAngleSafe(f32 *, f32 *, f32);
@@ -1001,7 +1001,7 @@ typedef struct {
 
 void vec3Cross(f32 *, f32 *, f32 *);
 f32 constMinusSinfApprox(f32);
-void normalize_vector(f32 *);
+f32 normalize_vector(f32 *);
 f32 vec3Dot(f32 *, f32 *);
 void quatFromAxisAngleSafe(f32 *, f32 *, f32);
 void quatFromAxisAngle(f32 *, f32 *, f32);

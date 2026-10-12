@@ -3187,7 +3187,7 @@ void tickCutsceneCameraFromTimeline(u32 arg0) {
 
 extern u16 D_cinematic_overlay_800B1B20[];
 extern Vec3f D_cinematic_overlay_800B1BA0[];
-extern void normalize_vector(Vec3f);
+extern f32 normalize_vector(Vec3f);
 
 typedef struct {
     u8 pad0[0x8];

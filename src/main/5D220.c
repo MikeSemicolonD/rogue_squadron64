@@ -73,7 +73,7 @@ void transformMeshPartIntoWorld(s32, f32 *);
 void vec3Cross(void *, void *, void *);
 f32 vec3Length(void *);
 f32 vec3Dot(void *, void *);
-void normalize_vector(void *);
+f32 normalize_vector(void *);
 f32 constMinusSinfApprox(f32);
 void quatFromAxisAngleSafe(void *, void *, f32);
 void rotateVec3ByQuat(void *, void *, void *);

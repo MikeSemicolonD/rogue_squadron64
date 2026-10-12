@@ -276,7 +276,7 @@ extern u8 *walkMeshdef0List(s32);
 extern void mat3x4Multiply(void *, void *, void *);
 extern void extractOrthonormalFrameFromStruct(void *, void *);
 extern void mat34CrossRowsAndCopyPosPtr(void *, void *, void *);
-extern void normalize_vector(void *);
+extern f32 normalize_vector(void *);
 extern s16 rand(void);
 extern void buildRotationMatrixSlot1(void *, f32);
 extern void play3DSoundEvent(s32, void *, void *, f32, f32, s32, s32, s32, s32);

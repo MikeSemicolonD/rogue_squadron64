@@ -1496,7 +1496,7 @@ void spawnDebris1Npc(void *, void *, f32, f32, f32);
 void spawnDestructionEffectBurst(void *, u16, f32, f32, f32, f32);
 void spawnDestructionDebris(u16, void *, f32, f32, f32);
 void spawnDirectionalDebrisBurst(void *, u16, f32, f32, s32, f32);
-void normalize_vector(f32 *);
+f32 normalize_vector(f32 *);
 s32 mostlyMusyxFlagGatedHelper(void *);
 void spreadVoiceByteParamLocked(s32, s32);
 
