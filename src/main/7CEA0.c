@@ -1774,16 +1774,13 @@ extern s32 D_main_bss_80137CE4;
 
 void npcSpawnInitTimedEffect(u8 *arg0) {
     u8 *s0 = *(u8 **)(arg0 + 4);
-    u8 *def;
-    register u8 *t asm("$6");
+    u8 *def = *(u8 **)(s0 + 0x34);
     s32 hp;
     f32 *row;
     f32 v;
 
     *(s16 *)(s0 + 0x1B2) = 0;
-    t = *(u8 **)(s0 + 0x34);
-    def = t;
-    hp = nsSetHealth(*(void **)(s0 + 0x38), t + 0x6C, t);
+    hp = nsSetHealth(*(void **)(s0 + 0x38), *(u8 **)(s0 + 0x34) + 0x6C, *(u8 **)(s0 + 0x34));
     *(s32 *)(s0 + 0xE8) = *(s32 *)(s0 + 0xEC) = *(s32 *)(s0 + 0xF0) = *(s32 *)(s0 + 0xF4) = hp;
     *(u8 *)(s0 + 0xF9) = 0;
     *(s16 *)(s0 + 0xFA) = 0;
