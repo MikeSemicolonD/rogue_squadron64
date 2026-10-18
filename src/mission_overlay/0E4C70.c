@@ -34,7 +34,7 @@ typedef struct {
 } NpcA;
 
 s32 func_mission_overlay_800E4070(u8 *arg0, u16 arg1, u8 *arg2) {
-    register NpcA *s1 asm("$17") = *(NpcA **)(arg0 + 4);
+    NpcA *s1 = *(NpcA **)(arg0 + 4);
     u8 *s0;
     u32 a0;
 
@@ -130,22 +130,23 @@ l800:
         }
         break;
     case 5: {
-        s0 = arg2;
-        if (*(u16 *)(s0 + 4) != 7) {
-            if (*(u16 *)(s0 + 4) == 0xD && s1->b3E == 1) {
+        u8 *msg = arg2;
+
+        if (*(u16 *)(msg + 4) != 7) {
+            if (*(u16 *)(msg + 4) == 0xD && s1->b3E == 1) {
                 u8 *r = s1->rec;
                 datItemSetObjectiveBooleanCount(*(s32 *)(r + 0x7C), *(s32 *)(r + 0x80), *(s32 *)(r + 0x74), *(s32 *)(r + 0x78), *(s32 *)(r + 0x84), *(s32 *)(r + 0x88));
             } else {
-                extrapolateNpcPositionForCurrentMode(s0);
+                extrapolateNpcPositionForCurrentMode(msg);
                 play3DSoundEvent(0, (u8 *)s1 + 4, (u8 *)s1 + 0x28, 24.0f, 0.8f, 0, 0xC, 0x7F, 0x50);
-                if (*(u16 *)s1->rec == 0x33 && *(u16 *)(s0 + 2) == (u16)getPlayerField2(0) && s1->b3D == 0) {
+                if (*(u16 *)s1->rec == 0x33 && *(u16 *)(msg + 2) == (u16)getPlayerField2(0) && s1->b3D == 0) {
                     s1->b3D = 1;
                     playSpeechClip(0x15B, 0x73, 0, 8);
                 }
             }
         }
-        if (*(u16 *)s0 != 0xFFFF) {
-            destroyNpcSlotByIndex(*(u16 *)s0);
+        if (*(u16 *)msg != 0xFFFF) {
+            destroyNpcSlotByIndex(*(u16 *)msg);
         }
         break;
     }
