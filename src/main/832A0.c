@@ -1789,61 +1789,52 @@ void fsImplFS(u8 *v) {
 extern u32 D_main_bss_8013ACF8;
 extern u8 *D_main_bss_8013AF00;
 extern u8 *D_main_bss_8013AF04;
-u32 allocVoiceHandleNode(u8 *v) {
-    u32 id;
-    u32 k;
-    u32 n;
-    u8 *a2;
-    u8 *t0;
-    u8 *a1;
-    u8 *t;
-    register u32 ret asm("$2");
+static __inline__ u32 getNewVidAV(void) {
+    u32 vid;
     do {
-        n = D_main_bss_8013ACF8;
-        D_main_bss_8013ACF8 = n + 1;
-    } while (n == -1);
-    id = n;
-    a2 = D_main_bss_8013AF00;
-    t0 = 0;
-    while (a2 != 0) {
-        k = *(u32 *)(a2 + 8);
-        if (id < k) {
+        vid = D_main_bss_8013ACF8++;
+    } while (vid == 0xFFFFFFFF);
+    return vid;
+}
+u32 allocVoiceHandleNode(u8 *v) {
+    u32 vid;
+    FsNode *nvl;
+    FsNode *lvl;
+    FsNode *vl;
+
+    vid = getNewVidAV();
+    lvl = NULL;
+    nvl = gFsHead;
+    while (nvl != NULL) {
+        if (nvl->h > vid) {
             break;
         }
-        if (k == id) {
-            do {
-                n = D_main_bss_8013ACF8;
-                D_main_bss_8013ACF8 = n + 1;
-            } while (n == -1);
-            id = n;
+        if (nvl->h == vid) {
+            vid = getNewVidAV();
         }
-        t0 = a2;
-        a2 = *(u8 **)a2;
+        lvl = nvl;
+        nvl = nvl->next;
     }
-    a1 = D_main_bss_8013AF04;
-    ret = -1;
-    if (a1 != 0) {
-        t = *(u8 **)a1;
-        D_main_bss_8013AF04 = t;
-        if (t != 0) {
-            *(s32 *)(t + 4) = 0;
-        }
-        if (t0 == 0) {
-            D_main_bss_8013AF00 = a1;
-        } else {
-            *(u8 **)t0 = a1;
-        }
-        *(u8 **)(a1 + 4) = t0;
-        *(u8 **)a1 = a2;
-        if (a2 != 0) {
-            *(u8 **)(a2 + 4) = a1;
-        }
-        *(u32 *)(a1 + 8) = id;
-        ret = id;
-        *(s32 *)(a1 + 0xC) = *(s32 *)(v + 0x64);
-        *(u8 **)(v + 0x18) = a1;
+    if ((vl = gFsFree) == NULL) {
+        return 0xFFFFFFFF;
     }
-    return ret;
+    if ((gFsFree = gFsFree->next) != NULL) {
+        gFsFree->prev = NULL;
+    }
+    if (lvl == NULL) {
+        gFsHead = vl;
+    } else {
+        lvl->next = vl;
+    }
+    vl->prev = lvl;
+    vl->next = nvl;
+    if (nvl != NULL) {
+        nvl->prev = vl;
+    }
+    vl->h = vid;
+    vl->slot = *(s32 *)(v + 0x64);
+    *(FsNode **)(v + 0x18) = vl;
+    return vid;
 }
 
 typedef struct VhNodeRV { struct VhNodeRV *next; s32 pad4; u32 h; s32 slot; } VhNodeRV;
