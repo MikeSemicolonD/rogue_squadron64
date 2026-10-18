@@ -2377,7 +2377,6 @@ s32 applyNoteEventToGroup(u32 key, u16 a1, u8 note, u8 vel, u8 a4, u8 a5, u8 a6,
     u8 v2;
     u32 k2;
     s32 kk;
-    register u32 h0 asm("$2");
 
     tbl = (AgEnt *)lookupAG(key >> 16, &cnt);
     if (tbl != NULL) {
@@ -2426,25 +2425,15 @@ s32 applyNoteEventToGroup(u32 key, u16 a1, u8 note, u8 vel, u8 a4, u8 a5, u8 a6,
                 v4 = 0x80;
             }
             v2 = (vel * e->b5) / 127;
-            {
-                s32 t3;
-                kk = (key >> 8) & 0xFF;
-                kk += e->h6;
-                if (kk < 0x100) {
-                    t3 = (kk < 0) ? 0 : kk;
-                } else {
-                    t3 = 0xFF;
-                }
-                k2 = key & 0xFF;
-                t3 <<= 8;
-                k2 |= t3;
-                h0 = e->h0;
-                k2 |= h0 << 16;
-            }
-            if (h0 & 0xC000) {
+            kk = (key >> 8) & 0xFF;
+            kk += e->h6;
+            kk = (kk < 0x100) ? ((kk < 0) ? 0 : kk) : 0xFF;
+            k2 = key & 0xFF;
+            k2 |= kk << 8;
+            k2 |= e->h0 << 16;
+            if (e->h0 & 0xC000) {
                 continue;
             }
-            __asm__("" :: "r"(kk));
             if (ret == -1) {
                 prev = startNoteOnVoice(k2, a1, (u8)(n | (note & 0x80)), v2, v4, a5, a6, a7, a8, 0, a9);
                 if (prev != -1) {
