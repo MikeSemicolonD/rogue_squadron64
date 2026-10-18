@@ -237,12 +237,12 @@ void serviceVoicePoolFrame(void) {
         D_main_bss_8015466C = osGetTime();
         for (; i < 1; i++) {
             off = i * 0x1228;
-            if (*(volatile u8 *)((u8 *)D_main_bss_80154620 + off) == 0) {
+            if (gVSlots[i].active == 0) {
                 continue;
             }
             v = (u8 *)D_main_80153420 + off;
             svpStream(v);
-            switch (*(volatile u8 *)((u8 *)D_main_bss_80154620 + off)) {
+            switch (gVSlots[i].active) {
             case 1:
                 if (SVA(u8, 0x11DD) == 2) {
                     u32 r = SVA(u32, 0x1208);
@@ -252,7 +252,7 @@ void serviceVoicePoolFrame(void) {
                     x = (f32)*(u16 *)((u8 *)D_main_bss_801545C0 + off) * 160.0f;
                     d = r;
                     *(s32 *)((u8 *)D_main_bss_8015463C + off) = 0;
-                    *(volatile u8 *)((u8 *)D_main_bss_80154620 + off) = 2;
+                    gVSlots[i].active = 2;
                     *(f32 *)((u8 *)D_main_bss_80154640 + off) = x / d;
                     advanceVoiceStateToPlaying(v);
                     *(s32 *)&v[0x120C] = startStreamedSampleVoice(
@@ -262,19 +262,19 @@ void serviceVoicePoolFrame(void) {
                         D_main_bss_80154639[off], accumulateVoiceSampleOffset, i);
                     if (*(s32 *)&v[0x120C] == -1) {
                         stopVoice(v);
-                        *(volatile u8 *)((u8 *)D_main_bss_80154620 + off) = 0;
+                        gVSlots[i].active = 0;
                     }
                 }
                 break;
             case 2:
                 if (SVA(u8, 0x11DD) == 4) {
-                    *(volatile u8 *)((u8 *)D_main_bss_80154620 + off) = 3;
+                    gVSlots[i].active = 3;
                     SVA(u8, 0x1218) = 4;
                 }
                 break;
             case 3:
                 if (SVA(u8, 0x1218) == 0) {
-                    *(volatile u8 *)((u8 *)D_main_bss_80154620 + off) = 0;
+                    gVSlots[i].active = 0;
                 } else {
                     if (SVA(u8, 0x1218) == 2) {
                         stopStreamedVoice(SVA(s32, 0x120C));
