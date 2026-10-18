@@ -258,16 +258,11 @@ void csImpl(CsSrc *src, f32 *vol, f32 *dop, f32 *panx, f32 *pany, f32 *front0) {
         }
     }
 }
-__asm__(".section .rodata\n.align 2\n.globl D_main_8003DE90\nD_main_8003DE90:\n.word 0x42FE0000\n.globl D_main_8003DE94\nD_main_8003DE94:\n.word 0x4F000000\n.globl D_main_8003DE98\nD_main_8003DE98:\n.word 0x42FE0000\n.globl D_main_8003DE9C\nD_main_8003DE9C:\n.word 0x4F000000\n.globl D_main_8003DEA0\nD_main_8003DEA0:\n.word 0x3F800000\n.globl D_main_8003DEA4\nD_main_8003DEA4:\n.word 0x42800000\n.globl D_main_8003DEA8\nD_main_8003DEA8:\n.word 0x4F000000\n.globl D_main_8003DEAC\nD_main_8003DEAC:\n.word 0x3F800000\n.globl D_main_8003DEB0\nD_main_8003DEB0:\n.word 0x42800000\n.globl D_main_8003DEB4\nD_main_8003DEB4:\n.word 0x4F000000\n.globl D_main_8003DEB8\nD_main_8003DEB8:\n.word 0x46000000\n.globl D_main_8003DEBC\nD_main_8003DEBC:\n.word 0x4F000000\n.globl D_main_8003DEC0\nD_main_8003DEC0:\n.word 0x42FE0000\n.globl D_main_8003DEC4\nD_main_8003DEC4:\n.word 0x42FE0000\n.globl D_main_8003DEC8\nD_main_8003DEC8:\n.word 0x42FE0000\n.globl D_main_8003DECC\nD_main_8003DECC:\n.word 0x42FE0000\n.globl D_main_8003DED0\nD_main_8003DED0:\n.word 0x42FE0000\n.globl D_main_8003DED4\nD_main_8003DED4:\n.word 0x3DA3D70A\n.globl D_main_8003DED8\nD_main_8003DED8:\n.word 0x3E19999A\n.globl D_main_8003DEDC\nD_main_8003DEDC:\n.word 0x3E99999A\n.globl D_main_8003DEE0\nD_main_8003DEE0:\n.word 0x3F800000\n.word 0x00000000\n.word 0x95AA0004\n.word 0x24010003\n.section .text");
 
-extern f32 D_main_8003DE90, D_main_8003DE94, D_main_8003DE98, D_main_8003DE9C, D_main_8003DEA0, D_main_8003DEA4;
-extern f32 D_main_8003DEA8, D_main_8003DEAC, D_main_8003DEB0, D_main_8003DEB4, D_main_8003DEB8, D_main_8003DEBC;
 void spreadVoiceByteParamAcrossChain(s32, u32);
 void setVoiceParamByHandle(s32, u32);
 void applyVoiceCmdByHandle(s32, u32);
 void spreadVoiceKeyTransposeAcrossChain(s32, u32);
-
-#define AVF2U(t, x, k) if (!((x) >= (k))) { t = (s32)(x); } else { t = (s32)((x) - (k)); t |= 0x80000000; }
 
 static __inline__ u32 cl(u32 v0) { register u32 v asm("$3") = v0; u32 r = v; if (v >= 0x80) { r = 0x7F; } __asm__("" :: "r"(v)); return r; }
 static __inline__ u32 c16(u32 v0) { register u32 v asm("$5") = v0; u32 r; if (v >= 0x4000) { r = 0x3FFF; __asm__(""); } else { r = v; } __asm__("" :: "r"(v)); return r; }
@@ -282,25 +277,31 @@ void applyVoice3DMixParams(void *a0, f32 arg1, f32 arg2, f32 arg3, f32 arg4, f32
 
     h = *(s32 *)(arg0 + 0x34);
     if (*(u32 *)(arg0 + 8) & 0x100000) {
-        x = *(f32 *)(arg0 + 0x40) * arg1 * D_main_8003DE90;
-        AVF2U(t1, x, D_main_8003DE94);
+        x = *(f32 *)(arg0 + 0x40) * arg1 * 127.0f;
+        t1 = (u32)x;
         { register u32 v asm("$3") = t1 & 0xFF; if (v < 0x80) { a = v; __asm__("" :: "r"(v)); } else { a = 0x7F; } }
     } else {
-        x = arg1 * D_main_8003DE98;
-        AVF2U(a, x, D_main_8003DE9C);
+        x = arg1 * 127.0f;
+        if (!(x >= 2147483648.0f)) {
+            a = (s32)x;
+        } else {
+            a = (s32)(x - 2147483648.0f);
+            a |= 0x80000000;
+        }
         a &= 0xFF; if (a >= 0x80) { a = 0x7F; }
     }
     spreadVoiceByteParamAcrossChain(h, a);
-    x = (arg2 + D_main_8003DEA0) * D_main_8003DEA4;
-    AVF2U(t, x, D_main_8003DEA8);
+    x = (arg2 + 1.0f) * 64.0f;
+    t = (u32)x;
         setVoiceParamByHandle(h, cl(t & 0xFF));
-    x = (D_main_8003DEAC - arg4) * D_main_8003DEB0;
-    AVF2U(t, x, D_main_8003DEB4);
+    x = (1.0f - arg4) * 64.0f;
+    t = (u32)x;
         applyVoiceCmdByHandle(h, cl(t & 0xFF));
-    x = arg5 * D_main_8003DEB8;
-    AVF2U(t4, x, D_main_8003DEBC);
+    x = arg5 * 8192.0f;
+    t4 = (u32)x;
     spreadVoiceKeyTransposeAcrossChain(h, (u16)c16(t4));
 }
+__asm__(".section .rodata\n.globl D_main_8003DEC0\nD_main_8003DEC0:\n.word 0x42FE0000\n.globl D_main_8003DEC4\nD_main_8003DEC4:\n.word 0x42FE0000\n.globl D_main_8003DEC8\nD_main_8003DEC8:\n.word 0x42FE0000\n.globl D_main_8003DECC\nD_main_8003DECC:\n.word 0x42FE0000\n.globl D_main_8003DED0\nD_main_8003DED0:\n.word 0x42FE0000\n.globl D_main_8003DED4\nD_main_8003DED4:\n.word 0x3DA3D70A\n.globl D_main_8003DED8\nD_main_8003DED8:\n.word 0x3E19999A\n.globl D_main_8003DEDC\nD_main_8003DEDC:\n.word 0x3E99999A\n.globl D_main_8003DEE0\nD_main_8003DEE0:\n.word 0x3F800000\n.word 0x00000000\n.word 0x95AA0004\n.word 0x24010003\n.section .text");
 
 extern f32 D_main_8003DEC0;
 extern u8 gMusyXActiveFlag;
