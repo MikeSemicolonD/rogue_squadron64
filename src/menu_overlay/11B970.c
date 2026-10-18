@@ -1997,9 +1997,7 @@ void driveFalconAnimationKeyframes(DfObj *o, f32 dt) {
     }
 }
 
-void applyTieInterceptorAnimState(u8 *arg0, s32 arg1, s32 arg2) {
-    register s32 g asm("$17") = arg1;
-    register s32 f asm("$16") = arg2;
+void applyTieInterceptorAnimState(u8 *arg0, u16 arg1, u8 arg2) {
     u32 i;
     u16 idx;
     u8 *q;
@@ -2016,14 +2014,14 @@ void applyTieInterceptorAnimState(u8 *arg0, s32 arg1, s32 arg2) {
     *(s16 *)(arg0 + 0x40) = 0x34;
     *(s16 *)(arg0 + 0x3A) = 0x98;
     *(s16 *)(arg0 + 0x3E) = 0xA2;
-    arg0[0x28] = g;
+    arg0[0x28] = arg1;
     arg0[0x2A] = 0;
     *(s16 *)(arg0 + 0x38) = 0;
     *(s16 *)(arg0 + 0x42) = 0x7E;
     *(f32 *)(arg0 + 0x5C) = 1.0f;
     *(f32 *)(arg0 + 0x60) = 0.8f;
     *(f32 *)(arg0 + 0x64) = 0.8f;
-    arg0[0x94] = (u8)f ? 3 : 4;
+    arg0[0x94] = arg2 ? 3 : 4;
     *(u16 *)(arg0 + 0x98) |= 0x1C;
     for (i = 0; i < arg0[0x95]; i++) {
         p = arg0 + i * 4;
@@ -3215,7 +3213,7 @@ extern s8 D_menu_overlay_800CCC55;
 extern s8 D_menu_overlay_800CCC56;
 extern s8 D_menu_overlay_800CCC57;
 extern Bytes4 D_menu_overlay_800A6654;
-void applyTieInterceptorAnimState(u8 *, s32, s32);
+void applyTieInterceptorAnimState(u8 *, u16, u8);
 void updateMenuPerFrame(void *, f32, f32, s32, s32);
 u32 getControllerNewButtonsPressed(u8);
 void unsetControllerNewButtonsPressed(u8, u32);
