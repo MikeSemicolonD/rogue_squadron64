@@ -1742,10 +1742,16 @@ s32 playerAtStUpdate(u8 *arg0, s32 action, u8 *arg2) {
         *(PaMat *)(s4 + 4) = *(PaMat *)s2;
         {
             union { s32 i; f32 f; } u;
-            register f32 d asm("$f2");
+            f32 d;
             u.i = 0x3D400000;
             d = *(f32 *)a3;
-            __asm__("" :: "f"(d));
+            {
+                f32 x = *(f32 *)(s4 + 0xE8);
+
+                if (x < d) {
+                    x = d;
+                }
+            }
             cbsvF(0, u.f, u.f, D_main_bss_8013800C, 1.0f, d);
         }
         return 1;
