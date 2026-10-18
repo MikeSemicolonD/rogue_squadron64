@@ -737,6 +737,7 @@ s32 npcGroundTransportUpdate(u8 *arg0, u16 action, u8 *arg2) {
     f32 dt;
     char *name;
     s32 i;
+    s32 k;
 
     switch (action) {
     case 1:
@@ -930,7 +931,6 @@ s32 npcGroundTransportUpdate(u8 *arg0, u16 action, u8 *arg2) {
             case 0:
             case 1:
                 {
-                    register s32 k asm("$16");
                     s32 n = (rand() & 1) + 2;
                     for (k = 0; k < n; ) {
                         composeRandomRotationMatrix(sp, &sp[4], s1->radius * 0.5f, 0x5A, 0, 0);
@@ -958,7 +958,6 @@ s32 npcGroundTransportUpdate(u8 *arg0, u16 action, u8 *arg2) {
                 break;
             default:
                 {
-                    s32 k;
                     s32 n = (s16)(rand() % 3) + 3;
                     for (k = 0; k < n; k++) {
                         composeRandomRotationMatrix(sp, &sp[4], s1->radius * 0.5f, 0x5A, 0, 0);
