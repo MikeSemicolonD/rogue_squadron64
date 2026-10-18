@@ -211,13 +211,12 @@ static __inline__ void hfInit(void) {
 void buildHeapFreeList(struct heapBlockHeader **arg0, u32 arg1, struct D_main_bss_8010FF08_type *arg2, struct heapBlockHeader *arg3, struct heapBlockHeader *arg4, u8 arg5) {
     struct heapBlockHeader *a3;
     struct heapBlockHeader *a1;
-    struct heapBlockHeader *a0;
+    u32 a0;
     struct heapBlockHeader *t0;
     struct D_main_bss_8010FF08_type *a2;
     u32 pa1;
     s32 t1;
     s32 v1;
-    u32 diff;
     u32 t2;
 
     hfInit();
@@ -246,9 +245,8 @@ void buildHeapFreeList(struct heapBlockHeader **arg0, u32 arg1, struct D_main_bs
             t1 = (a2->dataSize + 0xF) & ~0xF;
             if (!(a3->unk00 & 8)) {
                 do {
-                    a0 = (struct heapBlockHeader *)((u8 *)a3 + a3->size);
-                    t0 = a0 + 1;
-                    __asm__("" :: "r"(a0));
+                    a0 = (u32)a3 + a3->size;
+                    t0 = (struct heapBlockHeader *)a0 + 1;
                     if (((u32)a1 >= (u32)a3) & ((u32)a1 < (u32)t0)) {
                         a1->unk00 = 6;
                         a1->flags = 0;
@@ -256,13 +254,13 @@ void buildHeapFreeList(struct heapBlockHeader **arg0, u32 arg1, struct D_main_bs
                             a3->size = (u32)a1 - (u32)a3 - 0x10;
                         }
                         v1 = (u32)t0 - (u32)a1 - 0x10;
-                        diff = v1 - t1;
+                        a0 = v1 - t1;
                         if (v1 != t1) {
-                            if (diff >= 0x21) {
+                            if (a0 >= 0x21) {
                                 struct heapBlockHeader *n = (struct heapBlockHeader *)((u8 *)a1 + t1);
                                 n[1].unk00 = 1;
                                 n[1].flags = 0;
-                                n[1].size = diff - 0x10;
+                                n[1].size = a0 - 0x10;
                             } else {
                                 t1 = v1;
                             }
@@ -271,7 +269,7 @@ void buildHeapFreeList(struct heapBlockHeader **arg0, u32 arg1, struct D_main_bs
                         break;
                     }
                     a3 = t0;
-                } while (!(a0[1].unk00 & 8));
+                } while (!(((struct heapBlockHeader *)a0)[1].unk00 & 8));
             }
             t2++;
         } while (t2 < arg1);
@@ -371,13 +369,12 @@ static __inline__ void cfInit(void) {
 static __inline__ void cfBuild(struct heapBlockHeader **arg0, u32 arg1, struct D_main_bss_8010FF08_type *arg2, struct heapBlockHeader *arg3, struct heapBlockHeader *arg4, u8 arg5) {
     struct heapBlockHeader *a3;
     struct heapBlockHeader *a1;
-    struct heapBlockHeader *a0;
+    u32 a0;
     struct heapBlockHeader *t0;
     struct D_main_bss_8010FF08_type *a2;
     u32 pa1;
     s32 t1;
     s32 v1;
-    u32 diff;
     u32 t2;
 
     cfInit();
@@ -405,9 +402,8 @@ static __inline__ void cfBuild(struct heapBlockHeader **arg0, u32 arg1, struct D
             t1 = (a2->dataSize + 0xF) & ~0xF;
             if (!(a3->unk00 & 8)) {
                 do {
-                    a0 = (struct heapBlockHeader *)((u8 *)a3 + a3->size);
-                    t0 = a0 + 1;
-                    __asm__("" :: "r"(a0));
+                    a0 = (u32)a3 + a3->size;
+                    t0 = (struct heapBlockHeader *)a0 + 1;
                     if (((u32)a1 >= (u32)a3) & ((u32)a1 < (u32)t0)) {
                         a1->unk00 = 6;
                         a1->flags = 0;
@@ -415,13 +411,13 @@ static __inline__ void cfBuild(struct heapBlockHeader **arg0, u32 arg1, struct D
                             a3->size = (u32)a1 - (u32)a3 - 0x10;
                         }
                         v1 = (u32)t0 - (u32)a1 - 0x10;
-                        diff = v1 - t1;
+                        a0 = v1 - t1;
                         if (v1 != t1) {
-                            if (diff >= 0x21) {
+                            if (a0 >= 0x21) {
                                 struct heapBlockHeader *n = (struct heapBlockHeader *)((u8 *)a1 + t1);
                                 n[1].unk00 = 1;
                                 n[1].flags = 0;
-                                n[1].size = diff - 0x10;
+                                n[1].size = a0 - 0x10;
                             } else {
                                 t1 = v1;
                             }
@@ -430,7 +426,7 @@ static __inline__ void cfBuild(struct heapBlockHeader **arg0, u32 arg1, struct D
                         break;
                     }
                     a3 = t0;
-                } while (!(a0[1].unk00 & 8));
+                } while (!(((struct heapBlockHeader *)a0)[1].unk00 & 8));
             }
         }
     }
