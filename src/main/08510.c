@@ -4382,13 +4382,10 @@ u8 bdmImpl(s16 arg0, s16 arg1, s16 arg2, s16 arg3, u16 arg4, s32 *arg5, s32 arg6
     prevn = NULL;
     if (cur < end) {
         do {
-            u32 *nx;
             cur[1] = (u32)prevn;
+            cur[0] = (u32)(cur + 0x42);
             prevn = cur;
-            nx = (u32 *)((u8 *)prevn + 0x108);
-            prevn[0] = (u32)nx;
-            __asm__ volatile("");
-            __asm__("" : "=r"(cur) : "0"(nx));
+            cur += 0x42;
         } while (cur < end);
     }
     cur[-0x42] = 0;
