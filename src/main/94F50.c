@@ -786,7 +786,8 @@ void updateSongTempoTickRate(u32 arg0) {
     struct SNG_unk0C_type *cur;
     struct SNG_unk0C_type *prev;
     u32 budget;
-    register u32 lo asm("$2");
+    u32 tickDelta;
+    s32 deltaTime;
     s32 neg;
 
     D_main_bss_801529C0->unkE6C = D_main_bss_801529C0->unkE68;
@@ -807,10 +808,12 @@ loop:
             }
         }
     }
-    { register u32 pr asm("$3"); register u32 qq asm("$2"); register s32 dd asm("$4"); qq = (u32)(D_main_bss_801529C0->unk110[5] * 0x600) / 240; dd = (s32)(D_main_bss_80142038 << 16) / D_main_bss_801440C0; pr = qq * dd; lo = pr * D_main_bss_801529C0->unkEC2; }
-    D_main_bss_801529C0->unk110[2] = (lo >> 8) & 0xFFFF;
-    D_main_bss_801529C0->unk110[3] = lo >> 24;
-    D_main_bss_801529C0->unk110[4] = (s32)(lo >> 24) >> 1;
+    deltaTime = (s32)(D_main_bss_80142038 << 16) / D_main_bss_801440C0;
+    tickDelta = ((u32)(D_main_bss_801529C0->unk110[5] * 0x600) / 240) * deltaTime;
+    tickDelta = (tickDelta * D_main_bss_801529C0->unkEC2) >> 8;
+    D_main_bss_801529C0->unk110[2] = tickDelta & 0xFFFF;
+    D_main_bss_801529C0->unk110[3] = tickDelta >> 16;
+    D_main_bss_801529C0->unk110[4] = D_main_bss_801529C0->unk110[3] >> 1;
 }
 
 static inline s32 findSongSlotByHandle(u32 handle) {
