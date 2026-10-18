@@ -3565,43 +3565,39 @@ s32 soundMacroOpKeyOnNote(u8 *ch, u8 *cmd) {
     return 0;
 }
 
-// NOTE: 2 rows: only the position of i=0 (target: after first lbu, mine first). levers: unused[4], hi temp, off = i*0x17C temp
 extern u8 D_main_bss_80141AD0;
 extern u8 gMusyXActiveFlag;
 extern u32 D_main_bss_8013D8A4[];
 extern s32 D_main_bss_8013D8E4[];
-s32 soundMacroOpKeyOffByNote(u8 *ch, u8 *cmd) {
-    u32 b = cmd[2];
-    u32 i = 0;
-    u32 hi = *(u16 *)cmd;
-    u32 key;
-    u8 cnt = D_main_bss_80141AD0;
-    s32 off;
-    s32 id;
-    s32 o2;
-    u8 act;
-    s32 unused[4];
-    b <<= 4;
-    b <<= 4;
-    key = (*(u16 *)(ch + 0x52) + b) | (hi << 16);
+typedef struct { s32 id; u8 pad[0x178]; } KoVI;
+typedef struct { u32 flags; u8 pad[0x178]; } KoVF;
+extern KoVI gKoVI[] __asm__("D_main_bss_8013D8E4");
+extern KoVF gKoVF[] __asm__("D_main_bss_8013D8A4");
+static __inline__ s32 sendSingleKeyOffKO(u32 voiceid) {
+    u32 i;
 
-    if (cnt != 0) {
-        act = gMusyXActiveFlag;
-        do {
-            off = i * 0x17C;
-            id = *(s32 *)((s32)D_main_bss_8013D8E4 + off);
-            if (id == (key | i)) {
-                if (act != 0) {
-                    if (id != -1) {
-                        o2 = (id & 0xFF) * 0x17C;
-                        if (*(s32 *)((s32)D_main_bss_8013D8E4 + o2) == id) {
-                            *(u32 *)((s32)D_main_bss_8013D8A4 + o2) |= 8;
-                        }
-                    }
-                }
+    if (gMusyXActiveFlag != 0) {
+        if (voiceid != 0xFFFFFFFF) {
+            i = voiceid & 0xFF;
+            if (gKoVI[i].id == voiceid) {
+                gKoVF[i].flags |= 8;
+                return 0;
             }
-            i++;
-        } while (i < cnt);
+        }
+    }
+    return -1;
+}
+s32 soundMacroOpKeyOffByNote(u8 *ch, u8 *cmdArg) {
+    u32 *cstep = (u32 *)cmdArg;
+    u32 voiceid;
+    u32 i;
+
+    voiceid = *(u16 *)(ch + 0x52) + ((u8)(cstep[0] >> 8) << 8);
+    voiceid |= (u16)(cstep[0] >> 16) << 16;
+    for (i = 0; i < D_main_bss_80141AD0; ++i) {
+        if (gKoVI[i].id == (voiceid | i)) {
+            sendSingleKeyOffKO(voiceid | i);
+        }
     }
     return 0;
 }
