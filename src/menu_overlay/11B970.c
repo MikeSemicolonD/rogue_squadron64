@@ -1792,10 +1792,9 @@ static __inline__ s32 clampColor(s32 v) {
     }
     return 0;
 }
-void updateMenuPerFrameU8(void *argp, f32 arg1, f32 arg2, s32 arg3, u8 arg4) __asm__("updateMenuPerFrame");
-void updateMenuPerFrameU8(void *argp, f32 arg1, f32 arg2, s32 arg3, u8 arg4)
+void updateMenuPerFrameU8(MenuAnimView *arg0, f32 arg1, f32 arg2, s32 arg3, u8 arg4) __asm__("updateMenuPerFrame");
+void updateMenuPerFrameU8(MenuAnimView *arg0, f32 arg1, f32 arg2, s32 arg3, u8 arg4)
 {
-  register MenuAnimView *arg0 asm("$20") = argp;
   struct rgba col;
   struct ui_element *e;
   struct ui_element *e2;
