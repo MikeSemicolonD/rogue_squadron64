@@ -229,7 +229,13 @@ void nbImpl(NbArg *arg0, f32 dt) {
                 c->fE8 = fs0;
             }
         }
-        __asm__("" :: "f"(sc));
+        {
+            f32 x = c->fE8;
+
+            if (x < sc) {
+                x = sc;
+            }
+        }
     }
     updatePlayerCraftPhysics(c, dt);
     sc = 0.375f;
