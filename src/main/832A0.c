@@ -3887,7 +3887,7 @@ static __inline__ s32 sweepStepRE(u8 *a) {
     return r;
 }
 u8 soundMacroOpStartNoteRelativeSweep(u8 *ch, u8 *cmd) {
-    u32 c = *(volatile u32 *)cmd;
+    u32 c = *(u32 *)cmd;
     u16 b;
 
     if ((c >> 24) == 0) {
@@ -5574,7 +5574,7 @@ void setupAudioFaderRamp(u8 vol, u16 time, u8 which) {
         break;
     default:
         gFaderH[which].target = vol << 16;
-        gFaderH[which].time = *(volatile s32 *)&t;
+        gFaderH[which].time = *(s32 *)&t;
         gFaderH[which].step = (gFaderH[which].target - gFaderH[which].cur) / time;
         break;
     }
