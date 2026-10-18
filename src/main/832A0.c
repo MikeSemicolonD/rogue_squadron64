@@ -1796,19 +1796,19 @@ extern u32 D_main_bss_8013ACF8;
 extern u8 *D_main_bss_8013AF00;
 extern u8 *D_main_bss_8013AF04;
 u32 allocVoiceHandleNode(u8 *v) {
-    register u32 id asm("$7");
+    u32 id;
     u32 k;
     u32 n;
     u8 *a2;
-    register u8 *t0 asm("$8");
+    u8 *t0;
     u8 *a1;
     u8 *t;
     register u32 ret asm("$2");
     do {
         n = D_main_bss_8013ACF8;
         D_main_bss_8013ACF8 = n + 1;
-        id = n;
     } while (n == -1);
+    id = n;
     a2 = D_main_bss_8013AF00;
     t0 = 0;
     while (a2 != 0) {
@@ -1836,11 +1836,10 @@ u32 allocVoiceHandleNode(u8 *v) {
         }
         if (t0 == 0) {
             D_main_bss_8013AF00 = a1;
-            *(u8 **)(a1 + 4) = t0;
         } else {
             *(u8 **)t0 = a1;
-            *(u8 **)(a1 + 4) = t0;
         }
+        *(u8 **)(a1 + 4) = t0;
         *(u8 **)a1 = a2;
         if (a2 != 0) {
             *(u8 **)(a2 + 4) = a1;
