@@ -2038,7 +2038,7 @@ u32 computeVoiceGlidePitch(u8 *v) {
         end = *(u32 *)(v + 0x98);
         if (cur < end) {
             d = (cur << 8);
-            __asm__("srl %0,%1,8" : "=r"(t) : "r"(end));
+            t = end >> 8;
             t = d / t;
             r = t * *(u16 *)(v + 0x70) + (0x10000 - t) * *(u16 *)(v + 0x9C);
             g = gGlideStepGP;
