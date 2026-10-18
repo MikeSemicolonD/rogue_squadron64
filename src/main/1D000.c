@@ -15,7 +15,8 @@ f32 sinfApprox(f32 y) {
     f32 t7;
     f32 r;
     f32 p;
-    register f32 x asm("$f10");
+    f32 x;
+    f32 z;
     s32 a;
     s32 b;
     s32 c;
@@ -35,29 +36,31 @@ f32 sinfApprox(f32 y) {
         x = y;
         if (x < 0.0f) {
             __asm__("sqrt.s %0, %1" : "=f"(r) : "f"(1.0f - x * x));
-            y = -r;
+            z = -r;
         } else {
             t = 1.0f - x * x;
-            __asm__("sqrt.s %0, %1" : "=f"(y) : "f"(t));
+            __asm__("sqrt.s %0, %1" : "=f"(z) : "f"(t));
         }
+    } else {
+        z = y;
     }
-    c = y < 0.001f;
-    d = y > -0.001f;
+    c = z < 0.001f;
+    d = z > -0.001f;
     if (!(c & d)) {
-        s2 = y * y;
-        t3 = y * s2;
+        s2 = z * z;
+        t3 = z * s2;
         t5 = t3 * s2;
         t7 = t5 * s2;
         p = t7 * s2;
-        y = y + t3 * 0.16666667f + t5 * 0.075f + t7 * 0.04464286f + p * 0.047446f;
+        z = z + t3 * 0.16666667f + t5 * 0.075f + t7 * 0.04464286f + p * 0.047446f;
     }
     if (!mid) {
         if (x < 0.0f) {
-            return -1.5707964f - y;
+            return -1.5707964f - z;
         }
-        return 1.5707964f - y;
+        return 1.5707964f - z;
     }
-    return y;
+    return z;
 }
 
 f32 constMinusSinfApprox(f32 arg0) {
