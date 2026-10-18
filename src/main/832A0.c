@@ -529,7 +529,7 @@ void audioSeqFree(void *p) {
 }
 
 extern u32 D_main_800A0F54;
-u16 unusedRand(void) {
+__inline__ u16 unusedRand(void) {
     D_main_800A0F54 *= 0xA8351D63;
     return D_main_800A0F54 >> 6;
 }
@@ -4249,59 +4249,37 @@ s32 soundMacroSetupVolumeRamp(SVR_V *v, u8 *op) {
 extern u32 D_main_800A0F54;
 s32 soundMacroOpStartNoteAbsoluteSweep(u8 *, u8 *);
 typedef struct { u32 w0; u32 w1; } PRKOp;
-s32 soundMacroPlayRandomKeyNote(u8 *v, u8 *op) {
-    u8 lo, hi, vel;
-    u16 r;
-    u32 w, fw, vs;
-    s32 unused[2];
-    s32 rem;
-    if (op[6] == 0) {
-        w = *(u32 *)op;
-        lo = w >> 8;
-        hi = w >> 24;
-        if (hi < lo) {
-            u8 t = lo;
-            lo = hi;
-            hi = t;
+s32 soundMacroPlayRandomKeyNote(u8 *v, u8 *cmdArg) {
+    u32 *cstep = (u32 *)cmdArg;
+    u8 k1;
+    u8 k2;
+    u8 t;
+    s16 i1;
+    s16 i2;
+    u8 detune;
+
+    if (!(u8)(cstep[1] >> 8)) {
+        k1 = cstep[0] >> 8;
+        k2 = cstep[0] >> 24;
+        if (k1 > k2) {
+            t = k1;
+            k1 = k2;
+            k2 = t;
         }
     } else {
-        s32 base = *(u16 *)(v + 0x54);
-        s32 a = base + op[0];
-        s16 b = base - op[2];
-        if ((s16)b >= 0) {
-            if ((s16)b < 0x80) {
-                lo = b;
-            } else {
-                lo = 0x7F;
-            }
-        } else {
-            lo = 0;
-        }
-        if ((s16)a >= 0) {
-            if ((s16)a < 0x80) {
-                hi = a;
-            } else {
-                hi = 0x7F;
-            }
-        } else {
-            hi = 0;
-        }
+        i1 = *(u16 *)(v + 0x54) - (u8)(cstep[0] >> 8);
+        i2 = *(u16 *)(v + 0x54) + (u8)(cstep[0] >> 24);
+        k1 = i1 < 0 ? 0 : i1 > 127 ? 127 : i1;
+        k2 = i2 < 0 ? 0 : i2 > 127 ? 127 : i2;
     }
-    if (op[7] != 0) {
-        D_main_800A0F54 *= 0xA8351D63;
-        r = D_main_800A0F54 >> 6;
-        vel = r % 201 - 100;
+    if ((u8)cstep[1]) {
+        detune = (unusedRand() % 201) - 100;
     } else {
-        vel = op[1];
+        detune = (u8)(cstep[0] >> 16);
     }
-    ((u32 *)op)[1] = 0;
-    D_main_800A0F54 *= 0xA8351D63;
-    r = D_main_800A0F54 >> 6;
-    rem = r % (hi - lo + 1);
-    vs = vel << 16;
-    fw = ((lo + rem) << 8) | 0x19;
-    *(u32 *)op = vs | fw;
-    soundMacroOpStartNoteAbsoluteSweep(v, op);
+    cstep[0] = ((u8)detune << 16) | 0x19 | ((k1 + (unusedRand() % ((k2 - k1) + 1))) * 0x100);
+    cstep[1] = 0;
+    soundMacroOpStartNoteAbsoluteSweep(v, (u8 *)cstep);
     return 0;
 }
 
