@@ -250,42 +250,30 @@ void setVoiceParamByHandle(s32, u32);
 void applyVoiceCmdByHandle(s32, u32);
 void spreadVoiceKeyTransposeAcrossChain(s32, u32);
 
-static __inline__ u32 cl(u32 v0) { register u32 v asm("$3") = v0; u32 r = v; if (v >= 0x80) { r = 0x7F; } __asm__("" :: "r"(v)); return r; }
-static __inline__ u32 c16(u32 v0) { register u32 v asm("$5") = v0; u32 r; if (v >= 0x4000) { r = 0x3FFF; __asm__(""); } else { r = v; } __asm__("" :: "r"(v)); return r; }
-void applyVoice3DMixParams(void *a0, f32 arg1, f32 arg2, f32 arg3, f32 arg4, f32 arg5) {
-    u8 *arg0 = a0;
-    s32 h;
-    register u32 a asm("$5");
-    u32 t;
-    u32 t1;
-    u32 t4;
-    f32 x;
-
-    h = *(s32 *)(arg0 + 0x34);
-    if (*(u32 *)(arg0 + 8) & 0x100000) {
-        x = *(f32 *)(arg0 + 0x40) * arg1 * 127.0f;
-        t1 = (u32)x;
-        { register u32 v asm("$3") = t1 & 0xFF; if (v < 0x80) { a = v; __asm__("" :: "r"(v)); } else { a = 0x7F; } }
-    } else {
-        x = arg1 * 127.0f;
-        if (!(x >= 2147483648.0f)) {
-            a = (s32)x;
-        } else {
-            a = (s32)(x - 2147483648.0f);
-            a |= 0x80000000;
-        }
-        a &= 0xFF; if (a >= 0x80) { a = 0x7F; }
+static __inline__ u8 clip127(u8 v) {
+    if (v > 0x7F) {
+        return 0x7F;
     }
-    spreadVoiceByteParamAcrossChain(h, a);
-    x = (arg2 + 1.0f) * 64.0f;
-    t = (u32)x;
-        setVoiceParamByHandle(h, cl(t & 0xFF));
-    x = (1.0f - arg4) * 64.0f;
-    t = (u32)x;
-        applyVoiceCmdByHandle(h, cl(t & 0xFF));
-    x = arg5 * 8192.0f;
-    t4 = (u32)x;
-    spreadVoiceKeyTransposeAcrossChain(h, (u16)c16(t4));
+    return v;
+}
+static __inline__ u16 clip3FFF(u32 v) {
+    if (v > 0x3FFF) {
+        return 0x3FFF;
+    }
+    return v;
+}
+void applyVoice3DMixParams(void *em, f32 vol, f32 xPan, f32 yPan, f32 zPan, f32 doppler) {
+    s32 vid;
+
+    vid = *(s32 *)((u8 *)em + 0x34);
+    if (*(u32 *)((u8 *)em + 8) & 0x100000) {
+        spreadVoiceByteParamAcrossChain(vid, clip127(*(f32 *)((u8 *)em + 0x40) * vol * 127.0f));
+    } else {
+        spreadVoiceByteParamAcrossChain(vid, clip127(vol * 127.0f));
+    }
+    setVoiceParamByHandle(vid, clip127((1.0f + xPan) * 64.0f));
+    applyVoiceCmdByHandle(vid, clip127((1.0f - zPan) * 64.0f));
+    spreadVoiceKeyTransposeAcrossChain(vid, clip3FFF(doppler * 8192.0f));
 }
 
 extern u8 gMusyXActiveFlag;
