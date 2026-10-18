@@ -543,9 +543,10 @@ s32 npcShuttleUpdate(u8 *arg0, u16 action, u8 *arg2) {
             s1->f60 = 0.0f;
             s1->f64 = 0.0f;
         } else {
-            s1->f60 = 110.0f;
-            __asm__("");
-            s1->f64 = 1.0f;
+            f32 t = 110.0f;
+            s1->f60 = t;
+            t = 1.0f;
+            s1->f64 = t;
         }
         s1->f68 = 0.0f;
         if (s1->type != 3) {
