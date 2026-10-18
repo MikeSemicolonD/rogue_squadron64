@@ -4,7 +4,6 @@
 #include "rs_math.h"
 
 #define VABS(x) ({ f32 _x = (x); f32 _r; FABSF(_r, _x); _r; })
-#define ABSF(x) ({ f32 _r = (x); __asm__ volatile("abs.s %0, %0" : "+f"(_r)); _r; })
 typedef struct {
     f32 x;
     f32 y;
@@ -46,11 +45,11 @@ void buildPositionAndCallTransformHelper(void *spline, void *offv, void *outv, v
     n.y = 0.0f;
     normalize_vector((f32 *)&n);
     if (n.x < 0.0f && n.z < 0.0f) {
-        rot[1] = ABSF(sinfApprox(-n.x) * 57.29578f) - 180.0f;
+        rot[1] = FABSF_SELF(sinfApprox(-n.x) * 57.29578f) - 180.0f;
     } else if (n.x >= 0.0f && n.z < 0.0f) {
-        rot[1] = -ABSF(sinfApprox(n.x) * 57.29578f) - 180.0f;
+        rot[1] = -FABSF_SELF(sinfApprox(n.x) * 57.29578f) - 180.0f;
     } else if (n.x < 0.0f && n.z >= 0.0f) {
-        rot[1] = -ABSF(sinfApprox(-n.x) * 57.29578f);
+        rot[1] = -FABSF_SELF(sinfApprox(-n.x) * 57.29578f);
     } else {
         rot[1] = VABS(sinfApprox(n.x) * 57.29578f);
     }
@@ -59,13 +58,13 @@ void buildPositionAndCallTransformHelper(void *spline, void *offv, void *outv, v
     n.x = 0.0f;
     normalize_vector((f32 *)&n);
     if (n.y < 0.0f && n.z < 0.0f) {
-        rot[0] = ABSF(sinfApprox(-n.z) * 57.29578f) - 270.0f;
+        rot[0] = FABSF_SELF(sinfApprox(-n.z) * 57.29578f) - 270.0f;
     } else if (n.y >= 0.0f && n.z < 0.0f) {
-        rot[0] = -ABSF(sinfApprox(-n.z) * 57.29578f) - 90.0f;
+        rot[0] = -FABSF_SELF(sinfApprox(-n.z) * 57.29578f) - 90.0f;
     } else if (n.y < 0.0f && n.z >= 0.0f) {
-        rot[0] = -ABSF(sinfApprox(n.z) * 57.29578f) - 270.0f;
+        rot[0] = -FABSF_SELF(sinfApprox(n.z) * 57.29578f) - 270.0f;
     } else {
-        rot[0] = ABSF(sinfApprox(n.z) * 57.29578f) - 90.0f;
+        rot[0] = FABSF_SELF(sinfApprox(n.z) * 57.29578f) - 90.0f;
     }
     diff = rot[1] - prevYaw;
     if (diff > 180.0f) {

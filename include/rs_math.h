@@ -15,6 +15,7 @@
 #define SQRTF_PURE(out, in) __asm__("sqrt.s %0, %1" : "=f"(out) : "f"(in))
 #define FABSF(out, in) __asm__ volatile("abs.s %0, %1" : "=f"(out) : "f"(in))
 #define FABSF_VAL(x) ({ f32 _r; FABSF(_r, (x)); _r; })
+#define FABSF_SELF(x) ({ f32 _r = (x); __asm__ volatile("abs.s %0, %0" : "+f"(_r)); _r; })
 
 static __inline__ f32 sqrtfInline(f32 x) {
     f32 r;
