@@ -191,7 +191,13 @@ void pwImpl(PwState *e, f32 dt) {
             v -= 0.1875f;
             k = -0.09375f;
         }
-        __asm__ volatile("" :: "f"(k));
+        {
+            f32 x = p->fE8;
+
+            if (x < k) {
+                x = k;
+            }
+        }
         p->f120 = 60.0f;
         if (v < e->f14 * 2.25f) {
             v = e->f14 * 2.25f;
