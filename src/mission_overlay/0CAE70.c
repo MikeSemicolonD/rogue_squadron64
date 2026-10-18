@@ -393,16 +393,18 @@ s32 npcProbeDriod(u8 *arg0, u16 action, u8 *arg2) {
         *(u8 **)(arg0 + 0xC) = s1->mesh;
         {
             u8 *b = (u8 *)D_main_bss_80139560;
-            register s32 one asm("$16") = 1;
             s32 o;
-            o = 0;
-            if (*(s32 *)(arg2 + 0x90) == one) {
-                o = 0xA;
-            }
+
+            do {
+                o = 0;
+                if (*(s32 *)(arg2 + 0x90) == 1) {
+                    o = 0xA;
+                }
+            } while (0);
             s1->slot8E = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
             if (*(s32 *)(arg2 + 0x94) != 0) {
                 o = 0x18;
-                if (*(s32 *)(arg2 + 0x90) == one) {
+                if (*(s32 *)(arg2 + 0x90) == 1) {
                     o = 0x1A;
                 }
                 s1->slot90 = popNpcSlotFromTail(*(u16 *)(o + b), arg0);
