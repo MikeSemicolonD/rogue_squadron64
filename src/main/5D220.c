@@ -288,7 +288,7 @@ s32 sprayEffectEmitterNpcHandler(u8 *arg0, s32 action, u8 *arg2) {
         o->D4 = *(u16 *)(rec + 0x18);
         o->CC = 0.0f;
         o->D8 = rec[0x17];
-        *(volatile f32 *)&o->D0 = 2.5f;
+        *(f32 *)((u8 *)o + 0xD0) = 2.5f;
         o->D9 = 0;
         popNpcSlotFromTail(D_main_bss_80139568, arg0);
         return 1;
