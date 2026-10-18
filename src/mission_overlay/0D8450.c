@@ -1649,7 +1649,7 @@ f32 getActorCurrentValueByType(s32);
 
 s32 npcTieVariantUpdate(u8 *arg0, s32 action, u8 *arg2) {
     s32 act = action;
-    register TvObj *s1 asm("$17") = *(TvObj **)(arg0 + 4);
+    TvObj *s1 = *(TvObj **)(arg0 + 4);
     union {
         TvVec v;
         TvMsg m;
@@ -1890,12 +1890,11 @@ s32 npcTieVariantUpdate(u8 *arg0, s32 action, u8 *arg2) {
     case 4:
         if (s1->state == 2) {
             mat34CrossRowsAndCopyPos(s1->mesh + 0x28, s1, *(f32 *)(s1->def + 0x28));
-            {
+            if (s1->audioOn != 0) {
                 u8 *au = s1->audio;
-                if (s1->audioOn != 0) {
-                    updateActive3DAudioSource(au, s1, s1->vel, 0x7F);
-                    safeLookup3DSoundEntry(mostlyMusyxFlagGatedHelper(au), s1->snd);
-                }
+
+                updateActive3DAudioSource(au, s1, s1->vel, 0x7F);
+                safeLookup3DSoundEntry(mostlyMusyxFlagGatedHelper(au), s1->snd);
             }
         } else if (s1->state != 3) {
             mat34CrossRowsAndCopyPos(s1->mesh + 0x28, s1, *(f32 *)(s1->def + 0x28));
