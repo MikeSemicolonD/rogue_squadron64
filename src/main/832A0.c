@@ -3912,16 +3912,22 @@ s32 soundMacroOpSetPanSweep(u8 *ch, u8 *cmd) {
     return 0;
 }
 
-s32 soundMacroOpSetProgramTableValue(u8 *ch, u32 *cmd) {
-    u32 c = *(volatile u32 *)cmd;
-    u8 *e = ch + ((c >> 8) & 0xFF) * 12;
-    s32 x = *(s32 *)(e + 0x168);
-    s32 t = (c >> 16) << 8;
+typedef struct { s32 value; s32 period; s32 pad; } LfoSL;
+typedef struct { u8 pad[0x164]; LfoSL lfo[2]; } SvSL;
+static __inline__ void sndConvertMsSL(u32 *ms) {
+    *ms <<= 8;
+}
+s32 soundMacroOpSetProgramTableValue(u8 *ch, u32 *cstep) {
+    u32 time;
+    u8 n;
 
-    if (x != 0) {
-        *(s32 *)(e + 0x164) = 0;
+    n = (u8)(cstep[0] >> 8);
+    time = (u16)(cstep[0] >> 16);
+    sndConvertMsSL(&time);
+    if (((SvSL *)ch)->lfo[n].period != 0) {
+        ((SvSL *)ch)->lfo[n].value = 0;
     }
-    *(s32 *)(e + 0x168) = *(volatile s32 *)&t;
+    ((SvSL *)ch)->lfo[n].period = time;
     return 0;
 }
 
