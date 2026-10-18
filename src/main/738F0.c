@@ -810,7 +810,7 @@ s32 explosionEffectNpcHandler(ExpSelf *self, u16 action, void *arg2) {
         orthonormalizeFrame((void *)n);
         *(ExpVec *)n->vel = *(ExpVec *)n->dir;
         scaleVec3ByRandomRange(n->vel, 0.8f, 3.5f);
-        *(volatile f32 *)&n->f64 = 0.0f;
+        *(f32 *)((u8 *)n + 0x64) = 0.0f;
         popNpcSlotFromTail(D_main_bss_80139574, self);
         return 1;
     case 2:
