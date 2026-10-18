@@ -204,8 +204,8 @@ s32 randomlyScaledColoredEffectNpcHandler(ColorFxNpc *npc, u16 cmd, void *arg) {
             c->c2E = p->color[2];
         }
         *(V3 *)&c->f30 = *(V3 *)p->pos;
-        *(volatile f32 *)&c->f3C = 0.0f;
-        *(volatile f32 *)&c->f40 = 0.0f;
+        *(f32 *)((u8 *)c + 0x3C) = 0.0f;
+        *(f32 *)((u8 *)c + 0x40) = 0.0f;
         popNpcSlotFromTail(D_main_bss_80139574, npc);
         return 1;
     }
