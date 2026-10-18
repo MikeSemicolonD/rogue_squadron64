@@ -338,7 +338,6 @@ void copySaveUnk08(s32 arg0, u8 *arg1) {
     pfs = &D_main_bss_80112730[arg0];
     do {
         dst = arg1 + i * 0x10;
-        __asm__("" :: "r"(dst));
         if (initMemoryPack(arg0) == 0) {
             rs_memset(ext, 0, 4);
             if (i != 0) {
@@ -351,12 +350,13 @@ void copySaveUnk08(s32 arg0, u8 *arg1) {
                 p8 = (u8 *)hdr + 8;
                 if (hdr->unk4 == adler32(adler32(0, 0, 0), p8, 0x10)) {
                     memcpy(dst, p8, 0x10);
-                    goto next;
+                } else {
+                    rs_memset(dst, 0, 0x10);
                 }
+            } else {
+                rs_memset(dst, 0, 0x10);
             }
-            rs_memset(dst, 0, 0x10);
         }
-    next:
         i++;
     } while (i < gCsAsset.count);
     }
