@@ -3093,9 +3093,8 @@ f32 computeCutsceneScreenScale(u32 arg0) {
     setLookupEntryField5ByKey(D_cinematic_overlay_800B0B00, o, arg0 < 0x5F);
 
     if (arg0 - 0x2E9 < 0x1F) {
-        register f32 t asm("$f0") = (f32)arg0 - 745.0f;
-        register f32 dd asm("$f2") = t / 30.0f;
-        c = quadraticEaseInOut(1.0f - dd) * 255.0f;
+        c = ((f32)arg0 - 745.0f) / 30.0f;
+        c = quadraticEaseInOut(1.0f - c) * 255.0f;
         D_main_bss_80136E18[0] = (u32)c;
         D_main_bss_80136E18[1] = (u32)c;
         D_main_bss_80136E18[2] = (u32)c;
