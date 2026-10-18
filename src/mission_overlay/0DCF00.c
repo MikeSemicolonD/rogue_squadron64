@@ -193,7 +193,6 @@ s32 npcRadarDishUpdate(u8 *arg0, s32 arg1, u8 *arg2) {
     f32 sp48[4];
     f32 dt;
     f32 kk;
-    u8 *a2;
     f32 a;
     f32 b;
     f32 c;
@@ -202,64 +201,40 @@ s32 npcRadarDishUpdate(u8 *arg0, s32 arg1, u8 *arg2) {
     s32 off;
     s16 r16;
     f32 sc2;
-    register u16 *tb asm("$16");
-    u16 *tb2;
     u32 fl;
-    register s32 one asm("$16");
     u8 *q;
 
     act = arg1 & 0xFFFF;
     n = *(u8 **)(arg0 + 4);
     switch (act) {
     case 1:
-        a2 = arg2;
+        {
+        u8 *rec = arg2;
+
         *(u8 **)(n + 0x34) = arg2;
         *(void **)(n + 0x30) = walkMeshdef0List("b_lrsp");
-        *(f32 *)(n + 0) = *(f32 *)(a2 + 0x10);
-        *(f32 *)(n + 4) = *(f32 *)(a2 + 0x14);
-        *(f32 *)(n + 8) = *(f32 *)(a2 + 0x18);
-        composeEulerRotationXYZ(n, *(f32 *)(a2 + 0x1C), *(f32 *)(a2 + 0x20) + 180.0f, *(f32 *)(a2 + 0x24));
+        *(f32 *)(n + 0) = *(f32 *)(rec + 0x10);
+        *(f32 *)(n + 4) = *(f32 *)(rec + 0x14);
+        *(f32 *)(n + 8) = *(f32 *)(rec + 0x18);
+        composeEulerRotationXYZ(n, *(f32 *)(rec + 0x1C), *(f32 *)(rec + 0x20) + 180.0f, *(f32 *)(rec + 0x24));
         *(f32 *)(n + 0x24) = *(f32 *)(n + 0x28) = *(f32 *)(n + 0x2C) = 0.0f;
         kk = 1.0f / *(f32 *)(**(u8 ***)(n + 0x30) + 0x34);
-        *(f32 *)(n + 0x50) = kk * *(f32 *)(a2 + 0x28);
-        initVec4TripletFromArgs(*(u8 **)(n + 0x30) + 0x28, kk * *(f32 *)(a2 + 0x28), kk * *(f32 *)(a2 + 0x2C), kk * *(f32 *)(a2 + 0x30));
-        composeRotationMatrixSlot0(*(u8 **)(n + 0x30) + 0x28, *(f32 *)(a2 + 0x1C));
-        composeRotationMatrixSlot1(*(u8 **)(n + 0x30) + 0x28, *(f32 *)(a2 + 0x20) + 180.0f);
-        composeRotationMatrixSlot2(*(u8 **)(n + 0x30) + 0x28, *(f32 *)(a2 + 0x24));
+        *(f32 *)(n + 0x50) = kk * *(f32 *)(rec + 0x28);
+        initVec4TripletFromArgs(*(u8 **)(n + 0x30) + 0x28, kk * *(f32 *)(rec + 0x28), kk * *(f32 *)(rec + 0x2C), kk * *(f32 *)(rec + 0x30));
+        composeRotationMatrixSlot0(*(u8 **)(n + 0x30) + 0x28, *(f32 *)(rec + 0x1C));
+        composeRotationMatrixSlot1(*(u8 **)(n + 0x30) + 0x28, *(f32 *)(rec + 0x20) + 180.0f);
+        composeRotationMatrixSlot2(*(u8 **)(n + 0x30) + 0x28, *(f32 *)(rec + 0x24));
         addVec3At0x24(*(u8 **)(n + 0x30) + 0x28, *(f32 *)(n + 0), *(f32 *)(n + 4), *(f32 *)(n + 8));
         *(u8 **)(arg0 + 8) = n;
         *(void **)(arg0 + 0xC) = *(void **)(n + 0x30);
-        tb = D_main_bss_80139560;
-        *(u16 *)(n + 0x64) = popNpcSlotFromTail(tb[14], arg0);
-        {
-        s32 o1;
-        if (*(s32 *)(a2 + 0x8C) != 1) {
-            o1 = 0x2A;
-            if (*(s32 *)(a2 + 0x8C) == 0) {
-                o1 = 0x28;
-            }
-        } else {
-            o1 = 0x26;
-        }
-        *(u16 *)(n + 0x66) = popNpcSlotFromTail(*(u16 *)((u8 *)tb + o1), arg0);
-        }
+        *(u16 *)(n + 0x64) = popNpcSlotFromTail(D_main_bss_80139560[14], arg0);
+        *(u16 *)(n + 0x66) = popNpcSlotFromTail(D_main_bss_80139560[*(s32 *)(rec + 0x8C) == 1 ? 0x13 : *(s32 *)(rec + 0x8C) == 0 ? 0x14 : 0x15], arg0);
         *(f32 *)(n + 0x5C) = (*(f32 *)(n + 0x50) / 0.05f) * -4.0f;
         *(s32 *)(n + 0x3C) = lookupHmtMaterialByName(*(void **)(n + 0x30), "top_tran", n + 0x44);
         *(s32 *)(n + 0x40) = lookupHmtMaterialByName(*(void **)(n + 0x30), "dish", n + 0x48);
-        tb2 = D_main_bss_80139560;
-        __asm__ volatile("" : "+r"(one));
-        off = 0x12;
-        one = 1;
-        if (*(s32 *)(a2 + 0x8C) == one) {
-            off = 0xE;
-        }
-        *(u16 *)(n + 0x68) = popNpcSlotFromTail(*(u16 *)(off + (u8 *)tb2), arg0);
-        if (*(s32 *)(a2 + 0x90) != 0) {
-            off = 0x18;
-            if (*(s32 *)(a2 + 0x8C) == one) {
-                off = 0x1A;
-            }
-            *(u16 *)(n + 0x6A) = popNpcSlotFromTail(*(u16 *)(off + (u8 *)tb2), arg0);
+        *(u16 *)(n + 0x68) = popNpcSlotFromTail(D_main_bss_80139560[*(s32 *)(rec + 0x8C) == 1 ? 7 : 9], arg0);
+        if (*(s32 *)(rec + 0x90) != 0) {
+            *(u16 *)(n + 0x6A) = popNpcSlotFromTail(D_main_bss_80139560[*(s32 *)(rec + 0x8C) == 1 ? 13 : 12], arg0);
         } else {
             *(u16 *)(n + 0x6A) = 0xFFFF;
         }
@@ -270,6 +245,7 @@ s32 npcRadarDishUpdate(u8 *arg0, s32 arg1, u8 *arg2) {
         n[0xB0] = 0;
         createAndInitObject(n + 0x38, 0, arg0, npcInitMinimalNoAnim, 0);
         dispatchDatSubtypeByRandomIndex(n + 0xB4, *(void **)(n + 0x30));
+        }
         return 1;
     case 2:
         if (n[0xB0] == 1) {
@@ -302,20 +278,19 @@ s32 npcRadarDishUpdate(u8 *arg0, s32 arg1, u8 *arg2) {
             spawnOrientedNpc(0x8002, sp28, 0, 0, sc * 0.75f, sc * 1.2f, 1.0f, 0.4f);
             spawnDestructionEffectBurst(sp28, 0xFFFF, 1.6f, sc * 2.5f, 1.5f, 1.0f);
             {
-            register f32 *p48 asm("$18");
             f32 *p38;
             i = 0;
             r16 = rand();
             cnt = (s16)(r16 % 3) + 7;
             if (cnt > 0) {
                 p38 = sp38;
-                p48 = sp48;
+                m = (u8 *)sp48;
                 do {
-                    composeRandomRotationMatrix(p38, p48, *(f32 *)(n + 0x4C) / 3.0f, 0x3C, 0, 0);
+                    composeRandomRotationMatrix(p38, (f32 *)m, *(f32 *)(n + 0x4C) / 3.0f, 0x3C, 0, 0);
                     sp38[0] += sp28[0];
                     sp38[1] += sp28[1];
                     sp38[2] += sp28[2];
-                    scaleVec3ByRandomRange(p48, 1.5f, 3.0f);
+                    scaleVec3ByRandomRange((f32 *)m, 1.5f, 3.0f);
                     c = ((f32)(rand() & 0x7F) - 64.0f) / 12.8f;
                     FABSF(a, c);
                     a += 12.0f;
@@ -324,7 +299,7 @@ s32 npcRadarDishUpdate(u8 *arg0, s32 arg1, u8 *arg2) {
                     b += 2.5f;
                     c = ((f32)(rand() & 0x7F) - 64.0f) / 320.0f;
                     FABSF(d3, c);
-                    spawnDebris1Npc(p38, p48, a, b, d3 + 0.2f);
+                    spawnDebris1Npc(p38, (f32 *)m, a, b, d3 + 0.2f);
                     i++;
                 } while (i < cnt);
             }
@@ -354,8 +329,6 @@ dflt:
         }
     case 4:
         {
-        u8 *d;
-        u8 *m;
         d = *(u8 **)(n + 0x44);
         m = *(u8 **)(n + 0x3C) + 0x1C;
         clearVec4QuadStruct(m);
