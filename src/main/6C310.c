@@ -12,10 +12,8 @@ extern u16 D_main_bss_8013A528[14];
 #include "main/1EE30.h"
 #include "main/55AF0.h"
 #include "main/64EA0.h"
-extern char D_main_8003C960[];
 void rs_free(void *);
 
-__asm__(".section .rodata\n.align 2\n.globl D_main_8003C960\nD_main_8003C960:\n.word 0x706C5F63\n.word 0x72616674\n.word 0x732F7368\n.word 0x61646F77\n.word 0x735F544D\n.word 0x00000000\n.section .text");
 
 void loadCraftShadowTextures(s32 arg0) {
     struct material_entry sp10;
@@ -26,7 +24,7 @@ void loadCraftShadowTextures(s32 arg0) {
 
     var_s2 = arg0;
     if (D_main_bss_8013A528[var_s2] == 0xFFFF) {
-        temp_s4 = load_asset(D_main_8003C960);
+        temp_s4 = load_asset("pl_crafts/shadows_TM");
         do {
 loop_2:
             var_s1 = temp_s4;
@@ -486,11 +484,9 @@ extern u32 get_asset_size_extra(s32, char *);
 extern s32 findAssetAcrossSegments(s32, s32, s32, char *, s32);
 extern void setupAssetDma(s32, s32, s32, s32, u32, void *);
 extern void teardownAssetDma(s32, s32);
-extern char D_main_8003C9B0[];
 extern s32 D_main_bss_80137CFC;
 extern s32 D_main_bss_80138920;
 
-__asm__(".section .rodata\n.align 2\n.globl D_main_8003C9B0\nD_main_8003C9B0:\n.word 0x706C5F63\n.word 0x72616674\n.word 0x732F6B6F\n.word 0x656C7363\n.word 0x685F484D\n.word 0x54008005\n.word 0x45010004\n.word 0x00000000\n.section .text");
 
 u32 load_naboo_starfighter(u32 arg0) {
     u32 buf;
@@ -503,9 +499,9 @@ u32 load_naboo_starfighter(u32 arg0) {
     u16 i;
     u32 *q;
 
-    size = get_asset_size_extra(D_main_bss_80137CFC, D_main_8003C9B0);
+    size = get_asset_size_extra(D_main_bss_80137CFC, "pl_crafts/koelsch_HMT");
     buf = (u32)rs_malloc(size, 0);
-    idx = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, D_main_8003C9B0, 0);
+    idx = findAssetAcrossSegments(D_main_bss_80138920, 0, D_main_bss_80137CFC, "pl_crafts/koelsch_HMT", 0);
     setupAssetDma(D_main_bss_80138920, 0, idx, 0, size, (void *)buf);
     teardownAssetDma(D_main_bss_80138920, idx);
     decrypt_ns_hmt((u8 *)buf, size, arg0);
@@ -537,6 +533,7 @@ u32 load_naboo_starfighter(u32 arg0) {
     rs_free((void *)buf);
     return ret;
 }
+__asm__(".section .rodata\n.byte 0x80, 0x05\n.word 0x45010004\n.word 0x00000000\n.section .text");
 
 #if 0
 void *getCraftRecordByIdx(s32 arg0) {
