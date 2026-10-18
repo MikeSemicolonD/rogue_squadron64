@@ -492,8 +492,8 @@ void initNpcContextFromTransform(NpcCtxInit *self, u8 *tf) {
     self->f54 = zero;
     self->f58 = c1;
     self->f5C = c07;
-    *(volatile s32 *)&self->w64 = g;
-    *(volatile f32 *)&self->f0 = c5;
+    *(s32 *)&self->w64 = g;
+    *(f32 *)&self->f0 = c5;
 }
 __asm__(".section .rodata\n.word 0x00220821\n.word 0x8C30A770\n.section .text");
 
