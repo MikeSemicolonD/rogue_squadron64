@@ -245,9 +245,8 @@ void computeNpcOrientationFromAimVectors(CoNpc *npc, f32 dt) {
         transformVec3ByMat34(m, D_mission_overlay_8010B16C, v);
         ang = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010B16C, v)) * 57.29578f;
         if (0.001f < ang) {
-            { register f32 t asm("$f0") = dt * 30.0f; register f32 l2 asm("$f2") = npc->f58 * t; lim = l2; }
-            if (lim < ang) {
-                ang = lim;
+            if (npc->f58 * (dt * 30.0f) < ang) {
+                ang = npc->f58 * (dt * 30.0f);
             }
             vec3Cross(axis, v, D_mission_overlay_8010B16C);
             normalize_vector(axis);
