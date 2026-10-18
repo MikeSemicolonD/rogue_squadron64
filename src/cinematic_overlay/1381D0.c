@@ -1755,6 +1755,7 @@ void initCutsceneScene(u8 *arg0) {
     u8 *node;
     u8 *a1;
     u8 *base;
+    s32 *p;
 
     i = 0;
     if (*(u16 *)(arg0 + 0x4A) != 0) {
@@ -1770,10 +1771,9 @@ void initCutsceneScene(u8 *arg0) {
                 node = *(u8 **)((u8 *)D_cinematic_overlay_800B1900 + i * 0x13C + 0x50);
                 s0 = 0;
                 a1 = node + 0xC;
-                __asm__("" :: "r"(s0));
                 sp10[0] = (s32)(node + 0x28);
+                p = sp10;
                 for (; *(u8 **)(a1 + 8) != 0; ) {
-                    s32 *p = sp10;
                     s0++;
                     a1 = *(u8 **)(a1 + 8);
                     *(s32 *)((s32)p + (s0 << 2)) = (s32)(a1 + 0x1C);
