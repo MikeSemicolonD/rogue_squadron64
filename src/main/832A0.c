@@ -5834,16 +5834,12 @@ void factor5MutexRelease(void);
 void buildSongTempoScheduleImpl(u8 *song) __asm__("buildSongTempoSchedule");
 void buildSongTempoScheduleImpl(u8 *song) {
     TempoSchedBTS *p;
-    register u32 sz asm("$17");
-    u32 q;
-    register u32 m asm("$2");
+    u32 sz;
     u32 i;
     void *buf;
     if (D_main_bss_80149770 != 0) {
         sz = (u32)(*(u16 *)song * D_main_bss_801496F4) / 1000;
-        q = sz / 192;
-        m = q * 192;
-        sz = m + 0xC0;
+        sz = sz - sz % 192 + 192;
         p = rs_malloc(0x48, 0);
         buf = D_main_bss_80149770;
         p->buf = buf;
