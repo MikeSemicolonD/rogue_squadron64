@@ -899,25 +899,19 @@ s32 tpImpl(u8 *obj, f32 *src, TpCh *ch, f32 *out) {
     u8 hit;
     s32 n;
     s32 i;
-    s32 v;
     u16 id;
 
     switch ((s32)ch) {
     case 0:
-        v = *(s16 *)(obj + 0x15C);
+        r = *(s16 *)(obj + 0x15C) / 100.0f;
         break;
     case 1:
-        v = *(s16 *)(obj + 0x188);
+        r = *(s16 *)(obj + 0x188) / 100.0f;
         break;
     default:
-        v = ch->h24;
+        r = ch->h24 / 100.0f;
         break;
     }
-    {
-        register f32 d asm("$f0") = (f32)v;
-        r = d / 100.0f;
-    }
-    __asm__("");
     hit = 0;
     st.range = r;
     n = tpGather(src, D_main_bss_8013957C, &st);
