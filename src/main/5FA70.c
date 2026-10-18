@@ -97,14 +97,16 @@ void steerOrientationTowardTarget(f32 *p, f32 *tgt, f32 dt) {
                 soCross(c2, up, v);
                 if (soLen(c2) > 0.000001f) {
                     if (lim < 0.0f) {
-                        { register f32 k asm("$f0") = -15.0f; soQuat(q2, c2, (lim < k) ? k : lim); }
+                        ang = -15.0f;
+                        soQuat(q2, c2, (lim < ang) ? ang : lim);
                         soRot(q2, p + 4, n);
                         *(SoV3 *)(p + 4) = *(SoV3 *)n;
                         soRot(q2, p + 7, n);
                         *(SoV3 *)(p + 7) = *(SoV3 *)n;
                         soOrtho(p + 1);
                     } else if (lim > 0.0f) {
-                        { register f32 k asm("$f0") = 15.0f; soQuat(q2, c2, (lim > k) ? k : lim); }
+                        ang = 15.0f;
+                        soQuat(q2, c2, (lim > ang) ? ang : lim);
                         soRot(q2, p + 4, n);
                         *(SoV3 *)(p + 4) = *(SoV3 *)n;
                         soRot(q2, p + 7, n);
