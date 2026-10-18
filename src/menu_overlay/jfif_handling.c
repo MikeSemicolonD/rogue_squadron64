@@ -637,10 +637,10 @@ s32 paserJfifSOSMarker(SosSt *s) {
 
 typedef struct {
     u8 pad[0x77C];
-    s32 blk[8];
+    s16 *blk[8];
 } JpS;
-extern void buildDebrisCellBitfield(u8 *, u8, s32);
-extern void emitDebrisCellFaces(u8 *, u8, s32, s32, s32);
+extern void buildDebrisCellBitfield(u8 *, u8, s16 *);
+extern void emitDebrisCellFaces(u8 *, u8, s16 *, s32, s32);
 
 s32 rebuildDebrisCellGeometry(u8 *s) {
     u8 mcu;
@@ -904,8 +904,7 @@ extern s32 allocCellBitGroup(void *, u8);
 extern s32 findFreeBitsL(void *, u8) __asm__("findFreeCellBitSlot");
 extern void rs_memset(u8 *, u8, u32);
 
-void buildDebrisCellBitfield(u8 *s, u8 idx, s32 blkArg) {
-    register s16 *blk asm("$21") = (s16 *)blkArg;
+void buildDebrisCellBitfield(u8 *s, u8 idx, s16 *blk) {
     s32 diff;
     s32 sz;
     s32 run;
