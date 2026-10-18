@@ -157,9 +157,6 @@ void collectNearbyNpcsForEffect(u8 *arg0, u16 arg1) {
     f32 sq;
     f32 sq2;
     f32 val;
-    f32 two31;
-    u32 sign;
-    s32 w;
 
     ev.a = 0xFFFF;
     ev.b = 0xFFFF;
@@ -167,8 +164,6 @@ void collectNearbyNpcsForEffect(u8 *arg0, u16 arg1) {
     ev.e = 0;
     idx = findActiveNpcInSlotChain(D_main_bss_8013957C, sp10);
     if ((idx & 0xFFFF) != 0xFFFF) {
-        sign = 0x80000000;
-        two31 = 2147483648.0f;
         do {
             cur = idx & 0xFFFF;
             if (cur != (arg1 & 0xFFFF)) {
@@ -185,13 +180,7 @@ void collectNearbyNpcsForEffect(u8 *arg0, u16 arg1) {
                         t = (r - sq) / r;
                         SQRTF(sq2, t);
                         val = (f32)*(u16 *)(arg0 + 0xD6) * sq2;
-                        if (!(two31 <= val)) {
-                            ev.d = (s32)val;
-                        } else {
-                            w = (s32)(val - two31);
-                            __asm__("or %0, %1, %2" : "=r"(w) : "r"(w), "r"(sign));
-                            ev.d = w;
-                        }
+                        ev.d = (u32)val;
                         slotDispatcherIter(idx & 0xFFFF, 5, &ev);
                     }
                 }
