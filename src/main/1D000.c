@@ -65,10 +65,9 @@ f32 constMinusSinfApprox(f32 arg0) {
     return M_HALF_PI_F - sinfApprox(arg0);
 }
 
-f32 atan2Approx(f32 arg0, f32 arg1) {
-    register f32 a asm("$f4");
+f32 atan2Approx(f32 a, f32 arg1) {
+    f32 arg0;
 
-    a = arg0;
     arg0 = (a * a) + (arg1 * arg1);
     if (arg0 > 0.0f) {
         SQRTF_PURE(arg0, arg0);
