@@ -1001,9 +1001,6 @@ s32 bvImpl(BvV3 *out, BgFace **faces, f32 fov) {
     return (s32)&n->cell->face;
 }
 
-extern f32 D_main_8003A53C;
-__asm__(".section .rodata\n.globl D_main_8003A53C\nD_main_8003A53C:\n.word 0x3F000000\n.section .text");
-
 void markLowLodCellsInGrid(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     s32 x0;
     s32 x1;
@@ -1016,7 +1013,7 @@ void markLowLodCellsInGrid(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     f32 sc;
 
     o = D_main_bss_80136DC0.unk20;
-    __asm__("lwc1 %0, D_main_8003A53C" : "=f"(sc));
+    sc = 0.5f;
     x0 = (s32)((arg0 - o) * sc);
     if (x0 < 0) {
         x0 = 0;
@@ -1051,9 +1048,6 @@ void markLowLodCellsInGrid(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     }
 }
 
-extern f32 D_main_8003A540;
-
-__asm__(".section .rodata\n.globl D_main_8003A540\nD_main_8003A540:\n.word 0x3F000000\n.section .text");
 
 void markHighLodCellsInGrid(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     s32 x0;
@@ -1067,7 +1061,7 @@ void markHighLodCellsInGrid(f32 arg0, f32 arg1, f32 arg2, f32 arg3) {
     f32 sc;
 
     o = D_main_bss_80136DC0.unk20;
-    __asm__("lwc1 %0, D_main_8003A540" : "=f"(sc));
+    sc = 0.5f;
     x0 = (s32)((arg0 - o) * sc);
     if (x0 < 0) {
         x0 = 0;
