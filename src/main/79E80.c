@@ -68,7 +68,7 @@ s32 heavyMechSubEffectNpcHandler(u8 *npc, u16 msg, u8 *arg) {
         HmNode *n;
         f32 one;
         f32 z;
-        register f32 (*tp)[12] asm("$22");
+        f32 (*tp)[12];
         void *src;
         void *dst;
 
@@ -77,10 +77,10 @@ s32 heavyMechSubEffectNpcHandler(u8 *npc, u16 msg, u8 *arg) {
         *(u16 *)d = findFreeNpcSlotByKey(*(u16 *)(npc + 0x16), *(u16 *)arg);
         node = *(HmNode **)(d + 4);
         nx = node->parent;
+        tp = u.tmp;
         if (nx == NULL) {
             zmemcpy(mat, node->m, 0x30);
         } else {
-            tp = u.tmp;
             src = node->m;
             node = nx;
             do {
