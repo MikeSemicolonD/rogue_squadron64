@@ -156,22 +156,20 @@ s32 stopVoiceByHandle(s32 handle) {
     return 1;
 }
 
-s32 isVoiceHandleActive(s32 handle) {
-    u32 i;
-    register s32 h asm("$5") = handle;
-
+s32 isVoiceHandleActive(u32 i) {
     if (speechFileLoaded) {
+        s32 handle = i;
+
         for (i = 0; i < 1; i++) {
-            if (D_main_bss_80154620[i].active != 0 && D_main_bss_80154620[i].handle == h) {
+            if (D_main_bss_80154620[i].active != 0 && D_main_bss_80154620[i].handle == handle) {
                 goto found;
             }
         }
         i = -1;
     found:
-        h = i;
-        __asm__("" : "=r"(h) : "0"(h));
-        if (h != -1) {
-            return D_main_bss_80154620[h].active != 0;
+        handle = i;
+        if (handle != -1) {
+            return D_main_bss_80154620[handle].active != 0;
         }
     }
     return 0;
