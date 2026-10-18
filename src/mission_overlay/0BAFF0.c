@@ -223,9 +223,15 @@ void ffImpl(FfArg *arg0, f32 dt) {
             }
         }
         {
-            register f32 t3 asm("$f2") = arg0->scale * 5.625f;
-            if (t3 < fs0) {
-                fs0 = t3;
+            f32 s = arg0->scale;
+            f32 k;
+
+            do {
+                k = 5.625f;
+            } while (0);
+            k = k * s;
+            if (k < fs0) {
+                fs0 = k;
             }
         }
         {
