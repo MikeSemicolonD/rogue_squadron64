@@ -904,16 +904,11 @@ extern s32 allocCellBitGroup(void *, u8);
 extern s32 findFreeBitsL(void *, u8) __asm__("findFreeCellBitSlot");
 extern void rs_memset(u8 *, u8, u32);
 
-static __inline__ s32 extendAcBits(u8 *s, s32 sz) {
-    s32 b = findFreeBitsL(s, sz);
-    return b < (1 << (sz - 1)) ? b + ((-1 << sz) + 1U) : b;
-}
-
 void buildDebrisCellBitfield(u8 *s, u8 idx, s32 blkArg) {
     register s16 *blk asm("$21") = (s16 *)blkArg;
     s32 diff;
     s32 sz;
-    register s32 run asm("$3");
+    s32 run;
     s32 k;
     s32 bits;
     s16 sbits;
@@ -947,8 +942,9 @@ void buildDebrisCellBitfield(u8 *s, u8 idx, s32 blkArg) {
         sz &= 0xF;
         if (sz != 0) {
             k += run;
-            bits = extendAcBits(s, sz);
-            blk[D_menu_overlay_800A76E0[k]] = bits;
+            run = findFreeBitsL(s, sz);
+            run = run < (1 << (sz - 1)) ? run + ((-1 << sz) + 1) : run;
+            blk[D_menu_overlay_800A76E0[k]] = run;
         } else {
             if (run != 15) {
                 break;
