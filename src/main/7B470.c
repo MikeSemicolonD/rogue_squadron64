@@ -373,12 +373,13 @@ s32 heavyAttachedAudioEmitterNpcHandler(u8 *npc, u16 msg, u8 *arg) {
             mat34CrossRowsAndCopyPosPtr(*(u8 **)d + 0x28, d + 8, d + 0x13C);
             transformMeshVerticesForNpc(d + 0x38);
             mesh = *(HaMesh **)d;
-            __asm__("" :: "r"(mesh));
-            if ((mesh->next = **(u8 ***)a) != NULL) {
-                *(u8 **)(*(u8 **)(*(u8 **)d + 0xC) + 4) = *(u8 **)d + 0xC;
-            }
-            *(s32 *)(*(u8 **)d + 0x10) = 0;
-            **(u8 ***)a = *(u8 **)d + 0xC;
+            do {
+                if ((mesh->next = **(u8 ***)a) != NULL) {
+                    *(u8 **)(*(u8 **)(*(u8 **)d + 0xC) + 4) = *(u8 **)d + 0xC;
+                }
+                *(s32 *)(*(u8 **)d + 0x10) = 0;
+                **(u8 ***)a = *(u8 **)d + 0xC;
+            } while (0);
         }
         break;
     }
