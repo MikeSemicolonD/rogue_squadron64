@@ -4016,27 +4016,21 @@ s32 soundMacroOpSetVolumeRamp(u8 *ch, u8 *cmd) {
     return 0;
 }
 
-s32 soundMacroOpSetPitchRelativeToNote(u8 *ch, u8 *cmd) {
-    u32 c;
-    register s32 h asm("$2");
-    s32 b;
-    register s32 t asm("$3");
-    s32 m, p;
-    s32 x;
-    s32 unused[2];
+s32 soundMacroOpSetPitchRelativeToNote(u8 *ch, u8 *cmdArg) {
+    u32 *cstep = (u32 *)cmdArg;
+    s32 delta;
+    s32 scale;
 
-    h = *(u16 *)(ch + 0x54);
-    b = cmd[1];
-    c = *(u32 *)cmd;
-    t = (h - b) << 16;
-    m = (s8)(c >> 8);
-    p = t * m; if (p < 0) { p += 127; __asm__("" :: "r"(t)); } x = (p >> 7) + ((c >> 24) << 16);
-    if (x < 0) {
-        x = 0;
-    } else if (x > 0x7F0000) {
-        x = 0x7F0000;
+    delta = (*(u16 *)(ch + 0x54) << 16) - ((u8)(cstep[0] >> 16) << 16);
+    scale = (s8)(u8)(cstep[0] >> 8);
+    delta = (delta * scale) / 128;
+    delta += (u8)(cstep[0] >> 24) << 16;
+    if (delta < 0) {
+        delta = 0;
+    } else if (delta > 0x7F0000) {
+        delta = 0x7F0000;
     }
-    *(s32 *)(ch + 0x38) = x;
+    *(s32 *)(ch + 0x38) = delta;
     return 0;
 }
 
