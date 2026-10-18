@@ -228,12 +228,13 @@ s32 emitTrailPuffAndCue(TpObj *arg0) {
     TpBuf u;
     u8 *lb;
     TpCue cue;
-    register u16 *hp __asm__("$17");
+    u16 *hp;
 
     if (arg0->active == 0) {
         goto clear;
     }
     {
+        hp = hits;
         u.a.list = kTrailTypes;
         {
             f32 *s_ = arg0->pos.v;
@@ -254,7 +255,6 @@ s32 emitTrailPuffAndCue(TpObj *arg0) {
             n = acquireNpcTargetsInAimCone(cp);
             cp = 0;
         }
-        hp = hits;
         if (n > 0) {
             TpAim *ap = &u.a.aim;
             for (i = 0; n < 7; i++, n++) {
