@@ -3418,20 +3418,17 @@ s32 soundMacroOpGosubLoopCounterThirty(u8 *ch, u8 *cmdArg) {
 
 s32 bucketLookupML(u32) __asm__("factor5BucketedTableLookupValue");
 u16 evalModRecML(u8 *, u8 *) __asm__("evaluateVoiceModulatorRecord");
-s32 soundMacroOpGosubModulatorLoop(u8 *ch, u8 *cmd) {
-    s32 v;
-    u32 c;
-    u8 x;
-    s32 unused[2];
+s32 soundMacroOpGosubModulatorLoop(u8 *ch, u8 *cmdArg) {
+    u32 *cstep = (u32 *)cmdArg;
+    s32 addr;
+    u8 mod;
 
     if (ch[0x4E] != 0xFF) {
-        x = (u8)(evalModRecML(ch, ch + 0x11A) >> 7);
-        c = *(u32 *)cmd;
-        if (x >= cmd[2]) {
-            v = bucketLookupML(c >> 16);
-            if (v != 0) {
-                *(s32 *)ch = v;
-                *(s32 *)(ch + 4) = v + *(u16 *)(cmd + 6) * 8;
+        mod = evalModRecML(ch, ch + 0x11A) >> 7;
+        if (mod >= (u8)(cstep[0] >> 8)) {
+            if ((addr = bucketLookupML(cstep[0] >> 16)) != 0) {
+                *(s32 *)ch = addr;
+                *(s32 *)(ch + 4) = addr + (u16)cstep[1] * 8;
             }
         }
     }
