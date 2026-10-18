@@ -438,7 +438,6 @@ typedef struct {
     s16 h7C;
 } NpcCtxInit;
 
-__asm__(".section .rodata\n.globl D_main_8003A4B0\nD_main_8003A4B0:\n.word 0x3F800000\n.globl D_main_8003A4B4\nD_main_8003A4B4:\n.word 0x41200000\n.globl D_main_8003A4B8\nD_main_8003A4B8:\n.word 0x40000000\n.globl D_main_8003A4BC\nD_main_8003A4BC:\n.word 0x3F800000\n.globl D_main_8003A4C0\nD_main_8003A4C0:\n.word 0x3F333333\n.globl D_main_8003A4C4\nD_main_8003A4C4:\n.word 0x40A00000\n.word 0x00220821\n.word 0x8C30A770\n.section .text");
 
 void initNpcContextFromTransform(NpcCtxInit *self, u8 *tf) {
     f32 one;
@@ -455,7 +454,7 @@ void initNpcContextFromTransform(NpcCtxInit *self, u8 *tf) {
         *(NpcV3w *)&self->w20 = *(NpcV3w *)(tf + 0xC);
         vec3Cross(&self->f2C, tf + 0xC, tf + 0x18);
     } else {
-        __asm__ volatile("lwc1 %0, D_main_8003A4B0" : "=f"(one));
+        one = 1.0f;
         self->w20 = 0;
         self->w24 = 0;
         self->w30 = 0;
@@ -464,12 +463,12 @@ void initNpcContextFromTransform(NpcCtxInit *self, u8 *tf) {
         self->f2C = one;
     }
     g = D_main_bss_80130C08;
-    __asm__ volatile("mtc1 $zero, %0" : "=f"(zero));
-    __asm__ volatile("lwc1 %0, D_main_8003A4B4" : "=f"(c10));
-    __asm__ volatile("lwc1 %0, D_main_8003A4B8" : "=f"(c2));
-    __asm__ volatile("lwc1 %0, D_main_8003A4BC" : "=f"(c1));
-    __asm__ volatile("lwc1 %0, D_main_8003A4C0" : "=f"(c07));
-    __asm__ volatile("lwc1 %0, D_main_8003A4C4" : "=f"(c5));
+    zero = 0.0f;
+    c10 = 10.0f;
+    c2 = 2.0f;
+    c1 = 1.0f;
+    c07 = 0.7f;
+    c5 = 5.0f;
     self->h70 = 0xC;
     self->h3E = 0;
     self->h3C = 0;
@@ -496,6 +495,7 @@ void initNpcContextFromTransform(NpcCtxInit *self, u8 *tf) {
     *(volatile s32 *)&self->w64 = g;
     *(volatile f32 *)&self->f0 = c5;
 }
+__asm__(".section .rodata\n.word 0x00220821\n.word 0x8C30A770\n.section .text");
 
 s32 randomBurstNpcHandlerVariant(struct D_80130BB8_type *self, u16 arg1, void *arg2);
 
