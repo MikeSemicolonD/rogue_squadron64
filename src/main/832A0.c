@@ -1796,7 +1796,7 @@ static __inline__ u32 getNewVidAV(void) {
     } while (vid == 0xFFFFFFFF);
     return vid;
 }
-u32 allocVoiceHandleNode(u8 *v) {
+__inline__ u32 allocVoiceHandleNode(u8 *v) {
     u32 vid;
     FsNode *nvl;
     FsNode *lvl;
@@ -2104,62 +2104,6 @@ static __inline__ u32 fvGlide(u8 *v) {
     }
     return *(u32 *)(v + 0x70);
 }
-static __inline__ u32 fvAlloc(u8 *v) {
-    register u32 id asm("$6");
-    u32 k;
-    u32 n;
-    u8 *a2;
-    u8 *t0;
-    u8 *a1;
-    u8 *t;
-    register u32 ret asm("$18");
-    do {
-        n = fvNextId;
-        fvNextId = n + 1;
-        id = n;
-    } while (n == -1);
-    a2 = fvHead;
-    t0 = 0;
-    while (a2 != 0) {
-        k = *(u32 *)(a2 + 8);
-        if (id < k) {
-            break;
-        }
-        if (k == id) {
-            do {
-                n = fvNextId;
-                fvNextId = n + 1;
-            } while (n == -1);
-            id = n;
-        }
-        t0 = a2;
-        a2 = *(u8 **)a2;
-    }
-    a1 = fvFree;
-    ret = -1;
-    if (a1 != 0) {
-        t = *(u8 **)a1;
-        fvFree = t;
-        if (t != 0) {
-            *(s32 *)(t + 4) = 0;
-        }
-        if (t0 == 0) {
-            fvHead = a1;
-        } else {
-            *(u8 **)t0 = a1;
-        }
-        *(u8 **)(a1 + 4) = t0;
-        *(u8 **)a1 = a2;
-        if (a2 != 0) {
-            *(u8 **)(a2 + 4) = a1;
-        }
-        *(u32 *)(a1 + 8) = id;
-        ret = id;
-        *(s32 *)(a1 + 0xC) = *(s32 *)(v + 0x64);
-        *(u8 **)(v + 0x18) = a1;
-    }
-    return ret;
-}
 s32 findActiveVoiceByKeyPair(s32 key, s32 a, s32 b) {
     s32 ret = -1;
     u32 i;
@@ -2201,7 +2145,7 @@ s32 findActiveVoiceByKeyPair(s32 key, s32 a, s32 b) {
         if (ret == -1) {
             FV(s32, 0x10, off) = ret;
             FV(s32, 0x14, off) = ret;
-            ret = fvAlloc((u8 *)&fvVs[i]);
+            ret = allocVoiceHandleNode((u8 *)&fvVs[i]);
         } else {
             o3 = (u8)prev * 0x17C;
             FV(s32, 0x10, o3) = *(s32 *)(fv64 + off);
