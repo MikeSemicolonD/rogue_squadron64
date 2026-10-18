@@ -1342,7 +1342,7 @@ void updatePlayerAtStBehavior(AtStPl *o, f32 dt) {
     f32 ab;
     f32 z;
     f32 fv;
-    register f32 sx __asm__("$f2");
+    f32 sx;
     s32 pi;
 
     pi = 0;
@@ -1350,8 +1350,11 @@ void updatePlayerAtStBehavior(AtStPl *o, f32 dt) {
         fv = o->f64;
         z = 0.0f;
         sy = D_mission_overlay_8010BDD8[0][1];
-        sx = *(volatile f32 *)&D_mission_overlay_8010BDD8[0][0];
+        sx = D_mission_overlay_8010BDD8[0][0];
         if (fv == z) {
+            if (sx < z) {
+                sx = z;
+            }
             if (fabsf(sy) < 0.1f) {
                 sy = z;
             }
