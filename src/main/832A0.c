@@ -2569,17 +2569,10 @@ s32 dispatchSequencerNoteEvent(u32 key, u8 note, u8 vel, u8 a3, u8 a4, u8 a5, u1
             n = t2;
         }
         k += tbl[i].h4;
-        {
-            s32 t3;
-            if (k < 0x100) {
-                t3 = (k < 0) ? 0 : k;
-            } else {
-                t3 = 0xFF;
-            }
-            key &= 0xFF;
-            key |= t3 << 8;
-            key |= tbl[i].h0 << 16;
-        }
+        k = (k < 0x100) ? ((k < 0) ? 0 : k) : 0xFF;
+        key &= 0xFF;
+        key |= k << 8;
+        key |= tbl[i].h0 << 16;
         if ((tbl[i].h0 & 0xC000) == 0) {
             r = findVoiceForNoteDS(n, a4, a5);
             if (r != -1) {
@@ -2587,7 +2580,6 @@ s32 dispatchSequencerNoteEvent(u32 key, u8 note, u8 vel, u8 a3, u8 a4, u8 a5, u1
             }
             return startNoteOnVoice(key, hi, (u8)(n | (note & 0x80)), vel, a3, a4, a5, a6, a7, 1, a8);
         }
-        __asm__("" :: "r"(k));
         return applyNoteEventToGroupDS(key, hi, n | (note & 0x80), vel, a3, a4, a5, a6, a7, a8);
     case 0x8000:
         return applyNoteEventToGroupDS(key, key >> 16, note, vel, a3, a4, a5, a6, a7, a8);
