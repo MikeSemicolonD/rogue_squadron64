@@ -17,6 +17,7 @@ void func_mission_overlay_800E9AE0(u8 *arg0) {
     f32 one;
 
     if (setNpcHealth(*(s32 *)(s1 + 0x38), *(u8 **)(s1 + 0x34) + 0x6C, *(u8 **)(s1 + 0x34)) > 0) {
+        d = *(u8 **)(s1 + 0x34);
         one = 1.0f;
         o = D_main_bss_80137CE4 * 4;
         *(s16 *)(s1 + 0x6C) = 0;
@@ -25,13 +26,10 @@ void func_mission_overlay_800E9AE0(u8 *arg0) {
         *(f32 *)(s1 + 0x5C) = one;
         *(f32 *)(s1 + 0x58) = *(f32 *)(o + *(s32 *)(s1 + 0x34) + 0xBC) * 10.0f;
         p = o + *(s32 *)(s1 + 0x34);
-        d = *(u8 **)(s1 + 0x34);
         initActorMotionParams(*(s32 *)(s1 + 0x38), *(s32 *)(p + 0xB4), *(s32 *)(p + 0xB8), *(s32 *)(p + 0xC0), *(f32 *)(p + 0xC4));
         initObjectAnimSubstruct(*(s32 *)(s1 + 0x38), *(s32 *)(d + 0xC8), *(s32 *)(d + 0xCC), *(s32 *)(d + 0xD0), *(f32 *)(d + 0xD4), spawnObjectImpactEffectWithSound, 0, 10.0f, 15.0f, 0);
-        __asm__("" :: "r"(d)); __asm__("" :: "r"(d)); 
         setObjectDetailLevel(*(s32 *)(s1 + 0x38), *(s32 *)(*(u8 **)(s1 + 0x34) + 0xA0));
     } else {
-        __asm__("" :: "r"(d));
         *(s16 *)(s1 + 0x6C) = 3;
     }
 }
