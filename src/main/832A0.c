@@ -6077,14 +6077,6 @@ void allocateSongChannelArray(u16 nch, u32 rate) {
     osWritebackDCache(gMixBufSC, 0x298);
 }
 
-extern const f64 D_main_8003DD68;
-extern const f32 D_main_8003DD70;
-extern const f32 D_main_8003DD74;
-extern const f32 D_main_8003DD78;
-extern const f32 D_main_8003DD7C;
-extern const f64 D_main_8003DD80;
-extern const f32 D_main_8003DD88;
-extern const f32 D_main_8003DD8C;
 extern u16 D_main_bss_8014971C;
 extern u32 D_main_bss_80149720;
 extern u8 *D_main_bss_80149728;
@@ -6095,51 +6087,22 @@ extern u16 D_main_800A1760[];
 void *rs_malloc(u32, u16);
 void buildSongDecodeBufferRing(s32);
 void initSampleStreamBlockCache(u16);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD68);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD70);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD74);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD78);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD7C);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD80);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD88);
-INCLUDE_RODATA("asm/nonmatchings/main/832A0", D_main_8003DD8C);
 
 void setupSongRenderBuffers(u16 n, u32 x, u8 mode) {
-    f64 d;
-    f32 f;
     u32 q;
     u32 t1;
     u32 sz;
     u32 nn;
     u32 k;
+
     nn = n;
-    d = (s32)x;
-    if ((s32)x >= 0) goto L1;
-    d = d + D_main_8003DD68;
-L1:
-    f = (f32)d / D_main_8003DD70 * D_main_8003DD74 / D_main_8003DD78;
-    if (f >= D_main_8003DD7C) goto L2;
-    q = (s32)f;
-    goto L3;
-L2:
-    q = (s32)(f - D_main_8003DD7C) | 0x80000000;
-L3:
+    q = (u32)((f32)x / 50.0f * 1.2f / 192.0f);
     t1 = nn * ((u16)q + 1);
     k = 0x310;
     D_main_bss_80149720 = k;
     D_main_bss_8014971C = t1;
     sz = (u16)t1 * k;
-    d = (s32)sz;
-    if ((s32)sz >= 0) goto L4;
-    d = d + D_main_8003DD80;
-L4:
-    f = (f32)d * D_main_8003DD88;
-    if (f >= D_main_8003DD8C) goto L5;
-    q = (s32)f;
-    goto L6;
-L5:
-    q = (s32)(f - D_main_8003DD8C) | 0x80000000;
-L6:
+    q = (u32)((f32)sz * 0.9f);
     D_main_bss_80149720 = ((((q + 0x3F) >> 6) * 40) + 0xF) & 0xFFF0;
     D_main_bss_80149728 = rs_malloc(D_main_bss_8014971C * 24, 0);
     osCreateMesgQueue(&D_main_bss_80149730, &D_main_bss_80149748, 1);
