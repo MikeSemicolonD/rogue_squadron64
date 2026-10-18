@@ -190,8 +190,7 @@ f32 normalize_vector(void *);
 void quatFromAxisAngle(void *, void *, f32);
 void rotateVec3ByQuat(void *, void *, void *);
 
-void tickAtAtBodyTransform(void *arg0, f32 dt) {
-    register AbNpc *npc asm("$20") = arg0;
+void tickAtAtBodyTransform(AbNpc *npc, f32 dt) {
     f32 mtx[12];
     f32 inv[12];
     f32 dir[3];
@@ -462,8 +461,7 @@ void scaleVec3ByRandomRange(void *, f32, f32);
 void spawnDebris1Npc(void *, void *, f32, f32, f32);
 void spawnSplineWalkerCraft(void *, f32, f32, s32);
 
-void npcAtAtHandleDestruction(void *arg0, s32 arg1) {
-    register AaNpc *npc asm("$20");
+void npcAtAtHandleDestruction(AaNpc *npc, s32 arg1) {
     f32 mtx[4];
     f32 vel[4];
     f32 pos[4];
@@ -475,7 +473,6 @@ void npcAtAtHandleDestruction(void *arg0, s32 arg1) {
     s32 i;
     s32 n;
 
-    npc = arg0;
     color = D_mission_overlay_800A6DE0;
     switch (arg1) {
     case 0:
@@ -546,7 +543,6 @@ spawn:
         }
         spawnByteAnimDebrisDefault(npc);
         spawnSplineWalkerCraft(buf, npc->f54 * 30.0f, npc->f54 * 35.0f, 0xC);
-        __asm__("" : "+r"(npc));
         *(s32 *)(npc->f34 + 0x4C) |= 0x40000000;
         break;
     }
@@ -756,13 +752,13 @@ void releaseMeshAsset(void *);
 void func_mission_overlay_800AA6D0(void *, f32, void *);
 void dispatchEffectByActorType(s32, f32);
 s32 func_mission_overlay_800EFDE0(s32, s32, s32, f32);
-void tickAtAtBodyTransform(void *, f32);
+void tickAtAtBodyTransform(AbNpc *, f32);
 s32 isPendingChildNpcActive(s32);
 s32 validateActorTargetLOS(s32);
 void applyToObjectSubstructByFlag(s32, f32, s32, f32);
 s32 getNpcCurrentHealth(s32);
 s32 dealDamageToNpc(s32, s32);
-void npcAtAtHandleDestruction(void *, s32);
+void npcAtAtHandleDestruction(AaNpc *, s32);
 void datItemSetObjectiveBooleanCount(s32, s32, s32, s32, s32, s32);
 void tallyMidDetailObject(void *);
 void unregisterAndFreeNpcSlot(u16, void *);
