@@ -760,7 +760,6 @@ typedef struct { void *p0; s32 p4; s32 p8; s32 pC; } SehObj;
 
 void slotEffectHandlerDispatch(u8 *arg0, u8 arg1) {
     void *saved;
-    s32 a0;
     void **tbl;
     void **t;
     s32 x;
@@ -777,21 +776,16 @@ void slotEffectHandlerDispatch(u8 *arg0, u8 arg1) {
         sehBusy -= 1;
         return;
     }
-    if (arg1 != 0x13) {
-        if (arg1 == 0xA) {
-            __asm__("");
-            a0 = 0;
-            goto call;
-        }
-        if (D_cinematic_overlay_800B09D0.unk0 == 0) {
-            a0 = 0;
-            goto call;
-        }
+    if (arg1 == 0x13) {
+        setRenderStateFlagByteOne(1);
+    } else if (arg1 == 0xA) {
+        setRenderStateFlagByteOne(0);
+    } else if (D_cinematic_overlay_800B09D0.unk0 == 0) {
+        setRenderStateFlagByteOne(0);
+    } else {
         setActiveRenderListPtr(&D_cinematic_overlay_800B09D0);
+        setRenderStateFlagByteOne(1);
     }
-    a0 = 1;
-call:
-    setRenderStateFlagByteOne(a0);
     tbl = (void **)D_cinematic_overlay_800B09C0;
     x = D_cinematic_overlay_800B0B00;
     saved = *(void **)arg0;
@@ -828,11 +822,12 @@ call:
         setRenderStateFlagByteThree(0);
         setRenderStateFlagByteTwo(1);
         setActiveRenderListPtr(0);
-        *(s32 *)arg0 = 0;
-        *(s32 *)(D_cinematic_overlay_800B0B18 + 0xC) = 0;
-        *(s32 *)(D_cinematic_overlay_800B0B18 + 0x10) = 0;
-        *(s32 *)arg0 = D_cinematic_overlay_800B0B18 + 0xC;
-        __asm__("" :: "m"(*(s32 *)arg0) : "$4");
+        do {
+            *(s32 *)arg0 = 0;
+            *(s32 *)(D_cinematic_overlay_800B0B18 + 0xC) = 0;
+            *(s32 *)(D_cinematic_overlay_800B0B18 + 0x10) = 0;
+            *(s32 *)arg0 = D_cinematic_overlay_800B0B18 + 0xC;
+        } while (0);
         setupCameraMatrices(arg0);
         setRenderStateFlagByteThree(1);
         setRenderStateFlagByteOne(0);
