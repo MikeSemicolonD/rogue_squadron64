@@ -3590,7 +3590,7 @@ f32 vec2Cross2D(f32 *, f32 *);
 static inline f32 bofSqrt(f32 x)
 {
     f32 r;
-    __asm__("sqrt.s %0, %1" : "=f"(r) : "f"(x));
+    SQRTF_PURE(r, x);
     return r;
 }
 

@@ -12,6 +12,7 @@
 #define M_HALF_PI_F (M_PI_F / 2.0f)
 
 #define SQRTF(out, in) __asm__ volatile("sqrt.s %0, %1" : "=f"(out) : "f"(in))
+#define SQRTF_PURE(out, in) __asm__("sqrt.s %0, %1" : "=f"(out) : "f"(in))
 #define FABSF(out, in) __asm__ volatile("abs.s %0, %1" : "=f"(out) : "f"(in))
 #define FABSF_VAL(x) ({ f32 _r; FABSF(_r, (x)); _r; })
 

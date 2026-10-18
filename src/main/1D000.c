@@ -5,8 +5,6 @@
 #include "main/192E0.h"
 #include "main/1D000.h"
 
-#define SQRTF_ASM(out, in) __asm__("sqrt.s %0, %1" : "=f"(out) : "f"(in))
-
 f32 sinfApprox(f32 y) {
     f32 t;
     f32 s2;
@@ -35,11 +33,11 @@ f32 sinfApprox(f32 y) {
     if (!mid) {
         x = y;
         if (x < 0.0f) {
-            __asm__("sqrt.s %0, %1" : "=f"(r) : "f"(1.0f - x * x));
+            SQRTF_PURE(r, 1.0f - x * x);
             z = -r;
         } else {
             t = 1.0f - x * x;
-            __asm__("sqrt.s %0, %1" : "=f"(z) : "f"(t));
+            SQRTF_PURE(z, t);
         }
     } else {
         z = y;
@@ -73,7 +71,7 @@ f32 atan2Approx(f32 arg0, f32 arg1) {
     a = arg0;
     arg0 = (a * a) + (arg1 * arg1);
     if (arg0 > 0.0f) {
-        SQRTF_ASM(arg0, arg0);
+        SQRTF_PURE(arg0, arg0);
         arg1 = arg1 / arg0;
         arg0 = a / arg0;
         if (fabs((f64)arg0) < fabs((f64)arg1)) {
@@ -349,14 +347,14 @@ void buildRotationMatrixSlot2(Mat4x3 arg0, f32 arg1) {
 f32 vec3Length(Vec3f v) {
     f32 len;
 
-    SQRTF_ASM(len, v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    SQRTF_PURE(len, v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     return len;
 }
 
 f32 normalize_vector(Vec3f v) {
     f32 len;
 
-    SQRTF_ASM(len, v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
+    SQRTF_PURE(len, v[0] * v[0] + v[1] * v[1] + v[2] * v[2]);
     v[0] /= len;
     v[1] /= len;
     v[2] /= len;
@@ -366,7 +364,7 @@ f32 normalize_vector(Vec3f v) {
 f32 vec3NormalizeInto(Vec3f dst, Vec3f src) {
     f32 len;
 
-    SQRTF_ASM(len, src[0] * src[0] + src[1] * src[1] + src[2] * src[2]);
+    SQRTF_PURE(len, src[0] * src[0] + src[1] * src[1] + src[2] * src[2]);
     dst[0] = src[0] / len;
     dst[1] = src[1] / len;
     dst[2] = src[2] / len;
@@ -449,7 +447,7 @@ void quatFromAxisAngleSafe(f32 *q, Vec3f axis, f32 angle) {
     f32 len;
 
     half = angle * 0.008726646f;
-    SQRTF_ASM(len, axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
+    SQRTF_PURE(len, axis[0] * axis[0] + axis[1] * axis[1] + axis[2] * axis[2]);
     if ((half != 0.0f) & (len != 0.0f)) {
         q[0] = cosf(half);
         half = sinf(half) / len;
@@ -623,7 +621,7 @@ void convertMat3x4ToQuat(Mat4x3 arg0, Vec4f arg1) {
     c = arg0[2][2];
     tr = a + b + c;
     if (tr > 0.0f) {
-        SQRTF_ASM(s, tr + 1.0f);
+        SQRTF_PURE(s, tr + 1.0f);
         arg1[0] = s * 0.5f;
         s = 0.5f / s;
         arg1[1] = (arg0[2][1] - arg0[1][2]) * s;
@@ -647,7 +645,7 @@ void convertMat3x4ToQuat(Mat4x3 arg0, Vec4f arg1) {
     k = D_main_80037840[j];
     ri = (f32 *)(i * 12 + (s32)arg0);
     rj = (f32 *)(nv + (s32)arg0);
-    SQRTF_ASM(s, (ri[i] - (rj[j] + (rk = (f32 *)(k * 12 + (s32)arg0))[k])) + 1.0f);
+    SQRTF_PURE(s, (ri[i] - (rj[j] + (rk = (f32 *)(k * 12 + (s32)arg0))[k])) + 1.0f);
     q[i] = s * 0.5f;
     s = 0.5f / s;
     arg1[0] = (arg0[k][j] - rj[k]) * s;
@@ -671,7 +669,7 @@ void slerpQuaternions(Vec4f arg0, Vec4f arg1, f32 arg2, Vec4f arg3) {
             temp_fs1 = M_HALF_PI_F - sinfApprox(temp_fs0);
             {
                 f32 sq;
-                SQRTF_ASM(sq, 1.0f - (f32) (temp_fs0 * temp_fs0));
+                SQRTF_PURE(sq, 1.0f - (f32) (temp_fs0 * temp_fs0));
                 temp_fs0_2 = sq;
             }
             var_fs2 = sinf((1.0f - arg2) * temp_fs1) / temp_fs0_2;
@@ -784,7 +782,7 @@ u8 transformVec3ToNpcLocalWithScale(TvCam *cam, f32 (*mat)[3], f32 *in, f32 scal
     }
     if (scale != 0.0f) {
         rotateVec3ByMat3x3(mat, D_main_8003784C, r);
-        SQRTF_ASM(len, r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
+        SQRTF_PURE(len, r[0] * r[0] + r[1] * r[1] + r[2] * r[2]);
         scale = scale * len;
         if (v[0] - scale < -125.0f) return 0;
         if (v[1] - scale < -125.0f) return 0;
