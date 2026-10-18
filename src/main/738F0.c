@@ -2579,16 +2579,8 @@ s32 func_main_80077AF0(u8 *arg0, u16 action, u8 *arg2) {
                     s2->s14A = 0xFFFF;
                 }
             }
-            {
-                u8 *b;
-                s32 t;
-                s32 o;
-                __asm__("la %0, D_main_bss_80139560" : "=r"(b));
-                s2->s144 = pgPop(*(u16 *)(b + 0x1C), arg0);
-                t = *(s32 *)(rec + 0x8C);
-                o = (t == 1) ? 0x26 : (t == 0) ? 0x28 : 0x2A;
-                s2->s146 = pgPop(*(u16 *)(b + o), arg0);
-            } /*B2*/
+            s2->s144 = pgPop(D_main_bss_80139560[14], arg0);
+            s2->s146 = pgPop(D_main_bss_80139560[*(s32 *)(rec + 0x8C) == 1 ? 0x13 : *(s32 *)(rec + 0x8C) == 0 ? 0x14 : 0x15], arg0);
             s2->radius = *(f32 *)(*(u8 **)s2->mesh + 0x44) * s2->scale;
             s2->a130 = 0.0f;
             s2->a134 = 0.0f;
