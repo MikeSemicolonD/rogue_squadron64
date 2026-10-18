@@ -277,27 +277,6 @@ void emitGridCellTileStripDiagonal_impl(EdCell *a, EsGrid *g) {
         a->v10 = fpList[--fpCnt];
         a->v12 = fpList[--fpCnt];
     }
-    __asm__("" :: "r"(idx));
-    if (a->gx > 0) {
-        l = g->tiles + (g->cells[idx - 1] & 0x1FFF) * 0x1E + 5;
-    } else {
-        l = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
-    }
-    if (a->gx < g->w - 1) {
-        r = g->tiles + (g->cells[idx + 1] & 0x1FFF) * 0x1E + 5;
-    } else {
-        r = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
-    }
-    if (a->gz > 0) {
-        u = g->tiles + (g->cells[idx - g->w] & 0x1FFF) * 0x1E + 5;
-    } else {
-        u = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
-    }
-    if (a->gz < g->h - 1) {
-        d = g->tiles + (g->cells[idx + g->w] & 0x1FFF) * 0x1E + 5;
-    } else {
-        d = g->tiles + (g->cells[idx] & 0x1FFF) * 0x1E + 5;
-    }
     if (a->gx > 0) {
         l = g->tiles + (g->cells[idx - 1] & 0x1FFF) * 0x1E + 5;
     } else {
