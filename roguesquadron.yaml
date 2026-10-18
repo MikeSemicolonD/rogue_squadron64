@@ -347,7 +347,7 @@ segments:
       - [0x3E710, .rodata, "main/832A0"]
       - [0x3EA70, .rodata,  "main/98960"]
       - [0x3EAF0, .rodata,  "main/9A850"]
-      - [0x3EB00, rodata,  "main/3EB00"]
+      - [0x3EB00, .rodata, "main/9BB60"]
       - [0x3EB20, c,     "main/3EB20"]
       - [0x3EBA0, c,     "main/3EBA0"]
       - [0x3F160, c,     "main/3F160"]

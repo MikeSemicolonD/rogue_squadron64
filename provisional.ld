@@ -532,7 +532,6 @@ SECTIONS
         build/src/main/94F50.o(.rodata);
         build/src/main/97D20.o(.rodata);
         build/asm/data/main/aspMainText.o(.rodata);
-        build/src/main/9BB60.o(.rodata);
         build/src/main/9CED0.o(.rodata);
         build/asm/main/9E3D0.o(.rodata);
         build/src/main/3EBA0.o(.rodata);
@@ -575,7 +574,7 @@ SECTIONS
         build/src/main/832A0.o(.rodata);
         build/src/main/98960.o(.rodata);
         build/src/main/9A850.o(.rodata);
-        build/asm/data/main/3EB00.rodata.o(.rodata);
+        build/src/main/9BB60.o(.rodata);
         build/src/main/3EB20.o(.text);
         build/src/main/3EBA0.o(.text);
         build/src/main/3F160.o(.text);

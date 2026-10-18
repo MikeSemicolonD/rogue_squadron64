@@ -213,8 +213,6 @@ extern void advanceVoiceStateToPlaying(void *);
 extern s32 startStreamedSampleVoice(s32, s32, s32, s32, s32, s32, s32, s32, void *, s32);
 extern void stopStreamedVoice(s32);
 extern s32 accumulateVoiceSampleOffset(s32, s32, s32, s32, s32);
-extern f32 D_main_8003DF00;
-extern f64 D_main_8003DF08;
 extern u32 D_main_bss_8015466C;
 extern u32 D_main_bss_80154678;
 extern u32 D_main_bss_80154680;
@@ -249,16 +247,15 @@ void serviceVoicePoolFrame(void) {
             switch (*(volatile u8 *)((u8 *)D_main_bss_80154620 + off)) {
             case 1:
                 if (SVA(u8, 0x11DD) == 2) {
-                    s32 r = SVA(s32, 0x1208);
-                    f64 d = r;
+                    u32 r = SVA(u32, 0x1208);
                     f32 x;
-                    x = (f32)*(u16 *)((u8 *)D_main_bss_801545C0 + off) * D_main_8003DF00;
-                    if (r < 0) {
-                        d += D_main_8003DF08;
-                    }
+                    f32 d;
+
+                    x = (f32)*(u16 *)((u8 *)D_main_bss_801545C0 + off) * 160.0f;
+                    d = r;
                     *(s32 *)((u8 *)D_main_bss_8015463C + off) = 0;
                     *(volatile u8 *)((u8 *)D_main_bss_80154620 + off) = 2;
-                    *(f32 *)((u8 *)D_main_bss_80154640 + off) = x / (f32)d;
+                    *(f32 *)((u8 *)D_main_bss_80154640 + off) = x / d;
                     advanceVoiceStateToPlaying(v);
                     *(s32 *)&v[0x120C] = startStreamedSampleVoice(
                         D_main_bss_80154624[off], *(s32 *)((u8 *)D_main_bss_80154630 + off),
@@ -300,31 +297,16 @@ static inline s32 voiceSlotActive2(s32 i) {
     return D_main_bss_80154620[i].active;
 }
 
-extern f64 D_main_8003DF10;
-extern f64 D_main_8003DF18;
 
 f32 getVoicePlaybackProgressByKey(s32 handle, f32 *out) {
     f32 progress;
-    register f64 a asm("$f4");
-    f64 b;
-    s32 v;
 
     if (handle != -1 && speechFileLoaded) {
         handle = findVoiceSlotByHandle(handle);
         if (handle != -1) {
             lockSpeechVoices();
             if (gVSlots[handle].active == 2) {
-                v = D_main_bss_80154620[handle].sampleOffset;
-                a = (f64)v;
-                if (v < 0) {
-                    a += D_main_8003DF10;
-                }
-                v = *(s32 *)((u8 *)&D_main_bss_80154620[handle] + 8);
-                b = (f64)v;
-                if (v < 0) {
-                    b += D_main_8003DF18;
-                }
-                progress = (f32)a / (f32)b;
+                progress = (f32)(u32)D_main_bss_80154620[handle].sampleOffset / (f32)*(u32 *)((u8 *)&D_main_bss_80154620[handle] + 8);
             } else {
                 progress = 0.0f;
             }
