@@ -228,7 +228,13 @@ void titImpl(TitArg *arg0, f32 dt) {
         } else {
             c->fE8 = fs0;
         }
-        __asm__("" :: "f"(sc));
+        {
+            f32 x = c->fE8;
+
+            if (x < sc) {
+                x = sc;
+            }
+        }
         arg0->scale = 1.0f;
     }
     updatePlayerCraftPhysics(c, dt);
