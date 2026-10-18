@@ -495,14 +495,6 @@ static __inline__ s32 atPtCheckLOS(AtPt *s1, PMat *a, PMat *b) {
     return flag;
 }
 
-static __inline__ void atPtSpawnPair(f32 k, f32 *v0, PCol *col) {
-    register f32 *v asm("$16") = v0;
-    f32 a = 1.0f;
-    f32 b = 0.6f;
-    spawnOrientedNpc(0x8002, v, 0, NULL, k * 0.75f, k * 1.2f, a, b);
-    spawnOrientedNpc(0x8003, v, 0, col, k * b, k, a, b);
-}
-
 s32 npcAtPtUpdate(u8 *arg0, s32 action, u8 *arg2) {
     AtPt *s1 = *(AtPt **)(arg0 + 4);
     PMat sp28;
@@ -733,7 +725,13 @@ s32 npcAtPtUpdate(u8 *arg0, s32 action, u8 *arg2) {
                 play3DSoundEvent(0, s1, &s1->vel, 24.0f, 0.7f, 0, 0x21, 0x7D, 0x50);
                 if (D_main_bss_80130B63 != 0) {
                 spawn:
-                    atPtSpawnPair(k, (((f32 *)&sp28) + 8), (PCol *)&sp58);
+                    {
+                        f32 a = 1.0f;
+                        f32 b = 0.6f;
+
+                        spawnOrientedNpc(0x8002, ((f32 *)&sp28) + 8, 0, NULL, k * 0.75f, k * 1.2f, a, b);
+                        spawnOrientedNpc(0x8003, ((f32 *)&sp28) + 8, 0, (PCol *)&sp58, k * b, k, a, b);
+                    }
                 } else {
                     switch (gCurrentLevel) {
                     case 3:
