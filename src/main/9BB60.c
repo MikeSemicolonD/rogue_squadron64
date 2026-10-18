@@ -348,13 +348,13 @@ s32 loadSpeechFile(s32 arg0, s32 arg1) {
                 return 0;
             }
             setupAssetDma(arg1, 0, arg0, 4, numSpeechSamples * 4, offs);
-            { register u8 one asm("$2") = 1; speechSampleOffsetsLoaded = one; }
-            return 1;
+            speechSampleOffsetsLoaded = 1;
+        } else {
+            speechFile = arg0;
+            speechSampleOffsets = (void *)(arg0 + 4);
+            numSpeechSamples = *(u32 *)arg0;
+            speechSampleOffsetsLoaded = 0;
         }
-        speechFile = arg0;
-        speechSampleOffsets = (void *)(arg0 + 4);
-        { register u32 n asm("$2") = *(u32 *)arg0; numSpeechSamples = n; }
-        speechSampleOffsetsLoaded = 0;
         return 1;
     }
     return 0;
