@@ -73,9 +73,6 @@ typedef struct {
     u8 b18;
 } SsvSample;
 extern u8 gMusyXActiveFlag;
-extern f64 D_main_8003DE70;
-extern f32 D_main_8003DE78;
-extern f32 D_main_8003DE7C;
 extern s32 D_main_bss_801440C0;
 s32 factor5MutexAcquire();
 s32 factor5MutexRelease();
@@ -88,7 +85,6 @@ void musyxTriggerVoiceAttack(s32);
 s32 startStreamedSampleVoice(u8 key, s32 buf, s32 len, u32 rate, u8 p4, u8 p5, u8 p6, u8 p7, void *fn, s32 arg) {
     SsvSample s;
     s32 v;
-    f64 d;
     f32 f;
     u32 t;
 
@@ -110,17 +106,8 @@ s32 startStreamedSampleVoice(u8 key, s32 buf, s32 len, u32 rate, u8 p4, u8 p5, u
         s.w14 = len;
         s.b18 = 0;
         musyxInitVoiceFromSample(v, &s, 1);
-        d = (s32)rate;
-        if ((s32)rate < 0) {
-            d += D_main_8003DE70;
-        }
-        f = (f32)d / (f32)D_main_bss_801440C0 * D_main_8003DE78;
-        if (!(f >= D_main_8003DE7C)) {
-            t = (s32)f;
-        } else {
-            t = (s32)(f - D_main_8003DE7C);
-            t |= 0x80000000;
-        }
+        f = (f32)rate / (f32)D_main_bss_801440C0 * 4096.0f;
+        t = (u32)f;
         musyxSetVoicePitchBend(v, t);
         setVoiceModulationParams(v, p4 << 16, p5 << 16, p6 << 16, p7 << 16);
         musyxTriggerVoiceAttack(v);
@@ -164,7 +151,6 @@ void stopStreamedVoice(s32 arg0) {
     }
 }
 
-__asm__(".section .rodata\n.align 3\n.globl D_main_8003DE70\nD_main_8003DE70:\n.word 0x41F00000\n.word 0x00000000\n.globl D_main_8003DE78\nD_main_8003DE78:\n.word 0x45800000\n.globl D_main_8003DE7C\nD_main_8003DE7C:\n.word 0x4F000000\n.section .text");
 typedef struct { f32 x, y, z; } CsV3;
 typedef struct CsLis {
     struct CsLis *next;
