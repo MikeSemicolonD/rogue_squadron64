@@ -151,7 +151,7 @@ void mat3x3InverseInto(Mat4x3 arg0, Mat4x3 arg1) {
     f32 temp_ft3;
     f32 temp_ft3_2;
     f32 temp_fv0;
-    register f32 temp_fv1 asm("$f2");
+    f32 temp_fv1;
     f32 xa;
     f32 xb;
     f32 xc;
