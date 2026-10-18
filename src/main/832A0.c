@@ -2363,62 +2363,6 @@ static __inline__ s32 findVoiceForNoteAG(u8 note, u8 a, u8 b) {
     }
     return -1;
 }
-static __inline__ u32 agAlloc(u8 *v) {
-    register u32 id asm("$7");
-    u32 k;
-    u32 n;
-    u8 *a2;
-    u8 *t0;
-    u8 *a1;
-    u8 *t;
-    register u32 ret asm("$22");
-    do {
-        n = agNextId;
-        agNextId = n + 1;
-        id = n;
-    } while (n == -1);
-    a2 = agHead;
-    t0 = 0;
-    while (a2 != 0) {
-        k = *(u32 *)(a2 + 8);
-        if (id < k) {
-            break;
-        }
-        if (k == id) {
-            do {
-                n = agNextId;
-                agNextId = n + 1;
-            } while (n == -1);
-            id = n;
-        }
-        t0 = a2;
-        a2 = *(u8 **)a2;
-    }
-    a1 = agFree;
-    ret = -1;
-    if (a1 != 0) {
-        t = *(u8 **)a1;
-        agFree = t;
-        if (t != 0) {
-            *(s32 *)(t + 4) = 0;
-        }
-        if (t0 == 0) {
-            agHead = a1;
-        } else {
-            *(u8 **)t0 = a1;
-        }
-        *(u8 **)(a1 + 4) = t0;
-        *(u8 **)a1 = a2;
-        if (a2 != 0) {
-            *(u8 **)(a2 + 4) = a1;
-        }
-        *(u32 *)(a1 + 8) = id;
-        ret = id;
-        *(s32 *)(a1 + 0xC) = *(s32 *)(v + 0x64);
-        *(u8 **)(v + 0x18) = a1;
-    }
-    return ret;
-}
 typedef struct { u16 h0; u8 b2; u8 b3; s8 b4; u8 b5; s16 h6; u8 b8; u8 pad[3]; } AgEnt;
 s32 applyNoteEventToGroup(u32 key, u16 a1, u8 note, u8 vel, u8 a4, u8 a5, u8 a6, u16 a7, u16 a8, u8 a9) {
     u16 cnt;
@@ -2504,7 +2448,7 @@ s32 applyNoteEventToGroup(u32 key, u16 a1, u8 note, u8 vel, u8 a4, u8 a5, u8 a6,
             if (ret == -1) {
                 prev = startNoteOnVoice(k2, a1, (u8)(n | (note & 0x80)), v2, v4, a5, a6, a7, a8, 0, a9);
                 if (prev != -1) {
-                    ret = agAlloc(agV + (prev & 0xFF) * 0x17C);
+                    ret = allocVoiceHandleNode(agV + (prev & 0xFF) * 0x17C);
                 }
             } else {
                 r = startNoteOnVoice(k2, a1, (u8)(n | (note & 0x80)), v2, v4, a5, a6, a7, a8, 0, a9);
@@ -2518,7 +2462,6 @@ s32 applyNoteEventToGroup(u32 key, u16 a1, u8 note, u8 vel, u8 a4, u8 a5, u8 a6,
                 }
             }
         }
-        return ret;
     }
     return ret;
 }
