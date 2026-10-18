@@ -122,19 +122,16 @@ void buildOrientationFromPosAndAngles(Mat4x3 m, Vec3f pos, Vec3f ang) {
 
 extern f32 floatModulo(f32, f32);
 void stepAngleTowardTarget(f32 *cur, f32 *tgt, f32 t, f32 *out) {
-    register f32 a asm("$f12");
+    f32 a;
     f32 b;
-    register f32 b1 asm("$f4");
-    register f32 q asm("$f0");
-    f32 a1, sum, r, d;
+    f32 sum, r, d;
 
     a = cur[0];
     b = tgt[0];
     if ((a >= 0.0f && b >= 0.0f) || (a <= 0.0f && b <= 0.0f)) {
-        a1 = a + 180.0f;
-        b1 = b + 180.0f;
-        q = (b1 - a1) * t;
-        r = (a1 + q) - 180.0f;
+        a += 180.0f;
+        b += 180.0f;
+        r = (a + (b - a) * t) - 180.0f;
     } else {
         sum = FABSF_VAL(a) + FABSF_VAL(b);
         if (sum < 180.0f) {
@@ -159,10 +156,9 @@ void stepAngleTowardTarget(f32 *cur, f32 *tgt, f32 t, f32 *out) {
     a = cur[1];
     b = tgt[1];
     if ((a >= 0.0f && b >= 0.0f) || (a <= 0.0f && b <= 0.0f)) {
-        a1 = a + 180.0f;
-        b1 = b + 180.0f;
-        q = (b1 - a1) * t;
-        r = (a1 + q) - 180.0f;
+        a += 180.0f;
+        b += 180.0f;
+        r = (a + (b - a) * t) - 180.0f;
     } else {
         sum = FABSF_VAL(a) + FABSF_VAL(b);
         if (sum < 180.0f) {
@@ -187,10 +183,9 @@ void stepAngleTowardTarget(f32 *cur, f32 *tgt, f32 t, f32 *out) {
     a = cur[2];
     b = tgt[2];
     if ((a >= 0.0f && b >= 0.0f) || (a <= 0.0f && b <= 0.0f)) {
-        a1 = a + 180.0f;
-        b1 = b + 180.0f;
-        q = (b1 - a1) * t;
-        r = (a1 + q) - 180.0f;
+        a += 180.0f;
+        b += 180.0f;
+        r = (a + (b - a) * t) - 180.0f;
     } else {
         sum = FABSF_VAL(a) + FABSF_VAL(b);
         if (sum < 180.0f) {
