@@ -3541,16 +3541,13 @@ s32 soundMacroOpReturnFromGosub(u8 *ch, u8 *cmd) {
 
 s32 bucketLookupFF(u32) __asm__("factor5BucketedTableLookupValue");
 s32 soundMacroOpGosubLoopCounterFiftyFour(u8 *ch, u8 *cmdArg) {
-    register u8 *cmd asm("$17") = cmdArg;
-    s32 v;
-    u32 c = *(u32 *)cmd;
-    s32 unused[2];
+    u32 *cstep = (u32 *)cmdArg;
+    s32 addr;
 
-    if (*(u16 *)(ch + 0x54) >= cmd[2]) {
-        v = bucketLookupFF(c >> 16);
-        if (v != 0) {
-            *(s32 *)ch = v;
-            *(s32 *)(ch + 4) = v + *(u16 *)(cmd + 6) * 8;
+    if (*(u16 *)(ch + 0x54) >= (u8)(cstep[0] >> 8)) {
+        if ((addr = bucketLookupFF(cstep[0] >> 16)) != 0) {
+            *(s32 *)ch = addr;
+            *(s32 *)(ch + 4) = addr + (u16)cstep[1] * 8;
         }
     }
     return 0;
@@ -3558,16 +3555,13 @@ s32 soundMacroOpGosubLoopCounterFiftyFour(u8 *ch, u8 *cmdArg) {
 
 s32 bucketLookupTH(u32) __asm__("factor5BucketedTableLookupValue");
 s32 soundMacroOpGosubLoopCounterThirty(u8 *ch, u8 *cmdArg) {
-    register u8 *cmd asm("$17") = cmdArg;
-    s32 v;
-    u32 c = *(u32 *)cmd;
-    s32 unused[2];
+    u32 *cstep = (u32 *)cmdArg;
+    s32 addr;
 
-    if (*(u16 *)(ch + 0x30) >= cmd[2]) {
-        v = bucketLookupTH(c >> 16);
-        if (v != 0) {
-            *(s32 *)ch = v;
-            *(s32 *)(ch + 4) = v + *(u16 *)(cmd + 6) * 8;
+    if (*(u16 *)(ch + 0x30) >= (u8)(cstep[0] >> 8)) {
+        if ((addr = bucketLookupTH(cstep[0] >> 16)) != 0) {
+            *(s32 *)ch = addr;
+            *(s32 *)(ch + 4) = addr + (u16)cstep[1] * 8;
         }
     }
     return 0;
