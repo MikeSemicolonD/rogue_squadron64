@@ -839,7 +839,7 @@ s32 startPlayerSlotAnimationChannelLooping(PsAnim *a, f32 dt) {
 end:
     return ret;
 }
-__asm__(".section .rodata\n.globl D_main_8003B7C8\nD_main_8003B7C8:\n.word 0x00010000\n.word 0x3F800000\n.word 0x3F800000\n.word 0x00000000\n.word 0x00000000\n.align 2\n.globl strZAFnt\nstrZAFnt:\n.word 0x5A415F66\n.word 0x6E740000\n.word 0x00000000\n.word 0x00000000\n.align 2\n.globl D_main_8003B7EC\nD_main_8003B7EC:\n.word 0x5A415F66\n.word 0x6E740000\n.globl D_main_8003B7F4\nD_main_8003B7F4:\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x8003B7EC\n.word 0x00000000\n.word 0x01000005\n.word 0x00000000\n.globl D_main_8003B828\nD_main_8003B828:\n.word 0x3F800000\n.word 0x19C00016\n.section .text");
+__asm__(".section .rodata\n.globl D_main_8003B7C8\nD_main_8003B7C8:\n.word 0x00010000\n.word 0x3F800000\n.word 0x3F800000\n.word 0x00000000\n.word 0x00000000\n.align 2\n.globl strZAFnt\nstrZAFnt:\n.word 0x5A415F66\n.word 0x6E740000\n.word 0x00000000\n.word 0x00000000\n.align 2\n.globl D_main_8003B7EC\nD_main_8003B7EC:\n.word 0x5A415F66\n.word 0x6E740000\n.globl D_main_8003B7F4\nD_main_8003B7F4:\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x00000000\n.word 0x8003B7EC\n.word 0x00000000\n.word 0x01000005\n.word 0x00000000\n.section .text");
 
 
 #include "textures.h"
@@ -888,9 +888,9 @@ CraftTemplate *buildPlayerCraftAssetTemplate(s16 arg0, s16 arg1) {
     rs_memset(p, 0xFF, size);
     r->unk30 = registerHmtTextureInTable(&mat, &tex, 0);
     rs_free((void *)tex.pixel_offsets[0]);
-    __asm__ volatile("move %2, %3
-	mtc1 $zero, %0
-	lwc1 %1, D_main_8003B828" : "=f"(z), "=f"(c), "=r"(q) : "r"(r));
+    q = r;
+    z = 0.0f;
+    c = 1.0f;
     q->unkA = 1;
     q->unk8 = 1;
     q->unk14 = 3;
@@ -909,6 +909,7 @@ CraftTemplate *buildPlayerCraftAssetTemplate(s16 arg0, s16 arg1) {
     q->unk20 = z;
     return q;
 }
+__asm__(".section .rodata\n.word 0x19C00016\n.section .text");
 
 extern u16 D_main_bss_80139970[];
 extern s8 D_main_8009ED88[];
