@@ -159,8 +159,7 @@ f32 normalize_vector(void *);
 void quatFromAxisAngle(void *, void *, f32);
 void rotateVec3ByQuat(void *, void *, void *);
 
-void computeNpcOrientationFromAimVectors(void *arg0, f32 dt) {
-    register CoNpc *npc asm("$19") = arg0;
+void computeNpcOrientationFromAimVectors(CoNpc *npc, f32 dt) {
     f32 mtx[12];
     f32 inv[12];
     f32 dir[3];
@@ -432,7 +431,7 @@ void func_mission_overlay_800AA6D0(void *, f32, void *);
 void dispatchEffectByActorType(s32, f32);
 void setType1ActorParams(s32, f32, u8, u8, u8, s32);
 u8 func_mission_overlay_800EFDE0(s32, s32, s32, f32);
-void computeNpcOrientationFromAimVectors(void *, f32);
+void computeNpcOrientationFromAimVectors(CoNpc *, f32);
 u8 isPendingChildNpcActive(s32);
 void buildRotationMatrixSlot0(void *, f32);
 void transformVec3ByMat34(void *, void *, void *);
