@@ -731,10 +731,12 @@ void cinematicSlotBatchDispatch(CineNode **arg0) {
     slotDispatcherIter(D_main_bss_80139560[10], 4, &D_cinematic_overlay_800B0A00);
     slotDispatcherIter(D_main_bss_80139560[7], 4, &D_cinematic_overlay_800B0A00);
     slotDispatcherIter(D_main_bss_80130BA2, 4, &D_cinematic_overlay_800B0A00);
-    D_cinematic_overlay_800B0AB0.unk0 = n = ({ s32 t = (s32)*arg0; __asm__("" : "+r"(t)); t; });
-    if (n != 0) ((CineNode *)n)->unk4 = (s32)&D_cinematic_overlay_800B0AB0;
-    D_cinematic_overlay_800B0AB0.unk4 = 0;
-    *arg0 = &D_cinematic_overlay_800B0AB0;
+    do {
+        D_cinematic_overlay_800B0AB0.unk0 = n = (s32)*arg0;
+        if (n != 0) ((CineNode *)n)->unk4 = (s32)&D_cinematic_overlay_800B0AB0;
+        D_cinematic_overlay_800B0AB0.unk4 = 0;
+        *arg0 = &D_cinematic_overlay_800B0AB0;
+    } while (0);
 }
 
 extern u8 sehBusy __asm__("D_cinematic_overlay_800B09B0");
