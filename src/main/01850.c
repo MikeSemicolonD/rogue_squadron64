@@ -299,7 +299,15 @@ void thread3_video_handle(void *arg) {
         base = NULL;
         heapTop = top;
     }
-    { register u8 *e asm("$2") = D_main_bss_8010D200; initMainHeap(n, base, e + (s32)D_47490, heapTop); }
+    {
+        u8 *e = D_main_bss_8010D200;
+        s32 d;
+
+        do {
+            d = (s32)D_47490;
+        } while (0);
+        initMainHeap(n, base, e + d, heapTop);
+    }
     if (!initServiceRegistry()) {
         while (1) {
         }
