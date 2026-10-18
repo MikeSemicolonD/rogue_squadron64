@@ -246,24 +246,17 @@ void shiftTlutEntryWithinChunk(u16, u8, u8, s32);
 
 void tickTextureAnimSlots(f32 dt) {
     s32 i;
-    f32 wrap;
     f32 v;
     u32 val;
     TlutAnimSlot *s;
 
     i = 0;
-    wrap = 2147483648.0f;
     s = (TlutAnimSlot *)D_main_bss_80137C90;
     do {
         if (s->flags != 0) {
             v = (f32)s->phase + dt * (f32)s->speed;
-            if (!(wrap <= v)) {
-                val = (s32)v;
-                s->phase = val;
-            } else {
-                val = (s32)(v - wrap) | 0x80000000;
-                s->phase = val;
-            }
+            val = (u32)v;
+            s->phase = val;
             if (val & 0xFF00) {
                 do {
                     s->phase -= 0x100;
