@@ -1211,10 +1211,7 @@ s32 tickObjectSoundCueState(ObjCueReq *arg0) {
             D_mission_overlay_8010C170.unk6 = D_mission_overlay_8010C400.unk6;
             D_mission_overlay_8010C170.unk8 = D_mission_overlay_8010C400.unk8;
         } else {
-            D_mission_overlay_8010C170.unk4 = D_mission_overlay_8010B1C0[*(volatile u16 *)&arg0->unk20 - 2].a;
-            D_mission_overlay_8010C170.unk6 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].b;
-            D_mission_overlay_8010C170.unk8 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].c;
-            D_mission_overlay_8010C170.unkA = arg0->unk20;
+            goto lookup;
         }
     } else {
         popActiveSoundDescriptor();
@@ -1226,7 +1223,8 @@ s32 tickObjectSoundCueState(ObjCueReq *arg0) {
         } else if (v1 == 1) {
             D_mission_overlay_8010C17A = v1;
         } else {
-            D_mission_overlay_8010C170.unk4 = D_mission_overlay_8010B1C0[*(volatile u16 *)&arg0->unk20 - 2].a;
+        lookup:
+            D_mission_overlay_8010C170.unk4 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].a;
             D_mission_overlay_8010C170.unk6 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].b;
             D_mission_overlay_8010C170.unk8 = D_mission_overlay_8010B1C0[arg0->unk20 - 2].c;
             D_mission_overlay_8010C170.unkA = arg0->unk20;
