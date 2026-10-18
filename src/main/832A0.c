@@ -4322,79 +4322,71 @@ __inline__ void soundMacroPushEffectEvent(SqModRec *rec, u8 *cmd) {
 }
 
 
-s32 seqCmdHandler40(u8 *chArg, u8 *cmd) {
-    register u8 *ch asm("$6") = chArg;
-    if ((((*(u32 *)(ch + 0x24) >> 20) & 1) == 0) | (cmd[7] == 0)) {
-        *(u32 *)(ch + 0x24) |= 0x100000;
-        ch[0xD0] = 0;
+#define SEQ_SELECT_SOURCE(ch, cstep, bit, off) \
+    SqModRec *dest; \
+    u8 comb = (u8)(cstep)[1]; \
+    u8 n; \
+    u32 ctrl; \
+\
+    if (!(*(u32 *)((ch) + 0x24) & (bit)) || comb == 0) { \
+        *(u32 *)((ch) + 0x24) |= (bit); \
+        ((SqModRec *)((ch) + (off)))->count = 0; \
+    } \
+    dest = (SqModRec *)((ch) + (off)); \
+    if (dest->count < 4) { \
+        n = dest->count++; \
+        ctrl = (cstep)[0] >> 8; \
+        switch ((u8)ctrl) { \
+        case 0x80: ctrl = 0x80; break; \
+        case 0x81: ctrl = 0x82; break; \
+        case 0x82: ctrl = 0xA0; break; \
+        case 0x83: ctrl = 0xA1; break; \
+        case 0x84: ctrl = 0x83; break; \
+        case 0x85: ctrl = 0x84; break; \
+        } \
+        dest->e[n].ctrl = ctrl; \
+        dest->e[n].op = (cstep)[1]; \
+        dest->e[n].scale = ((s16)((cstep)[0] >> 16) << 8) / 100; \
     }
-    soundMacroPushEffectEvent((SqModRec *)(ch + 0xC0), cmd);
+
+s32 seqCmdHandler40(u8 *ch, u32 *cstep) {
+    SEQ_SELECT_SOURCE(ch, cstep, 0x100000, 0xC0);
     return 0;
 }
 
 
-s32 seqCmdHandler41(u8 *chArg, u8 *cmd) {
-    register u8 *ch asm("$6") = chArg;
-    if ((((*(u32 *)(ch + 0x24) >> 21) & 1) == 0) | (cmd[7] == 0)) {
-        *(u32 *)(ch + 0x24) |= 0x200000;
-        ch[0xE2] = 0;
-    }
-    soundMacroPushEffectEvent((SqModRec *)(ch + 0xD2), cmd);
+s32 seqCmdHandler41(u8 *ch, u32 *cstep) {
+    SEQ_SELECT_SOURCE(ch, cstep, 0x200000, 0xD2);
     return 0;
 }
 
 
-s32 seqCmdHandler42(u8 *chArg, u8 *cmd) {
-    register u8 *ch asm("$6") = chArg;
-    if ((((*(u32 *)(ch + 0x24) >> 22) & 1) == 0) | (cmd[7] == 0)) {
-        *(u32 *)(ch + 0x24) |= 0x400000;
-        ch[0x106] = 0;
-    }
-    soundMacroPushEffectEvent((SqModRec *)(ch + 0xF6), cmd);
+s32 seqCmdHandler42(u8 *ch, u32 *cstep) {
+    SEQ_SELECT_SOURCE(ch, cstep, 0x400000, 0xF6);
     return 0;
 }
 
 
-s32 seqCmdHandler43(u8 *chArg, u8 *cmd) {
-    register u8 *ch asm("$6") = chArg;
-    if ((((*(u32 *)(ch + 0x24) >> 23) & 1) == 0) | (cmd[7] == 0)) {
-        *(u32 *)(ch + 0x24) |= 0x800000;
-        ch[0x12A] = 0;
-    }
-    soundMacroPushEffectEvent((SqModRec *)(ch + 0x11A), cmd);
+s32 seqCmdHandler43(u8 *ch, u32 *cstep) {
+    SEQ_SELECT_SOURCE(ch, cstep, 0x800000, 0x11A);
     return 0;
 }
 
 
-s32 seqCmdHandler44(u8 *chArg, u8 *cmd) {
-    register u8 *ch asm("$6") = chArg;
-    if ((((*(u32 *)(ch + 0x24) >> 25) & 1) == 0) | (cmd[7] == 0)) {
-        *(u32 *)(ch + 0x24) |= 0x2000000;
-        ch[0x13C] = 0;
-    }
-    soundMacroPushEffectEvent((SqModRec *)(ch + 0x12C), cmd);
+s32 seqCmdHandler44(u8 *ch, u32 *cstep) {
+    SEQ_SELECT_SOURCE(ch, cstep, 0x2000000, 0x12C);
     return 0;
 }
 
 
-s32 seqCmdHandler45(u8 *chArg, u8 *cmd) {
-    register u8 *ch asm("$6") = chArg;
-    if ((((*(u32 *)(ch + 0x24) >> 25) & 1) == 0) | (cmd[7] == 0)) {
-        *(u32 *)(ch + 0x24) |= 0x2000000;
-        ch[0x14E] = 0;
-    }
-    soundMacroPushEffectEvent((SqModRec *)(ch + 0x13E), cmd);
+s32 seqCmdHandler45(u8 *ch, u32 *cstep) {
+    SEQ_SELECT_SOURCE(ch, cstep, 0x2000000, 0x13E);
     return 0;
 }
 
 
-s32 seqCmdHandler46(u8 *chArg, u8 *cmd) {
-    register u8 *ch asm("$6") = chArg;
-    if ((((*(u32 *)(ch + 0x24) >> 24) & 1) == 0) | (cmd[7] == 0)) {
-        *(u32 *)(ch + 0x24) |= 0x1000000;
-        ch[0x160] = 0;
-    }
-    soundMacroPushEffectEvent((SqModRec *)(ch + 0x150), cmd);
+s32 seqCmdHandler46(u8 *ch, u32 *cstep) {
+    SEQ_SELECT_SOURCE(ch, cstep, 0x1000000, 0x150);
     return 0;
 }
 
