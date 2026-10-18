@@ -3652,10 +3652,10 @@ s32 setChannelProgByteAt2E(u8 *ch, u32 *cmd) {
 }
 
 extern u8 gGlobRegsSG[] __asm__("D_main_bss_80148C58");
-s32 soundMacroOpStoreGlobalRegister(u8 *ch, u8 *cmd) {
-    s32 unused[2];
+s32 soundMacroOpStoreGlobalRegister(u8 *ch, u8 *cmdArg) {
+    u32 *cstep = (u32 *)cmdArg;
 
-    gGlobRegsSG[cmd[2]] = *(u16 *)cmd;
+    gGlobRegsSG[(u8)(cstep[0] >> 8)] = (u8)(cstep[0] >> 16);
     return 0;
 }
 
