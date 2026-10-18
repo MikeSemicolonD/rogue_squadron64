@@ -133,8 +133,11 @@ void computeT16TransformImpl(T16Arg *arg0, f32 dt) {
         }
         countTrailingZeros16(cf[arg0->index].maskB);
         {
-        s32 ii = arg0->index;
-        __asm__("" : "+r"(ii));
+        s32 ii;
+
+        do {
+            ii = arg0->index;
+        } while (0);
         if (D_main_bss_80130B88[ii][0] & cf[ii].maskB) {
             if (!(u8)getCraftAnimationSlotFlag(0)) {
                 setCraftAnimationSlotParams(0, 1, 0.0f);
