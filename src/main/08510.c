@@ -749,7 +749,6 @@ Gfx *emitFaceDLCommands(Gfx *dl, Gfx **out, u8 *outIdx, u8 n, u16 *vt, s32 flags
     cnt = 0;
     for (i = 0; i < n; i++) {
         vi = vt[i];
-        __asm__("" :: "r"(dl));
         slot = efSlotOf[vi];
         if (efCache[slot].stamp == efStamp && efCache[slot].idx == vi) {
             bp[i] = slot;
@@ -775,6 +774,7 @@ Gfx *emitFaceDLCommands(Gfx *dl, Gfx **out, u8 *outIdx, u8 n, u16 *vt, s32 flags
                 outIdx[i] = efG.cnt;
                 efG.cnt++;
             }
+            return dl;
         } else {
             for (i = 0; i < n; i++) {
                 if (buf[i] == 0xFF) {
@@ -789,6 +789,7 @@ Gfx *emitFaceDLCommands(Gfx *dl, Gfx **out, u8 *outIdx, u8 n, u16 *vt, s32 flags
                     out[i] = efG.vtx + buf[i];
                 }
             }
+            return dl;
         }
     } else {
         for (i = 0; i < n; i++) {
