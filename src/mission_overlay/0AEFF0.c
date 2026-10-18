@@ -608,7 +608,7 @@ void spawnSceneDebrisAndEffectCluster(SceneObj *arg0, s32 arg1) {
             spawnRandomizedEffectBurst(arg0);
         }
     }
-    *(volatile s32 *)&arg0->unkC0 = 0;
+    *(s32 *)((u8 *)arg0 + 0xC0) = 0;
     rumbleInlineA((u8 *)arg0, 0xC);
     wrapAngleToCyclicRange(arg0->pos[0], arg0->pos[2], D_main_bss_80138058, (u8 *)&l.w);
     if (l.w.f5C <= arg0->pos[1]) {
