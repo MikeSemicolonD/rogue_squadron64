@@ -2623,7 +2623,7 @@ void *initControllerSettingsStructs(void) {
             *(s16 *)(q + 0x12) = i * 4 + 2;
             *(s32 *)(q + 0) = k9e;
             *(s32 *)(q + 4) = 0x0D0C9005;
-            *(volatile s32 *)(q + 8) = 0;
+            *(f32 *)(q + 8) = 0.0f;
             *(s32 *)(q + 8) = 0;
             *(s16 *)(q + 0xC) = i * 4;
             *(s32 *)(q + 0) &= ~0x14;
