@@ -2265,7 +2265,7 @@ extern u8 *snFree __asm__("D_main_bss_8013AF04");
 void snFreeV() __asm__("freeSynthVoiceFromActiveList");
 #define SV(T, k, o) (*(T *)(snV + (k) + (o)))
 static __inline__ u32 snAlloc(u8 *v) {
-    register u32 id asm("$5");
+    u32 id;
     u32 k;
     u32 n;
     u8 *a2;
@@ -2276,8 +2276,8 @@ static __inline__ u32 snAlloc(u8 *v) {
     do {
         n = snNextId;
         snNextId = n + 1;
-        id = n;
     } while (n == -1);
+    id = n;
     a2 = snHead;
     t0 = 0;
     while (a2 != 0) {
@@ -2318,8 +2318,7 @@ static __inline__ u32 snAlloc(u8 *v) {
     *(u32 *)(a1 + 8) = id;
     *(s32 *)(a1 + 0xC) = *(s32 *)(v + 0x64);
     *(u8 **)(v + 0x18) = a1;
-    __asm__("" : "=r"(ret) : "0"(id));
-    return ret;
+    return id;
 }
 s32 startNoteOnVoice(u32 key, u16 a1, s32 a2, u8 a3, u8 a4, u8 a5, u8 a6, u16 a7, u16 a8, u8 a9, u8 a10) {
     u8 k8 = key >> 8;
