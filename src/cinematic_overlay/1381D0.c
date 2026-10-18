@@ -1211,8 +1211,6 @@ void cutsceneDispatchSlotsByFlag(CdNode **root, u8 *scene, f32 t, f32 scale) {
         }
     }
     initCutsceneScene(scene);
-    __asm__("" :: "r"(root));
-    __asm__("" :: "r"(root));
     {
         typedef struct { u8 pad0[4]; s32 x4; s32 x8; s32 xC; s32 x10; u8 pad14[0x3C]; CdObj *obj; u8 pad54[0xE8]; } CdSl;
         for (i = 0; i < *(u16 *)(scene + 0x4A); i++) {
@@ -1292,7 +1290,12 @@ void cutsceneDispatchSlotsByFlag(CdNode **root, u8 *scene, f32 t, f32 scale) {
     for (i = 0; i < *(u16 *)(scene + 0x4A); i++) {
         if (scene[i * 0x4C + 0x13F7] & 0x80) {
             u8 *sl = CD_SLOT(o);
-            if (!(u8)transformVec3ToNpcLocalWithScale(root, (u8 *)root + 0x2C, sl + 0x70, (*(CdObj **)(sl + 0x50))->mesh->f44 * *(f32 *)(sl + 0x64), sp48) || *CD_SLOT(o) != 0) {
+            u8 ok;
+
+            do {
+                ok = transformVec3ToNpcLocalWithScale(root, (u8 *)root + 0x2C, sl + 0x70, (*(CdObj **)(sl + 0x50))->mesh->f44 * *(f32 *)(sl + 0x64), sp48);
+            } while (0);
+            if (!ok || *CD_SLOT(o) != 0) {
                 CdObj *ob = *(CdObj **)(CD_SLOT(o) + 0x50);
                 CdNode *n = &ob->node;
                 CdNode *t2 = *root;
