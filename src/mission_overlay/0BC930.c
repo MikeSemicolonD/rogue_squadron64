@@ -185,8 +185,11 @@ void titImpl(TitArg *arg0, f32 dt) {
         }
         countTrailingZeros16(cf[arg0->index].maskB);
         {
-            s32 ii = arg0->index;
-            __asm__("" :: "r"(ii));
+            s32 ii;
+
+            do {
+                ii = arg0->index;
+            } while (0);
             bits = sTitB88[ii][0];
         }
         if (!(bits & cf[arg0->index].maskA) && !(bits & cf[arg0->index].maskB) && c->fE8 < 3.375f) {
