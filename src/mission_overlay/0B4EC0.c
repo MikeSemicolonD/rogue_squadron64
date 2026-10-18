@@ -201,7 +201,10 @@ void pwImpl(PwState *e, f32 dt) {
         tbl = (s32)D_mission_overlay_8010BEA8;
         v += *(f32 *)((e->idx * 0x40 + ct * 4) + tbl) * 0.1875f;
         countTrailingZeros16(hud[e->idx].m18);
-        { s32 ix = e->idx; __asm__("" :: "r"(ix));
+        { s32 ix;
+        do {
+            ix = e->idx;
+        } while (0);
         if ((D_pw_btn[ix][0] & hud[ix].m18) && pwSlotReady(e->idx)) {
             if (getCraftAnimationSlotFlag(0) == 0) {
                 setCraftAnimationSlotParams(0, 1, 0);
