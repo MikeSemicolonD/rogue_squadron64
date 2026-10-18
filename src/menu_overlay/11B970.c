@@ -5457,11 +5457,7 @@ void updateUiSpriteScrollAndAlpha(s32 arg0, f32 arg1, f32 arg2, s32 arg3) {
     t = arg1 * 255.0f;
     s0 = obj + 1;
     obj->unk24 = (f32)a3 / 127.0f;
-    if (!(t >= 2147483648.0f)) {
-        v = (s32)t;
-    } else {
-        v = (s32)(t - 2147483648.0f) | 0x80000000;
-    }
+    v = (u32)t;
     flag = 0;
     s0->unk2F = v;
     obj->unk2F = v;
