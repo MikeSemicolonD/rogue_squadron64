@@ -641,7 +641,7 @@ typedef struct {
 
 void setMaterialTextureByName(u8 a, void *b, f32 c) {
     u8 sp10;
-    s32 i;
+    u8 i;
     s32 j;
     s32 k;
     s32 m;
@@ -742,7 +742,6 @@ void setMaterialTextureByName(u8 a, void *b, f32 c) {
         i++;
         dst->b2F = q;
         setLookupEntryField5ByKey((s32)D_menu_overlay_800CF078, (u8 *)dst, (q & 0xFF) != 0);
-        __asm__("");
     } while ((u8)i < 3);
 }
 
