@@ -141,25 +141,25 @@ s32 npcTickEffectChannelE(void *arg0)
   f32 spB8;
   f32 fv;
   s32 r;
-  register void *e asm("$16");
   u8 *npc = *((u8 **) (((u8 *) arg0) + 4));
-  e = "a_b";
-  lookupHmtTextureByName(*((s32 *) (npc + 0x30)), e, 0, sp28, (s32) sp88, 0);
-  lookupHmtTextureByName(*((s32 *) (npc + 0x30)), e, 1, sp58, (s32) sp88, 1);
+  lookupHmtTextureByName(*((s32 *) (npc + 0x30)), "a_b", 0, sp28, (s32) sp88, 0);
+  lookupHmtTextureByName(*((s32 *) (npc + 0x30)), "a_b", 1, sp58, (s32) sp88, 1);
   fv = ((f32 *) (*((u8 **) (npc + 0x34))))[D_main_bss_80137CE4 + 0x37];
   if (fv != 0.0f)
   {
-    e = &D_mission_overlay_8010A9F4;
-    resolveNpcAttachmentPos(*((s32 *) (npc + 0x38)), sp28, *((s32 *) (&((struct EffectRow *)e)->unkC)), fv);
-    resolveNpcAttachmentPos(*((s32 *) (npc + 0x38)), sp58, *((s32 *) (&((struct EffectRow *)e)->unkC)), fv);
+    struct EffectRow *row = (struct EffectRow *)&D_mission_overlay_8010A9F4;
+
+    resolveNpcAttachmentPos(*((s32 *) (npc + 0x38)), sp28, *((s32 *) (&row->unkC)), fv);
+    resolveNpcAttachmentPos(*((s32 *) (npc + 0x38)), sp58, *((s32 *) (&row->unkC)), fv);
   }
   r = tickProgressChannel(*((s32 *) (npc + 0x38)), sp28, 1, &spB8) & 0xFF;
   if (r == 1)
   {
-    e = &D_mission_overlay_8010A9F4;
+    struct EffectRow *row = (struct EffectRow *)&D_mission_overlay_8010A9F4;
+
     *((f32 *) (npc + 0xE0)) = 0.0f;
-    { f32 c = ((struct EffectRow *)e)->unkC; triggerCueWithSlotEffect(*((s32 *) (npc + 0x38)), 0, sp28, e, r, c, spB8); }
-    { f32 c = ((struct EffectRow *)e)->unkC; triggerCueWithSlotEffect(*((s32 *) (npc + 0x38)), 0, sp58, e, 0, c, spB8); }
+    { f32 c = row->unkC; triggerCueWithSlotEffect(*((s32 *) (npc + 0x38)), 0, sp28, row, r, c, spB8); }
+    { f32 c = row->unkC; triggerCueWithSlotEffect(*((s32 *) (npc + 0x38)), 0, sp58, row, 0, c, spB8); }
     play3DSoundEvent(0, npc, npc + 0x24, 18.0f, 0.3f, 0, 0x1D, 0x78, 0x28);
   }
   return 0;
