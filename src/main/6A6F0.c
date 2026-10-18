@@ -56,13 +56,11 @@ f32 *intersectSegmentWithObjectSphere(void *, void *, f32 *, f32 *);
 f32 projectPointOntoObjectSphereHit(u8 **obj, f32 *p, f32 *d) {
     f32 *s;
     f32 dx, dy, dz;
-    f32 b2, b, aa, r, dd, t, q;
-    register f32 len asm("$f0");
+    f32 b2, b, aa, dd, t, q;
+    f32 len;
 
     s = intersectSegmentWithObjectSphere(obj, *obj + 0x48, p, d);
-    if (s == NULL) {
-        r = -1.0f;
-    } else {
+    if (s != NULL) {
         dx = s[0] - p[0];
         dy = s[1] - p[1];
         dz = s[2] - p[2];
@@ -74,9 +72,9 @@ f32 projectPointOntoObjectSphereHit(u8 **obj, f32 *p, f32 *d) {
         len = sqrtfInline(aa);
         q = sqrtfInline(dd);
         b = b / len - q;
-        r = b / len;
+        return b / len;
     }
-    return r;
+    return -1.0f;
 }
 
 void transformVec3ByMat34(void *, void *, void *);
