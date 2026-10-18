@@ -93,12 +93,6 @@ void orthonormalizeFrame(Mat4x3 arg0) {
     vec3Cross(arg0[2], arg0[1], sp10);
 }
 
-__asm__(".section .rodata
-.globl D_main_8003ADB8
-D_main_8003ADB8:
-.word 0x33D6BF95
-.word 0xAFB00014
-.section .text");
 static __inline__ f32 absOR(f32 x) {
     f32 r;
     FABSF(r, x);
@@ -114,7 +108,7 @@ void orthonormalizeFrameAndSnapToZero(Mat4x3 arg0) {
     normalize_vector(sp10);
     vec3Cross(arg0[2], arg0[1], sp10);
     val = absOR(arg0[1][0]);
-    __asm__ volatile("lwc1 %0, D_main_8003ADB8" : "=f"(eps));
+    eps = 1e-07f;
     if (val < eps) {
         arg0[1][0] = 0.0f;
     }
@@ -134,6 +128,9 @@ void orthonormalizeFrameAndSnapToZero(Mat4x3 arg0) {
         arg0[2][2] = 0.0f;
     }
 }
+__asm__(".section .rodata
+.word 0xAFB00014
+.section .text");
 
 typedef struct {
     u8 pad0[0x10];
