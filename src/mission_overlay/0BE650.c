@@ -170,6 +170,8 @@ void nbImpl(NbArg *arg0, f32 dt) {
     u16 bits;
     register f32 *tb asm("$16");
     NbCfg *cf;
+    f32 ee;
+    f32 lim;
 
     c = (NbCraft *)sCraftBytes[arg0->index];
     if (*(u16 *)((s32)sCraftBytes + c->owner * 0x2A0 + 0x180) & 1) {
@@ -198,17 +200,15 @@ void nbImpl(NbArg *arg0, f32 dt) {
             } while (0);
             bits = nbB88[ii][0];
         }
-        if (!(bits & cf[arg0->index].maskA) && !(bits & cf[arg0->index].maskB) && c->fE8 < 3.0f) {
+        if (!(bits & cf[arg0->index].maskA) && !(bits & cf[arg0->index].maskB) && (ee = c->fE8) < (lim = 3.0f)) {
             fs0 += 0.3f;
-            if (3.0f < fs0) {
-                fs0 = 3.0f;
+            if (lim < fs0) {
+                fs0 = lim;
             }
         }
-        {
-            register f32 t3 asm("$f2") = 6.0f;
-            if (t3 < fs0) {
-                fs0 = t3;
-            }
+        lim = 6.0f;
+        if (lim < fs0) {
+            fs0 = lim;
         }
         {
             f32 e8a = c->fE8;
@@ -233,7 +233,8 @@ void nbImpl(NbArg *arg0, f32 dt) {
     }
     updatePlayerCraftPhysics(c, dt);
     sc = 0.375f;
-    computeBootConfigScaledVec4(arg0->index, sc, sc, D_main_bss_8013800C[arg0->index], (c->fE8 - 1.6875f) / 4.3125f + 1.0f, dt);
+    ee = (c->fE8 - 1.6875f) / 4.3125f + 1.0f;
+    computeBootConfigScaledVec4(arg0->index, sc, sc, D_main_bss_8013800C[arg0->index], ee, dt);
     NB_SUB(arg0->def1, arg0->obj1, 45.0f)
     NB_SUB(arg0->def2, arg0->obj2, -45.0f)
 }
