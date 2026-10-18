@@ -548,10 +548,8 @@ void ctTick(CtObj *o, f32 dt) {
     s32 sp78;
     u16 sp7C;
     CtPl *pl;
-    void *q;
     void *q3;
     u16 r;
-    s32 *p78;
 
     pl = &ctPl[o->idx];
     if (*(u16 *)((s32)ctPl + pl->wB8 * 0x2A0 + 0x180) & 1) {
@@ -575,9 +573,7 @@ void ctTick(CtObj *o, f32 dt) {
                 if (o->b2C == 0) {
                     if (isCameraTransitionIdle() & 0xFF) {
                         if (o->b2F != 0) {
-                            p78 = &sp78;
-                            __asm__("" :: "r"(p78));
-                            if ((o->hF0 = findNearestNpcWithinRange(2.5f, p78, q = &o->v30, o->xF4)) != 0xFFFF && ctAbs(o->v30.y - pl->v4[1]) <= 1.5f) {
+                            if ((o->hF0 = findNearestNpcWithinRange(2.5f, &sp78, &o->v30, o->xF4)) != 0xFFFF && ctAbs(o->v30.y - pl->v4[1]) <= 1.5f) {
                                 beginCameraViewTransition(sp28, 0, o->x108);
                                 o->b2C = 1;
                                 o->b2D = 1;
@@ -585,7 +581,7 @@ void ctTick(CtObj *o, f32 dt) {
                                 o->fF8 = 0.0f;
                                 o->b10A = 0;
                                 o->vFC = *(CtV3 *)pl->v4;
-                                play3DSoundEvent(0, q, o->x54, 0x41A00000, 0.2f, 0, 0x6A, 0x78, 0x3C);
+                                play3DSoundEvent(0, &o->v30, o->x54, 0x41A00000, 0.2f, 0, 0x6A, 0x78, 0x3C);
                                 scheduleSceneFormatMessageTimed(pl, 9);
                                 initEffectObjectDefaults(pl->wB8, o->hF0);
                                 args.b18 = 0xC;
@@ -624,14 +620,9 @@ end_tr:
             submitActiveEffectObjectRender(pl->wB8, dt);
         }
 skip:
-        {
-            u8 *cb = sp28;
-            __asm__("" :: "r"(cb));
-            q = &o->v30;
-            ctUpdateCam(cb, q, dt);
-        }
+        ctUpdateCam(sp28, &o->v30, dt);
         if (o->b2D != 0) {
-            if (!(emitEffectParticlesAlongPath(pl->v4, o->x108, q, 3.2f, &o->b10A) & 0xFF)
+            if (!(emitEffectParticlesAlongPath(pl->v4, o->x108, &o->v30, 3.2f, &o->b10A) & 0xFF)
                 || ctAbs(o->vFC.y - pl->v4[1]) > 2.6f) {
                 goto end_tr;
             }
