@@ -1009,7 +1009,13 @@ void runScriptedCraftCinematicEvent(f32 dt) {
     D_menu_overlay_800CDD74->rgba.a = D_menu_overlay_800CDD74->rgba.a * D_menu_overlay_800CDAF0 * quadraticEaseInOut(D_menu_overlay_800CDB04) * t;
     D_menu_overlay_800CDD78->rgba.a = D_menu_overlay_800CDD78->rgba.a * D_menu_overlay_800CDAF0 * quadraticEaseInOut(D_menu_overlay_800CDB04) * t;
     b04 = D_menu_overlay_800CDB04;
-    __asm__("" :: "f"(b04));
+    {
+        f32 x = D_menu_overlay_800CDB08;
+
+        if (x < b04) {
+            x = b04;
+        }
+    }
     if (D_menu_overlay_800CDAC7 != 1) {
         wave = 0.0f;
     } else {
