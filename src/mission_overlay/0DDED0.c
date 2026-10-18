@@ -287,6 +287,7 @@ void teImpl(EcObj *npc, f32 dt)
   f32 lim;
   f32 b;
   f32 z;
+  f32 c1;
   u8 snd;
   EcAudio *au;
   f32 mtx[12];
@@ -356,13 +357,15 @@ void teImpl(EcObj *npc, f32 dt)
       u.a.axis[2] = dir[2];
       ang = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A964, u.a.axis) / (vec3Length(D_mission_overlay_8010A964) * vec3Length(u.a.axis))) * 57.29578f;
       *((EcV3i *) u.a.t1) = *((EcV3i *) D_mission_overlay_8010A964);
-      u.a.t1[1] = 0.0f;
+      ((EcV3i *)u.a.t1)->b = 0;
       *((EcV3i *) u.a.t2) = *((EcV3i *) u.a.axis);
-      u.a.t2[1] = 0.0f;
+      ((EcV3i *)u.a.t2)->b = 0;
       vec3Cross(u.a.cr, u.a.t1, u.a.t2);
-      z = 0.0f;
-      __asm__("" : "+f"(z));
-      if (!(z <= u.a.cr[1]))
+      c1 = u.a.cr[1];
+      do {
+        z = 0.0f;
+      } while (0);
+      if (!(z <= c1))
       {
         ang = -ang;
       }
@@ -482,13 +485,15 @@ void teImpl(EcObj *npc, f32 dt)
         u.b.axis[2] = u.b.r[2];
         ang = constMinusSinfApprox(vec3Dot(D_mission_overlay_8010A964, u.b.axis) / (vec3Length(D_mission_overlay_8010A964) * vec3Length(u.b.axis))) * 57.29578f;
         *((EcV3i *) u.b.t1) = *((EcV3i *) D_mission_overlay_8010A964);
-        u.b.t1[1] = 0.0f;
+        ((EcV3i *)u.b.t1)->b = 0;
         *((EcV3i *) u.b.t2) = *((EcV3i *) u.b.axis);
-        u.b.t2[1] = 0.0f;
+        ((EcV3i *)u.b.t2)->b = 0;
         vec3Cross(u.b.cr, u.b.t1, u.b.t2);
-        z = 0.0f;
-        __asm__("" : "+f"(z));
-        if (!(z <= u.b.cr[1]))
+        c1 = u.b.cr[1];
+        do {
+          z = 0.0f;
+        } while (0);
+        if (!(z <= c1))
         {
           ang = -ang;
         }
