@@ -1935,7 +1935,6 @@ void initEffectObjectDefaults(s32 arg0, u16 arg1) {
     u16 a1s;
     u8 *ctx;
     u16 key;
-    register s32 four asm("$7");
     u8 *cur;
     u8 *c2;
     u8 *nw;
@@ -2028,16 +2027,15 @@ void initEffectObjectDefaults(s32 arg0, u16 arg1) {
         *(f32 *)(e + 0xA0) = 3.5f;
         *(IeM48 *)s5 = *(IeM48 *)((u8 *)D_main_bss_80138D18[arg0].unk4 + 0x28);
         computeAngleToTargetFromTransform(e + 0x28, e + 0x10, e + 0x1C);
-        four = 4;
         cur = D_main_bss_80138D18[arg0].unk4;
-        if (*(u16 *)((u8 *)cur + 2) == four) {
+        if (*(u16 *)((u8 *)cur + 2) == 4) {
             releaseEffectObjectNpcSlotsVariant(arg0, 3, 1);
             return;
         }
         c2 = cur;
         if (c2 != e) {
             nw = D_main_bss_80138930[arg0][0];
-            *(u16 *)(nw + 2) = four;
+            *(u16 *)(nw + 2) = 4;
             *(u8 **)(nw + 0xBC) = c2;
             *(u8 **)(nw + 0xC0) = e;
             *(s32 *)(nw + 0xC4) = 0;
@@ -2047,8 +2045,10 @@ void initEffectObjectDefaults(s32 arg0, u16 arg1) {
             ((IeObj *)nw)->c8 = 1.0f;
             if (D_main_bss_80138260 == 1) {
                 D_main_bss_80138894->unk4 = nw;
+                D_main_bss_80138D18[arg0].unk4 = nw;
+            } else {
+                D_main_bss_80138D18[arg0].unk4 = nw;
             }
-            D_main_bss_80138D18[arg0].unk4 = nw;
             *(IeM48 *)(nw + 0x28) = *(IeM48 *)((u8 *)c2 + 0x28);
             *(IeV3 *)(nw + 0x10) = *(IeV3 *)((u8 *)c2 + 0x10);
             *(IeV3 *)(nw + 0x1C) = *(IeV3 *)((u8 *)c2 + 0x1C);
