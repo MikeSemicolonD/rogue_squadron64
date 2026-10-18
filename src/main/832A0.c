@@ -2125,7 +2125,7 @@ static __inline__ u32 fvAlloc(u8 *v) {
     u32 k;
     u32 n;
     u8 *a2;
-    register u8 *t0 asm("$5");
+    u8 *t0;
     u8 *a1;
     u8 *t;
     register u32 ret asm("$18");
@@ -2161,11 +2161,10 @@ static __inline__ u32 fvAlloc(u8 *v) {
         }
         if (t0 == 0) {
             fvHead = a1;
-            *(u8 **)(a1 + 4) = t0;
         } else {
             *(u8 **)t0 = a1;
-            *(u8 **)(a1 + 4) = t0;
         }
+        *(u8 **)(a1 + 4) = t0;
         *(u8 **)a1 = a2;
         if (a2 != 0) {
             *(u8 **)(a2 + 4) = a1;
