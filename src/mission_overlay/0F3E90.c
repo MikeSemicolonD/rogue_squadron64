@@ -39,10 +39,11 @@ s32 resolveScriptedNameTokenList(u8 *arg0, u8 *arg1) {
         name = *(u8 **)(arg1 + 0x24) + t->name;
         switch (t->type) {
         case 1:
-            if ((s32)t->a < *(s32 *)(arg1 + 0x34)) {
-                break;
+            if ((s32)t->a >= *(s32 *)(arg1 + 0x34)) {
+                *(u8 **)(arg1 + 0x28) = *(u8 **)(arg1 + 0x24);
+                return 1;
             }
-            goto done;
+            break;
         case 2:
             r = rsObjBool(arg0, (s32)t->a);
             if ((u8)r == (s32)t->b) {
@@ -76,8 +77,6 @@ s32 resolveScriptedNameTokenList(u8 *arg0, u8 *arg1) {
             *(s32 *)(arg1 + 0x34) = 0;
             return 1;
         case 6:
-            __asm__("" :: "r"(arg1));
-            __asm__("" :: "r"(arg1));
             if ((s32)t->a == 1) {
                 arg0[0x1A5] = 1;
             }
@@ -98,7 +97,6 @@ s32 resolveScriptedNameTokenList(u8 *arg0, u8 *arg1) {
         }
         t++;
     }
-done:
     *(u8 **)(arg1 + 0x28) = *(u8 **)(arg1 + 0x24);
     return 1;
 }
