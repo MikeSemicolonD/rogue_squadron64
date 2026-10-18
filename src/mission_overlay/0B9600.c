@@ -408,8 +408,6 @@ void ovImpl(OvEng *e, u16 side, f32 ang, s32 flag, OvV3 *out) {
     s32 s;
     OvSrc *p;
     u8 *b;
-    f32 k;
-    register OvV3 *pax asm("$18");
 
     s = side & 1;
     p = &ovSrc[e->idx];
@@ -435,17 +433,14 @@ void ovImpl(OvEng *e, u16 side, f32 ang, s32 flag, OvV3 *out) {
         t.z = e->tpos.z - m.pos.z;
         ovNorm(&t);
         ang = ovAcos(ovDot(&m.ax, &t)) * 57.295776f;
-        pax = &ax;
-        ovCross(pax, &m.ax, &t);
+        ovCross(&ax, &m.ax, &t);
         if (ovMeta[e->idx].info[2] != 3) {
-            k = 0.4f;
+            ovQS(q, &ax, ang * 0.4f);
         } else if (*(s32 *)(b + e->idx * 0x2A0 + 0x160) != 1) {
-            k = 0.8f;
+            ovQS(q, &ax, ang * 0.8f);
         } else {
-            k = 0.6f;
+            ovQS(q, &ax, ang * 0.6f);
         }
-        ang *= k;
-        ovQS(q, pax, ang);
         t = m.ax;
         ovRot(q, &t, &m.ax);
         t = m.ay;
