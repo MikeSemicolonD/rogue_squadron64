@@ -287,9 +287,7 @@ void applyVoice3DMixParams(void *a0, f32 arg1, f32 arg2, f32 arg3, f32 arg4, f32
     t4 = (u32)x;
     spreadVoiceKeyTransposeAcrossChain(h, (u16)c16(t4));
 }
-__asm__(".section .rodata\n.globl D_main_8003DEC0\nD_main_8003DEC0:\n.word 0x42FE0000\n.globl D_main_8003DEC4\nD_main_8003DEC4:\n.word 0x42FE0000\n.globl D_main_8003DEC8\nD_main_8003DEC8:\n.word 0x42FE0000\n.globl D_main_8003DECC\nD_main_8003DECC:\n.word 0x42FE0000\n.globl D_main_8003DED0\nD_main_8003DED0:\n.word 0x42FE0000\n.globl D_main_8003DED4\nD_main_8003DED4:\n.word 0x3DA3D70A\n.globl D_main_8003DED8\nD_main_8003DED8:\n.word 0x3E19999A\n.globl D_main_8003DEDC\nD_main_8003DEDC:\n.word 0x3E99999A\n.globl D_main_8003DEE0\nD_main_8003DEE0:\n.word 0x3F800000\n.word 0x00000000\n.word 0x95AA0004\n.word 0x24010003\n.section .text");
 
-extern f32 D_main_8003DEC0;
 extern u8 gMusyXActiveFlag;
 s32 factor5MutexAcquire();
 s32 factor5MutexRelease();
@@ -312,7 +310,7 @@ s32 updateActive3DAudioSource(Active3DSource *arg0, Vec3i *arg1, Vec3i *arg2, u8
 
     if (gMusyXActiveFlag != 0) {
         factor5MutexAcquire();
-        v = (f32)arg3 / D_main_8003DEC0;
+        v = (f32)arg3 / 127.0f;
         arg0->pos = *arg1;
         arg0->vel = *arg2;
         arg0->unk28 = v;
@@ -338,7 +336,6 @@ s32 isAudioVoiceActive(u8 *voice) {
     return r;
 }
 
-extern f32 D_main_8003DEC4;
 extern u8 D_main_bss_80152D20[];
 extern s32 D_main_bss_80153414;
 extern void compute3DSourceSpatialMix(u8 *, f32 *, f32 *, f32 *, f32 *, f32 *);
@@ -368,8 +365,8 @@ s32 play3DSoundEvent(u8 *arg0, Vec3i *arg1, Vec3i *arg2, f32 arg3, f32 arg4, s32
     {
       s0 = D_main_bss_80152D20;
     }
-    va = ((f32) arg7) / D_main_8003DEC4;
-    vb = ((f32) arg8) / D_main_8003DEC4;
+    va = ((f32) arg7) / 127.0f;
+    vb = ((f32) arg8) / 127.0f;
     *((s32 *) (s0 + 8)) = arg5;
     *((Vec3i *) (s0 + 0xC)) = *arg1;
     *((Vec3i *) (s0 + 0x18)) = *arg2;
@@ -416,7 +413,6 @@ s32 play3DSoundEvent(u8 *arg0, Vec3i *arg1, Vec3i *arg2, f32 arg3, f32 arg4, s32
 
 extern u8 D_main_bss_80152D20[];
 extern s32 D_main_bss_80153414;
-extern f32 D_main_8003DEC8;
 extern void compute3DSourceSpatialMix(u8 *, f32 *, f32 *, f32 *, f32 *, f32 *);
 extern s32 bsearchFactor5TableByU16Key(u16, s32, s32);
 extern void applyVoice3DMixParams(void *, f32, f32, f32, f32, f32);
@@ -446,8 +442,8 @@ s32 play3DSoundEventVariant(u8 *arg0, Vec3i *arg1, Vec3i *arg2, f32 arg3, f32 ar
     {
       s0 = D_main_bss_80152D20;
     }
-    va = ((f32) arg8) / D_main_8003DEC8;
-    vb = ((f32) arg9) / D_main_8003DEC8;
+    va = ((f32) arg8) / 127.0f;
+    vb = ((f32) arg9) / 127.0f;
     *((s32 *) (s0 + 8)) = arg5;
     *((Vec3i *) (s0 + 0xC)) = *arg1;
     *((Vec3i *) (s0 + 0x18)) = *arg2;
@@ -578,7 +574,6 @@ typedef struct {
     f32 volume;
 } MusyX3D;
 
-extern f32 D_main_8003DECC;
 extern void crossProductVec3(void *, void *, void *);
 extern void invertOrientationMatrix(void *, void *);
 
@@ -607,7 +602,7 @@ s32 setMusyX3DProperties(MusyX3D *arg0, IVec3 *arg1, IVec3 *arg2, IVec3 *arg3, F
     sp10[10] = *(f32 *)&arg0->pos.y;
     sp10[11] = *(f32 *)&arg0->pos.z;
     invertOrientationMatrix(&arg0->inv, sp10);
-    arg0->volume = (f32)arg5 / D_main_8003DECC;
+    arg0->volume = (f32)arg5 / 127.0f;
     factor5MutexRelease();
     return 1;
     }
@@ -615,7 +610,6 @@ s32 setMusyX3DProperties(MusyX3D *arg0, IVec3 *arg1, IVec3 *arg2, IVec3 *arg3, F
 }
 
 extern s32 D_main_bss_80153418;
-extern f32 D_main_8003DED0;
 
 s32 register3DAudioListenerNode(MusyX3D *arg0, IVec3 *arg1, IVec3 *arg2, IVec3 *arg3, FVec3 *arg4, f32 arg5, f32 arg6, f32 arg7, s32 arg8, u8 arg9) {
     f32 sp10[12];
@@ -653,7 +647,7 @@ s32 register3DAudioListenerNode(MusyX3D *arg0, IVec3 *arg1, IVec3 *arg2, IVec3 *
         sp10[10] = *(f32 *)&arg0->pos.y;
         sp10[11] = *(f32 *)&arg0->pos.z;
         invertOrientationMatrix(&arg0->inv, sp10);
-        arg0->volume = (f32)arg9 / D_main_8003DED0;
+        arg0->volume = (f32)arg9 / 127.0f;
         *(s32 *)((u8 *)arg0 + 8) = arg8;
         factor5MutexRelease();
         return 1;
@@ -807,8 +801,6 @@ typedef struct PendNode {
     f32 f14;
     u8 *voice;
 } PendNode;
-extern f32 D_main_8003DED4;
-extern f32 D_main_8003DED8;
 extern s32 musyxNoteEventLockedDispatch(u16, s32, s32);
 extern void applyVoice3DMixParams(void *, f32, f32, f32, f32, f32);
 
@@ -828,10 +820,10 @@ void dispatchPrioritizedSoundQueue(void) {
                 h = D_main_bss_80152D70[i].head;
                 if (h != 0) {
                     diff = n->f4 - h->pri;
-                    if (diff <= D_main_8003DED4) {
+                    if (diff <= 0.08f) {
                         goto next;
                     }
-                    if (diff <= D_main_8003DED8) {
+                    if (diff <= 0.15f) {
                         tv = n->voice;
                         (*(u16 *)(tv + 0x3E))++;
                         if (*(u16 *)(tv + 0x3E) < 0x14) {
@@ -865,8 +857,6 @@ void dispatchPrioritizedSoundQueue(void) {
 }
 
 extern s32 D_main_bss_8015341C;
-extern const f32 D_main_8003DEDC;
-extern const f32 D_main_8003DEE0;
 s32 validateVoiceHandle(s32);
 
 void update3DAudioFrame(void) {
@@ -958,9 +948,9 @@ void update3DAudioFrame(void) {
                         }
                     }
                     if (*(u32 *)(v + 8) & 0x100000) {
-                        t = *(f32 *)(v + 0x40) + D_main_8003DEDC;
+                        t = *(f32 *)(v + 0x40) + 0.3f;
                         *(f32 *)(v + 0x40) = t;
-                        if (D_main_8003DEE0 <= t) {
+                        if (1.0f <= t) {
                             *(u32 *)(v + 8) &= 0xFFEFFFFF;
                         }
                     }
@@ -977,6 +967,7 @@ void update3DAudioFrame(void) {
     }
     dispatchPrioritizedSoundQueue();
 }
+__asm__(".section .rodata\n.word 0x00000000\n.word 0x95AA0004\n.word 0x24010003\n.section .text");
 
 extern s32 D_main_bss_80153414;
 extern s32 D_main_bss_80153418;
