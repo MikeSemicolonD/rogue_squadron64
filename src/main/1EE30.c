@@ -1065,7 +1065,7 @@ s32 findTextureByName(u8 *name) {
     s32 i;
     s32 idx;
     u16 type;
-    register struct D_main_bss_8011A444 *e asm("$3");
+    struct D_main_bss_8011A444 *e;
     s32 base;
 
     i = 0;
@@ -1073,7 +1073,9 @@ s32 findTextureByName(u8 *name) {
         do {
             idx = i & 0xFFFF;
             { register s32 o asm("$2") = idx * 4; e = (struct D_main_bss_8011A444 *)(o + (s32)D_main_bss_8011A444); }
-            type = e->material_type;
+            do {
+                type = e->material_type;
+            } while (0);
             if (type != 0) {
                 if (D_main_bss_801143AC != 0) {
                     if (type & 2) {
@@ -1085,9 +1087,11 @@ s32 findTextureByName(u8 *name) {
                 } else if (!(type & 1)) {
                     goto next;
                 }
-                if (rs_strncmp(D_main_bss_80128F08[e->D_80128F08_index].texture_name, name, 16) == 0) {
-                    return idx;
-                }
+                do {
+                    if (rs_strncmp(D_main_bss_80128F08[e->D_80128F08_index].texture_name, name, 16) == 0) {
+                        return idx;
+                    }
+                } while (0);
             }
 next:
             i++;
