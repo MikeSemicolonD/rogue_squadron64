@@ -4658,6 +4658,7 @@ u8 anyAudioSlotActive(void);
 void initMenuScreenCameraViewport(void);
 
 void runMenuModelViewerScreen(void) {
+    u8 frames = 0;
     u8 *mesh;
     u8 *m;
     u8 *node;
@@ -4781,7 +4782,7 @@ void runMenuModelViewerScreen(void) {
         setupCameraMatrices(&D_menu_overlay_800CF090);
         drawFrameProfilerBars();
         submitGfxFrame();
-        __asm__("" :: "i"(0));
+        frames++;
     }
     bufferArbiterProducerScanWait();
     tickMusyXIfActive();
