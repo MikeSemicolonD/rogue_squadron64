@@ -254,7 +254,7 @@ void tickActiveSongSlots(void) {
         a = &args;
         __asm__("" : "+r"(a));
         {
-        u32 fa; u32 fb; u8 cm; register s32 cur asm("$3"); register TSDesc *n asm("$5") = &gTSNew;
+        u32 fa; u32 fb; u8 cm; s32 cur; register TSDesc *n asm("$5") = &gTSNew;
 D_mission_overlay_8010C260 = 1;
 cur = gTSCur.unk0;
 args.unk26 = flags;
