@@ -756,13 +756,17 @@ void renderRadarSweep(void *arg0v, f32 *arg1, f32 arg2, f32 arg3)
         i1 = i0 + 1;
         i1 %= 8;
         e->i1 = i1;
-        if (n == 0)
+        do
         {
-          tbl[8].x = tbl[i0].x + (tbl[i1].x - tbl[i0].x) * frac;
-          tbl[8].y = tbl[i0].y + (tbl[i1].y - tbl[i0].y) * frac;
-          tbl[8].z = tbl[i0].z + (tbl[i1].z - tbl[i0].z) * frac;
-          e->i0 = 8;
+          if (n == 0)
+          {
+            tbl[8].x = tbl[i0].x + (tbl[i1].x - tbl[i0].x) * frac;
+            tbl[8].y = tbl[i0].y + (tbl[i1].y - tbl[i0].y) * frac;
+            tbl[8].z = tbl[i0].z + (tbl[i1].z - tbl[i0].z) * frac;
+            e->i0 = 8;
+          }
         }
+        while (0);
         e->u0 = (u32) ((acc / span) * 4096.0f);
         acc += 1.0f - frac;
         if (span < acc)
@@ -786,13 +790,15 @@ void renderRadarSweep(void *arg0v, f32 *arg1, f32 arg2, f32 arg3)
         asm("" :: "f"(half));
         e->col = col;
         e--;
-        n++;
+        do
+        {
+          n++;
+        }
+        while (0);
       }
       while ((n < 8) && (lo < hi));
     }
   }
-  asm("" : "+r"(n));
-  asm("" : "+r"(n));
   *((RadarEntry **) (arg0 + 0x940)) = e + 1;
   *((s32 *) (arg0 + 0x944)) = n + 8;
 }
