@@ -1437,7 +1437,7 @@ void updateEffectObjectTransformPieces(void *s3v, s32 arg1, s32 arg2, f32 arg3, 
     f32 *s0;
     u8 *s1;
     register s32 s5 asm("$21");
-    register s32 s7 asm("$23");
+    s32 s7;
     s32 v1;
 #define s3 ((u8*)s3v)
     u8 *t0;
@@ -1538,7 +1538,9 @@ void updateEffectObjectTransformPieces(void *s3v, s32 arg1, s32 arg2, f32 arg3, 
         applyPlayerVehicleStateUpdate(s1);
         s2 += 0xF;
         s3v = (u8*)s3v + 0x3C;
-        s7 += 1;
+        do {
+            s7 += 1;
+        } while (0);
         s5 += 0xF8;
     }
     if (s7 < 6) goto loop;
