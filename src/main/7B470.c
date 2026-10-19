@@ -105,16 +105,21 @@ void tmImpl(TmObj *o) {
     f32 c;
     u32 col;
     TmLight *L;
+    u8 checked;
+    u8 lit;
 
     dst = o->dst;
     n = o->mesh->count;
     v = o->mesh->verts;
     for (; n > 0; ) {
+        checked = 0;
+        lit = 0;
         a = 0.0f;
         b = a;
         g = a;
         r = a;
         for (i = 0, L = o->lights; i < 4; L++, i++) {
+            checked++;
             if (L->fl == 0) {
                 continue;
             }
@@ -147,9 +152,7 @@ void tmImpl(TmObj *o) {
             g += L->col[1] + L->k[1] * d;
             b += L->col[2] + L->k[2] * d;
             a += L->col[3] + L->k[3] * d;
-            __asm__("" :: "i"(0));
-            __asm__("" :: "i"(0));
-            __asm__("" :: "i"(0));
+            lit++;
         }
         c = (r < 0.0f) ? 0.0f : ((255.0f < r) ? 255.0f : r);
         r = c;
