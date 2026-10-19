@@ -1536,25 +1536,26 @@ extern s8 D_main_bss_8011A89A;
 extern u8 D_main_bss_80128EAA[];
 extern u8 D_main_bss_80128EAD;
 
+typedef struct { s8 unk0; u8 unk1; u8 gfx; u8 dpWait; u8 spWait; } SchedState;
+extern volatile SchedState gSchedS __asm__("D_main_bss_8011A89A");
 void bufferArbiterProducerScanWait(void) {
     u32 i;
-    volatile u8 *pending = &D_main_bss_8011A89E;
     s32 stateA;
     s32 stateB;
     u8 *count;
 
-    if (*pending != 0) {
+    if (gSchedS.spWait != 0) {
         osRecvMesg(D_main_bss_8011A818, NULL, 1);
-        *pending = 0;
+        gSchedS.spWait = 0;
         osYieldThread();
     }
     bufferArbiterMarkSlotReady();
-    if (D_main_bss_8011A89D != 0) {
+    if (gSchedS.dpWait != 0) {
         osRecvMesg(D_main_8011A7E8, NULL, 1);
-        D_main_bss_8011A89D = 0;
+        gSchedS.dpWait = 0;
         osYieldThread();
     }
-    D_main_bss_8011A89A = 0;
+    gSchedS.unk0 = 0;
     bufferArbiterProducerMark();
     stateA = 3;
     count = &D_main_bss_80128EAD;
