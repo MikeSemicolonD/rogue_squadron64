@@ -1634,7 +1634,7 @@ s32 submitGfxFrame(void) {
     void *slot;
     u8 idx;
     u32 mode;
-    volatile s32 *fc;
+    s32 *fc;
     u8 m;
 
     D_main_bss_8011A914 = getTimeSinceLastFrame();
