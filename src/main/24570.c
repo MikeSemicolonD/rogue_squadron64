@@ -372,8 +372,8 @@ extern u8 D_main_bss_8011A908;
 extern u32 tblx[][2] __asm__("D_main_80038AE0");
 
 DLW *emitMaterialRenderModeDLAlt(DLW *dlIn, s32 flags, s32 mode) {
-    register DLW *dl asm("$4") = dlIn;
-    DLW *p;
+    DLW *dl = dlIn;
+    DLW *p, *q;
     s32 idx;
     s32 t;
     s32 v;
@@ -420,9 +420,10 @@ DLW *emitMaterialRenderModeDLAlt(DLW *dlIn, s32 flags, s32 mode) {
         dl->w1 = 0;
         dl = (DLW *)allocateDisplayListBuffer();
     }
-    dl->w0 = 0xB900031D;
-    dl->w1 = tblx[idx & 0xFF][0] | tblx[idx & 0xFF][1];
-    return dl + 1;
+    q = dl++;
+    q->w0 = 0xB900031D;
+    q->w1 = tblx[idx & 0xFF][0] | tblx[idx & 0xFF][1];
+    return dl;
 }
 
 void recordFrameTimestamp(void) {
