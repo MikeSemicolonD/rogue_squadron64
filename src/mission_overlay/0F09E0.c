@@ -88,7 +88,7 @@ s32 func_mission_overlay_800EFDE0(u8 *obj, s32 mode, s32 alt, f32 dt) {
     f32 d;
     TgtSel *p = (TgtSel *)(obj + 0x114);
     u8 *item;
-    register s32 n asm("$23");
+    s32 n;
     s32 k;
     s32 idx;
     u16 cur;
@@ -119,7 +119,9 @@ s32 func_mission_overlay_800EFDE0(u8 *obj, s32 mode, s32 alt, f32 dt) {
         alt = p->s19;
     }
 retry:
-    n = 1;
+    do {
+        n = 1;
+    } while (0);
     fp = 0;
     s6 = 0;
     switch (mode) {
