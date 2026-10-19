@@ -101,7 +101,6 @@ extern void *rs_mallocI(u32, u16) __asm__("rs_malloc");
 void initGridLayerFromLevelData(IgLvl *arg0, s32 arg1) {
     IgDat *dat;
     s32 i;
-    s32 j;
     s32 v;
     IgElem *p;
     IgElem *e;
@@ -141,9 +140,6 @@ void initGridLayerFromLevelData(IgLvl *arg0, s32 arg1) {
     v = 0;
     if (arg0->w * arg0->h > 0) {
     do {
-        __asm__("" :: "r"(v));
-        __asm__("" :: "r"(v));
-        __asm__("" :: "r"(v));
         cp = (u16 *)(i * 2 + (s32)arg0->cells);
         if (e[*cp & 0x1FFF].flags & 0x18) {
             *cp |= 0x2000;
@@ -165,21 +161,21 @@ void initGridLayerFromLevelData(IgLvl *arg0, s32 arg1) {
     ig37450.f38 = 4;
     ig37450.f4 = ig374D0;
     ig37450.f8 = 0;
-    for (j = 0; j < 4; j++) {
-        ig37170[j].h18 = j % 2 + 1;
-        ig37170[j].h1A = j / 2 + 1;
-        ig37170[j].b30 = 0;
-        ig37170[j].h12 = 0;
-        ig37170[j].h10 = 0;
-        ig37170[j].hE = 0;
-        ig37170[j].hC = 0;
-        ig37170[j].hA = 0;
-        ig37170[j].h14 = 0;
-        ig37170[j].h1E = 0xFFFF;
+    for (v = 0; v < 4; v++) {
+        ig37170[v].h18 = v % 2 + 1;
+        ig37170[v].h1A = v / 2 + 1;
+        ig37170[v].b30 = 0;
+        ig37170[v].h12 = 0;
+        ig37170[v].h10 = 0;
+        ig37170[v].hE = 0;
+        ig37170[v].hC = 0;
+        ig37170[v].hA = 0;
+        ig37170[v].h14 = 0;
+        ig37170[v].h1E = 0xFFFF;
     }
-    for (j = 0; j < 4; j++) {
+    for (v = 0; v < 4; v++) {
         for (i = 0; i < 4; i++) {
-            ig374B0[j * 4 + i] = (j + 1) % 2 * 2 + (i + 1) % 2;
+            ig374B0[v * 4 + i] = (v + 1) % 2 * 2 + (i + 1) % 2;
         }
     }
     ig37151 = 0;
