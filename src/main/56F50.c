@@ -641,14 +641,15 @@ static __inline__ void avSetLod(u8 *inst, s32 lod) {
     for (i = 0; i < n; i++, e++, src++) {
         __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
         if (*src != NULL) {
-            prev = NULL;
+            do {
+                prev = NULL;
+            } while (0);
             e->head = nd;
         loop:
             ld = (u16 *)((src[1] != NULL) ? nd + 1 : NULL);
             nd->next = (AvNode *)ld;
             nd->prev = prev;
             prev = nd;
-            __asm__("" :: "r"(prev));
             nd->data = *src;
             nd++;
             src++;
@@ -819,14 +820,15 @@ static __inline__ void smSetLod(u8 *inst, s32 lod) {
     for (i = 0; i < n; i++, e++, src++) {
         __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
         if (*src != NULL) {
-            prev = NULL;
+            do {
+                prev = NULL;
+            } while (0);
             e->head = nd;
         loop:
             ld = (u16 *)((src[1] != NULL) ? nd + 1 : NULL);
             nd->next = (SmNode *)ld;
             nd->prev = prev;
             prev = nd;
-            __asm__("" :: "r"(prev));
             nd->data = *src;
             nd++;
             src++;
@@ -1279,14 +1281,15 @@ void setMeshInstanceLodAndRebuildNodes(u8 *inst, s32 lod) {
     for (i = 0; i < n; i++, e++, src++) {
         __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); __asm__("" :: "r"(n)); 
         if (*src != NULL) {
-            prev = NULL;
+            do {
+                prev = NULL;
+            } while (0);
             e->head = nd;
         loop:
             ld = (u16 *)((src[1] != NULL) ? nd + 1 : NULL);
             nd->next = (MlNode *)ld;
             nd->prev = prev;
             prev = nd;
-            __asm__("" :: "r"(prev));
             nd->data = *src;
             nd++;
             src++;
