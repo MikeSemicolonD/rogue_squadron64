@@ -363,8 +363,10 @@ void tickAtAtAudioAndWeaponState(u8 *arg0) {
     if (arg0[0x6F] == 0) {
         f32 d = *(f32 *)(arg0 + 0x84);
         register f32 c asm("$f0") = 10.0f;
-        register f32 y asm("$f2") = *(f32 *)(arg0 + 0xF0);
-        t2 = y + c / d;
+        f32 y = *(f32 *)(arg0 + 0xF0);
+        do {
+            t2 = y + c / d;
+        } while (0);
         *(f32 *)(arg0 + 0xF0) = t2;
         if (t2 > 1.0f) {
             arg0[0xE7] = 0;
