@@ -4428,22 +4428,21 @@ extern s32 D_main_bss_8010E008;
 
 static __inline__ void avScanWait(void) {
     u32 i;
-    volatile u8 *pending = &D_main_bss_8011A89E;
     s32 stateA;
     s32 stateB;
 
-    if (*pending != 0) {
+    if (gSchedS.spWait != 0) {
         osRecvMesg(D_main_bss_8011A818, NULL, 1);
-        *pending = 0;
+        gSchedS.spWait = 0;
         osYieldThread();
     }
     bufferArbiterMarkSlotReady();
-    if (D_main_bss_8011A89D != 0) {
+    if (gSchedS.dpWait != 0) {
         osRecvMesg(D_main_8011A7E8, NULL, 1);
-        D_main_bss_8011A89D = 0;
+        gSchedS.dpWait = 0;
         osYieldThread();
     }
-    D_main_bss_8011A89A = 0;
+    gSchedS.unk0 = 0;
     bufferArbiterProducerMark();
     stateA = 3;
     stateB = 4;
