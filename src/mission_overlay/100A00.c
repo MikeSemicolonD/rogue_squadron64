@@ -275,6 +275,7 @@ u8 isWeaponSlotReady(s32);
 void applyCraftAnimationKeyframePose(u8 *, f32);
 
 void tickCraftAnimationSlot(u8 slot, f32 dt) {
+    u8 n;
     CraftAnimSlot *s;
     u8 en;
     u8 i;
@@ -350,10 +351,11 @@ void tickCraftAnimationSlot(u8 slot, f32 dt) {
             }
             if (ok) {
                 if (s->unk11 == 0) {
+                    n = 0;
                     for (i = 0; i < CA_LIST(s)->count; i++) {
                         if (CA_LIST(s)->ents[i].b5 & 2) {
-                            __asm__("" :: "i"(0));
                             s->npcs[1][i] = spawnNpcChildForActivePlayerCell(*(u16 *)(s->unk0 + 0xB6), CA_LIST(s)->ents[i].f8 * 0.008f, (u32)(CA_LIST(s)->ents[i].fC * 3.0f), CA_LIST(s)->ents[i].w0, CA_LIST(s)->ents[i].b4, D_mission_overlay_8010B510, 1);
+                            n++;
                         }
                     }
                     s->unk11 = 1;
