@@ -2,7 +2,7 @@
 #define MAIN_08510_H
 
 #include "PR/ultratypes.h"
-#include "PR/gbi.h"
+#include "PR/mbi.h"
 
 #include "hob.h"
 

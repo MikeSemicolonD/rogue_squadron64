@@ -1142,8 +1142,6 @@ s32 beginFrameDLChunk(void) {
     s32 j;
     s32 *pp;
     BfNode *n;
-    register Gfx *h asm("$2");
-    register Gfx *g asm("$3");
     s32 st;
 
     chunk = D_main_bss_801163B0;
@@ -1183,64 +1181,43 @@ s32 beginFrameDLChunk(void) {
         ((Gfx *)D_main_bss_8011DC50)->words.w1 = (u32)buf;
     } else {
         D_main_bss_8011A4C0 = D_main_bss_8011DC58;
-        g = D_main_bss_8011DC58++;
-        g->words.w0 = 0x06000000;
-        g->words.w1 = (u32)D_main_80037658;
+        gSPDisplayList(D_main_bss_8011DC58++, (u32)D_main_80037658);
     }
     for (k = 0; k < D_main_bss_80117C00; k++) {
         st = D_main_bss_8011A470[k].start;
-        BF_G(g);
-        g->words.w0 = 0x06000000;
-        g->words.w1 = D_bf400[st].dl - 8;
-        D_main_bss_8011DC58 = g + 1;
+        CFR_ENSURE();
+        gSPDisplayList(D_main_bss_8011DC58++, D_bf400[st].dl - 8);
         st++;
         for (j = D_main_bss_8011A470[k].lo0; j < D_main_bss_8011A470[k].hi0; j++) {
             CFR_ENSURE();
-            h = D_main_bss_8011DC58;
-            h->words.w0 = 0x06000000;
-            h->words.w1 = D_main_bss_8011A4D0[j] - 8;
-            D_main_bss_8011DC58 = h + 1;
+            gSPDisplayList(D_main_bss_8011DC58++, D_main_bss_8011A4D0[j] - 8);
         }
         for (; st < D_main_bss_8011A470[k].end; st++) {
             if (D_bf400[st].mtx != 0) {
-                BF_G(g);
-                g->words.w0 = 0x01020040;
-                g->words.w1 = D_bf400[st].mtx;
-                D_main_bss_8011DC58 = g + 1;
+                CFR_ENSURE();
+                gSPMatrix(D_main_bss_8011DC58++, D_bf400[st].mtx, G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
             }
             CFR_ENSURE();
-            h = D_main_bss_8011DC58;
-            h->words.w0 = 0x06000000;
-            h->words.w1 = D_bf400[st].dl - 8;
-            D_main_bss_8011DC58 = h + 1;
+            gSPDisplayList(D_main_bss_8011DC58++, D_bf400[st].dl - 8);
         }
         for (i = 0x3F; i >= 0; i--) {
             for (n = (BfNode *)D_main_bss_8011D498[k].a[i]; n != NULL; n = n->next) {
                 if (n->mtx != 0) {
-                    BF_G(g);
-                    g->words.w0 = 0x01020040;
-                    g->words.w1 = n->mtx;
-                    D_main_bss_8011DC58 = g + 1;
+                    CFR_ENSURE();
+                    gSPMatrix(D_main_bss_8011DC58++, n->mtx, G_MTX_MODELVIEW | G_MTX_LOAD | G_MTX_NOPUSH);
                 }
-                BF_G(g);
-                g->words.w0 = 0x06000000;
-                g->words.w1 = n->dl - 8;
-                D_main_bss_8011DC58 = g + 1;
+                CFR_ENSURE();
+                gSPDisplayList(D_main_bss_8011DC58++, n->dl - 8);
             }
         }
         for (j = D_main_bss_8011A470[k].lo1; j < D_main_bss_8011A470[k].hi1; j++) {
             CFR_ENSURE();
-            h = D_main_bss_8011DC58;
-            h->words.w0 = 0x06000000;
-            h->words.w1 = D_main_bss_8011A4D0[j] - 8;
-            D_main_bss_8011DC58 = h + 1;
+            gSPDisplayList(D_main_bss_8011DC58++, D_main_bss_8011A4D0[j] - 8);
         }
         for (i = 0x1F; i >= 0; i--) {
             for (n = (BfNode *)D_main_bss_8011D498[k].b[i]; n != NULL; n = n->next) {
-                BF_G(g);
-                g->words.w0 = 0x06000000;
-                g->words.w1 = n->dl - 8;
-                D_main_bss_8011DC58 = g + 1;
+                CFR_ENSURE();
+                gSPDisplayList(D_main_bss_8011DC58++, n->dl - 8);
             }
         }
     }
