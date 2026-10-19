@@ -1634,12 +1634,11 @@ s32 submitGfxFrame(void) {
     void *slot;
     u8 idx;
     u32 mode;
-    volatile u8 *pend;
     volatile s32 *fc;
     u8 m;
 
     D_main_bss_8011A914 = getTimeSinceLastFrame();
-    if (*(volatile u8 *)&D_main_bss_8011A89E != 0) {
+    if (gSchedS.spWait != 0) {
         osRecvMesg(D_main_bss_8011A818, NULL, 1);
         yieldFromSpThread();
     }
@@ -1648,8 +1647,7 @@ s32 submitGfxFrame(void) {
     for (i = 0; i < sgCountA; i++) {
         commitMeshDrawBatchRefs(sgMeshes[i]);
     }
-    pend = &D_main_bss_8011A89D;
-    wait = *pend;
+    wait = gSchedS.dpWait;
     if (sgSlots[sgBufIdx] != NULL) {
         slot = bufferArbiterAllocSlot(1);
         if (slot != NULL) {
@@ -1667,8 +1665,8 @@ s32 submitGfxFrame(void) {
             gspTaskS.data_size = 0;
             gspTaskS.ucode_boot = rspbootTextStart;
             gspTaskS.ucode_boot_size = findModelAnimKeyframeByPhase - rspbootTextStart;
-            D_main_bss_8011A89E = 1;
-            D_main_bss_8011A89D = 1;
+            gSchedS.spWait = 1;
+            gSchedS.dpWait = 1;
             sgMsg.type = 1;
             sgMsg.task = &gspTaskS;
             gspTaskS.ucode = D_main_800377C0;
@@ -1689,8 +1687,8 @@ s32 submitGfxFrame(void) {
             setPostSwapPendingFlags();
         }
     } else {
-        *pend = 0;
-        D_main_bss_8011A89E = 0;
+        gSchedS.dpWait = 0;
+        gSchedS.spWait = 0;
         bufferArbiterProducerMark();
     }
     while (isPreNmiPending()) {
