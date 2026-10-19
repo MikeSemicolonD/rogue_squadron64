@@ -1072,7 +1072,7 @@ s32 findTextureByName(u8 *name) {
     if (D_main_bss_8011A8B4 != 0) {
         do {
             idx = i & 0xFFFF;
-            { register s32 o asm("$2") = idx * 4; e = (struct D_main_bss_8011A444 *)(o + (s32)D_main_bss_8011A444); }
+            { s32 o = idx * 4; e = (struct D_main_bss_8011A444 *)(o + (s32)D_main_bss_8011A444); }
             do {
                 type = e->material_type;
             } while (0);
