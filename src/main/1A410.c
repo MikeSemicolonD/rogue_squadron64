@@ -625,14 +625,15 @@ extern volatile u8 D_main_bss_8011A89D;
 extern u8 D_main_80128CE0;
 extern OSTask *D_main_bss_80128CE4;
 extern OSMesgQueue D_main_8011A420;
+typedef struct { u8 req; u8 ack; } SwapFlags;
+extern volatile SwapFlags gSwapFlags __asm__("D_main_bss_8011A8C8");
 void postSwapRdpReset(void) {
     s32 slot;
     u8 *m;
-    volatile u8 *p = &D_main_bss_8011A8C8;
-    if (*p != 0) {
+    if (gSwapFlags.req != 0) {
         slot = bufferArbiterAllocSlot(1);
         if (slot != 0) {
-            *p = 0;
+            gSwapFlags.req = 0;
             emitCombinerStateAndPatch((void *)slot, gBufIdxV ^ 1);
             computeFrameDeltaTime();
             osWritebackDCacheAll();
