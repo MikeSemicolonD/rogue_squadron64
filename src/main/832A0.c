@@ -5028,19 +5028,23 @@ void tickAudioChannel(u8 *ch) {
             case 0x50: {
                 struct { s32 v[18]; } tmp;
                 register u8 *p asm("$3");
-                register s32 w asm("$2");
+                s32 w;
                 u = tacW0;
                 {
                     u32 b = (u >> 8) & 0xFF;
                     register u32 o asm("$2") = b * 0xC;
                     p = ch + o;
                 }
-                w = *(s32 *)(p + 0x168);
+                do {
+                    w = *(s32 *)(p + 0x168);
+                } while (0);
                 u = (u >> 16) << 8;
                 tmp.v[0] = u;
-                if (w != 0) {
-                    *(s32 *)(p + 0x164) = 0;
-                }
+                do {
+                    if (w != 0) {
+                        *(s32 *)(p + 0x164) = 0;
+                    }
+                } while (0);
                 done = 0;
                 *(s32 *)(p + 0x168) = tmp.v[0];
                 break;
