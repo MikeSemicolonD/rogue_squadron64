@@ -1750,6 +1750,9 @@ void npcPowerGeneratorHandleDestruction(void) {
     f32 dist;
     f32 scale;
     s32 count;
+    u8 tries;
+    u8 clamped;
+    u8 spawned;
     f32 x;
     f32 z;
     f32 ground;
@@ -1820,6 +1823,9 @@ void npcPowerGeneratorHandleDestruction(void) {
             z = *(f32 *)(obj + 0x18);
             pos[2] = z;
             ground = wrapAngleToCyclicRange(x, z, D_main_bss_80138058, 0);
+            tries = 0;
+            clamped = 0;
+            spawned = 0;
             i = 0;
             args.id = 0xFFFF;
             args.colorA = &colA;
@@ -1829,13 +1835,16 @@ void npcPowerGeneratorHandleDestruction(void) {
             ep[1] = ground;
             if (count > 0) {
                 do {
+                    tries++;
                     ep[0] = pos[0] + ((f32)(randX() & 0x7F) - 64.0f) / 106.666664f;
                     ep[2] = pos[2] + ((f32)(randX() & 0x7F) - 64.0f) / 106.666664f;
                     args.scale = scale + ((f32)(randX() & 0x7F) - 64.0f) / 640.0f;
                     if (args.scale <= 0.0f) {
                         args.scale = 0.001f;
+                        clamped++;
                     }
-                    spawnNpcOfType((void *)explosionEffectNpcHandler, &args, 1, 10);   __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0)); __asm__("" :: "i"(0));
+                    spawnNpcOfType((void *)explosionEffectNpcHandler, &args, 1, 10);
+                    spawned++;
                     i++;
                 } while (i < count);
             }
