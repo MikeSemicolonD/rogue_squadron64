@@ -708,20 +708,20 @@ extern s32 D_main_bss_80128D34;
 extern s32 D_main_bss_80128EDC;
 extern volatile u8 D_main_bss_8011A89D;
 u32 getTimeSinceLastFrame(void);
+typedef struct { u8 unk0; u8 unk1; u8 unk2; u8 dpWait; } DpFlags;
+extern volatile DpFlags gDpFlags __asm__("D_main_bss_8011A89A");
 void dpInterruptHandlerThread(void *arg) {
-    volatile u8 *p;
     osCreateMesgQueue(&D_main_bss_8011A408, &D_main_bss_8011A830, 1);
     osSetEventMesg(OS_EVENT_DP, &D_main_bss_8011A408, NULL);
     osCreateMesgQueue(&D_main_8011A7E8, &D_main_bss_8011DC64, 1);
-    p = &D_main_bss_8011A89D;
     while (1) {
         osRecvMesg(&D_main_bss_8011A408, NULL, OS_MESG_BLOCK);
         D_main_bss_80128D34 = (u32)osGetTime() - D_main_bss_80128D30;
         D_main_bss_80128EDC = getTimeSinceLastFrame();
-        if (*p != 0) {
+        if (gDpFlags.dpWait != 0) {
             osSendMesg(&D_main_8011A7E8, NULL, OS_MESG_NOBLOCK);
         }
-        p[-2] = 0;
+        gDpFlags.unk1 = 0;
     }
 }
 
