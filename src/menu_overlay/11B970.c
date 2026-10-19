@@ -4756,10 +4756,13 @@ void runMenuModelViewerScreen(void) {
                     composeRotationMatrixSlot0(m, -5.0f);
                     composeRotationMatrixSlot1(m, sinf(gMvPhase * 1.2f) * 45.0f + 180.0f);
                     addVec3At0x24(m, 0.0f, 0.5f, 2.41421f);
-                    node = mesh + 0xC;
-                    __asm__("" :: "r"(mesh));
+                    do {
+                        node = mesh + 0xC;
+                    } while (0);
                     head = D_menu_overlay_800CF090.unk0;
-                    *(s32 *)(mesh + 0xC) = head;
+                    do {
+                        *(s32 *)(mesh + 0xC) = head;
+                    } while (0);
                     if (head != 0) {
                         *(u8 **)(head + 4) = node;
                     }
