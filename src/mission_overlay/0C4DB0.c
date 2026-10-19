@@ -777,7 +777,11 @@ void renderRadarSweep(void *arg0v, f32 *arg1, f32 arg2, f32 arg3)
         lo += 1.0f - frac;
         if (hi < lo)
         {
-          frac = hi + half;
+          do
+          {
+            frac = hi + half;
+          }
+          while (0);
           i1 = i0 + 1;
           frac = frac - ((f32) ((s32) frac));
           a = (RadarPt *)(i0 * 8 + (s32)tbl);
@@ -787,7 +791,6 @@ void renderRadarSweep(void *arg0v, f32 *arg1, f32 arg2, f32 arg3)
           lo = hi;
           e->i1 = 9;
         }
-        asm("" :: "f"(half));
         e->col = col;
         e--;
         do
